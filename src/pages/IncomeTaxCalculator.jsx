@@ -33,7 +33,7 @@ const incomeTaxJsonLd = {
             {
                 "@type": "WebSite",
                 "name": "GOV.UK - Income Tax rates and allowances",
-                "url": "https://www.gov.uk/guidance/rates-and-alcreatePageUrl("Home")owances-for-income-tax-on-employment-income" // Link to official source
+                "url": "https://www.gov.uk/guidance/rates-and-allowances-for-income-tax-on-employment-income" // Link to official source
             }
         ]
     },
