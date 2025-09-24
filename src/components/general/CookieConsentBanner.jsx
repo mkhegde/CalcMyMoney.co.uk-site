@@ -1,7 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Cookie, X, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 export default function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false);
@@ -12,8 +15,21 @@ export default function CookieConsentBanner() {
     marketing: false,
     preferences: false
   });
+  // NEW: show a persistent "Cookie Settings" button for returning users
+  const [showFloatingManage, setShowFloatingManage] = useState(false);
 
   useEffect(() => {
+    // Support query param to reset consent for testing or when user wants to resurface the banner
+    const url = new URL(window.location.href);
+    const resetParam = url.searchParams.get('consent') === 'reset' || url.searchParams.get('cookie_reset') === '1';
+    if (resetParam) {
+      localStorage.removeItem('cookieConsent');
+      localStorage.removeItem('cookiePreferences');
+      setShowBanner(true);
+      setShowFloatingManage(false);
+      return;
+    }
+
     // Check if user has already consented
     const hasConsented = localStorage.getItem('cookieConsent');
     if (!hasConsented) {
@@ -22,6 +38,17 @@ export default function CookieConsentBanner() {
         setShowBanner(true);
       }, 2000);
       return () => clearTimeout(timer);
+    } else {
+      // If consent exists, surface floating manage button for easy access
+      setShowFloatingManage(true);
+      // Also restore saved preferences (if present)
+      try {
+        const saved = JSON.parse(localStorage.getItem('cookiePreferences') || '{}');
+        setCookiePreferences(prev => ({ ...prev, ...saved, essential: true }));
+      } catch (error) {
+        // ignore parse errors, default preferences will be used
+        console.error("Error parsing cookie preferences from localStorage:", error);
+      }
     }
   }, []);
 
@@ -34,8 +61,10 @@ export default function CookieConsentBanner() {
     };
     localStorage.setItem('cookieConsent', 'accepted');
     localStorage.setItem('cookiePreferences', JSON.stringify(allAccepted));
+    setCookiePreferences(allAccepted);
     setShowBanner(false);
     setShowManageDialog(false);
+    setShowFloatingManage(true);
   };
 
   const handleDeclineAll = () => {
@@ -47,8 +76,10 @@ export default function CookieConsentBanner() {
     };
     localStorage.setItem('cookieConsent', 'declined');
     localStorage.setItem('cookiePreferences', JSON.stringify(essentialOnly));
+    setCookiePreferences(essentialOnly);
     setShowBanner(false);
     setShowManageDialog(false);
+    setShowFloatingManage(true);
   };
 
   const handleSavePreferences = () => {
@@ -56,6 +87,7 @@ export default function CookieConsentBanner() {
     localStorage.setItem('cookiePreferences', JSON.stringify(cookiePreferences));
     setShowBanner(false);
     setShowManageDialog(false);
+    setShowFloatingManage(true);
   };
 
   const updatePreference = (type, value) => {
@@ -65,53 +97,66 @@ export default function CookieConsentBanner() {
     }));
   };
 
-  if (!showBanner) return null;
-
   return (
     <>
+      {/* NEW: Floating manage button (visible once a consent state exists) */}
+      {showFloatingManage && (
+        <Button
+          variant="outline"
+          onClick={() => setShowManageDialog(true)}
+          className="fixed bottom-4 right-4 z-[9999] shadow-md bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 hover:dark:bg-gray-700"
+        >
+          <Settings className="w-4 h-4 mr-2" />
+          Cookie Settings
+        </Button>
+      )}
+
       {/* Main Cookie Banner */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
-        <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
-          <div className="p-6">
-            <div className="flex items-start gap-4">
-              <Cookie className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  We Use Cookies
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-                  We use cookies to enhance your experience, analyze site usage, and assist with our marketing efforts. 
-                  Your data is processed in your browser - we don't store any of your financial calculations on our servers.
-                  <br />
-                  <a href="/cookie-policy" className="text-blue-600 dark:text-blue-400 hover:underline">
-                    Learn more about our cookies
-                  </a>
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button onClick={handleAcceptAll} className="bg-blue-600 hover:bg-blue-700">
-                    Accept All Cookies
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowManageDialog(true)}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Manage Cookies
-                  </Button>
-                  <Button variant="outline" onClick={handleDeclineAll}>
-                    Decline All
-                  </Button>
+      {showBanner && (
+        <div className="fixed bottom-0 left-0 right-0 z-[9998] p-4">
+          <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <Cookie className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    We Use Cookies
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+                    We use cookies to enhance your experience, analyze site usage, and assist with our marketing efforts. 
+                    Your data is processed in your browser - we don't store any of your financial calculations on our servers.
+                    <br />
+                    {/* Fixed: use SPA routing to the Cookie Policy page */}
+                    <Link to={createPageUrl("CookiePolicy")} className="text-blue-600 dark:text-blue-400 hover:underline">
+                      Learn more about our cookies
+                    </Link>
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button onClick={handleAcceptAll} className="bg-blue-600 hover:bg-blue-700">
+                      Accept All Cookies
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowManageDialog(true)}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Manage Cookies
+                    </Button>
+                    <Button variant="outline" onClick={handleDeclineAll}>
+                      Decline All
+                    </Button>
+                  </div>
                 </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleDeclineAll}
+                  className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handleDeclineAll}
-                className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-              >
-                <X className="w-5 h-5" />
-              </Button>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Cookie Management Dialog */}
       <Dialog open={showManageDialog} onOpenChange={setShowManageDialog}>
