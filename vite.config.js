@@ -28,12 +28,14 @@ export default defineConfig({
       // Configuration details
       criticalConfig: {
         inline: true, // Injects the critical CSS directly into the HTML <head>
-        base: 'dist/',
+        // 🚨 FIX 1: Changed base back to '/' (root of the temporary build server)
+        base: '/',
         extract: true, // Removes the inlined CSS from the main external stylesheet
 
         // Optimizes for a common mobile screen size (e.g., iPhone SE/mini)
         width: 375,
         height: 667,
+        // 🚨 FIX 2: Removed 'minify: true' which was causing the ConfigError
       },
     }),
   ],
@@ -53,8 +55,21 @@ export default defineConfig({
       },
     },
   },
-  // 3. Optional: Ensure proper build settings for Vercel/Vite
+  // 3. Updated build settings for performance optimization
   build: {
     cssCodeSplit: true,
+    // 🚨 NEW: Add manual chunking strategy to split vendor code from app code
+    rollupOptions: {
+      output: {
+        // This function tells Rollup how to split your code into chunks
+        manualChunks(id) {
+          // If the module comes from node_modules, put it into a 'vendor' chunk
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+          // Otherwise, let Vite/Rollup handle the default application code splitting
+        },
+      },
+    },
   },
 });
