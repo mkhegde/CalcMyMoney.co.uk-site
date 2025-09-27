@@ -5,13 +5,14 @@
 @layer base {
   :root {
     /* Typography */
-    --font-sans: 'Montserrat', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-      Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --font-sans:
+      'Montserrat', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
 
     /* Brand palette */
-    --brand-blue: 226 100% 20%;   /* Deep royal blue */
-    --brand-teal: 193 100% 50%;   /* Teal */
-    --brand-aqua: 164 100% 50%;   /* Aqua */
+    --brand-blue: 226 100% 20%; /* Deep royal blue */
+    --brand-teal: 193 100% 50%; /* Teal */
+    --brand-aqua: 164 100% 50%; /* Aqua */
 
     /* Light mode semantic tokens */
     --background: 0 0% 100%;

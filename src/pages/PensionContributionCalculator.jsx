@@ -1,26 +1,35 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PoundSterling, Calculator, Shield, TrendingUp } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
-import FAQSection from "../components/calculators/FAQSection";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { PoundSterling, Calculator, Shield, TrendingUp } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
+import FAQSection from '../components/calculators/FAQSection';
 
 const pensionFAQs = [
   {
-    question: "What is the minimum pension contribution in the UK?",
-    answer: "Under auto-enrolment, the minimum total contribution is 8% of qualifying earnings (between £6,240 and £50,270 for 2024/25). The employer must contribute at least 3%, with the employee contributing at least 5%."
+    question: 'What is the minimum pension contribution in the UK?',
+    answer:
+      'Under auto-enrolment, the minimum total contribution is 8% of qualifying earnings (between £6,240 and £50,270 for 2024/25). The employer must contribute at least 3%, with the employee contributing at least 5%.',
   },
   {
-    question: "How much tax relief do I get on pension contributions?",
-    answer: "You get tax relief at your marginal rate. Basic rate taxpayers get 20% relief, higher rate taxpayers get 40%, and additional rate taxpayers get 45%. This effectively reduces the cost of your pension contributions."
+    question: 'How much tax relief do I get on pension contributions?',
+    answer:
+      'You get tax relief at your marginal rate. Basic rate taxpayers get 20% relief, higher rate taxpayers get 40%, and additional rate taxpayers get 45%. This effectively reduces the cost of your pension contributions.',
   },
   {
-    question: "What is the annual allowance for pension contributions?",
-    answer: "For 2024/25, the annual allowance is £60,000. This is the maximum amount you can contribute to pensions in a tax year while still receiving tax relief. High earners may have a reduced allowance (tapered annual allowance)."
-  }
+    question: 'What is the annual allowance for pension contributions?',
+    answer:
+      'For 2024/25, the annual allowance is £60,000. This is the maximum amount you can contribute to pensions in a tax year while still receiving tax relief. High earners may have a reduced allowance (tapered annual allowance).',
+  },
 ];
 
 export default function PensionContributionCalculator() {
@@ -54,7 +63,7 @@ export default function PensionContributionCalculator() {
     const totalContribution = employeeContribAmount + employerContribAmount;
 
     // Tax relief calculation
-    const taxReliefRates = { basic: 0.20, higher: 0.40, additional: 0.45 };
+    const taxReliefRates = { basic: 0.2, higher: 0.4, additional: 0.45 };
     const taxRelief = employeeContribAmount * taxReliefRates[taxBand];
     const netCostToEmployee = employeeContribAmount - taxRelief;
 
@@ -72,20 +81,32 @@ export default function PensionContributionCalculator() {
       netCostToEmployee,
       monthlyEmployeeContrib,
       monthlyEmployerContrib,
-      monthlyNetCost
+      monthlyNetCost,
     };
 
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Metric", "Annual", "Monthly"],
-      ["Qualifying Earnings", `£${newResults.qualifyingEarnings.toFixed(2)}`, ""],
-      ["Employee Contribution", `£${newResults.employeeContribAmount.toFixed(2)}`, `£${newResults.monthlyEmployeeContrib.toFixed(2)}`],
-      ["Employer Contribution", `£${newResults.employerContribAmount.toFixed(2)}`, `£${newResults.monthlyEmployerContrib.toFixed(2)}`],
-      ["Total Contribution", `£${newResults.totalContribution.toFixed(2)}`, ""],
-      ["Tax Relief", `£${newResults.taxRelief.toFixed(2)}`, ""],
-      ["Net Cost to You", `£${newResults.netCostToEmployee.toFixed(2)}`, `£${newResults.monthlyNetCost.toFixed(2)}`],
+      ['Metric', 'Annual', 'Monthly'],
+      ['Qualifying Earnings', `£${newResults.qualifyingEarnings.toFixed(2)}`, ''],
+      [
+        'Employee Contribution',
+        `£${newResults.employeeContribAmount.toFixed(2)}`,
+        `£${newResults.monthlyEmployeeContrib.toFixed(2)}`,
+      ],
+      [
+        'Employer Contribution',
+        `£${newResults.employerContribAmount.toFixed(2)}`,
+        `£${newResults.monthlyEmployerContrib.toFixed(2)}`,
+      ],
+      ['Total Contribution', `£${newResults.totalContribution.toFixed(2)}`, ''],
+      ['Tax Relief', `£${newResults.taxRelief.toFixed(2)}`, ''],
+      [
+        'Net Cost to You',
+        `£${newResults.netCostToEmployee.toFixed(2)}`,
+        `£${newResults.monthlyNetCost.toFixed(2)}`,
+      ],
     ];
     setCsvData(csvExportData);
   };
@@ -104,7 +125,8 @@ export default function PensionContributionCalculator() {
               UK Pension Contribution Calculator
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Calculate your pension contributions, tax relief, and the real cost of building your retirement savings.
+              Calculate your pension contributions, tax relief, and the real cost of building your
+              retirement savings.
             </p>
           </div>
         </div>
@@ -115,20 +137,36 @@ export default function PensionContributionCalculator() {
         <div className="grid lg:grid-cols-5 gap-8 printable-grid-cols-1">
           <div className="lg:col-span-2 non-printable">
             <Card className="sticky top-24">
-              <CardHeader><CardTitle>Your Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Your Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="salary">Annual Salary</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="salary" type="number" value={salary} onChange={(e) => setSalary(e.target.value)} className="pl-10" placeholder="e.g. 40000" />
+                    <Input
+                      id="salary"
+                      type="number"
+                      value={salary}
+                      onChange={(e) => setSalary(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 40000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="employeeContribution">Your Contribution (%)</Label>
                   <div className="relative">
                     <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="employeeContribution" type="number" value={employeeContribution} onChange={(e) => setEmployeeContribution(e.target.value)} className="pl-10" placeholder="e.g. 5" />
+                    <Input
+                      id="employeeContribution"
+                      type="number"
+                      value={employeeContribution}
+                      onChange={(e) => setEmployeeContribution(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 5"
+                    />
                   </div>
                   <p className="text-xs text-gray-500">Minimum 5% under auto-enrolment</p>
                 </div>
@@ -136,14 +174,23 @@ export default function PensionContributionCalculator() {
                   <Label htmlFor="employerContribution">Employer Contribution (%)</Label>
                   <div className="relative">
                     <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="employerContribution" type="number" value={employerContribution} onChange={(e) => setEmployerContribution(e.target.value)} className="pl-10" placeholder="e.g. 3" />
+                    <Input
+                      id="employerContribution"
+                      type="number"
+                      value={employerContribution}
+                      onChange={(e) => setEmployerContribution(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 3"
+                    />
                   </div>
                   <p className="text-xs text-gray-500">Minimum 3% under auto-enrolment</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Your Tax Band</Label>
                   <Select value={taxBand} onValueChange={setTaxBand}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="basic">Basic Rate (20%)</SelectItem>
                       <SelectItem value="higher">Higher Rate (40%)</SelectItem>
@@ -164,41 +211,73 @@ export default function PensionContributionCalculator() {
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Your Pension Contributions</h2>
-                  <ExportActions csvData={csvData} fileName="pension-contributions" title="Pension Contributions" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="pension-contributions"
+                    title="Pension Contributions"
+                  />
                 </div>
                 <Card className="bg-green-50 border-green-200">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-green-800 mb-2">Net Monthly Cost to You</h3>
                     <div className="text-4xl font-bold text-green-900">
-                      £{results.monthlyNetCost.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      £
+                      {results.monthlyNetCost.toLocaleString('en-GB', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </div>
-                    <p className="text-sm text-green-700">After {taxBand === 'basic' ? '20%' : taxBand === 'higher' ? '40%' : '45%'} tax relief</p>
+                    <p className="text-sm text-green-700">
+                      After {taxBand === 'basic' ? '20%' : taxBand === 'higher' ? '40%' : '45%'} tax
+                      relief
+                    </p>
                   </CardContent>
                 </Card>
                 <div className="grid md:grid-cols-2 gap-4">
                   <Card>
-                    <CardHeader><CardTitle>Your Contributions</CardTitle></CardHeader>
+                    <CardHeader>
+                      <CardTitle>Your Contributions</CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="p-3 bg-blue-50 rounded">
                         <p className="text-sm text-blue-600">Gross Monthly Contribution</p>
-                        <p className="text-lg font-semibold">£{results.monthlyEmployeeContrib.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</p>
+                        <p className="text-lg font-semibold">
+                          £
+                          {results.monthlyEmployeeContrib.toLocaleString('en-GB', {
+                            minimumFractionDigits: 2,
+                          })}
+                        </p>
                       </div>
                       <div className="p-3 bg-green-50 rounded">
                         <p className="text-sm text-green-600">Annual Tax Relief</p>
-                        <p className="text-lg font-semibold">£{results.taxRelief.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
+                        <p className="text-lg font-semibold">
+                          £{results.taxRelief.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardHeader><CardTitle>Employer Contributions</CardTitle></CardHeader>
+                    <CardHeader>
+                      <CardTitle>Employer Contributions</CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="p-3 bg-purple-50 rounded">
                         <p className="text-sm text-purple-600">Monthly Employer Contribution</p>
-                        <p className="text-lg font-semibold">£{results.monthlyEmployerContrib.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</p>
+                        <p className="text-lg font-semibold">
+                          £
+                          {results.monthlyEmployerContrib.toLocaleString('en-GB', {
+                            minimumFractionDigits: 2,
+                          })}
+                        </p>
                       </div>
                       <div className="p-3 bg-gray-50 rounded">
                         <p className="text-sm text-gray-600">Total Annual Pension Growth</p>
-                        <p className="text-lg font-semibold">£{results.totalContribution.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
+                        <p className="text-lg font-semibold">
+                          £
+                          {results.totalContribution.toLocaleString('en-GB', {
+                            maximumFractionDigits: 0,
+                          })}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>

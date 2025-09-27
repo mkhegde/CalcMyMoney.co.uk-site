@@ -8,7 +8,7 @@ export const base44 = {
   },
   functions: {
     // return empty forex map to avoid runtime crashes; update if you need real FX
-    getForexRates: async () => ({ base: "GBP", rates: { GBP: 1 } }),
+    getForexRates: async () => ({ base: 'GBP', rates: { GBP: 1 } }),
   },
   integrations: {
     Core: {

@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Calculator, CalendarDays, Briefcase } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import ExportActions from "../components/calculators/ExportActions";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Calculator, CalendarDays, Briefcase } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import ExportActions from '../components/calculators/ExportActions';
 
 const STATUTORY_WEEKS = 5.6;
 
@@ -25,37 +31,41 @@ export default function HolidayPayCalculator() {
     let holidayPay = 0;
 
     if (calculationType === 'days') {
-        const days = Number(daysPerWeek) || 0;
-        const rate = Number(dailyRate) || 0;
-        if (days > 0 && days <= 7) {
-            holidayEntitlement = Math.min(days * STATUTORY_WEEKS, 28);
-            holidayPay = holidayEntitlement * rate;
-        }
-    } else { // Irregular hours
-        const weeks = Number(weeksWorked) || 0;
-        const rate = Number(hourlyRate) || 0;
-        if (weeks > 0 && rate > 0) {
-            // Holiday entitlement for irregular hours workers is 12.07% of hours worked
-            holidayEntitlement = (weeks * 12.07) / 100; // in weeks, convert to hours
-            // This is a simplified model. True calculation is based on average pay over last 52 weeks.
-            const avgWeeklyHours = weeks;
-            const avgWeeklyPay = avgWeeklyHours * rate;
-            holidayPay = avgWeeklyPay * STATUTORY_WEEKS;
-        }
+      const days = Number(daysPerWeek) || 0;
+      const rate = Number(dailyRate) || 0;
+      if (days > 0 && days <= 7) {
+        holidayEntitlement = Math.min(days * STATUTORY_WEEKS, 28);
+        holidayPay = holidayEntitlement * rate;
+      }
+    } else {
+      // Irregular hours
+      const weeks = Number(weeksWorked) || 0;
+      const rate = Number(hourlyRate) || 0;
+      if (weeks > 0 && rate > 0) {
+        // Holiday entitlement for irregular hours workers is 12.07% of hours worked
+        holidayEntitlement = (weeks * 12.07) / 100; // in weeks, convert to hours
+        // This is a simplified model. True calculation is based on average pay over last 52 weeks.
+        const avgWeeklyHours = weeks;
+        const avgWeeklyPay = avgWeeklyHours * rate;
+        holidayPay = avgWeeklyPay * STATUTORY_WEEKS;
+      }
     }
-    
+
     const newResults = {
-        holidayEntitlement,
-        holidayPay
+      holidayEntitlement,
+      holidayPay,
     };
 
     setResults(newResults);
     setHasCalculated(true);
-    
+
     const csvExportData = [
-        ["Metric", "Value"],
-        ["Holiday Entitlement", `${newResults.holidayEntitlement.toFixed(2)} ${calculationType === 'days' ? 'days' : 'hours'}`],
-        ["Estimated Holiday Pay", `£${newResults.holidayPay.toFixed(2)}`],
+      ['Metric', 'Value'],
+      [
+        'Holiday Entitlement',
+        `${newResults.holidayEntitlement.toFixed(2)} ${calculationType === 'days' ? 'days' : 'hours'}`,
+      ],
+      ['Estimated Holiday Pay', `£${newResults.holidayPay.toFixed(2)}`],
     ];
     setCsvData(csvExportData);
   };
@@ -87,37 +97,68 @@ export default function HolidayPayCalculator() {
               <CardHeader>
                 <CardTitle>Your Work Pattern</CardTitle>
                 <Select value={calculationType} onValueChange={setCalculationType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="days">I work a fixed number of days per week</SelectItem>
-                        <SelectItem value="irregular">I work irregular hours / am on a zero-hour contract</SelectItem>
-                    </SelectContent>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="days">I work a fixed number of days per week</SelectItem>
+                    <SelectItem value="irregular">
+                      I work irregular hours / am on a zero-hour contract
+                    </SelectItem>
+                  </SelectContent>
                 </Select>
               </CardHeader>
               <CardContent className="space-y-6">
                 {calculationType === 'days' ? (
-                    <>
-                        <div className="space-y-2">
-                            <Label htmlFor="daysPerWeek">Days worked per week</Label>
-                            <Input id="daysPerWeek" type="number" value={daysPerWeek} onChange={e => setDaysPerWeek(e.target.value)} placeholder="e.g. 5" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="dailyRate">Normal daily pay (£)</Label>
-                            <Input id="dailyRate" type="number" value={dailyRate} onChange={e => setDailyRate(e.target.value)} placeholder="e.g. 150" />
-                        </div>
-                    </>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="daysPerWeek">Days worked per week</Label>
+                      <Input
+                        id="daysPerWeek"
+                        type="number"
+                        value={daysPerWeek}
+                        onChange={(e) => setDaysPerWeek(e.target.value)}
+                        placeholder="e.g. 5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="dailyRate">Normal daily pay (£)</Label>
+                      <Input
+                        id="dailyRate"
+                        type="number"
+                        value={dailyRate}
+                        onChange={(e) => setDailyRate(e.target.value)}
+                        placeholder="e.g. 150"
+                      />
+                    </div>
+                  </>
                 ) : (
-                    <>
-                        <div className="space-y-2">
-                            <Label htmlFor="weeksWorked">Average hours worked per week</Label>
-                            <Input id="weeksWorked" type="number" value={weeksWorked} onChange={e => setWeeksWorked(e.target.value)} placeholder="e.g. 30" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="hourlyRate">Your hourly rate (£)</Label>
-                            <Input id="hourlyRate" type="number" value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} placeholder="e.g. 11.50" />
-                        </div>
-                        <p className="text-xs text-gray-500">For irregular hours, holiday pay is based on your average pay over the previous 52 weeks worked.</p>
-                    </>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="weeksWorked">Average hours worked per week</Label>
+                      <Input
+                        id="weeksWorked"
+                        type="number"
+                        value={weeksWorked}
+                        onChange={(e) => setWeeksWorked(e.target.value)}
+                        placeholder="e.g. 30"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hourlyRate">Your hourly rate (£)</Label>
+                      <Input
+                        id="hourlyRate"
+                        type="number"
+                        value={hourlyRate}
+                        onChange={(e) => setHourlyRate(e.target.value)}
+                        placeholder="e.g. 11.50"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      For irregular hours, holiday pay is based on your average pay over the
+                      previous 52 weeks worked.
+                    </p>
+                  </>
                 )}
                 <Button onClick={handleCalculate} className="w-full text-lg">
                   <Calculator className="w-5 h-5 mr-2" />
@@ -126,24 +167,35 @@ export default function HolidayPayCalculator() {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="space-y-6">
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Your Holiday Entitlement</h2>
-                   <ExportActions csvData={csvData} fileName="holiday-entitlement" title="Holiday Entitlement" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="holiday-entitlement"
+                    title="Holiday Entitlement"
+                  />
                 </div>
                 <Card>
-                  <CardHeader><CardTitle>Annual Entitlement</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Annual Entitlement</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-4 text-center">
                     <div className="p-4 bg-blue-50 rounded-lg">
-                        <p className="text-sm font-medium text-blue-800">Annual Holiday Days/Hours</p>
-                        <p className="text-3xl font-bold text-blue-900">{results.holidayEntitlement.toFixed(1)} {calculationType === 'days' ? 'days' : 'hours'}</p>
+                      <p className="text-sm font-medium text-blue-800">Annual Holiday Days/Hours</p>
+                      <p className="text-3xl font-bold text-blue-900">
+                        {results.holidayEntitlement.toFixed(1)}{' '}
+                        {calculationType === 'days' ? 'days' : 'hours'}
+                      </p>
                     </div>
-                     <div className="p-4 bg-green-50 rounded-lg">
-                        <p className="text-sm font-medium text-green-800">Total Holiday Pay</p>
-                        <p className="text-3xl font-bold text-green-900">£{results.holidayPay.toLocaleString('en-GB', { maximumFractionDigits: 2 })}</p>
+                    <div className="p-4 bg-green-50 rounded-lg">
+                      <p className="text-sm font-medium text-green-800">Total Holiday Pay</p>
+                      <p className="text-3xl font-bold text-green-900">
+                        £{results.holidayPay.toLocaleString('en-GB', { maximumFractionDigits: 2 })}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>

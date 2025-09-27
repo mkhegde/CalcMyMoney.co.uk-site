@@ -1,22 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Zap, Calculator, Home, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Zap, Calculator, Home, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
 
 // Current Ofgem price cap rates (as of 2025)
 const energyRates = {
   electricity: {
-    standingCharge: 60.10, // pence per day
-    unitRate: 24.50 // pence per kWh
+    standingCharge: 60.1, // pence per day
+    unitRate: 24.5, // pence per kWh
   },
   gas: {
-    standingCharge: 31.43, // pence per day  
-    unitRate: 6.24 // pence per kWh
-  }
+    standingCharge: 31.43, // pence per day
+    unitRate: 6.24, // pence per kWh
+  },
 };
 
 const propertyTypes = {
@@ -24,7 +30,7 @@ const propertyTypes = {
   terrace: { electricityUsage: 2900, gasUsage: 12000 },
   semi: { electricityUsage: 3300, gasUsage: 13500 },
   detached: { electricityUsage: 4200, gasUsage: 18000 },
-  bungalow: { electricityUsage: 3100, gasUsage: 13000 }
+  bungalow: { electricityUsage: 3100, gasUsage: 13000 },
 };
 
 export default function EnergyBillCalculator() {
@@ -44,9 +50,13 @@ export default function EnergyBillCalculator() {
       const baseUsage = propertyTypes[propertyType];
       const bedroomMultiplier = Number(bedrooms) * 0.15 + 0.7;
       const occupantMultiplier = Number(occupants) * 0.2 + 0.6;
-      
-      setElectricityUsage(Math.round(baseUsage.electricityUsage * bedroomMultiplier * occupantMultiplier).toString());
-      setGasUsage(Math.round(baseUsage.gasUsage * bedroomMultiplier * occupantMultiplier).toString());
+
+      setElectricityUsage(
+        Math.round(baseUsage.electricityUsage * bedroomMultiplier * occupantMultiplier).toString()
+      );
+      setGasUsage(
+        Math.round(baseUsage.gasUsage * bedroomMultiplier * occupantMultiplier).toString()
+      );
     }
   }, [propertyType, bedrooms, occupants, useCustomUsage]);
 
@@ -79,16 +89,16 @@ export default function EnergyBillCalculator() {
         usage: currentElectricityUsage,
         standingCharges: electricityStandingCharges,
         unitCosts: electricityUnitCosts,
-        totalCost: totalElectricityCost
+        totalCost: totalElectricityCost,
       },
       gas: {
         usage: currentGasUsage,
         standingCharges: gasStandingCharges,
         unitCosts: gasUnitCosts,
-        totalCost: totalGasCost
+        totalCost: totalGasCost,
       },
       totalAnnualCost,
-      monthlyAverageCost
+      monthlyAverageCost,
     };
 
     setResults(newResults);
@@ -96,12 +106,24 @@ export default function EnergyBillCalculator() {
 
     // Prepare CSV data
     const csvExportData = [
-      ["Energy Type", "Usage", "Standing Charges", "Unit Costs", "Total"],
-      ["Electricity", `${currentElectricityUsage} kWh`, `£${electricityStandingCharges.toFixed(2)}`, `£${electricityUnitCosts.toFixed(2)}`, `£${totalElectricityCost.toFixed(2)}`],
-      ["Gas", `${currentGasUsage} kWh`, `£${gasStandingCharges.toFixed(2)}`, `£${gasUnitCosts.toFixed(2)}`, `£${totalGasCost.toFixed(2)}`],
-      ["", "", "", "", ""],
-      ["Total Annual Cost", "", "", "", `£${totalAnnualCost.toFixed(2)}`],
-      ["Average Monthly Cost", "", "", "", `£${monthlyAverageCost.toFixed(2)}`],
+      ['Energy Type', 'Usage', 'Standing Charges', 'Unit Costs', 'Total'],
+      [
+        'Electricity',
+        `${currentElectricityUsage} kWh`,
+        `£${electricityStandingCharges.toFixed(2)}`,
+        `£${electricityUnitCosts.toFixed(2)}`,
+        `£${totalElectricityCost.toFixed(2)}`,
+      ],
+      [
+        'Gas',
+        `${currentGasUsage} kWh`,
+        `£${gasStandingCharges.toFixed(2)}`,
+        `£${gasUnitCosts.toFixed(2)}`,
+        `£${totalGasCost.toFixed(2)}`,
+      ],
+      ['', '', '', '', ''],
+      ['Total Annual Cost', '', '', '', `£${totalAnnualCost.toFixed(2)}`],
+      ['Average Monthly Cost', '', '', '', `£${monthlyAverageCost.toFixed(2)}`],
     ];
     setCsvData(csvExportData);
   };
@@ -121,7 +143,8 @@ export default function EnergyBillCalculator() {
               UK Energy Bill Calculator 2025
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Calculate your annual electricity and gas costs based on current Ofgem price cap rates. Get accurate estimates for your household energy bills.
+              Calculate your annual electricity and gas costs based on current Ofgem price cap
+              rates. Get accurate estimates for your household energy bills.
             </p>
           </div>
         </div>
@@ -223,9 +246,7 @@ export default function EnergyBillCalculator() {
                     placeholder="e.g. 3000"
                     disabled={!useCustomUsage && propertyType}
                   />
-                  <p className="text-xs text-gray-500">
-                    Average UK household: 2,700 kWh
-                  </p>
+                  <p className="text-xs text-gray-500">Average UK household: 2,700 kWh</p>
                 </div>
 
                 <div className="space-y-2">
@@ -238,9 +259,7 @@ export default function EnergyBillCalculator() {
                     placeholder="e.g. 12000"
                     disabled={!useCustomUsage && propertyType}
                   />
-                  <p className="text-xs text-gray-500">
-                    Average UK household: 11,500 kWh
-                  </p>
+                  <p className="text-xs text-gray-500">Average UK household: 11,500 kWh</p>
                 </div>
 
                 <Button onClick={handleCalculate} className="w-full text-lg">
@@ -279,8 +298,14 @@ export default function EnergyBillCalculator() {
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Your Energy Bill Breakdown</h2>
-                  <ExportActions csvData={csvData} fileName="energy-bill-calculation" title="Energy Bill Calculation" />
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                    Your Energy Bill Breakdown
+                  </h2>
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="energy-bill-calculation"
+                    title="Energy Bill Calculation"
+                  />
                 </div>
 
                 {/* Summary Cards */}
@@ -291,7 +316,10 @@ export default function EnergyBillCalculator() {
                         <div>
                           <p className="text-sm font-medium text-blue-800">Annual Energy Bill</p>
                           <p className="text-3xl font-bold text-blue-900">
-                            £{results.totalAnnualCost.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                            £
+                            {results.totalAnnualCost.toLocaleString('en-GB', {
+                              maximumFractionDigits: 0,
+                            })}
                           </p>
                         </div>
                         <Zap className="w-8 h-8 text-blue-600" />
@@ -305,7 +333,10 @@ export default function EnergyBillCalculator() {
                         <div>
                           <p className="text-sm font-medium text-green-800">Monthly Average</p>
                           <p className="text-3xl font-bold text-green-900">
-                            £{results.monthlyAverageCost.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                            £
+                            {results.monthlyAverageCost.toLocaleString('en-GB', {
+                              maximumFractionDigits: 0,
+                            })}
                           </p>
                         </div>
                         <TrendingUp className="w-8 h-8 text-green-600" />
@@ -327,7 +358,9 @@ export default function EnergyBillCalculator() {
                     <CardContent className="space-y-3">
                       <div className="flex justify-between">
                         <span>Annual Usage:</span>
-                        <span className="font-semibold">{results.electricity.usage.toLocaleString()} kWh</span>
+                        <span className="font-semibold">
+                          {results.electricity.usage.toLocaleString()} kWh
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Standing Charges:</span>
@@ -358,7 +391,9 @@ export default function EnergyBillCalculator() {
                     <CardContent className="space-y-3">
                       <div className="flex justify-between">
                         <span>Annual Usage:</span>
-                        <span className="font-semibold">{results.gas.usage.toLocaleString()} kWh</span>
+                        <span className="font-semibold">
+                          {results.gas.usage.toLocaleString()} kWh
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Standing Charges:</span>
@@ -382,7 +417,9 @@ export default function EnergyBillCalculator() {
                 {/* Energy Saving Tips */}
                 <Card className="bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700">
                   <CardHeader>
-                    <CardTitle className="text-green-900 dark:text-green-400">Energy Saving Tips</CardTitle>
+                    <CardTitle className="text-green-900 dark:text-green-400">
+                      Energy Saving Tips
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="text-sm text-green-800 dark:text-green-300">
                     <div className="grid md:grid-cols-2 gap-4">

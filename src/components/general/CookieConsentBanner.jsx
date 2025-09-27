@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,7 +12,7 @@ export default function CookieConsentBanner() {
     essential: true, // Always required
     analytics: false,
     marketing: false,
-    preferences: false
+    preferences: false,
   });
   // NEW: show a persistent "Cookie Settings" button for returning users
   const [showFloatingManage, setShowFloatingManage] = useState(false);
@@ -21,7 +20,8 @@ export default function CookieConsentBanner() {
   useEffect(() => {
     // Support query param to reset consent for testing or when user wants to resurface the banner
     const url = new URL(window.location.href);
-    const resetParam = url.searchParams.get('consent') === 'reset' || url.searchParams.get('cookie_reset') === '1';
+    const resetParam =
+      url.searchParams.get('consent') === 'reset' || url.searchParams.get('cookie_reset') === '1';
     if (resetParam) {
       localStorage.removeItem('cookieConsent');
       localStorage.removeItem('cookiePreferences');
@@ -44,10 +44,10 @@ export default function CookieConsentBanner() {
       // Also restore saved preferences (if present)
       try {
         const saved = JSON.parse(localStorage.getItem('cookiePreferences') || '{}');
-        setCookiePreferences(prev => ({ ...prev, ...saved, essential: true }));
+        setCookiePreferences((prev) => ({ ...prev, ...saved, essential: true }));
       } catch (error) {
         // ignore parse errors, default preferences will be used
-        console.error("Error parsing cookie preferences from localStorage:", error);
+        console.error('Error parsing cookie preferences from localStorage:', error);
       }
     }
   }, []);
@@ -57,7 +57,7 @@ export default function CookieConsentBanner() {
       essential: true,
       analytics: true,
       marketing: true,
-      preferences: true
+      preferences: true,
     };
     localStorage.setItem('cookieConsent', 'accepted');
     localStorage.setItem('cookiePreferences', JSON.stringify(allAccepted));
@@ -72,7 +72,7 @@ export default function CookieConsentBanner() {
       essential: true,
       analytics: false,
       marketing: false,
-      preferences: false
+      preferences: false,
     };
     localStorage.setItem('cookieConsent', 'declined');
     localStorage.setItem('cookiePreferences', JSON.stringify(essentialOnly));
@@ -91,9 +91,9 @@ export default function CookieConsentBanner() {
   };
 
   const updatePreference = (type, value) => {
-    setCookiePreferences(prev => ({
+    setCookiePreferences((prev) => ({
       ...prev,
-      [type]: value
+      [type]: value,
     }));
   };
 
@@ -123,11 +123,15 @@ export default function CookieConsentBanner() {
                     We Use Cookies
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-                    We use cookies to enhance your experience, analyze site usage, and assist with our marketing efforts. 
-                    Your data is processed in your browser - we don't store any of your financial calculations on our servers.
+                    We use cookies to enhance your experience, analyze site usage, and assist with
+                    our marketing efforts. Your data is processed in your browser - we don't store
+                    any of your financial calculations on our servers.
                     <br />
                     {/* Fixed: use SPA routing to the Cookie Policy page */}
-                    <Link to={createPageUrl("CookiePolicy")} className="text-blue-600 dark:text-blue-400 hover:underline">
+                    <Link
+                      to={createPageUrl('CookiePolicy')}
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                    >
                       Learn more about our cookies
                     </Link>
                   </p>
@@ -144,8 +148,8 @@ export default function CookieConsentBanner() {
                     </Button>
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="icon"
                   onClick={handleDeclineAll}
                   className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
@@ -162,18 +166,22 @@ export default function CookieConsentBanner() {
       <Dialog open={showManageDialog} onOpenChange={setShowManageDialog}>
         <DialogContent className="max-w-2xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-gray-100">Manage Cookie Preferences</DialogTitle>
+            <DialogTitle className="text-gray-900 dark:text-gray-100">
+              Manage Cookie Preferences
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
             <p className="text-gray-600 dark:text-gray-300 text-sm">
               Choose which cookies you'd like to accept. You can change these settings at any time.
             </p>
-            
+
             <div className="space-y-4">
               {/* Essential Cookies */}
               <div className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100">Essential Cookies</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    Essential Cookies
+                  </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Required for basic site functionality. These cannot be disabled.
                   </p>
@@ -188,17 +196,19 @@ export default function CookieConsentBanner() {
               {/* Analytics Cookies */}
               <div className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100">Analytics Cookies</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    Analytics Cookies
+                  </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Help us understand how visitors use our site to improve user experience.
                   </p>
                 </div>
                 <div className="ml-4">
-                  <button 
+                  <button
                     onClick={() => updatePreference('analytics', !cookiePreferences.analytics)}
                     className={`w-12 h-6 rounded-full flex items-center transition-colors ${
-                      cookiePreferences.analytics 
-                        ? 'bg-blue-500 justify-end' 
+                      cookiePreferences.analytics
+                        ? 'bg-blue-500 justify-end'
                         : 'bg-gray-300 dark:bg-gray-600 justify-start'
                     }`}
                   >
@@ -210,17 +220,19 @@ export default function CookieConsentBanner() {
               {/* Marketing Cookies */}
               <div className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100">Marketing Cookies</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    Marketing Cookies
+                  </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Used to track visitors for advertising and marketing purposes.
                   </p>
                 </div>
                 <div className="ml-4">
-                  <button 
+                  <button
                     onClick={() => updatePreference('marketing', !cookiePreferences.marketing)}
                     className={`w-12 h-6 rounded-full flex items-center transition-colors ${
-                      cookiePreferences.marketing 
-                        ? 'bg-blue-500 justify-end' 
+                      cookiePreferences.marketing
+                        ? 'bg-blue-500 justify-end'
                         : 'bg-gray-300 dark:bg-gray-600 justify-start'
                     }`}
                   >
@@ -232,17 +244,19 @@ export default function CookieConsentBanner() {
               {/* Preference Cookies */}
               <div className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100">Preference Cookies</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    Preference Cookies
+                  </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Remember your settings and preferences (like dark mode).
                   </p>
                 </div>
                 <div className="ml-4">
-                  <button 
+                  <button
                     onClick={() => updatePreference('preferences', !cookiePreferences.preferences)}
                     className={`w-12 h-6 rounded-full flex items-center transition-colors ${
-                      cookiePreferences.preferences 
-                        ? 'bg-blue-500 justify-end' 
+                      cookiePreferences.preferences
+                        ? 'bg-blue-500 justify-end'
                         : 'bg-gray-300 dark:bg-gray-600 justify-start'
                     }`}
                   >

@@ -1,29 +1,33 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { PoundSterling, Calculator, TrendingUp, Percent, Calendar } from "lucide-react";
-import FAQSection from "../components/calculators/FAQSection";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { PoundSterling, Calculator, TrendingUp, Percent, Calendar } from 'lucide-react';
+import FAQSection from '../components/calculators/FAQSection';
 
 const simpleInterestFAQs = [
   {
-    question: "What is simple interest?",
-    answer: "Simple interest is a quick method of calculating the interest charge on a loan or principal amount. It is determined by multiplying the daily interest rate by the principal by the number of days that elapse between payments."
+    question: 'What is simple interest?',
+    answer:
+      'Simple interest is a quick method of calculating the interest charge on a loan or principal amount. It is determined by multiplying the daily interest rate by the principal by the number of days that elapse between payments.',
   },
   {
     question: "What's the difference between simple and compound interest?",
-    answer: "Simple interest is calculated only on the initial principal amount. In contrast, compound interest is calculated on the principal amount and also on the accumulated interest of previous periods. This 'interest on interest' effect makes compound interest grow much faster over time."
+    answer:
+      "Simple interest is calculated only on the initial principal amount. In contrast, compound interest is calculated on the principal amount and also on the accumulated interest of previous periods. This 'interest on interest' effect makes compound interest grow much faster over time.",
   },
   {
-    question: "When is simple interest typically used?",
-    answer: "Simple interest is often used for short-term loans, such as car loans or certain personal loans. Most savings accounts and long-term investments use compound interest because it is much more powerful for wealth growth."
+    question: 'When is simple interest typically used?',
+    answer:
+      'Simple interest is often used for short-term loans, such as car loans or certain personal loans. Most savings accounts and long-term investments use compound interest because it is much more powerful for wealth growth.',
   },
   {
-    question: "A Note on Calculations",
-    answer: "This calculator applies the standard `I = P * R * T` formula. It's a useful tool for understanding the basic concept of interest but may not reflect the complex terms of a real-world financial product. Always check the terms and conditions provided by your financial institution."
-  }
+    question: 'A Note on Calculations',
+    answer:
+      "This calculator applies the standard `I = P * R * T` formula. It's a useful tool for understanding the basic concept of interest but may not reflect the complex terms of a real-world financial product. Always check the terms and conditions provided by your financial institution.",
+  },
 ];
 
 export default function SimpleInterestCalculator() {
@@ -74,52 +78,104 @@ export default function SimpleInterestCalculator() {
         <div className="grid lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2 non-printable">
             <Card className="sticky top-24">
-              <CardHeader><CardTitle>Calculation Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Calculation Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div>
                   <Label htmlFor="principal">Principal Amount (£)</Label>
                   <div className="relative mt-1">
                     <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="principal" type="number" value={principal} onChange={e => setPrincipal(e.target.value)} className="pl-10" />
+                    <Input
+                      id="principal"
+                      type="number"
+                      value={principal}
+                      onChange={(e) => setPrincipal(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
                 </div>
                 <div>
                   <Label htmlFor="rate">Annual Interest Rate (%)</Label>
-                   <div className="flex items-center gap-4 mt-1">
-                    <Slider id="rate" value={[parseFloat(rate)]} onValueChange={([val]) => setRate(val.toString())} max={25} step={0.1} className="flex-1" />
-                    <Input type="number" value={rate} onChange={e => setRate(e.target.value)} className="w-24 text-center" />
+                  <div className="flex items-center gap-4 mt-1">
+                    <Slider
+                      id="rate"
+                      value={[parseFloat(rate)]}
+                      onValueChange={([val]) => setRate(val.toString())}
+                      max={25}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={rate}
+                      onChange={(e) => setRate(e.target.value)}
+                      className="w-24 text-center"
+                    />
                   </div>
                 </div>
-                 <div>
+                <div>
                   <Label htmlFor="term">Time Period (Years)</Label>
                   <div className="flex items-center gap-4 mt-1">
-                    <Slider id="term" value={[parseFloat(term)]} onValueChange={([val]) => setTerm(val.toString())} max={50} step={1} className="flex-1" />
-                    <Input type="number" value={term} onChange={e => setTerm(e.target.value)} className="w-24 text-center" />
+                    <Slider
+                      id="term"
+                      value={[parseFloat(term)]}
+                      onValueChange={([val]) => setTerm(val.toString())}
+                      max={50}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={term}
+                      onChange={(e) => setTerm(e.target.value)}
+                      className="w-24 text-center"
+                    />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="lg:col-span-3">
             {results ? (
               <div className="space-y-6">
                 <Card>
-                  <CardHeader><CardTitle>Simple Interest Results</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Simple Interest Results</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-4">
-                     <div className="grid md:grid-cols-2 gap-4 text-center">
-                       <Card className="p-6 bg-blue-50">
-                         <CardTitle className="text-sm font-medium text-blue-800">Total Interest Earned</CardTitle>
-                         <p className="text-3xl font-bold text-blue-900 mt-2">£{results.totalInterest.toLocaleString('en-GB', { maximumFractionDigits: 2 })}</p>
-                       </Card>
-                       <Card className="p-6 bg-green-50">
-                          <CardTitle className="text-sm font-medium text-green-800">Final Amount</CardTitle>
-                          <p className="text-3xl font-bold text-green-900 mt-2">£{results.finalAmount.toLocaleString('en-GB', { maximumFractionDigits: 2 })}</p>
-                       </Card>
-                     </div>
-                     <div className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">
-                        After {term} years, your initial principal of £{Number(principal).toLocaleString()} would earn £{results.totalInterest.toLocaleString('en-GB', { maximumFractionDigits: 2 })} in simple interest, resulting in a total amount of £{results.finalAmount.toLocaleString('en-GB', { maximumFractionDigits: 2 })}.
-                     </div>
+                    <div className="grid md:grid-cols-2 gap-4 text-center">
+                      <Card className="p-6 bg-blue-50">
+                        <CardTitle className="text-sm font-medium text-blue-800">
+                          Total Interest Earned
+                        </CardTitle>
+                        <p className="text-3xl font-bold text-blue-900 mt-2">
+                          £
+                          {results.totalInterest.toLocaleString('en-GB', {
+                            maximumFractionDigits: 2,
+                          })}
+                        </p>
+                      </Card>
+                      <Card className="p-6 bg-green-50">
+                        <CardTitle className="text-sm font-medium text-green-800">
+                          Final Amount
+                        </CardTitle>
+                        <p className="text-3xl font-bold text-green-900 mt-2">
+                          £
+                          {results.finalAmount.toLocaleString('en-GB', {
+                            maximumFractionDigits: 2,
+                          })}
+                        </p>
+                      </Card>
+                    </div>
+                    <div className="text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">
+                      After {term} years, your initial principal of £
+                      {Number(principal).toLocaleString()} would earn £
+                      {results.totalInterest.toLocaleString('en-GB', { maximumFractionDigits: 2 })}{' '}
+                      in simple interest, resulting in a total amount of £
+                      {results.finalAmount.toLocaleString('en-GB', { maximumFractionDigits: 2 })}.
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -130,9 +186,9 @@ export default function SimpleInterestCalculator() {
             )}
           </div>
         </div>
-        
+
         <div className="mt-12 non-printable">
-            <FAQSection faqs={simpleInterestFAQs} />
+          <FAQSection faqs={simpleInterestFAQs} />
         </div>
       </div>
     </div>

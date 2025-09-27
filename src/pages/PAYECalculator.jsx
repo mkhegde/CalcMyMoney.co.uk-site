@@ -1,52 +1,60 @@
-
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PoundSterling, Calculator, HelpCircle } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
-import FAQSection from "../components/calculators/FAQSection";
-import RelatedCalculators from "../components/calculators/RelatedCalculators"; // New import
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { PoundSterling, Calculator, HelpCircle } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
+import FAQSection from '../components/calculators/FAQSection';
+import RelatedCalculators from '../components/calculators/RelatedCalculators'; // New import
 
 const taxBrackets2025 = {
   england: [
-    { min: 0, max: 12570, rate: 0, name: "Personal Allowance" },
-    { min: 12571, max: 50270, rate: 0.20, name: "Basic Rate" },
-    { min: 50271, max: 125140, rate: 0.40, name: "Higher Rate" },
-    { min: 125141, max: Infinity, rate: 0.45, name: "Additional Rate" }
+    { min: 0, max: 12570, rate: 0, name: 'Personal Allowance' },
+    { min: 12571, max: 50270, rate: 0.2, name: 'Basic Rate' },
+    { min: 50271, max: 125140, rate: 0.4, name: 'Higher Rate' },
+    { min: 125141, max: Infinity, rate: 0.45, name: 'Additional Rate' },
   ],
   scotland: [
-    { min: 0, max: 12570, rate: 0, name: "Personal Allowance" },
-    { min: 12571, max: 14876, rate: 0.19, name: "Starter Rate" },
-    { min: 14877, max: 26561, rate: 0.20, name: "Basic Rate" },
-    { min: 26562, max: 43662, rate: 0.21, name: "Intermediate Rate" },
-    { min: 43663, max: 75000, rate: 0.42, name: "Higher Rate" },
-    { min: 75001, max: 125140, rate: 0.45, name: "Advanced Rate" },
-    { min: 125141, max: Infinity, rate: 0.48, name: "Top Rate" }
-  ]
+    { min: 0, max: 12570, rate: 0, name: 'Personal Allowance' },
+    { min: 12571, max: 14876, rate: 0.19, name: 'Starter Rate' },
+    { min: 14877, max: 26561, rate: 0.2, name: 'Basic Rate' },
+    { min: 26562, max: 43662, rate: 0.21, name: 'Intermediate Rate' },
+    { min: 43663, max: 75000, rate: 0.42, name: 'Higher Rate' },
+    { min: 75001, max: 125140, rate: 0.45, name: 'Advanced Rate' },
+    { min: 125141, max: Infinity, rate: 0.48, name: 'Top Rate' },
+  ],
 };
 
 const niThresholds = [
   { min: 0, max: 12570, rate: 0 },
   { min: 12571, max: 50270, rate: 0.08 },
-  { min: 50271, max: Infinity, rate: 0.02 }
+  { min: 50271, max: Infinity, rate: 0.02 },
 ];
 
 const payeCalculatorFAQs = [
   {
-    question: "What is PAYE?",
-    answer: "PAYE (Pay As You Earn) is the UK's system for collecting income tax and National Insurance contributions directly from your salary before you receive it. Your employer calculates and deducts these amounts each pay period."
+    question: 'What is PAYE?',
+    answer:
+      "PAYE (Pay As You Earn) is the UK's system for collecting income tax and National Insurance contributions directly from your salary before you receive it. Your employer calculates and deducts these amounts each pay period.",
   },
   {
-    question: "How is PAYE calculated?",
-    answer: "PAYE calculations use your tax code, salary, and pay frequency. Tax is calculated cumulatively from April to March, meaning each pay period accounts for the full tax year to date."
+    question: 'How is PAYE calculated?',
+    answer:
+      'PAYE calculations use your tax code, salary, and pay frequency. Tax is calculated cumulatively from April to March, meaning each pay period accounts for the full tax year to date.',
   },
   {
     question: "What's the difference between Scottish and English PAYE rates?",
-    answer: "Scotland has different income tax rates and bands from the rest of the UK, but National Insurance rates remain the same across all UK regions."
-  }
+    answer:
+      'Scotland has different income tax rates and bands from the rest of the UK, but National Insurance rates remain the same across all UK regions.',
+  },
 ];
 
 export default function PAYECalculator() {
@@ -93,7 +101,7 @@ export default function PAYECalculator() {
 
     for (const bracket of taxBrackets) {
       if (bracket.rate === 0) continue;
-      
+
       const bracketMinAdjusted = Math.max(0, bracket.min - personalAllowance); // Ensure min is not negative if personalAllowance is higher
       const bracketMaxAdjusted = Math.max(0, bracket.max - personalAllowance); // Ensure max is not negative
 
@@ -106,7 +114,7 @@ export default function PAYECalculator() {
             name: bracket.name,
             rate: bracket.rate * 100,
             taxableAmount: taxableInBracket,
-            amount: taxInBracket
+            amount: taxInBracket,
           });
         }
       }
@@ -122,11 +130,12 @@ export default function PAYECalculator() {
         if (niableAmount > 0) {
           const niAmount = niableAmount * threshold.rate;
           annualNI += niAmount;
-          if (niAmount > 0) { // Only add to breakdown if NI is actually charged in this band
+          if (niAmount > 0) {
+            // Only add to breakdown if NI is actually charged in this band
             niBreakdown.push({
               rate: threshold.rate * 100,
               niableAmount: niableAmount,
-              amount: niAmount
+              amount: niAmount,
             });
           }
         }
@@ -150,7 +159,7 @@ export default function PAYECalculator() {
         periods = 12;
         break;
     }
-    
+
     const grossPerPeriod = annualSalary / periods;
     const taxPerPeriod = annualTax / periods;
     const niPerPeriod = annualNI / periods;
@@ -168,18 +177,18 @@ export default function PAYECalculator() {
       netPerPeriod,
       taxBreakdown,
       niBreakdown,
-      personalAllowance
+      personalAllowance,
     };
 
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Item", "Annual", `Per ${payFrequency.charAt(0).toUpperCase() + payFrequency.slice(1)}`],
-      ["Gross Salary", `£${annualSalary.toFixed(2)}`, `£${grossPerPeriod.toFixed(2)}`],
-      ["Income Tax", `-£${annualTax.toFixed(2)}`, `-£${taxPerPeriod.toFixed(2)}`],
-      ["National Insurance", `-£${annualNI.toFixed(2)}`, `-£${niPerPeriod.toFixed(2)}`],
-      ["Net Take-Home", `£${netSalary.toFixed(2)}`, `£${netPerPeriod.toFixed(2)}`],
+      ['Item', 'Annual', `Per ${payFrequency.charAt(0).toUpperCase() + payFrequency.slice(1)}`],
+      ['Gross Salary', `£${annualSalary.toFixed(2)}`, `£${grossPerPeriod.toFixed(2)}`],
+      ['Income Tax', `-£${annualTax.toFixed(2)}`, `-£${taxPerPeriod.toFixed(2)}`],
+      ['National Insurance', `-£${annualNI.toFixed(2)}`, `-£${niPerPeriod.toFixed(2)}`],
+      ['Net Take-Home', `£${netSalary.toFixed(2)}`, `£${netPerPeriod.toFixed(2)}`],
     ];
     setCsvData(csvExportData);
   };
@@ -198,7 +207,8 @@ export default function PAYECalculator() {
               UK PAYE Calculator 2025/26
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Calculate your exact take-home pay after income tax and National Insurance deductions using the latest UK rates.
+              Calculate your exact take-home pay after income tax and National Insurance deductions
+              using the latest UK rates.
             </p>
           </div>
         </div>
@@ -209,19 +219,30 @@ export default function PAYECalculator() {
         <div className="grid lg:grid-cols-5 gap-8 printable-grid-cols-1">
           <div className="lg:col-span-2 non-printable">
             <Card className="sticky top-24">
-              <CardHeader><CardTitle>Your Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Your Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="grossSalary">Annual Gross Salary</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="grossSalary" type="number" value={grossSalary} onChange={(e) => setGrossSalary(e.target.value)} className="pl-10" placeholder="e.g. 45000" />
+                    <Input
+                      id="grossSalary"
+                      type="number"
+                      value={grossSalary}
+                      onChange={(e) => setGrossSalary(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 45000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Location</Label>
                   <Select value={location} onValueChange={setLocation}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="england">England, Wales & NI</SelectItem>
                       <SelectItem value="scotland">Scotland</SelectItem>
@@ -230,13 +251,20 @@ export default function PAYECalculator() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="taxCode">Tax Code</Label>
-                  <Input id="taxCode" value={taxCode} onChange={(e) => setTaxCode(e.target.value)} placeholder="e.g. 1257L" />
+                  <Input
+                    id="taxCode"
+                    value={taxCode}
+                    onChange={(e) => setTaxCode(e.target.value)}
+                    placeholder="e.g. 1257L"
+                  />
                   <p className="text-xs text-gray-500">Found on your payslip or P60</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Pay Frequency</Label>
                   <Select value={payFrequency} onValueChange={setPayFrequency}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="weekly">Weekly</SelectItem>
                       <SelectItem value="monthly">Monthly</SelectItem>
@@ -257,44 +285,77 @@ export default function PAYECalculator() {
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Your PAYE Breakdown</h2>
-                  <ExportActions csvData={csvData} fileName="paye-calculation" title="PAYE Calculation" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="paye-calculation"
+                    title="PAYE Calculation"
+                  />
                 </div>
                 <Card className="bg-green-50 border-green-200">
                   <CardContent className="p-6">
-                    <h3 className="font-semibold text-green-800 mb-2">Take-Home Pay ({payFrequency})</h3>
+                    <h3 className="font-semibold text-green-800 mb-2">
+                      Take-Home Pay ({payFrequency})
+                    </h3>
                     <div className="text-4xl font-bold text-green-900">
-                      £{results.netPerPeriod.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      £
+                      {results.netPerPeriod.toLocaleString('en-GB', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </div>
-                    <p className="text-sm text-green-700">Annual: £{results.netSalary.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
+                    <p className="text-sm text-green-700">
+                      Annual: £
+                      {results.netSalary.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                    </p>
                   </CardContent>
                 </Card>
                 <div className="grid md:grid-cols-2 gap-4">
                   <Card>
-                    <CardHeader><CardTitle>Income Tax</CardTitle></CardHeader>
+                    <CardHeader>
+                      <CardTitle>Income Tax</CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="text-center p-4 bg-red-50 rounded-lg">
                         <p className="text-sm text-red-600">Annual Tax</p>
-                        <p className="text-xl font-bold text-red-800">£{results.taxAmount.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
-                        <p className="text-xs text-red-500">{payFrequency}: £{results.taxPerPeriod.toFixed(2)}</p>
+                        <p className="text-xl font-bold text-red-800">
+                          £{results.taxAmount.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                        </p>
+                        <p className="text-xs text-red-500">
+                          {payFrequency}: £{results.taxPerPeriod.toFixed(2)}
+                        </p>
                       </div>
                       {results.taxBreakdown.map((bracket, index) => (
-                        <div key={index} className="flex justify-between text-sm p-2 border-l-2 border-red-300">
-                          <span>{bracket.name} ({bracket.rate}%)</span>
+                        <div
+                          key={index}
+                          className="flex justify-between text-sm p-2 border-l-2 border-red-300"
+                        >
+                          <span>
+                            {bracket.name} ({bracket.rate}%)
+                          </span>
                           <span>£{bracket.amount.toFixed(0)}</span>
                         </div>
                       ))}
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardHeader><CardTitle>National Insurance</CardTitle></CardHeader>
+                    <CardHeader>
+                      <CardTitle>National Insurance</CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="text-center p-4 bg-blue-50 rounded-lg">
                         <p className="text-sm text-blue-600">Annual NI</p>
-                        <p className="text-xl font-bold text-blue-800">£{results.niAmount.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
-                        <p className="text-xs text-blue-500">{payFrequency}: £{results.niPerPeriod.toFixed(2)}</p>
+                        <p className="text-xl font-bold text-blue-800">
+                          £{results.niAmount.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                        </p>
+                        <p className="text-xs text-blue-500">
+                          {payFrequency}: £{results.niPerPeriod.toFixed(2)}
+                        </p>
                       </div>
                       {results.niBreakdown.map((ni, index) => (
-                        <div key={index} className="flex justify-between text-sm p-2 border-l-2 border-blue-300">
+                        <div
+                          key={index}
+                          className="flex justify-between text-sm p-2 border-l-2 border-blue-300"
+                        >
                           <span>Class 1 NI ({ni.rate}%)</span>
                           <span>£{ni.amount.toFixed(0)}</span>
                         </div>
@@ -324,9 +385,21 @@ export default function PAYECalculator() {
         {/* NEW: Related calculators to strengthen contextual internal links */}
         <RelatedCalculators
           calculators={[
-            { name: "Salary Calculator", url: createPageUrl("SalaryCalculatorUK"), description: "See full take-home pay including NI, pension and student loan." },
-            { name: "Income Tax Calculator", url: createPageUrl("IncomeTaxCalculator"), description: "Understand your tax by band for 2025/26." },
-            { name: "National Insurance Calculator", url: createPageUrl("NationalInsuranceCalculator"), description: "Calculate Class 1 NI contributions." }
+            {
+              name: 'Salary Calculator',
+              url: createPageUrl('SalaryCalculatorUK'),
+              description: 'See full take-home pay including NI, pension and student loan.',
+            },
+            {
+              name: 'Income Tax Calculator',
+              url: createPageUrl('IncomeTaxCalculator'),
+              description: 'Understand your tax by band for 2025/26.',
+            },
+            {
+              name: 'National Insurance Calculator',
+              url: createPageUrl('NationalInsuranceCalculator'),
+              description: 'Calculate Class 1 NI contributions.',
+            },
           ]}
         />
       </div>

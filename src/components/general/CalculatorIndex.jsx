@@ -1,7 +1,7 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { calculatorCategories } from "../data/calculatorConfig";
-import { createPageUrl } from "@/utils";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { calculatorCategories } from '../data/calculatorConfig';
+import { createPageUrl } from '@/utils';
 
 export default function CalculatorIndex() {
   return (
@@ -18,9 +18,7 @@ export default function CalculatorIndex() {
                   Open this index to quickly jump to any tool across the site.
                 </p>
               </div>
-              <span className="text-blue-600 text-sm font-medium">
-                Show/Hide
-              </span>
+              <span className="text-blue-600 text-sm font-medium">Show/Hide</span>
             </div>
           </summary>
 
@@ -28,13 +26,11 @@ export default function CalculatorIndex() {
             {calculatorCategories.map((category) => (
               <div key={category.slug}>
                 <div className="flex items-center gap-3 mb-3">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {category.name}
-                  </h3>
+                  <h3 className="text-xl font-bold text-gray-900">{category.name}</h3>
                   <span className="text-xs text-gray-500">
                     {/* anchor to homepage category for users who prefer the hub */}
                     <a
-                      href={`${createPageUrl("Home")}#${category.slug}`}
+                      href={`${createPageUrl('Home')}#${category.slug}`}
                       className="text-blue-600 hover:underline"
                     >
                       View on directory
@@ -44,12 +40,10 @@ export default function CalculatorIndex() {
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {category.subCategories.map((sub) => (
                     <div key={sub.name}>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                        {sub.name}
-                      </h4>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">{sub.name}</h4>
                       <ul className="space-y-1">
                         {sub.calculators
-                          .filter((c) => c.status === "active")
+                          .filter((c) => c.status === 'active')
                           .map((calc) => (
                             <li key={calc.name}>
                               <Link

@@ -1,28 +1,37 @@
-
-import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { PoundSterling, Calculator, Car, Percent, Calendar } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
-import FAQSection from "../components/calculators/FAQSection";
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { PoundSterling, Calculator, Car, Percent, Calendar } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
+import FAQSection from '../components/calculators/FAQSection';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 
 const carLoanFAQs = [
   {
-    question: "What is PCP vs HP?",
-    answer: "Hire Purchase (HP) means you pay off the car in monthly instalments and own it at the end. Personal Contract Purchase (PCP) has lower monthly payments, but at the end you can either pay a large 'balloon' payment to own the car, trade it in for a new one, or hand it back."
+    question: 'What is PCP vs HP?',
+    answer:
+      "Hire Purchase (HP) means you pay off the car in monthly instalments and own it at the end. Personal Contract Purchase (PCP) has lower monthly payments, but at the end you can either pay a large 'balloon' payment to own the car, trade it in for a new one, or hand it back.",
   },
   {
-    question: "How does my credit score affect my car loan?",
-    answer: "A better credit score generally gets you access to lower Annual Percentage Rates (APR), which means you'll pay less interest over the life of the loan. Lenders see you as a lower risk."
+    question: 'How does my credit score affect my car loan?',
+    answer:
+      "A better credit score generally gets you access to lower Annual Percentage Rates (APR), which means you'll pay less interest over the life of the loan. Lenders see you as a lower risk.",
   },
   {
-    question: "Should I pay a deposit on a car loan?",
-    answer: "Yes, paying a larger deposit is usually beneficial. It reduces the amount you need to borrow, which lowers your monthly payments and the total interest you'll pay. It can also improve your chances of being approved for the loan."
-  }
+    question: 'Should I pay a deposit on a car loan?',
+    answer:
+      "Yes, paying a larger deposit is usually beneficial. It reduces the amount you need to borrow, which lowers your monthly payments and the total interest you'll pay. It can also improve your chances of being approved for the loan.",
+  },
 ];
 
 const CHART_COLORS = {
@@ -63,32 +72,34 @@ export default function CarLoanCalculator() {
       totalInterest,
       loanAmount,
       vehiclePrice: price,
-      deposit: dep
+      deposit: dep,
     };
-    
+
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Metric", "Value"],
-      ["Vehicle Price", `£${price.toFixed(2)}`],
-      ["Deposit", `£${dep.toFixed(2)}`],
-      ["Loan Amount", `£${loanAmount.toFixed(2)}`],
-      ["Interest Rate (APR)", `${interestRate}%`],
-      ["Loan Term", `${term} months`],
-      ["Monthly Payment", `£${monthlyPayment.toFixed(2)}`],
-      ["Total Interest Paid", `£${totalInterest.toFixed(2)}`],
-      ["Total Amount Repaid", `£${totalRepayment.toFixed(2)}`],
+      ['Metric', 'Value'],
+      ['Vehicle Price', `£${price.toFixed(2)}`],
+      ['Deposit', `£${dep.toFixed(2)}`],
+      ['Loan Amount', `£${loanAmount.toFixed(2)}`],
+      ['Interest Rate (APR)', `${interestRate}%`],
+      ['Loan Term', `${term} months`],
+      ['Monthly Payment', `£${monthlyPayment.toFixed(2)}`],
+      ['Total Interest Paid', `£${totalInterest.toFixed(2)}`],
+      ['Total Amount Repaid', `£${totalRepayment.toFixed(2)}`],
     ];
     setCsvData(csvExportData);
   }, [vehiclePrice, deposit, interestRate, loanTerm]);
 
   // Removed useEffect for auto-calculation as per instructions
-  
-  const pieData = results ? [
-    { name: 'Principal', value: results.loanAmount, color: CHART_COLORS.principal },
-    { name: 'Interest', value: results.totalInterest, color: CHART_COLORS.interest }
-  ] : [];
+
+  const pieData = results
+    ? [
+        { name: 'Principal', value: results.loanAmount, color: CHART_COLORS.principal },
+        { name: 'Interest', value: results.totalInterest, color: CHART_COLORS.interest },
+      ]
+    : [];
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -109,34 +120,64 @@ export default function CarLoanCalculator() {
         <div className="grid lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2 non-printable">
             <Card className="sticky top-24">
-              <CardHeader><CardTitle>Finance Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Finance Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="vehiclePrice">Vehicle Price</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="vehiclePrice" type="number" value={vehiclePrice} onChange={(e) => setVehiclePrice(e.target.value)} className="pl-10" placeholder="e.g. 20000" />
+                    <Input
+                      id="vehiclePrice"
+                      type="number"
+                      value={vehiclePrice}
+                      onChange={(e) => setVehiclePrice(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 20000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="deposit">Deposit</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="deposit" type="number" value={deposit} onChange={(e) => setDeposit(e.target.value)} className="pl-10" placeholder="e.g. 2000" />
+                    <Input
+                      id="deposit"
+                      type="number"
+                      value={deposit}
+                      onChange={(e) => setDeposit(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 2000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="interestRate">Interest Rate (APR)</Label>
                   <div className="relative">
                     <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="interestRate" type="number" value={interestRate} onChange={(e) => setInterestRate(e.target.value)} className="pr-10" placeholder="e.g. 7.5" />
+                    <Input
+                      id="interestRate"
+                      type="number"
+                      value={interestRate}
+                      onChange={(e) => setInterestRate(e.target.value)}
+                      className="pr-10"
+                      placeholder="e.g. 7.5"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="loanTerm">Loan Term ({loanTerm} months)</Label>
-                  <Slider id="loanTerm" value={[loanTerm]} onValueChange={(val) => setLoanTerm(val[0])} min={12} max={84} step={1} />
+                  <Slider
+                    id="loanTerm"
+                    value={[loanTerm]}
+                    onValueChange={(val) => setLoanTerm(val[0])}
+                    min={12}
+                    max={84}
+                    step={1}
+                  />
                 </div>
-                 <Button onClick={handleCalculate} className="w-full text-lg">
+                <Button onClick={handleCalculate} className="w-full text-lg">
                   <Calculator className="w-5 h-5 mr-2" />
                   Calculate
                 </Button>
@@ -149,48 +190,100 @@ export default function CarLoanCalculator() {
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Your Car Loan Results</h2>
-                  <ExportActions csvData={csvData} fileName="car-loan-summary" title="Car Loan Summary" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="car-loan-summary"
+                    title="Car Loan Summary"
+                  />
                 </div>
                 <Card className="text-center bg-blue-50 border-blue-200">
-                  <CardHeader><CardTitle>Monthly Payment</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Monthly Payment</CardTitle>
+                  </CardHeader>
                   <CardContent>
-                    <p className="text-5xl font-bold text-blue-800">£{results.monthlyPayment.toFixed(2)}</p>
+                    <p className="text-5xl font-bold text-blue-800">
+                      £{results.monthlyPayment.toFixed(2)}
+                    </p>
                   </CardContent>
                 </Card>
-                
+
                 <div className="grid md:grid-cols-2 gap-6">
-                    <Card>
-                        <CardHeader><CardTitle>Loan Summary</CardTitle></CardHeader>
-                        <CardContent className="space-y-2">
-                            <div className="flex justify-between"><span>Vehicle Price:</span><span className="font-medium">£{results.vehiclePrice.toLocaleString()}</span></div>
-                            <div className="flex justify-between"><span>Deposit:</span><span className="font-medium">- £{results.deposit.toLocaleString()}</span></div>
-                            <div className="flex justify-between border-t pt-2"><span>Total Loan Amount:</span><span className="font-semibold">£{results.loanAmount.toLocaleString()}</span></div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader><CardTitle>Cost Breakdown</CardTitle></CardHeader>
-                        <CardContent className="space-y-2">
-                            <div className="flex justify-between"><span>Total Repayments:</span><span className="font-medium">£{results.totalRepayment.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></div>
-                            <div className="flex justify-between"><span>Total Interest:</span><span className="font-medium text-red-600">£{results.totalInterest.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></div>
-                        </CardContent>
-                    </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Loan Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Vehicle Price:</span>
+                        <span className="font-medium">
+                          £{results.vehiclePrice.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Deposit:</span>
+                        <span className="font-medium">- £{results.deposit.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span>Total Loan Amount:</span>
+                        <span className="font-semibold">
+                          £{results.loanAmount.toLocaleString()}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Cost Breakdown</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Total Repayments:</span>
+                        <span className="font-medium">
+                          £
+                          {results.totalRepayment.toLocaleString(undefined, {
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total Interest:</span>
+                        <span className="font-medium text-red-600">
+                          £
+                          {results.totalInterest.toLocaleString(undefined, {
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 <Card>
-                  <CardHeader><CardTitle>Total Cost Breakdown</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Total Cost Breakdown</CardTitle>
+                  </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
-                          <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                              {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                          </Pie>
-                          <RechartsTooltip />
-                          <Legend />
-                        </PieChart>
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          label
+                        >
+                          {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip />
+                        <Legend />
+                      </PieChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
-
               </>
             ) : (
               <Card className="flex items-center justify-center h-[400px] bg-gray-50">
@@ -203,9 +296,9 @@ export default function CarLoanCalculator() {
             )}
           </div>
         </div>
-        
+
         <div className="mt-12 non-printable">
-            <FAQSection faqs={carLoanFAQs} />
+          <FAQSection faqs={carLoanFAQs} />
         </div>
       </div>
     </div>

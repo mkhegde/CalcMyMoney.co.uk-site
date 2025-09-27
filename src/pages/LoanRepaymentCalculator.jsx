@@ -1,25 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Calculator, Calendar, Percent } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
-import FAQSection from "../components/calculators/FAQSection";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { PoundSterling, Calculator, Calendar, Percent } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
+import FAQSection from '../components/calculators/FAQSection';
 
 const loanFAQs = [
   {
-    question: "How is loan interest calculated?",
-    answer: "Most personal loans use a method where interest is calculated on the remaining balance. Each monthly payment consists of two parts: one part pays down the principal (the amount you borrowed), and the other part pays the interest accrued for that month."
+    question: 'How is loan interest calculated?',
+    answer:
+      'Most personal loans use a method where interest is calculated on the remaining balance. Each monthly payment consists of two parts: one part pays down the principal (the amount you borrowed), and the other part pays the interest accrued for that month.',
   },
   {
-    question: "What is APR (Annual Percentage Rate)?",
-    answer: "APR represents the total yearly cost of borrowing, including the interest rate and any mandatory fees. It provides a more complete picture of the loan's cost than the interest rate alone."
+    question: 'What is APR (Annual Percentage Rate)?',
+    answer:
+      "APR represents the total yearly cost of borrowing, including the interest rate and any mandatory fees. It provides a more complete picture of the loan's cost than the interest rate alone.",
   },
   {
-    question: "Can I pay off my loan early?",
-    answer: "Yes, you can usually pay off a personal loan early, which can save you a significant amount in interest. However, some lenders may charge an early repayment fee, typically equivalent to 1-2 months' interest, so it's important to check your loan agreement."
-  }
+    question: 'Can I pay off my loan early?',
+    answer:
+      "Yes, you can usually pay off a personal loan early, which can save you a significant amount in interest. However, some lenders may charge an early repayment fee, typically equivalent to 1-2 months' interest, so it's important to check your loan agreement.",
+  },
 ];
 
 export default function LoanRepaymentCalculator() {
@@ -41,7 +44,7 @@ export default function LoanRepaymentCalculator() {
       return;
     }
 
-    const monthlyPayment = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    const monthlyPayment = (P * (r * Math.pow(1 + r, n))) / (Math.pow(1 + r, n) - 1);
     const totalRepayment = monthlyPayment * n;
     const totalInterest = totalRepayment - P;
 
@@ -49,18 +52,18 @@ export default function LoanRepaymentCalculator() {
       monthlyPayment,
       totalRepayment,
       totalInterest,
-      loanAmount: P
+      loanAmount: P,
     };
-    
+
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Metric", "Value"],
-      ["Monthly Payment", `£${newResults.monthlyPayment.toFixed(2)}`],
-      ["Total Repayments", `£${newResults.totalRepayment.toFixed(2)}`],
-      ["Total Interest Paid", `£${newResults.totalInterest.toFixed(2)}`],
-      ["Loan Amount", `£${newResults.loanAmount.toFixed(2)}`],
+      ['Metric', 'Value'],
+      ['Monthly Payment', `£${newResults.monthlyPayment.toFixed(2)}`],
+      ['Total Repayments', `£${newResults.totalRepayment.toFixed(2)}`],
+      ['Total Interest Paid', `£${newResults.totalInterest.toFixed(2)}`],
+      ['Loan Amount', `£${newResults.loanAmount.toFixed(2)}`],
     ];
     setCsvData(csvExportData);
   };
@@ -90,27 +93,50 @@ export default function LoanRepaymentCalculator() {
         <div className="grid lg:grid-cols-5 gap-8 printable-grid-cols-1">
           <div className="lg:col-span-2 non-printable">
             <Card className="sticky top-24">
-              <CardHeader><CardTitle>Loan Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Loan Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="loanAmount">Loan Amount</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="loanAmount" type="number" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} className="pl-10" placeholder="e.g. 10000" />
+                    <Input
+                      id="loanAmount"
+                      type="number"
+                      value={loanAmount}
+                      onChange={(e) => setLoanAmount(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 10000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="interestRate">Annual Interest Rate (APR %)</Label>
                   <div className="relative">
                     <Percent className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="interestRate" type="number" value={interestRate} onChange={(e) => setInterestRate(e.target.value)} className="pl-10" placeholder="e.g. 7.5" />
+                    <Input
+                      id="interestRate"
+                      type="number"
+                      value={interestRate}
+                      onChange={(e) => setInterestRate(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 7.5"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="loanTerm">Loan Term (Years)</Label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="loanTerm" type="number" value={loanTerm} onChange={(e) => setLoanTerm(e.target.value)} className="pl-10" placeholder="e.g. 5" />
+                    <Input
+                      id="loanTerm"
+                      type="number"
+                      value={loanTerm}
+                      onChange={(e) => setLoanTerm(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 5"
+                    />
                   </div>
                 </div>
                 <Button onClick={handleCalculate} className="w-full text-lg">
@@ -126,26 +152,48 @@ export default function LoanRepaymentCalculator() {
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Your Loan Repayments</h2>
-                  <ExportActions csvData={csvData} fileName="loan-repayment" title="Loan Repayment" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="loan-repayment"
+                    title="Loan Repayment"
+                  />
                 </div>
                 <Card className="bg-blue-50 border-blue-200">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-blue-800 mb-2">Monthly Payment</h3>
                     <div className="text-4xl font-bold text-blue-900">
-                      £{results.monthlyPayment.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      £
+                      {results.monthlyPayment.toLocaleString('en-GB', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </div>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle>Loan Summary</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Loan Summary</CardTitle>
+                  </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-600">Total Repayments</p>
-                      <p className="text-lg font-semibold">£{results.totalRepayment.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <p className="text-lg font-semibold">
+                        £
+                        {results.totalRepayment.toLocaleString('en-GB', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
                     </div>
                     <div className="p-4 bg-red-50 rounded-lg">
                       <p className="text-sm text-gray-600">Total Interest Paid</p>
-                      <p className="text-lg font-semibold text-red-800">£{results.totalInterest.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      <p className="text-lg font-semibold text-red-800">
+                        £
+                        {results.totalInterest.toLocaleString('en-GB', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>

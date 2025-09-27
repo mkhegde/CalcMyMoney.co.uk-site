@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Calculator, ArrowRightLeft, Calendar, Clock } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { PoundSterling, Calculator, ArrowRightLeft, Calendar, Clock } from 'lucide-react';
 
 export default function HourlyToAnnualSalaryCalculator() {
   const [hourlyRate, setHourlyRate] = useState('');
@@ -14,7 +14,7 @@ export default function HourlyToAnnualSalaryCalculator() {
   const handleCalculate = () => {
     const rate = Number(hourlyRate) || 0;
     const hours = Number(hoursPerWeek) || 0;
-    
+
     if (rate <= 0 || hours <= 0) {
       setResults(null);
       setHasCalculated(true);
@@ -43,7 +43,8 @@ export default function HourlyToAnnualSalaryCalculator() {
               Hourly to Annual Salary Converter
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Quickly convert your hourly wage into weekly, monthly, and annual gross salary figures.
+              Quickly convert your hourly wage into weekly, monthly, and annual gross salary
+              figures.
             </p>
           </div>
         </div>
@@ -53,20 +54,35 @@ export default function HourlyToAnnualSalaryCalculator() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="non-printable">
             <Card>
-              <CardHeader><CardTitle>Your Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Your Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="hourlyRate">Your Hourly Rate</Label>
-                   <div className="relative">
+                  <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="hourlyRate" type="number" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} className="pl-10" placeholder="e.g. 15.50" />
+                    <Input
+                      id="hourlyRate"
+                      type="number"
+                      value={hourlyRate}
+                      onChange={(e) => setHourlyRate(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 15.50"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="hoursPerWeek">Hours Worked Per Week</Label>
                   <div className="relative">
                     <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="hoursPerWeek" type="number" value={hoursPerWeek} onChange={(e) => setHoursPerWeek(e.target.value)} className="pl-10" />
+                    <Input
+                      id="hoursPerWeek"
+                      type="number"
+                      value={hoursPerWeek}
+                      onChange={(e) => setHoursPerWeek(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
                 </div>
                 <Button onClick={handleCalculate} className="w-full text-lg">
@@ -80,30 +96,30 @@ export default function HourlyToAnnualSalaryCalculator() {
           <div className="space-y-6 printable-area">
             {hasCalculated && results ? (
               <Card className="bg-blue-50 border-blue-200">
-                  <CardHeader>
-                    <CardTitle className="text-blue-800">Your Salary Conversion</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="text-center p-4 bg-white rounded-lg">
-                      <p className="text-sm text-gray-500">Weekly Salary</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        £{results.weekly.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <div className="text-center p-4 bg-white rounded-lg">
-                      <p className="text-sm text-gray-500">Monthly Salary (approx.)</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        £{results.monthly.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <div className="text-center p-6 bg-blue-100 rounded-lg">
-                      <p className="text-lg font-medium text-blue-800">Annual Gross Salary</p>
-                      <p className="text-4xl font-extrabold text-blue-900">
-                        £{results.annual.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <CardHeader>
+                  <CardTitle className="text-blue-800">Your Salary Conversion</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="text-center p-4 bg-white rounded-lg">
+                    <p className="text-sm text-gray-500">Weekly Salary</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      £{results.weekly.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="text-center p-4 bg-white rounded-lg">
+                    <p className="text-sm text-gray-500">Monthly Salary (approx.)</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      £{results.monthly.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="text-center p-6 bg-blue-100 rounded-lg">
+                    <p className="text-lg font-medium text-blue-800">Annual Gross Salary</p>
+                    <p className="text-4xl font-extrabold text-blue-900">
+                      £{results.annual.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             ) : (
               <Card className="flex items-center justify-center h-full min-h-[300px]">
                 <div className="text-center text-gray-500">

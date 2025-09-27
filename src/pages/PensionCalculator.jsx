@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Calculator, Shield, TrendingUp } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { PoundSterling, Calculator, Shield, TrendingUp } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
 
 export default function PensionCalculator() {
   const [currentAge, setCurrentAge] = useState('');
@@ -42,14 +42,15 @@ export default function PensionCalculator() {
     // Future value of monthly contributions
     let futureValueContributions = 0;
     if (monthlyGrowthRate > 0) {
-      futureValueContributions = totalMonthlyContribution * 
+      futureValueContributions =
+        totalMonthlyContribution *
         ((Math.pow(1 + monthlyGrowthRate, monthsToRetirement) - 1) / monthlyGrowthRate);
     } else {
       futureValueContributions = totalMonthlyContribution * monthsToRetirement;
     }
 
     const totalPensionPot = futureValueCurrent + futureValueContributions;
-    const totalContributions = current + (totalMonthlyContribution * monthsToRetirement);
+    const totalContributions = current + totalMonthlyContribution * monthsToRetirement;
     const totalGrowth = totalPensionPot - totalContributions;
 
     // Rough annual income estimate (4% rule)
@@ -61,20 +62,20 @@ export default function PensionCalculator() {
       totalContributions,
       totalGrowth,
       estimatedAnnualIncome,
-      monthlyIncome: estimatedAnnualIncome / 12
+      monthlyIncome: estimatedAnnualIncome / 12,
     };
 
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Metric", "Value"],
-      ["Years to Retirement", yearsToRetirement.toString()],
-      ["Total Pension Pot", `£${totalPensionPot.toFixed(2)}`],
-      ["Total Contributions", `£${totalContributions.toFixed(2)}`],
-      ["Investment Growth", `£${totalGrowth.toFixed(2)}`],
-      ["Estimated Annual Income", `£${estimatedAnnualIncome.toFixed(2)}`],
-      ["Estimated Monthly Income", `£${(estimatedAnnualIncome / 12).toFixed(2)}`]
+      ['Metric', 'Value'],
+      ['Years to Retirement', yearsToRetirement.toString()],
+      ['Total Pension Pot', `£${totalPensionPot.toFixed(2)}`],
+      ['Total Contributions', `£${totalContributions.toFixed(2)}`],
+      ['Investment Growth', `£${totalGrowth.toFixed(2)}`],
+      ['Estimated Annual Income', `£${estimatedAnnualIncome.toFixed(2)}`],
+      ['Estimated Monthly Income', `£${(estimatedAnnualIncome / 12).toFixed(2)}`],
     ];
     setCsvData(csvExportData);
   };
@@ -82,7 +83,14 @@ export default function PensionCalculator() {
   useEffect(() => {
     setHasCalculated(false);
     setResults(null);
-  }, [currentAge, retirementAge, currentPension, monthlyContribution, employerContribution, annualGrowth]);
+  }, [
+    currentAge,
+    retirementAge,
+    currentPension,
+    monthlyContribution,
+    employerContribution,
+    annualGrowth,
+  ]);
 
   return (
     <div className="bg-white">
@@ -93,7 +101,8 @@ export default function PensionCalculator() {
               UK Pension Calculator
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              The best time to plant a tree was 20 years ago. The second best time is now. Start planning your retirement today.
+              The best time to plant a tree was 20 years ago. The second best time is now. Start
+              planning your retirement today.
             </p>
           </div>
         </div>
@@ -103,42 +112,84 @@ export default function PensionCalculator() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="non-printable">
             <Card>
-              <CardHeader><CardTitle>Your Pension Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Your Pension Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="currentAge">Current Age</Label>
-                    <Input id="currentAge" type="number" value={currentAge} onChange={e => setCurrentAge(e.target.value)} placeholder="e.g. 35" />
+                    <Input
+                      id="currentAge"
+                      type="number"
+                      value={currentAge}
+                      onChange={(e) => setCurrentAge(e.target.value)}
+                      placeholder="e.g. 35"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="retirementAge">Retirement Age</Label>
-                    <Input id="retirementAge" type="number" value={retirementAge} onChange={e => setRetirementAge(e.target.value)} placeholder="e.g. 65" />
+                    <Input
+                      id="retirementAge"
+                      type="number"
+                      value={retirementAge}
+                      onChange={(e) => setRetirementAge(e.target.value)}
+                      placeholder="e.g. 65"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="currentPension">Current Pension Pot</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="currentPension" type="number" value={currentPension} onChange={e => setCurrentPension(e.target.value)} className="pl-10" placeholder="e.g. 25000" />
+                    <Input
+                      id="currentPension"
+                      type="number"
+                      value={currentPension}
+                      onChange={(e) => setCurrentPension(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 25000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="monthlyContribution">Your Monthly Contribution</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="monthlyContribution" type="number" value={monthlyContribution} onChange={e => setMonthlyContribution(e.target.value)} className="pl-10" placeholder="e.g. 300" />
+                    <Input
+                      id="monthlyContribution"
+                      type="number"
+                      value={monthlyContribution}
+                      onChange={(e) => setMonthlyContribution(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 300"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="employerContribution">Employer Contribution (Monthly)</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="employerContribution" type="number" value={employerContribution} onChange={e => setEmployerContribution(e.target.value)} className="pl-10" placeholder="e.g. 200" />
+                    <Input
+                      id="employerContribution"
+                      type="number"
+                      value={employerContribution}
+                      onChange={(e) => setEmployerContribution(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 200"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="annualGrowth">Expected Annual Growth (%)</Label>
-                  <Input id="annualGrowth" type="number" value={annualGrowth} onChange={e => setAnnualGrowth(e.target.value)} step="0.1" placeholder="e.g. 5" />
+                  <Input
+                    id="annualGrowth"
+                    type="number"
+                    value={annualGrowth}
+                    onChange={(e) => setAnnualGrowth(e.target.value)}
+                    step="0.1"
+                    placeholder="e.g. 5"
+                  />
                 </div>
                 <Button onClick={handleCalculate} className="w-full text-lg">
                   <Calculator className="w-5 h-5 mr-2" />
@@ -147,49 +198,69 @@ export default function PensionCalculator() {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="space-y-6">
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Your Retirement Forecast</h2>
-                  <ExportActions csvData={csvData} fileName="pension-forecast" title="Pension Forecast" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="pension-forecast"
+                    title="Pension Forecast"
+                  />
                 </div>
                 <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                  <CardHeader><CardTitle className="text-blue-900">Projected Pension Pot</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle className="text-blue-900">Projected Pension Pot</CardTitle>
+                  </CardHeader>
                   <CardContent>
                     <div className="text-center p-4">
                       <Shield className="w-12 h-12 mx-auto text-blue-600 mb-4" />
                       <p className="text-4xl font-bold text-blue-800">
                         £{results.totalPensionPot.toLocaleString()}
                       </p>
-                      <p className="text-blue-700 mt-2">At retirement in {results.yearsToRetirement} years</p>
+                      <p className="text-blue-700 mt-2">
+                        At retirement in {results.yearsToRetirement} years
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle>Estimated Retirement Income</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Estimated Retirement Income</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="p-4 bg-green-50 rounded-lg">
                       <p className="text-sm text-green-800">Annual Income (4% rule)</p>
-                      <p className="text-3xl font-bold text-green-900">£{results.estimatedAnnualIncome.toLocaleString()}</p>
+                      <p className="text-3xl font-bold text-green-900">
+                        £{results.estimatedAnnualIncome.toLocaleString()}
+                      </p>
                     </div>
                     <div className="p-4 bg-purple-50 rounded-lg">
                       <p className="text-sm text-purple-800">Monthly Income</p>
-                      <p className="text-2xl font-bold text-purple-900">£{results.monthlyIncome.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-purple-900">
+                        £{results.monthlyIncome.toLocaleString()}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle>Contribution Breakdown</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Contribution Breakdown</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
                       <span>Total Contributions:</span>
-                      <span className="font-semibold">£{results.totalContributions.toLocaleString()}</span>
+                      <span className="font-semibold">
+                        £{results.totalContributions.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Investment Growth:</span>
-                      <span className="font-semibold text-green-600">£{results.totalGrowth.toLocaleString()}</span>
+                      <span className="font-semibold text-green-600">
+                        £{results.totalGrowth.toLocaleString()}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

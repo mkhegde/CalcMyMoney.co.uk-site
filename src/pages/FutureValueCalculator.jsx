@@ -1,24 +1,26 @@
-
-import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PoundSterling, Percent, Calendar, TrendingUp } from "lucide-react";
-import FAQSection from "../components/calculators/FAQSection";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PoundSterling, Percent, Calendar, TrendingUp } from 'lucide-react';
+import FAQSection from '../components/calculators/FAQSection';
 
 const fvFAQs = [
   {
-    question: "What is Future Value (FV)?",
-    answer: "Future Value is a financial formula used to determine the value of a current asset at a specified date in the future, based on an assumed rate of growth. It helps you understand the power of compounding over time."
+    question: 'What is Future Value (FV)?',
+    answer:
+      'Future Value is a financial formula used to determine the value of a current asset at a specified date in the future, based on an assumed rate of growth. It helps you understand the power of compounding over time.',
   },
   {
-    question: "How is this different from the Compound Interest Calculator?",
-    answer: "They are very similar! Both use the core principles of compounding. The Compound Interest Calculator is designed to show you the growth of regular savings over time. This Future Value calculator focuses on calculating the future worth of a single, one-time investment."
+    question: 'How is this different from the Compound Interest Calculator?',
+    answer:
+      'They are very similar! Both use the core principles of compounding. The Compound Interest Calculator is designed to show you the growth of regular savings over time. This Future Value calculator focuses on calculating the future worth of a single, one-time investment.',
   },
   {
-    question: "What can I use Future Value for?",
-    answer: "It's great for financial planning. For example, you can use it to estimate how much a single investment of £10,000 today might be worth when you retire, helping you make informed decisions about your investment strategy."
-  }
+    question: 'What can I use Future Value for?',
+    answer:
+      "It's great for financial planning. For example, you can use it to estimate how much a single investment of £10,000 today might be worth when you retire, helping you make informed decisions about your investment strategy.",
+  },
 ];
 
 export default function FutureValueCalculator() {
@@ -66,48 +68,84 @@ export default function FutureValueCalculator() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="non-printable">
             <Card>
-              <CardHeader><CardTitle>Investment Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Investment Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div>
                   <Label htmlFor="presentValue">Present Value (Current Investment) (£)</Label>
-                  <Input id="presentValue" type="number" value={presentValue} onChange={e => setPresentValue(e.target.value)} />
+                  <Input
+                    id="presentValue"
+                    type="number"
+                    value={presentValue}
+                    onChange={(e) => setPresentValue(e.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="interestRate">Annual Interest Rate (%)</Label>
-                  <Input id="interestRate" type="number" value={interestRate} onChange={e => setInterestRate(e.target.value)} />
+                  <Input
+                    id="interestRate"
+                    type="number"
+                    value={interestRate}
+                    onChange={(e) => setInterestRate(e.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="years">Number of Years</Label>
-                  <Input id="years" type="number" value={years} onChange={e => setYears(e.target.value)} />
+                  <Input
+                    id="years"
+                    type="number"
+                    value={years}
+                    onChange={(e) => setYears(e.target.value)}
+                  />
                 </div>
               </CardContent>
             </Card>
           </div>
-          
+
           <div>
             {results ? (
               <div className="space-y-6">
                 <Card className="bg-green-50 border-green-200">
-                  <CardHeader><CardTitle className="text-green-900">Future Value</CardTitle></CardHeader>
-                  <CardContent> {/* Removed text-center */}
-                     <p className="text-5xl font-bold text-green-900">
-                        £{results.futureValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                     </p>
-                     <p className="text-sm text-green-700 mt-2"> {/* Changed mt-1 to mt-2, text-blue-700 to text-green-700 */}
-                        Total value after {years} years. {/* Updated text */}
-                     </p>
+                  <CardHeader>
+                    <CardTitle className="text-green-900">Future Value</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {' '}
+                    {/* Removed text-center */}
+                    <p className="text-5xl font-bold text-green-900">
+                      £
+                      {results.futureValue.toLocaleString('en-GB', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                    <p className="text-sm text-green-700 mt-2">
+                      {' '}
+                      {/* Changed mt-1 to mt-2, text-blue-700 to text-green-700 */}
+                      Total value after {years} years. {/* Updated text */}
+                    </p>
                   </CardContent>
                 </Card>
-                 <Card>
-                  <CardHeader><CardTitle>Growth Breakdown</CardTitle></CardHeader>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Growth Breakdown</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                        <span>Initial Investment:</span>
-                        <span className="font-semibold">£{Number(presentValue).toLocaleString()}</span>
+                      <span>Initial Investment:</span>
+                      <span className="font-semibold">
+                        £{Number(presentValue).toLocaleString()}
+                      </span>
                     </div>
-                     <div className="flex justify-between items-center text-sm">
-                        <span>Total Interest Earned:</span>
-                        <span className="font-semibold text-green-700">£{results.totalInterest.toLocaleString('en-GB', { maximumFractionDigits: 2 })}</span>
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Total Interest Earned:</span>
+                      <span className="font-semibold text-green-700">
+                        £
+                        {results.totalInterest.toLocaleString('en-GB', {
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -119,9 +157,11 @@ export default function FutureValueCalculator() {
             )}
           </div>
         </div>
-        
-        <div className="mt-8 non-printable"> {/* Changed mt-12 to mt-8 */}
-            <FAQSection faqs={fvFAQs} />
+
+        <div className="mt-8 non-printable">
+          {' '}
+          {/* Changed mt-12 to mt-8 */}
+          <FAQSection faqs={fvFAQs} />
         </div>
       </div>
     </div>

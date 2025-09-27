@@ -1,19 +1,18 @@
-
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { jobTitles, createSlug } from "../components/data/seo-data";
-import { Briefcase, Search, PoundSterling } from "lucide-react";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { jobTitles, createSlug } from '../components/data/seo-data';
+import { Briefcase, Search, PoundSterling } from 'lucide-react';
 
 export default function JobSalaries() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const categories = [...new Set(jobTitles.map(job => job.category))];
+  const categories = [...new Set(jobTitles.map((job) => job.category))];
 
-  const filteredJobs = jobTitles.filter(job =>
+  const filteredJobs = jobTitles.filter((job) =>
     job.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -26,7 +25,8 @@ export default function JobSalaries() {
               UK Job Salary Explorer
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Discover average salaries for hundreds of jobs across the UK. Find out what you could be earning.
+              Discover average salaries for hundreds of jobs across the UK. Find out what you could
+              be earning.
             </p>
           </div>
         </div>
@@ -49,8 +49,12 @@ export default function JobSalaries() {
         {searchTerm ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredJobs.length > 0 ? (
-              filteredJobs.map(job => (
-                <Link to={createPageUrl(`JobSalaryPage?slug=${createSlug(job.title)}`)} key={job.title} className="group">
+              filteredJobs.map((job) => (
+                <Link
+                  to={createPageUrl(`JobSalaryPage?slug=${createSlug(job.title)}`)}
+                  key={job.title}
+                  className="group"
+                >
                   <Card className="hover:shadow-lg hover:border-blue-300 transition-all">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -61,30 +65,46 @@ export default function JobSalaries() {
                     <CardContent>
                       <p className="text-sm text-gray-600 mb-2">{job.description}</p>
                       <div className="flex items-center justify-between">
-                         <Badge variant="secondary">{job.category}</Badge>
-                         <span className="font-semibold text-lg">~£{job.averageSalary.toLocaleString()}/yr</span>
+                        <Badge variant="secondary">{job.category}</Badge>
+                        <span className="font-semibold text-lg">
+                          ~£{job.averageSalary.toLocaleString()}/yr
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
                 </Link>
               ))
             ) : (
-              <p className="text-center md:col-span-3 text-gray-500">No job titles found for "{searchTerm}".</p>
+              <p className="text-center md:col-span-3 text-gray-500">
+                No job titles found for "{searchTerm}".
+              </p>
             )}
           </div>
         ) : (
-          categories.map(category => (
+          categories.map((category) => (
             <div key={category} className="mb-10">
-              <h2 className="text-2xl font-bold border-b-2 border-blue-500 pb-2 mb-4">{category}</h2>
+              <h2 className="text-2xl font-bold border-b-2 border-blue-500 pb-2 mb-4">
+                {category}
+              </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {jobTitles.filter(job => job.category === category).map(job => (
-                  <Link to={createPageUrl(`JobSalaryPage?slug=${createSlug(job.title)}`)} key={job.title} className="group">
-                    <div className="p-4 bg-gray-50 rounded-lg hover:bg-blue-100 transition-colors">
-                      <p className="font-semibold text-gray-800 group-hover:text-blue-700">{job.title}</p>
-                      <p className="text-sm text-gray-600">~£{job.averageSalary.toLocaleString()}</p>
-                    </div>
-                  </Link>
-                ))}
+                {jobTitles
+                  .filter((job) => job.category === category)
+                  .map((job) => (
+                    <Link
+                      to={createPageUrl(`JobSalaryPage?slug=${createSlug(job.title)}`)}
+                      key={job.title}
+                      className="group"
+                    >
+                      <div className="p-4 bg-gray-50 rounded-lg hover:bg-blue-100 transition-colors">
+                        <p className="font-semibold text-gray-800 group-hover:text-blue-700">
+                          {job.title}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          ~£{job.averageSalary.toLocaleString()}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
               </div>
             </div>
           ))

@@ -1,15 +1,16 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function About() {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://calcmymoney.co.uk";
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : 'https://calcmymoney.co.uk';
   const breadcrumbJson = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {"@type":"ListItem","position":1,"name":"Home","item": `${origin}/`},
-      {"@type":"ListItem","position":2,"name":"About","item": `${origin}/About`}
-    ]
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${origin}/` },
+      { '@type': 'ListItem', position: 2, name: 'About', item: `${origin}/About` },
+    ],
   };
 
   return (
@@ -34,7 +35,10 @@ export default function About() {
             </CardHeader>
             <CardContent className="p-6">
               <p>
-                Our mission is simple: to make UK money calculations clear, accurate, and accessible for everyone. Whether you’re checking your take-home pay, planning a mortgage, or projecting savings, we want you to have fast, reliable tools that reflect the latest rules.
+                Our mission is simple: to make UK money calculations clear, accurate, and accessible
+                for everyone. Whether you’re checking your take-home pay, planning a mortgage, or
+                projecting savings, we want you to have fast, reliable tools that reflect the latest
+                rules.
               </p>
             </CardContent>
           </Card>
@@ -45,7 +49,10 @@ export default function About() {
             </CardHeader>
             <CardContent className="p-6">
               <p>
-                We are a team of financial experts and IT specialists who are passionate about building transparent, trustworthy, and user-friendly tools. Each calculator is designed with a balance of financial expertise and technical precision to ensure accuracy, clarity, and ease of use.
+                We are a team of financial experts and IT specialists who are passionate about
+                building transparent, trustworthy, and user-friendly tools. Each calculator is
+                designed with a balance of financial expertise and technical precision to ensure
+                accuracy, clarity, and ease of use.
               </p>
             </CardContent>
           </Card>
@@ -56,10 +63,19 @@ export default function About() {
             </CardHeader>
             <CardContent className="p-6">
               <ul className="list-disc list-inside space-y-2 text-gray-700">
-                <li><strong>Accuracy first</strong> – always based on HMRC and Bank of England sources</li>
-                <li><strong>Regular updates</strong> – new thresholds integrated promptly</li>
-                <li><strong>Transparency</strong> – clear assumptions and disclaimers on every calculator</li>
-                <li><strong>Accessibility</strong> – free and mobile-friendly for everyone in the UK</li>
+                <li>
+                  <strong>Accuracy first</strong> – always based on HMRC and Bank of England sources
+                </li>
+                <li>
+                  <strong>Regular updates</strong> – new thresholds integrated promptly
+                </li>
+                <li>
+                  <strong>Transparency</strong> – clear assumptions and disclaimers on every
+                  calculator
+                </li>
+                <li>
+                  <strong>Accessibility</strong> – free and mobile-friendly for everyone in the UK
+                </li>
               </ul>
             </CardContent>
           </Card>
@@ -69,12 +85,13 @@ export default function About() {
               <CardTitle>Contact</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <p>
-                For questions, corrections, or feedback, please email:
-              </p>
+              <p>For questions, corrections, or feedback, please email:</p>
               <p className="mt-2">
-                📧{" "}
-                <a href="mailto:support@calcmymoney.co.uk" className="text-blue-600 hover:underline">
+                📧{' '}
+                <a
+                  href="mailto:support@calcmymoney.co.uk"
+                  className="text-blue-600 hover:underline"
+                >
                   support@calcmymoney.co.uk
                 </a>
               </p>

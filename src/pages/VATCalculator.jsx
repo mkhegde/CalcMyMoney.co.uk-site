@@ -1,28 +1,36 @@
-
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PoundSterling, Calculator, Percent } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
-import FAQSection from "../components/calculators/FAQSection";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { PoundSterling, Calculator, Percent } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
+import FAQSection from '../components/calculators/FAQSection';
 
 const vatFAQs = [
   {
-    question: "What are the current VAT rates in the UK?",
-    answer: "The standard VAT rate is 20%. There is a reduced rate of 5% for items like home energy and children's car seats, and a zero rate (0%) for most food and children's clothes."
+    question: 'What are the current VAT rates in the UK?',
+    answer:
+      "The standard VAT rate is 20%. There is a reduced rate of 5% for items like home energy and children's car seats, and a zero rate (0%) for most food and children's clothes.",
   },
   {
-    question: "How do I calculate VAT?",
-    answer: "To add 20% VAT to a price, you multiply the net amount by 1.20. To find the VAT amount from a gross price (inclusive of VAT), you divide the gross amount by 6."
+    question: 'How do I calculate VAT?',
+    answer:
+      'To add 20% VAT to a price, you multiply the net amount by 1.20. To find the VAT amount from a gross price (inclusive of VAT), you divide the gross amount by 6.',
   },
   {
-    question: "What is the difference between net and gross price?",
-    answer: "The net price is the price before VAT is added. The gross price is the final price including VAT that a consumer pays."
-  }
+    question: 'What is the difference between net and gross price?',
+    answer:
+      'The net price is the price before VAT is added. The gross price is the final price including VAT that a consumer pays.',
+  },
 ];
 
 export default function VATCalculator() {
@@ -48,9 +56,10 @@ export default function VATCalculator() {
       netAmount = numAmount;
       vatAmount = netAmount * rate;
       grossAmount = netAmount + vatAmount;
-    } else { // remove
+    } else {
+      // remove
       grossAmount = numAmount;
-      vatAmount = grossAmount - (grossAmount / (1 + rate));
+      vatAmount = grossAmount - grossAmount / (1 + rate);
       netAmount = grossAmount - vatAmount;
     }
 
@@ -59,10 +68,10 @@ export default function VATCalculator() {
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Metric", "Value"],
-      ["Net Amount (excl. VAT)", `£${newResults.netAmount.toFixed(2)}`],
+      ['Metric', 'Value'],
+      ['Net Amount (excl. VAT)', `£${newResults.netAmount.toFixed(2)}`],
       [`VAT @ ${newResults.vatRate}%`, `£${newResults.vatAmount.toFixed(2)}`],
-      ["Gross Amount (incl. VAT)", `£${newResults.grossAmount.toFixed(2)}`],
+      ['Gross Amount (incl. VAT)', `£${newResults.grossAmount.toFixed(2)}`],
     ];
     setCsvData(csvExportData);
   };
@@ -81,7 +90,8 @@ export default function VATCalculator() {
               UK VAT Calculator
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Quickly add or remove VAT from any amount. Perfect for business owners, freelancers, and shoppers.
+              Quickly add or remove VAT from any amount. Perfect for business owners, freelancers,
+              and shoppers.
             </p>
           </div>
         </div>
@@ -100,13 +110,22 @@ export default function VATCalculator() {
                   <Label htmlFor="amount">Amount</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="pl-10" placeholder="e.g. 100" />
+                    <Input
+                      id="amount"
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 100"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>VAT Rate</Label>
-                   <Select value={vatRate} onValueChange={setVatRate}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select value={vatRate} onValueChange={setVatRate}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="20">Standard Rate (20%)</SelectItem>
                       <SelectItem value="5">Reduced Rate (5%)</SelectItem>
@@ -116,7 +135,11 @@ export default function VATCalculator() {
                 </div>
                 <div className="space-y-2">
                   <Label>Calculation</Label>
-                   <RadioGroup value={calculationType} onValueChange={setCalculationType} className="flex gap-4">
+                  <RadioGroup
+                    value={calculationType}
+                    onValueChange={setCalculationType}
+                    className="flex gap-4"
+                  >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="add" id="add" />
                       <Label htmlFor="add">Add VAT</Label>
@@ -140,26 +163,48 @@ export default function VATCalculator() {
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">VAT Calculation Results</h2>
-                  <ExportActions csvData={csvData} fileName="vat-calculation" title="VAT Calculation" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="vat-calculation"
+                    title="VAT Calculation"
+                  />
                 </div>
                 <Card className="bg-blue-50 border-blue-200">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-blue-800 mb-2">Gross Amount (inc. VAT)</h3>
                     <div className="text-4xl font-bold text-blue-900">
-                      £{results.grossAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      £
+                      {results.grossAmount.toLocaleString('en-GB', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </div>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle>VAT Breakdown</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>VAT Breakdown</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-4 text-lg">
-                     <div className="flex justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between p-4 bg-gray-50 rounded-lg">
                       <span className="text-gray-600">Net Amount</span>
-                      <span className="font-semibold">£{results.netAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="font-semibold">
+                        £
+                        {results.netAmount.toLocaleString('en-GB', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
-                     <div className="flex justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between p-4 bg-gray-50 rounded-lg">
                       <span className="text-gray-600">VAT @ {results.vatRate}%</span>
-                      <span className="font-semibold">£{results.vatAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="font-semibold">
+                        £
+                        {results.vatAmount.toLocaleString('en-GB', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

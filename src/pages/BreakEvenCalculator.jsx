@@ -1,25 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Calculator, Target, TrendingUp } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
-import FAQSection from "../components/calculators/FAQSection";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { PoundSterling, Calculator, Target, TrendingUp } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
+import FAQSection from '../components/calculators/FAQSection';
 
 const breakEvenFAQs = [
   {
-    question: "What is a break-even point?",
-    answer: "The break-even point is where your total revenue equals your total costs, meaning you're making neither a profit nor a loss. It's a critical metric for business planning and pricing decisions."
+    question: 'What is a break-even point?',
+    answer:
+      "The break-even point is where your total revenue equals your total costs, meaning you're making neither a profit nor a loss. It's a critical metric for business planning and pricing decisions.",
   },
   {
     question: "What's the difference between fixed and variable costs?",
-    answer: "Fixed costs remain constant regardless of sales volume (e.g., rent, insurance, salaries). Variable costs change with production or sales volume (e.g., materials, commission, delivery costs)."
+    answer:
+      'Fixed costs remain constant regardless of sales volume (e.g., rent, insurance, salaries). Variable costs change with production or sales volume (e.g., materials, commission, delivery costs).',
   },
   {
-    question: "How can I use break-even analysis for pricing?",
-    answer: "Break-even analysis helps you set minimum prices to cover costs. You can also use it to evaluate the impact of price changes, cost reductions, or volume increases on profitability."
-  }
+    question: 'How can I use break-even analysis for pricing?',
+    answer:
+      'Break-even analysis helps you set minimum prices to cover costs. You can also use it to evaluate the impact of price changes, cost reductions, or volume increases on profitability.',
+  },
 ];
 
 export default function BreakEvenCalculator() {
@@ -48,11 +51,11 @@ export default function BreakEvenCalculator() {
 
     // Calculate scenarios
     const scenarios = [
-      { units: breakEvenUnits * 0.5, revenue: (breakEvenUnits * 0.5) * price },
+      { units: breakEvenUnits * 0.5, revenue: breakEvenUnits * 0.5 * price },
       { units: breakEvenUnits, revenue: breakEvenRevenue },
-      { units: breakEvenUnits * 1.5, revenue: (breakEvenUnits * 1.5) * price },
-      { units: breakEvenUnits * 2, revenue: (breakEvenUnits * 2) * price }
-    ].map(scenario => {
+      { units: breakEvenUnits * 1.5, revenue: breakEvenUnits * 1.5 * price },
+      { units: breakEvenUnits * 2, revenue: breakEvenUnits * 2 * price },
+    ].map((scenario) => {
       const totalVariableCosts = scenario.units * variableCost;
       const totalCosts = fixed + totalVariableCosts;
       const profit = scenario.revenue - totalCosts;
@@ -64,18 +67,18 @@ export default function BreakEvenCalculator() {
       breakEvenRevenue,
       contributionMargin,
       contributionMarginPercent,
-      scenarios
+      scenarios,
     };
 
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Metric", "Value"],
-      ["Break-Even Units", `${newResults.breakEvenUnits}`],
-      ["Break-Even Revenue", `£${newResults.breakEvenRevenue.toFixed(2)}`],
-      ["Contribution Margin per Unit", `£${newResults.contributionMargin.toFixed(2)}`],
-      ["Contribution Margin %", `${newResults.contributionMarginPercent.toFixed(1)}%`],
+      ['Metric', 'Value'],
+      ['Break-Even Units', `${newResults.breakEvenUnits}`],
+      ['Break-Even Revenue', `£${newResults.breakEvenRevenue.toFixed(2)}`],
+      ['Contribution Margin per Unit', `£${newResults.contributionMargin.toFixed(2)}`],
+      ['Contribution Margin %', `${newResults.contributionMarginPercent.toFixed(1)}%`],
     ];
     setCsvData(csvExportData);
   };
@@ -94,7 +97,8 @@ export default function BreakEvenCalculator() {
               Business Break-Even Calculator
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Calculate how many units you need to sell to break even and start making profit. Essential for pricing and business planning.
+              Calculate how many units you need to sell to break even and start making profit.
+              Essential for pricing and business planning.
             </p>
           </div>
         </div>
@@ -105,13 +109,22 @@ export default function BreakEvenCalculator() {
         <div className="grid lg:grid-cols-5 gap-8 printable-grid-cols-1">
           <div className="lg:col-span-2 non-printable">
             <Card className="sticky top-24">
-              <CardHeader><CardTitle>Business Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Business Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="fixedCosts">Monthly Fixed Costs</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="fixedCosts" type="number" value={fixedCosts} onChange={(e) => setFixedCosts(e.target.value)} className="pl-10" placeholder="e.g. 5000" />
+                    <Input
+                      id="fixedCosts"
+                      type="number"
+                      value={fixedCosts}
+                      onChange={(e) => setFixedCosts(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 5000"
+                    />
                   </div>
                   <p className="text-xs text-gray-500">Rent, salaries, insurance, etc.</p>
                 </div>
@@ -119,14 +132,28 @@ export default function BreakEvenCalculator() {
                   <Label htmlFor="pricePerUnit">Price per Unit/Service</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="pricePerUnit" type="number" value={pricePerUnit} onChange={(e) => setPricePerUnit(e.target.value)} className="pl-10" placeholder="e.g. 50" />
+                    <Input
+                      id="pricePerUnit"
+                      type="number"
+                      value={pricePerUnit}
+                      onChange={(e) => setPricePerUnit(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 50"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="variableCostPerUnit">Variable Cost per Unit</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="variableCostPerUnit" type="number" value={variableCostPerUnit} onChange={(e) => setVariableCostPerUnit(e.target.value)} className="pl-10" placeholder="e.g. 20" />
+                    <Input
+                      id="variableCostPerUnit"
+                      type="number"
+                      value={variableCostPerUnit}
+                      onChange={(e) => setVariableCostPerUnit(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 20"
+                    />
                   </div>
                   <p className="text-xs text-gray-500">Materials, commission, delivery, etc.</p>
                 </div>
@@ -143,7 +170,11 @@ export default function BreakEvenCalculator() {
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Break-Even Analysis</h2>
-                  <ExportActions csvData={csvData} fileName="break-even-analysis" title="Break-Even Analysis" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="break-even-analysis"
+                    title="Break-Even Analysis"
+                  />
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <Card className="bg-orange-50 border-orange-200">
@@ -159,29 +190,47 @@ export default function BreakEvenCalculator() {
                     <CardContent className="p-6">
                       <h3 className="font-semibold text-green-800 mb-2">Break-Even Revenue</h3>
                       <div className="text-4xl font-bold text-green-900">
-                        £{results.breakEvenRevenue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                        £
+                        {results.breakEvenRevenue.toLocaleString('en-GB', {
+                          maximumFractionDigits: 0,
+                        })}
                       </div>
                       <p className="text-sm text-green-700">Monthly revenue needed</p>
                     </CardContent>
                   </Card>
                 </div>
                 <Card>
-                  <CardHeader><CardTitle>Contribution Analysis</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Contribution Analysis</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="p-4 bg-blue-50 rounded-lg">
                       <p className="text-sm text-blue-600">Contribution Margin per Unit</p>
-                      <p className="text-lg font-semibold">£{results.contributionMargin.toFixed(2)} ({results.contributionMarginPercent.toFixed(1)}%)</p>
+                      <p className="text-lg font-semibold">
+                        £{results.contributionMargin.toFixed(2)} (
+                        {results.contributionMarginPercent.toFixed(1)}%)
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle>Profit Scenarios</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Profit Scenarios</CardTitle>
+                  </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
                       {results.scenarios.map((scenario, index) => (
-                        <div key={index} className={`flex justify-between p-3 rounded ${scenario.profit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                          <span>{scenario.units.toLocaleString()} units (£{scenario.revenue.toLocaleString()})</span>
-                          <span className={`font-semibold ${scenario.profit >= 0 ? 'text-green-800' : 'text-red-800'}`}>
+                        <div
+                          key={index}
+                          className={`flex justify-between p-3 rounded ${scenario.profit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}
+                        >
+                          <span>
+                            {scenario.units.toLocaleString()} units (£
+                            {scenario.revenue.toLocaleString()})
+                          </span>
+                          <span
+                            className={`font-semibold ${scenario.profit >= 0 ? 'text-green-800' : 'text-red-800'}`}
+                          >
                             {scenario.profit >= 0 ? '+' : ''}£{scenario.profit.toLocaleString()}
                           </span>
                         </div>

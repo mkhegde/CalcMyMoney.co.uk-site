@@ -1,42 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Calculator, TrendingDown, TrendingUp, ArrowRight, Wallet } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  PoundSterling,
+  Calculator,
+  TrendingDown,
+  TrendingUp,
+  ArrowRight,
+  Wallet,
+} from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
 
 const calculateTakeHome = (salary) => {
-    // Simplified tax/NI calculation for demonstration purposes
-    // A real implementation would use the detailed logic from the main Salary Calculator
-    const personalAllowance = 12570;
-    const niThreshold = 12570;
-    
-    let tax = 0;
-    let ni = 0;
-    
-    const taxableIncome = Math.max(0, salary - personalAllowance);
-    
-    if (taxableIncome > 0) {
-        if (taxableIncome <= (50270 - personalAllowance)) {
-            tax = taxableIncome * 0.20;
-        } else if (taxableIncome <= (125140 - personalAllowance)) {
-            tax = ((50270 - personalAllowance) * 0.20) + ((taxableIncome - (50270 - personalAllowance)) * 0.40);
-        } else {
-            tax = ((50270 - personalAllowance) * 0.20) + ((125140 - 50270) * 0.40) + ((taxableIncome - (125140 - personalAllowance)) * 0.45);
-        }
+  // Simplified tax/NI calculation for demonstration purposes
+  // A real implementation would use the detailed logic from the main Salary Calculator
+  const personalAllowance = 12570;
+  const niThreshold = 12570;
+
+  let tax = 0;
+  let ni = 0;
+
+  const taxableIncome = Math.max(0, salary - personalAllowance);
+
+  if (taxableIncome > 0) {
+    if (taxableIncome <= 50270 - personalAllowance) {
+      tax = taxableIncome * 0.2;
+    } else if (taxableIncome <= 125140 - personalAllowance) {
+      tax = (50270 - personalAllowance) * 0.2 + (taxableIncome - (50270 - personalAllowance)) * 0.4;
+    } else {
+      tax =
+        (50270 - personalAllowance) * 0.2 +
+        (125140 - 50270) * 0.4 +
+        (taxableIncome - (125140 - personalAllowance)) * 0.45;
     }
-    
-    const niableIncome = Math.max(0, salary - niThreshold);
-    if (niableIncome > 0) {
-        if (niableIncome <= (50270 - niThreshold)) {
-            ni = niableIncome * 0.08;
-        } else {
-            ni = ((50270 - niThreshold) * 0.08) + ((niableIncome - (50270 - niThreshold)) * 0.02);
-        }
+  }
+
+  const niableIncome = Math.max(0, salary - niThreshold);
+  if (niableIncome > 0) {
+    if (niableIncome <= 50270 - niThreshold) {
+      ni = niableIncome * 0.08;
+    } else {
+      ni = (50270 - niThreshold) * 0.08 + (niableIncome - (50270 - niThreshold)) * 0.02;
     }
-    
-    return salary - tax - ni;
+  }
+
+  return salary - tax - ni;
 };
 
 export default function SalarySacrificeCalculator() {
@@ -71,20 +81,20 @@ export default function SalarySacrificeCalculator() {
       newTakeHome,
       newPension,
       takeHomeDifference,
-      taxSaving
+      taxSaving,
     };
 
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-        ["Metric", "Before Sacrifice", "After Sacrifice"],
-        ["Gross Salary", `£${salary.toFixed(2)}`, `£${newSalary.toFixed(2)}`],
-        ["Pension Contribution", "£0.00", `£${newPension.toFixed(2)}`],
-        ["Take-Home Pay", `£${originalTakeHome.toFixed(2)}`, `£${newTakeHome.toFixed(2)}`],
-        ["", "", ""],
-        ["Reduction in Take-Home", `£${takeHomeDifference.toFixed(2)}`, ""],
-        ["Tax & NI Saving", `£${taxSaving.toFixed(2)}`, ""],
+      ['Metric', 'Before Sacrifice', 'After Sacrifice'],
+      ['Gross Salary', `£${salary.toFixed(2)}`, `£${newSalary.toFixed(2)}`],
+      ['Pension Contribution', '£0.00', `£${newPension.toFixed(2)}`],
+      ['Take-Home Pay', `£${originalTakeHome.toFixed(2)}`, `£${newTakeHome.toFixed(2)}`],
+      ['', '', ''],
+      ['Reduction in Take-Home', `£${takeHomeDifference.toFixed(2)}`, ''],
+      ['Tax & NI Saving', `£${taxSaving.toFixed(2)}`, ''],
     ];
     setCsvData(csvExportData);
   };
@@ -103,7 +113,8 @@ export default function SalarySacrificeCalculator() {
               Salary Sacrifice Calculator
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Pay less tax and boost your pension pot. See how sacrificing a portion of your salary can increase your overall wealth.
+              Pay less tax and boost your pension pot. See how sacrificing a portion of your salary
+              can increase your overall wealth.
             </p>
           </div>
         </div>
@@ -113,20 +124,36 @@ export default function SalarySacrificeCalculator() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="non-printable">
             <Card>
-              <CardHeader><CardTitle>Your Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Your Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="grossSalary">Annual Gross Salary</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="grossSalary" type="number" value={grossSalary} onChange={e => setGrossSalary(e.target.value)} className="pl-10" placeholder="e.g. 50000" />
+                    <Input
+                      id="grossSalary"
+                      type="number"
+                      value={grossSalary}
+                      onChange={(e) => setGrossSalary(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 50000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="sacrificeAmount">Annual Pension Sacrifice Amount</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="sacrificeAmount" type="number" value={sacrificeAmount} onChange={e => setSacrificeAmount(e.target.value)} className="pl-10" placeholder="e.g. 3000" />
+                    <Input
+                      id="sacrificeAmount"
+                      type="number"
+                      value={sacrificeAmount}
+                      onChange={(e) => setSacrificeAmount(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 3000"
+                    />
                   </div>
                 </div>
                 <Button onClick={handleCalculate} className="w-full text-lg">
@@ -136,43 +163,70 @@ export default function SalarySacrificeCalculator() {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="space-y-6">
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Sacrifice Summary</h2>
-                  <ExportActions csvData={csvData} fileName="salary-sacrifice" title="Salary Sacrifice Summary" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="salary-sacrifice"
+                    title="Salary Sacrifice Summary"
+                  />
                 </div>
                 <Card>
-                  <CardHeader><CardTitle>Impact on Your Pay</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Impact on Your Pay</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-around text-center">
-                        <div>
-                            <p className="text-sm text-gray-600">Original Take-Home</p>
-                            <p className="text-2xl font-bold">£{results.originalTakeHome.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
-                        </div>
-                        <ArrowRight className="w-6 h-6 text-gray-400" />
-                         <div>
-                            <p className="text-sm text-gray-600">New Take-Home</p>
-                            <p className="text-2xl font-bold text-blue-700">£{results.newTakeHome.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
-                        </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Original Take-Home</p>
+                        <p className="text-2xl font-bold">
+                          £
+                          {results.originalTakeHome.toLocaleString('en-GB', {
+                            maximumFractionDigits: 0,
+                          })}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-6 h-6 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-600">New Take-Home</p>
+                        <p className="text-2xl font-bold text-blue-700">
+                          £
+                          {results.newTakeHome.toLocaleString('en-GB', {
+                            maximumFractionDigits: 0,
+                          })}
+                        </p>
+                      </div>
                     </div>
                     <div className="p-4 bg-red-50 rounded-lg text-center">
-                        <p className="text-sm text-red-800">Your take-home pay is reduced by:</p>
-                        <p className="text-2xl font-bold text-red-900">£{results.takeHomeDifference.toLocaleString('en-GB', { maximumFractionDigits: 2 })}</p>
+                      <p className="text-sm text-red-800">Your take-home pay is reduced by:</p>
+                      <p className="text-2xl font-bold text-red-900">
+                        £
+                        {results.takeHomeDifference.toLocaleString('en-GB', {
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                   <CardHeader><CardTitle className="text-green-900">Benefit of Sacrificing</CardTitle></CardHeader>
-                   <CardContent className="text-center">
-                        <p className="text-sm text-green-800">Your pension pot increases by £{results.newPension.toLocaleString()}, but your take-home only reduces by £{results.takeHomeDifference.toLocaleString()}.</p>
-                        <p className="mt-2 text-3xl font-bold text-green-800">
-                           Effective saving of £{results.taxSaving.toLocaleString('en-GB', { maximumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-sm text-green-700">in tax and National Insurance.</p>
-                   </CardContent>
+                  <CardHeader>
+                    <CardTitle className="text-green-900">Benefit of Sacrificing</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-sm text-green-800">
+                      Your pension pot increases by £{results.newPension.toLocaleString()}, but your
+                      take-home only reduces by £{results.takeHomeDifference.toLocaleString()}.
+                    </p>
+                    <p className="mt-2 text-3xl font-bold text-green-800">
+                      Effective saving of £
+                      {results.taxSaving.toLocaleString('en-GB', { maximumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-sm text-green-700">in tax and National Insurance.</p>
+                  </CardContent>
                 </Card>
               </>
             ) : (

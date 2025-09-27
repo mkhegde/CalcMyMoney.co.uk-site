@@ -1,63 +1,71 @@
-
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { Search, Calculator, TrendingUp, Users, Star, ExternalLink } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { calculatorCategories, getAllCalculators, getCalculatorsByStatus, getCalculatorStats, searchCalculators } from "../components/data/calculatorConfig";
-import FAQSection from "../components/calculators/FAQSection";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Search, Calculator, TrendingUp, Users, Star, ExternalLink } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
-  HandCoins,
-  PoundSterling,
-  Home as HomeIcon,
-  PiggyBank,
-} from 'lucide-react';
-
+  calculatorCategories,
+  getAllCalculators,
+  getCalculatorsByStatus,
+  getCalculatorStats,
+  searchCalculators,
+} from '../components/data/calculatorConfig';
+import FAQSection from '../components/calculators/FAQSection';
+import { HandCoins, PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
 
 const homepageFaqs = [
   {
-    question: "How accurate are your UK salary/tax calculators?",
+    question: 'How accurate are your UK salary/tax calculators?',
     answer: (
       <>
-        <p>Our calculators are designed to be highly accurate, based on the latest UK tax laws and financial regulations. They use up-to-date information for Income Tax, National Insurance, pension contributions, and student loans for the specified tax year (2025/26).</p>
-        <p className="mt-2">While we strive for precision, these tools are for estimation purposes and should not be considered financial advice. Always consult with a qualified financial advisor for personal financial decisions.</p>
+        <p>
+          Our calculators are designed to be highly accurate, based on the latest UK tax laws and
+          financial regulations. They use up-to-date information for Income Tax, National Insurance,
+          pension contributions, and student loans for the specified tax year (2025/26).
+        </p>
+        <p className="mt-2">
+          While we strive for precision, these tools are for estimation purposes and should not be
+          considered financial advice. Always consult with a qualified financial advisor for
+          personal financial decisions.
+        </p>
       </>
-    )
+    ),
   },
   {
-    question: "Which tax year do the calculators use (2025/26)?",
-    answer: "All relevant calculators, including the Salary, Income Tax, and National Insurance calculators, have been updated and are based on the 2025/26 UK tax year, which runs from 6 April 2025 to 5 April 2026. Rates and thresholds for England, Scotland, Wales, and Northern Ireland are applied where applicable."
+    question: 'Which tax year do the calculators use (2025/26)?',
+    answer:
+      'All relevant calculators, including the Salary, Income Tax, and National Insurance calculators, have been updated and are based on the 2025/26 UK tax year, which runs from 6 April 2025 to 5 April 2026. Rates and thresholds for England, Scotland, Wales, and Northern Ireland are applied where applicable.',
   },
   {
-    question: "Can I download or print the results?",
-    answer: "Yes. Most of our calculators feature 'Export' or 'Print' buttons that allow you to either download your results as a CSV/PDF file or generate a printer-friendly version of the summary. This makes it easy to save your calculations for your records or share them with others."
-  }
+    question: 'Can I download or print the results?',
+    answer:
+      "Yes. Most of our calculators feature 'Export' or 'Print' buttons that allow you to either download your results as a CSV/PDF file or generate a printer-friendly version of the summary. This makes it easy to save your calculations for your records or share them with others.",
+  },
 ];
 
-
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showAllCalculators, setShowAllCalculators] = useState(false);
-  
+
   const stats = getCalculatorStats();
   const allCalculators = getAllCalculators();
   const activeCalculators = getCalculatorsByStatus('active');
-  
+
   // Popular/Featured calculators (you can customize this list)
   const featuredCalculators = [
-    "SalaryCalculatorUK",
-    "MortgageCalculator", 
-    "BudgetCalculator",
-    "IncomeTaxCalculator",
-    "CompoundInterestCalculator",
-    "PensionCalculator"
+    'SalaryCalculatorUK',
+    'MortgageCalculator',
+    'BudgetCalculator',
+    'IncomeTaxCalculator',
+    'CompoundInterestCalculator',
+    'PensionCalculator',
   ];
 
-  const featuredCalcObjects = featuredCalculators.map(pageName => 
-    allCalculators.find(calc => calc.url.includes(pageName))
-  ).filter(Boolean);
+  const featuredCalcObjects = featuredCalculators
+    .map((pageName) => allCalculators.find((calc) => calc.url.includes(pageName)))
+    .filter(Boolean);
 
   // Handle search
   useEffect(() => {
@@ -74,10 +82,30 @@ export default function Home() {
   };
 
   const hubCards = [
-    { title: "Salary & Income", icon: HandCoins, link: "#income-employment", description: "Calculate take-home pay, tax, and more." },
-    { title: "Tax Tools", icon: PoundSterling, link: "#tax-calculators", description: "Tools for income tax, NI, VAT, and CGT." },
-    { title: "Mortgage & Loans", icon: HomeIcon, link: "#property-mortgages", description: "Estimate repayments and affordability." },
-    { title: "Savings & Finance", icon: PiggyBank, link: "#savings-investments", description: "Plan investments and savings goals." },
+    {
+      title: 'Salary & Income',
+      icon: HandCoins,
+      link: '#income-employment',
+      description: 'Calculate take-home pay, tax, and more.',
+    },
+    {
+      title: 'Tax Tools',
+      icon: PoundSterling,
+      link: '#tax-calculators',
+      description: 'Tools for income tax, NI, VAT, and CGT.',
+    },
+    {
+      title: 'Mortgage & Loans',
+      icon: HomeIcon,
+      link: '#property-mortgages',
+      description: 'Estimate repayments and affordability.',
+    },
+    {
+      title: 'Savings & Finance',
+      icon: PiggyBank,
+      link: '#savings-investments',
+      description: 'Plan investments and savings goals.',
+    },
   ];
 
   return (
@@ -90,9 +118,11 @@ export default function Home() {
               Free UK Salary, Tax & Mortgage Calculators
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-              Use our fast, accurate UK calculators to estimate take-home pay, tax & NI, mortgage repayments, and savings growth for the 2025/26 tax year. Start with salary, tax, mortgage or finance tools below.
+              Use our fast, accurate UK calculators to estimate take-home pay, tax & NI, mortgage
+              repayments, and savings growth for the 2025/26 tax year. Start with salary, tax,
+              mortgage or finance tools below.
             </p>
-            
+
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto mb-8">
               <div className="relative">
@@ -105,7 +135,7 @@ export default function Home() {
                   className="pl-12 pr-4 py-4 text-lg border-2 border-gray-300 focus:border-blue-500 rounded-xl"
                 />
               </div>
-              
+
               {/* Search Results Dropdown */}
               {searchResults.length > 0 && (
                 <div className="absolute z-10 w-full max-w-2xl mx-auto mt-2 bg-white border border-gray-200 rounded-lg shadow-lg">
@@ -116,7 +146,7 @@ export default function Home() {
                         to={calc.url}
                         className="block p-3 hover:bg-gray-50 rounded-lg transition-colors"
                         onClick={() => {
-                          setSearchQuery("");
+                          setSearchQuery('');
                           setSearchResults([]);
                         }}
                       >
@@ -124,10 +154,14 @@ export default function Home() {
                           <div>
                             <p className="font-medium text-gray-900">{calc.name}</p>
                             <p className="text-sm text-gray-600">{calc.description}</p>
-                            <p className="text-xs text-gray-500">{calc.category} → {calc.subCategory}</p>
+                            <p className="text-xs text-gray-500">
+                              {calc.category} → {calc.subCategory}
+                            </p>
                           </div>
                           {calc.status === 'planned' ? (
-                            <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+                            <Badge variant="secondary" className="text-xs">
+                              Coming Soon
+                            </Badge>
                           ) : (
                             <ExternalLink className="w-4 h-4 text-gray-400" />
                           )}
@@ -157,28 +191,28 @@ export default function Home() {
           </div>
         </div>
       </div>
-      
+
       {/* Hub Cards Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 -mt-16 relative z-10">
-         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {hubCards.map((card, index) => (
-              <a 
-                key={index} 
-                href={card.link}
-                className="group block p-6 bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transform transition-all duration-300"
-              >
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <card.icon className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700">
-                    {card.title}
-                  </h3>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {hubCards.map((card, index) => (
+            <a
+              key={index}
+              href={card.link}
+              className="group block p-6 bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transform transition-all duration-300"
+            >
+              <div className="flex items-center gap-4 mb-2">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <card.icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <p className="text-sm text-gray-600">{card.description}</p>
-              </a>
-            ))}
-          </div>
+                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700">
+                  {card.title}
+                </h3>
+              </div>
+              <p className="text-sm text-gray-600">{card.description}</p>
+            </a>
+          ))}
+        </div>
       </div>
 
       {/* Featured/Popular Calculators */}
@@ -188,7 +222,9 @@ export default function Home() {
             <Calculator className="inline w-9 h-9 mr-2 text-blue-600" />
             Popular Calculators
           </h2>
-          <p className="text-gray-600 dark:text-gray-300">The most used financial calculators on our platform</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            The most used financial calculators on our platform
+          </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
@@ -214,10 +250,10 @@ export default function Home() {
       {/* Homepage FAQ Section */}
       <div className="bg-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 text-center mb-10">
-                Common Questions
-            </h2>
-            <FAQSection faqs={homepageFaqs} />
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 text-center mb-10">
+            Common Questions
+          </h2>
+          <FAQSection faqs={homepageFaqs} />
         </div>
       </div>
 
@@ -263,28 +299,26 @@ export default function Home() {
                       </h4>
                       <div className="space-y-2 pl-3">
                         {subCategory.calculators
-                          .filter(calc => showAllCalculators || calc.status === 'active')
+                          .filter((calc) => showAllCalculators || calc.status === 'active')
                           .map((calc, index) => (
-                          <div key={index} className="flex items-center justify-between group">
-                            {calc.status === 'active' ? (
-                              <Link
-                                to={calc.url}
-                                className="flex-1 text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium"
-                              >
-                                {calc.name}
-                              </Link>
-                            ) : (
-                              <span className="flex-1 text-gray-400 text-sm">
-                                {calc.name}
-                              </span>
-                            )}
-                            {calc.status === 'planned' && (
-                              <Badge variant="outline" className="text-xs ml-2">
-                                Coming Soon
-                              </Badge>
-                            )}
-                          </div>
-                        ))}
+                            <div key={index} className="flex items-center justify-between group">
+                              {calc.status === 'active' ? (
+                                <Link
+                                  to={calc.url}
+                                  className="flex-1 text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium"
+                                >
+                                  {calc.name}
+                                </Link>
+                              ) : (
+                                <span className="flex-1 text-gray-400 text-sm">{calc.name}</span>
+                              )}
+                              {calc.status === 'planned' && (
+                                <Badge variant="outline" className="text-xs ml-2">
+                                  Coming Soon
+                                </Badge>
+                              )}
+                            </div>
+                          ))}
                       </div>
                     </div>
                   ))}

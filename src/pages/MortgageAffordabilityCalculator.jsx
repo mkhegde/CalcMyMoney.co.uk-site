@@ -1,25 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Calculator, Users, Home, TrendingDown } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
-import FAQSection from "../components/calculators/FAQSection";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { PoundSterling, Calculator, Users, Home, TrendingDown } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
+import FAQSection from '../components/calculators/FAQSection';
 
 const affordabilityFAQs = [
   {
-    question: "How do lenders calculate mortgage affordability?",
-    answer: "Lenders typically use an income multiple, usually around 4 to 4.5 times your annual income. They then subtract existing financial commitments (like loans and credit card debt) and apply 'stress tests' to ensure you could afford repayments if interest rates were to rise."
+    question: 'How do lenders calculate mortgage affordability?',
+    answer:
+      "Lenders typically use an income multiple, usually around 4 to 4.5 times your annual income. They then subtract existing financial commitments (like loans and credit card debt) and apply 'stress tests' to ensure you could afford repayments if interest rates were to rise.",
   },
   {
-    question: "What is a Loan-to-Income (LTI) ratio?",
-    answer: "Loan-to-Income (LTI) is the ratio of the mortgage amount to your gross annual income. For example, borrowing £200,000 on a £50,000 salary gives you an LTI of 4. This is a key metric for lenders."
+    question: 'What is a Loan-to-Income (LTI) ratio?',
+    answer:
+      'Loan-to-Income (LTI) is the ratio of the mortgage amount to your gross annual income. For example, borrowing £200,000 on a £50,000 salary gives you an LTI of 4. This is a key metric for lenders.',
   },
   {
-    question: "How can I improve my mortgage affordability?",
-    answer: "You can improve your chances by paying down existing debts, closing unused credit cards, saving for a larger deposit, and checking your credit report for errors. A stable employment history also helps."
-  }
+    question: 'How can I improve my mortgage affordability?',
+    answer:
+      'You can improve your chances by paying down existing debts, closing unused credit cards, saving for a larger deposit, and checking your credit report for errors. A stable employment history also helps.',
+  },
 ];
 
 export default function MortgageAffordabilityCalculator() {
@@ -46,9 +49,9 @@ export default function MortgageAffordabilityCalculator() {
 
     // A more realistic calculation than a simple multiplier
     const annualDebt = debts * 12;
-    const disposableForMortgage = Math.max(0, totalIncome - (annualDebt * 2)); // Lenders heavily weigh debt
+    const disposableForMortgage = Math.max(0, totalIncome - annualDebt * 2); // Lenders heavily weigh debt
     const baseMultiplier = 4.5;
-    
+
     // Adjust multiplier based on LTI - simplified model
     const estimatedLTI = (disposableForMortgage * baseMultiplier) / totalIncome;
     let multiplier = baseMultiplier;
@@ -63,18 +66,18 @@ export default function MortgageAffordabilityCalculator() {
       estimatedBorrowing,
       maxPropertyPrice,
       deposit: dep,
-      loanToIncome
+      loanToIncome,
     };
-    
+
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Metric", "Value"],
-      ["Estimated Borrowing Amount", `£${newResults.estimatedBorrowing.toFixed(2)}`],
-      ["Maximum Property Price", `£${newResults.maxPropertyPrice.toFixed(2)}`],
-      ["Your Deposit", `£${newResults.deposit.toFixed(2)}`],
-      ["Loan-to-Income (LTI) Ratio", newResults.loanToIncome],
+      ['Metric', 'Value'],
+      ['Estimated Borrowing Amount', `£${newResults.estimatedBorrowing.toFixed(2)}`],
+      ['Maximum Property Price', `£${newResults.maxPropertyPrice.toFixed(2)}`],
+      ['Your Deposit', `£${newResults.deposit.toFixed(2)}`],
+      ['Loan-to-Income (LTI) Ratio', newResults.loanToIncome],
     ];
     setCsvData(csvExportData);
   };
@@ -93,7 +96,8 @@ export default function MortgageAffordabilityCalculator() {
               Mortgage Affordability Calculator
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Get a realistic estimate of how much you could borrow for a mortgage based on your income and outgoings.
+              Get a realistic estimate of how much you could borrow for a mortgage based on your
+              income and outgoings.
             </p>
           </div>
         </div>
@@ -104,34 +108,64 @@ export default function MortgageAffordabilityCalculator() {
         <div className="grid lg:grid-cols-5 gap-8 printable-grid-cols-1">
           <div className="lg:col-span-2 non-printable">
             <Card className="sticky top-24">
-              <CardHeader><CardTitle>Your Financial Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Your Financial Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="applicant1Income">Applicant 1 Annual Income</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="applicant1Income" type="number" value={applicant1Income} onChange={(e) => setApplicant1Income(e.target.value)} className="pl-10" placeholder="e.g. 45000" />
+                    <Input
+                      id="applicant1Income"
+                      type="number"
+                      value={applicant1Income}
+                      onChange={(e) => setApplicant1Income(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 45000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="applicant2Income">Applicant 2 Annual Income (optional)</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="applicant2Income" type="number" value={applicant2Income} onChange={(e) => setApplicant2Income(e.target.value)} className="pl-10" placeholder="e.g. 30000" />
+                    <Input
+                      id="applicant2Income"
+                      type="number"
+                      value={applicant2Income}
+                      onChange={(e) => setApplicant2Income(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 30000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="deposit">Your Deposit Amount</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="deposit" type="number" value={deposit} onChange={(e) => setDeposit(e.target.value)} className="pl-10" placeholder="e.g. 25000" />
+                    <Input
+                      id="deposit"
+                      type="number"
+                      value={deposit}
+                      onChange={(e) => setDeposit(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 25000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="monthlyDebts">Monthly Debt Repayments</Label>
                   <div className="relative">
                     <TrendingDown className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="monthlyDebts" type="number" value={monthlyDebts} onChange={(e) => setMonthlyDebts(e.target.value)} className="pl-10" placeholder="e.g. 300" />
+                    <Input
+                      id="monthlyDebts"
+                      type="number"
+                      value={monthlyDebts}
+                      onChange={(e) => setMonthlyDebts(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 300"
+                    />
                   </div>
                   <p className="text-xs text-gray-500">e.g., loans, credit cards, car finance.</p>
                 </div>
@@ -148,35 +182,56 @@ export default function MortgageAffordabilityCalculator() {
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Your Affordability Estimate</h2>
-                  <ExportActions csvData={csvData} fileName="mortgage-affordability" title="Mortgage Affordability" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="mortgage-affordability"
+                    title="Mortgage Affordability"
+                  />
                 </div>
                 <Card className="bg-green-50 border-green-200">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-green-800 mb-2">You could borrow up to</h3>
                     <div className="text-4xl font-bold text-green-900">
-                      £{results.estimatedBorrowing.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                      £
+                      {results.estimatedBorrowing.toLocaleString('en-GB', {
+                        maximumFractionDigits: 0,
+                      })}
                     </div>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle>Buying Power</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Buying Power</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="p-4 bg-blue-50 rounded-lg">
                       <p className="text-sm text-blue-600">Maximum Property Price</p>
-                      <p className="text-2xl font-semibold text-blue-800">£{results.maxPropertyPrice.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</p>
-                      <p className="text-xs text-blue-500">(Based on your estimated borrowing plus your deposit of £{results.deposit.toLocaleString()})</p>
+                      <p className="text-2xl font-semibold text-blue-800">
+                        £
+                        {results.maxPropertyPrice.toLocaleString('en-GB', {
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                      <p className="text-xs text-blue-500">
+                        (Based on your estimated borrowing plus your deposit of £
+                        {results.deposit.toLocaleString()})
+                      </p>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-600">Your Loan-to-Income (LTI) Ratio</p>
                       <p className="text-lg font-semibold">{results.loanToIncome}</p>
-                      <p className="text-xs text-gray-500">Lenders typically cap this around 4.5 to 5.5.</p>
+                      <p className="text-xs text-gray-500">
+                        Lenders typically cap this around 4.5 to 5.5.
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="border-yellow-300 bg-yellow-50">
                   <CardContent className="p-6">
                     <p className="text-sm text-yellow-800">
-                      <strong>Disclaimer:</strong> This is an estimate for informational purposes only. Lenders use complex criteria and a full credit check. Always speak to a mortgage advisor for a precise figure.
+                      <strong>Disclaimer:</strong> This is an estimate for informational purposes
+                      only. Lenders use complex criteria and a full credit check. Always speak to a
+                      mortgage advisor for a precise figure.
                     </p>
                   </CardContent>
                 </Card>

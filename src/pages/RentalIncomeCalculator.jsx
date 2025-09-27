@@ -1,39 +1,47 @@
-
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Home, Calculator, TrendingUp, TrendingDown, AlertCircle, Percent } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
-import { TooltipProvider } from "@/components/ui/tooltip"; // New import for TooltipProvider
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  PoundSterling,
+  Home,
+  Calculator,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+  Percent,
+} from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
+import { TooltipProvider } from '@/components/ui/tooltip'; // New import for TooltipProvider
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"; // New imports for Accordion
+} from '@/components/ui/accordion'; // New imports for Accordion
 
 const rentalIncomeCalculatorJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "UK Rental Income Calculator 2025/26",
-  "applicationCategory": "FinanceApplication",
-  "operatingSystem": "Web Browser",
-  "description": "Free UK rental income calculator for landlords. Calculate rental yield, profit/loss, and tax on rental income with accurate UK rates for 2025/26.",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "GBP"
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'UK Rental Income Calculator 2025/26',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web Browser',
+  description:
+    'Free UK rental income calculator for landlords. Calculate rental yield, profit/loss, and tax on rental income with accurate UK rates for 2025/26.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'GBP',
   },
-  "featureList": [
-    "Rental yield calculation",
-    "Income tax estimation",
-    "Cash flow analysis",
-    "Expense tracking",
-    "ROI calculation",
-    "Cash-on-cash return analysis"
-  ]
+  featureList: [
+    'Rental yield calculation',
+    'Income tax estimation',
+    'Cash flow analysis',
+    'Expense tracking',
+    'ROI calculation',
+    'Cash-on-cash return analysis',
+  ],
 };
 
 export default function RentalIncomeCalculator() {
@@ -41,7 +49,7 @@ export default function RentalIncomeCalculator() {
   const [monthlyRent, setMonthlyRent] = useState('');
   const [propertyValue, setPropertyValue] = useState('');
   const [capitalInvested, setCapitalInvested] = useState(''); // New state for Capital Invested
-  
+
   // Expense inputs
   const [mortgagePayment, setMortgagePayment] = useState('');
   const [insurance, setInsurance] = useState('');
@@ -50,11 +58,11 @@ export default function RentalIncomeCalculator() {
   const [groundRent, setGroundRent] = useState('');
   const [serviceFees, setServiceFees] = useState('');
   const [voidPeriods, setVoidPeriods] = useState('1'); // months per year
-  
+
   // Tax inputs
   const [taxRate, setTaxRate] = useState('20'); // basic rate
   const [otherAllowableExpenses, setOtherAllowableExpenses] = useState('');
-  
+
   const [results, setResults] = useState(null);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [csvData, setCsvData] = useState(null);
@@ -63,7 +71,7 @@ export default function RentalIncomeCalculator() {
     const currentMonthlyRent = Number(monthlyRent) || 0;
     const currentPropertyValue = Number(propertyValue) || 0;
     const currentCapitalInvested = Number(capitalInvested) || 0; // Get capital invested value
-    
+
     if (currentMonthlyRent <= 0) {
       setResults(null);
       setHasCalculated(true);
@@ -74,7 +82,7 @@ export default function RentalIncomeCalculator() {
     const annualRentBeforeVoids = currentMonthlyRent * 12;
     const voidLoss = currentMonthlyRent * (Number(voidPeriods) || 0);
     const annualRentAfterVoids = annualRentBeforeVoids - voidLoss;
-    
+
     // Calculate annual expenses
     const annualMortgage = (Number(mortgagePayment) || 0) * 12;
     const annualInsurance = Number(insurance) || 0;
@@ -83,26 +91,34 @@ export default function RentalIncomeCalculator() {
     const annualGroundRent = Number(groundRent) || 0;
     const annualServiceFees = Number(serviceFees) || 0;
     const annualOtherExpenses = Number(otherAllowableExpenses) || 0;
-    
-    const totalExpenses = annualMortgage + annualInsurance + annualMaintenance + 
-                         annualManagementFees + annualGroundRent + annualServiceFees + annualOtherExpenses;
-    
+
+    const totalExpenses =
+      annualMortgage +
+      annualInsurance +
+      annualMaintenance +
+      annualManagementFees +
+      annualGroundRent +
+      annualServiceFees +
+      annualOtherExpenses;
+
     // Calculate profit/loss before tax
     const profitBeforeTax = annualRentAfterVoids - totalExpenses;
-    
+
     // Calculate tax (only on profit)
     const taxOwed = profitBeforeTax > 0 ? profitBeforeTax * (Number(taxRate) / 100) : 0;
-    
+
     // Net profit after tax
     const netProfit = profitBeforeTax - taxOwed;
-    
+
     // Calculate yields (if property value provided)
-    const grossYield = currentPropertyValue > 0 ? (annualRentBeforeVoids / currentPropertyValue) * 100 : 0;
+    const grossYield =
+      currentPropertyValue > 0 ? (annualRentBeforeVoids / currentPropertyValue) * 100 : 0;
     const netYield = currentPropertyValue > 0 ? (netProfit / currentPropertyValue) * 100 : 0;
 
     // Calculate Cash-on-Cash Return (if capital invested provided)
-    const cashOnCashReturn = currentCapitalInvested > 0 ? (netProfit / currentCapitalInvested) * 100 : 0;
-    
+    const cashOnCashReturn =
+      currentCapitalInvested > 0 ? (netProfit / currentCapitalInvested) * 100 : 0;
+
     const newResults = {
       annualRentBeforeVoids,
       voidLoss,
@@ -122,8 +138,8 @@ export default function RentalIncomeCalculator() {
         management: annualManagementFees,
         groundRent: annualGroundRent,
         serviceFees: annualServiceFees,
-        otherExpenses: annualOtherExpenses
-      }
+        otherExpenses: annualOtherExpenses,
+      },
     };
 
     setResults(newResults);
@@ -131,28 +147,90 @@ export default function RentalIncomeCalculator() {
 
     // Prepare CSV data
     const csvExportData = [
-      ["Description", "Annual", "Monthly"],
-      ["Rental Income (before voids)", `£${newResults.annualRentBeforeVoids.toFixed(2)}`, `£${currentMonthlyRent.toFixed(2)}`],
-      ["Void Periods Loss", `£${(-newResults.voidLoss).toFixed(2)}`, `£${(-newResults.voidLoss / 12).toFixed(2)}`],
-      ["Net Rental Income", `£${newResults.annualRentAfterVoids.toFixed(2)}`, `£${(newResults.annualRentAfterVoids / 12).toFixed(2)}`],
-      ["", "", ""],
-      ["EXPENSES", "", ""],
-      ["Mortgage Payments", `£${(-newResults.expenses.mortgage).toFixed(2)}`, `£${(-newResults.expenses.mortgage / 12).toFixed(2)}`],
-      ["Insurance", `£${(-newResults.expenses.insurance).toFixed(2)}`, `£${(-newResults.expenses.insurance / 12).toFixed(2)}`],
-      ["Maintenance", `£${(-newResults.expenses.maintenance).toFixed(2)}`, `£${(-newResults.expenses.maintenance / 12).toFixed(2)}`],
-      ["Management Fees", `£${(-newResults.expenses.management).toFixed(2)}`, `£${(-newResults.expenses.management / 12).toFixed(2)}`],
-      ["Ground Rent", `£${(-newResults.expenses.groundRent).toFixed(2)}`, `£${(-newResults.expenses.groundRent / 12).toFixed(2)}`],
-      ["Service Fees", `£${(-newResults.expenses.serviceFees).toFixed(2)}`, `£${(-newResults.expenses.serviceFees / 12).toFixed(2)}`],
-      ["Other Expenses", `£${(-newResults.expenses.otherExpenses).toFixed(2)}`, `£${(-newResults.expenses.otherExpenses / 12).toFixed(2)}`],
-      ["Total Expenses", `£${(-newResults.totalExpenses).toFixed(2)}`, `£${(-newResults.totalExpenses / 12).toFixed(2)}`],
-      ["", "", ""],
-      ["Profit Before Tax", `£${newResults.profitBeforeTax.toFixed(2)}`, `£${(newResults.profitBeforeTax / 12).toFixed(2)}`],
-      ["Tax Owed", `£${(-newResults.taxOwed).toFixed(2)}`, `£${(-newResults.taxOwed / 12).toFixed(2)}`],
-      ["Net Profit After Tax", `£${newResults.netProfit.toFixed(2)}`, `£${newResults.monthlyNetProfit.toFixed(2)}`],
-      ["", "", ""],
-      currentPropertyValue > 0 ? ["Gross Rental Yield", `${newResults.grossYield.toFixed(2)}%`, ""] : null,
-      currentPropertyValue > 0 ? ["Net Rental Yield", `${newResults.netYield.toFixed(2)}%`, ""] : null,
-      currentCapitalInvested > 0 ? ["Cash-on-Cash Return", `${newResults.cashOnCashReturn.toFixed(2)}%`, ""] : null,
+      ['Description', 'Annual', 'Monthly'],
+      [
+        'Rental Income (before voids)',
+        `£${newResults.annualRentBeforeVoids.toFixed(2)}`,
+        `£${currentMonthlyRent.toFixed(2)}`,
+      ],
+      [
+        'Void Periods Loss',
+        `£${(-newResults.voidLoss).toFixed(2)}`,
+        `£${(-newResults.voidLoss / 12).toFixed(2)}`,
+      ],
+      [
+        'Net Rental Income',
+        `£${newResults.annualRentAfterVoids.toFixed(2)}`,
+        `£${(newResults.annualRentAfterVoids / 12).toFixed(2)}`,
+      ],
+      ['', '', ''],
+      ['EXPENSES', '', ''],
+      [
+        'Mortgage Payments',
+        `£${(-newResults.expenses.mortgage).toFixed(2)}`,
+        `£${(-newResults.expenses.mortgage / 12).toFixed(2)}`,
+      ],
+      [
+        'Insurance',
+        `£${(-newResults.expenses.insurance).toFixed(2)}`,
+        `£${(-newResults.expenses.insurance / 12).toFixed(2)}`,
+      ],
+      [
+        'Maintenance',
+        `£${(-newResults.expenses.maintenance).toFixed(2)}`,
+        `£${(-newResults.expenses.maintenance / 12).toFixed(2)}`,
+      ],
+      [
+        'Management Fees',
+        `£${(-newResults.expenses.management).toFixed(2)}`,
+        `£${(-newResults.expenses.management / 12).toFixed(2)}`,
+      ],
+      [
+        'Ground Rent',
+        `£${(-newResults.expenses.groundRent).toFixed(2)}`,
+        `£${(-newResults.expenses.groundRent / 12).toFixed(2)}`,
+      ],
+      [
+        'Service Fees',
+        `£${(-newResults.expenses.serviceFees).toFixed(2)}`,
+        `£${(-newResults.expenses.serviceFees / 12).toFixed(2)}`,
+      ],
+      [
+        'Other Expenses',
+        `£${(-newResults.expenses.otherExpenses).toFixed(2)}`,
+        `£${(-newResults.expenses.otherExpenses / 12).toFixed(2)}`,
+      ],
+      [
+        'Total Expenses',
+        `£${(-newResults.totalExpenses).toFixed(2)}`,
+        `£${(-newResults.totalExpenses / 12).toFixed(2)}`,
+      ],
+      ['', '', ''],
+      [
+        'Profit Before Tax',
+        `£${newResults.profitBeforeTax.toFixed(2)}`,
+        `£${(newResults.profitBeforeTax / 12).toFixed(2)}`,
+      ],
+      [
+        'Tax Owed',
+        `£${(-newResults.taxOwed).toFixed(2)}`,
+        `£${(-newResults.taxOwed / 12).toFixed(2)}`,
+      ],
+      [
+        'Net Profit After Tax',
+        `£${newResults.netProfit.toFixed(2)}`,
+        `£${newResults.monthlyNetProfit.toFixed(2)}`,
+      ],
+      ['', '', ''],
+      currentPropertyValue > 0
+        ? ['Gross Rental Yield', `${newResults.grossYield.toFixed(2)}%`, '']
+        : null,
+      currentPropertyValue > 0
+        ? ['Net Rental Yield', `${newResults.netYield.toFixed(2)}%`, '']
+        : null,
+      currentCapitalInvested > 0
+        ? ['Cash-on-Cash Return', `${newResults.cashOnCashReturn.toFixed(2)}%`, '']
+        : null,
     ].filter(Boolean); // Filter out null values from optional rows
     setCsvData(csvExportData);
   };
@@ -160,15 +238,28 @@ export default function RentalIncomeCalculator() {
   useEffect(() => {
     setHasCalculated(false);
     setResults(null);
-  }, [monthlyRent, propertyValue, capitalInvested, mortgagePayment, insurance, maintenance, managementFees, groundRent, serviceFees, voidPeriods, taxRate, otherAllowableExpenses]);
+  }, [
+    monthlyRent,
+    propertyValue,
+    capitalInvested,
+    mortgagePayment,
+    insurance,
+    maintenance,
+    managementFees,
+    groundRent,
+    serviceFees,
+    voidPeriods,
+    taxRate,
+    otherAllowableExpenses,
+  ]);
 
   return (
     <>
-      <script type="application/ld+json">
-        {JSON.stringify(rentalIncomeCalculatorJsonLd)}
-      </script>
+      <script type="application/ld+json">{JSON.stringify(rentalIncomeCalculatorJsonLd)}</script>
 
-      <TooltipProvider> {/* New wrapper */}
+      <TooltipProvider>
+        {' '}
+        {/* New wrapper */}
         <div className="bg-white dark:bg-gray-900">
           {/* Page Header */}
           <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
@@ -178,7 +269,8 @@ export default function RentalIncomeCalculator() {
                   UK Rental Income Calculator 2025/26
                 </h1>
                 <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                  Calculate your rental property profit, tax obligations, and rental yield. Free calculator for UK landlords and property investors.
+                  Calculate your rental property profit, tax obligations, and rental yield. Free
+                  calculator for UK landlords and property investors.
                 </p>
               </div>
             </div>
@@ -244,7 +336,10 @@ export default function RentalIncomeCalculator() {
                           placeholder="e.g. 50000"
                         />
                       </div>
-                      <p className="text-xs text-gray-500">(for cash-on-cash return calculation - e.g., deposit, legal fees, stamp duty)</p>
+                      <p className="text-xs text-gray-500">
+                        (for cash-on-cash return calculation - e.g., deposit, legal fees, stamp
+                        duty)
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -301,7 +396,9 @@ export default function RentalIncomeCalculator() {
                           placeholder="e.g. 120"
                         />
                       </div>
-                      <p className="text-xs text-gray-500">Monthly agent fees (typically 8-12% of rent)</p>
+                      <p className="text-xs text-gray-500">
+                        Monthly agent fees (typically 8-12% of rent)
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -341,7 +438,9 @@ export default function RentalIncomeCalculator() {
                           placeholder="e.g. 1000"
                         />
                       </div>
-                      <p className="text-xs text-gray-500">Annual budget for repairs and maintenance</p>
+                      <p className="text-xs text-gray-500">
+                        Annual budget for repairs and maintenance
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -373,7 +472,9 @@ export default function RentalIncomeCalculator() {
                           placeholder="e.g. 500"
                         />
                       </div>
-                      <p className="text-xs text-gray-500">Annual service charge (leasehold properties)</p>
+                      <p className="text-xs text-gray-500">
+                        Annual service charge (leasehold properties)
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -413,7 +514,9 @@ export default function RentalIncomeCalculator() {
                           placeholder="20"
                         />
                       </div>
-                      <p className="text-xs text-gray-500">Basic: 20%, Higher: 40%, Additional: 45%</p>
+                      <p className="text-xs text-gray-500">
+                        Basic: 20%, Higher: 40%, Additional: 45%
+                      </p>
                     </div>
 
                     <Button onClick={handleCalculate} className="w-full text-lg">
@@ -429,22 +532,37 @@ export default function RentalIncomeCalculator() {
                 {hasCalculated && results ? (
                   <>
                     <div className="flex justify-between items-center non-printable">
-                      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Rental Income Analysis</h2>
-                      <ExportActions csvData={csvData} fileName="rental-income-calculation" title="Rental Income Calculation" />
+                      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                        Rental Income Analysis
+                      </h2>
+                      <ExportActions
+                        csvData={csvData}
+                        fileName="rental-income-calculation"
+                        title="Rental Income Calculation"
+                      />
                     </div>
 
                     {/* Key Metrics */}
                     <div className="grid md:grid-cols-3 gap-4">
-                      <Card className={`${results.netProfit >= 0 ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700' : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700'}`}>
+                      <Card
+                        className={`${results.netProfit >= 0 ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700' : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700'}`}
+                      >
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between">
                             <div>
                               <p className="text-sm font-medium">Monthly Net Profit</p>
-                              <p className={`text-2xl font-bold ${results.netProfit >= 0 ? 'text-green-900' : 'text-red-900'}`}>
-                                {results.netProfit >= 0 ? '£' : '-£'}{Math.abs(results.monthlyNetProfit).toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                              <p
+                                className={`text-2xl font-bold ${results.netProfit >= 0 ? 'text-green-900' : 'text-red-900'}`}
+                              >
+                                {results.netProfit >= 0 ? '£' : '-£'}
+                                {Math.abs(results.monthlyNetProfit).toLocaleString('en-GB', {
+                                  maximumFractionDigits: 0,
+                                })}
                               </p>
                             </div>
-                            <TrendingUp className={`w-8 h-8 ${results.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                            <TrendingUp
+                              className={`w-8 h-8 ${results.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                            />
                           </div>
                         </CardContent>
                       </Card>
@@ -485,12 +603,18 @@ export default function RentalIncomeCalculator() {
                           <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-sm font-medium text-orange-800">Cash-on-Cash Return</p>
-                                <p className={`text-2xl font-bold ${results.cashOnCashReturn >= 0 ? 'text-green-900' : 'text-red-900'}`}>
+                                <p className="text-sm font-medium text-orange-800">
+                                  Cash-on-Cash Return
+                                </p>
+                                <p
+                                  className={`text-2xl font-bold ${results.cashOnCashReturn >= 0 ? 'text-green-900' : 'text-red-900'}`}
+                                >
                                   {results.cashOnCashReturn.toFixed(2)}%
                                 </p>
                               </div>
-                              <TrendingUp className={`w-8 h-8 ${results.cashOnCashReturn >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                              <TrendingUp
+                                className={`w-8 h-8 ${results.cashOnCashReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                              />
                             </div>
                           </CardContent>
                         </Card>
@@ -506,19 +630,27 @@ export default function RentalIncomeCalculator() {
                         <div className="space-y-4">
                           {/* Income Section */}
                           <div>
-                            <h4 className="font-semibold text-green-700 mb-3">Annual Rental Income</h4>
+                            <h4 className="font-semibold text-green-700 mb-3">
+                              Annual Rental Income
+                            </h4>
                             <div className="space-y-2">
                               <div className="flex justify-between">
                                 <span>Gross Rental Income:</span>
-                                <span className="font-semibold text-green-600">£{results.annualRentBeforeVoids.toLocaleString()}</span>
+                                <span className="font-semibold text-green-600">
+                                  £{results.annualRentBeforeVoids.toLocaleString()}
+                                </span>
                               </div>
                               <div className="flex justify-between">
                                 <span>Less: Void Periods ({voidPeriods} months):</span>
-                                <span className="font-semibold text-red-600">-£{results.voidLoss.toLocaleString()}</span>
+                                <span className="font-semibold text-red-600">
+                                  -£{results.voidLoss.toLocaleString()}
+                                </span>
                               </div>
                               <div className="flex justify-between border-t pt-2">
                                 <span className="font-semibold">Net Rental Income:</span>
-                                <span className="font-bold text-green-700">£{results.annualRentAfterVoids.toLocaleString()}</span>
+                                <span className="font-bold text-green-700">
+                                  £{results.annualRentAfterVoids.toLocaleString()}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -571,7 +703,9 @@ export default function RentalIncomeCalculator() {
                               )}
                               <div className="flex justify-between border-t pt-2 font-semibold">
                                 <span>Total Expenses:</span>
-                                <span className="text-red-700">-£{results.totalExpenses.toLocaleString()}</span>
+                                <span className="text-red-700">
+                                  -£{results.totalExpenses.toLocaleString()}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -582,17 +716,27 @@ export default function RentalIncomeCalculator() {
                             <div className="space-y-2">
                               <div className="flex justify-between">
                                 <span>Profit Before Tax:</span>
-                                <span className={`font-semibold ${results.profitBeforeTax >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {results.profitBeforeTax >= 0 ? '£' : '-£'}{Math.abs(results.profitBeforeTax).toLocaleString()}
+                                <span
+                                  className={`font-semibold ${results.profitBeforeTax >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                                >
+                                  {results.profitBeforeTax >= 0 ? '£' : '-£'}
+                                  {Math.abs(results.profitBeforeTax).toLocaleString()}
                                 </span>
                               </div>
                               <div className="flex justify-between">
                                 <span>Income Tax ({taxRate}%):</span>
-                                <span className="font-semibold text-red-600">-£{results.taxOwed.toLocaleString()}</span>
+                                <span className="font-semibold text-red-600">
+                                  -£{results.taxOwed.toLocaleString()}
+                                </span>
                               </div>
-                              <div className={`flex justify-between border-t pt-2 font-bold text-lg ${results.netProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              <div
+                                className={`flex justify-between border-t pt-2 font-bold text-lg ${results.netProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}
+                              >
                                 <span>Net Annual Profit:</span>
-                                <span>{results.netProfit >= 0 ? '£' : '-£'}{Math.abs(results.netProfit).toLocaleString()}</span>
+                                <span>
+                                  {results.netProfit >= 0 ? '£' : '-£'}
+                                  {Math.abs(results.netProfit).toLocaleString()}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -610,18 +754,25 @@ export default function RentalIncomeCalculator() {
                           <div className="grid md:grid-cols-2 gap-6">
                             <div>
                               <h4 className="font-semibold mb-2">Gross Rental Yield</h4>
-                              <p className="text-3xl font-bold text-blue-700">{results.grossYield.toFixed(2)}%</p>
+                              <p className="text-3xl font-bold text-blue-700">
+                                {results.grossYield.toFixed(2)}%
+                              </p>
                               <p className="text-sm text-gray-600 mt-2">
-                                Based on gross annual rent of £{results.annualRentBeforeVoids.toLocaleString()} and property value of £{Number(propertyValue).toLocaleString()}
+                                Based on gross annual rent of £
+                                {results.annualRentBeforeVoids.toLocaleString()} and property value
+                                of £{Number(propertyValue).toLocaleString()}
                               </p>
                             </div>
                             <div>
                               <h4 className="font-semibold mb-2">Net Rental Yield</h4>
-                              <p className={`text-3xl font-bold ${results.netYield >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              <p
+                                className={`text-3xl font-bold ${results.netYield >= 0 ? 'text-green-700' : 'text-red-700'}`}
+                              >
                                 {results.netYield.toFixed(2)}%
                               </p>
                               <p className="text-sm text-gray-600 mt-2">
-                                After all expenses and tax, based on net profit of £{Math.abs(results.netProfit).toLocaleString()}
+                                After all expenses and tax, based on net profit of £
+                                {Math.abs(results.netProfit).toLocaleString()}
                               </p>
                             </div>
                           </div>
@@ -639,11 +790,15 @@ export default function RentalIncomeCalculator() {
                           <div className="grid md:grid-cols-1 gap-6">
                             <div>
                               <h4 className="font-semibold mb-2">Cash-on-Cash Return</h4>
-                              <p className={`text-3xl font-bold ${results.cashOnCashReturn >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                              <p
+                                className={`text-3xl font-bold ${results.cashOnCashReturn >= 0 ? 'text-green-700' : 'text-red-700'}`}
+                              >
                                 {results.cashOnCashReturn.toFixed(2)}%
                               </p>
                               <p className="text-sm text-gray-600 mt-2">
-                                Annual net profit (£{Math.abs(results.netProfit).toLocaleString()}) as a percentage of your total cash invested (£{Number(capitalInvested).toLocaleString()}).
+                                Annual net profit (£{Math.abs(results.netProfit).toLocaleString()})
+                                as a percentage of your total cash invested (£
+                                {Number(capitalInvested).toLocaleString()}).
                               </p>
                             </div>
                           </div>
@@ -660,9 +815,14 @@ export default function RentalIncomeCalculator() {
                           <ul className="space-y-1 text-xs">
                             <li>• Rental income is added to your total income for tax purposes</li>
                             <li>• You can claim tax relief on allowable expenses</li>
-                            <li>• Mortgage interest relief is restricted (gradually being phased out)</li>
+                            <li>
+                              • Mortgage interest relief is restricted (gradually being phased out)
+                            </li>
                             <li>• Consider the impact on your overall tax position</li>
-                            <li>• This calculator provides estimates only - consult a tax advisor for accurate advice</li>
+                            <li>
+                              • This calculator provides estimates only - consult a tax advisor for
+                              accurate advice
+                            </li>
                           </ul>
                         </div>
                       </CardContent>
@@ -672,10 +832,17 @@ export default function RentalIncomeCalculator() {
                   <Card className="lg:col-span-2 flex items-center justify-center h-[400px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="text-center text-gray-500">
                       <Home className="w-12 h-12 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold">Ready to analyze your rental income?</h3>
-                      <p>Enter your rental income and expenses to see your profit and yield calculations.</p>
+                      <h3 className="text-xl font-semibold">
+                        Ready to analyze your rental income?
+                      </h3>
+                      <p>
+                        Enter your rental income and expenses to see your profit and yield
+                        calculations.
+                      </p>
                       {hasCalculated && !results && (
-                        <p className="text-red-500 mt-2">Please enter a valid monthly rent amount.</p>
+                        <p className="text-red-500 mt-2">
+                          Please enter a valid monthly rent amount.
+                        </p>
                       )}
                     </div>
                   </Card>
@@ -687,7 +854,10 @@ export default function RentalIncomeCalculator() {
           {/* FAQ Section */}
           <div className="bg-gray-50 dark:bg-gray-800/50 py-12 non-printable">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <FAQSection faqs={rentalIncomeFAQs} title="Rental Income - Frequently Asked Questions" />
+              <FAQSection
+                faqs={rentalIncomeFAQs}
+                title="Rental Income - Frequently Asked Questions"
+              />
             </div>
           </div>
         </div>
@@ -716,35 +886,43 @@ const FAQSection = ({ faqs, title }) => (
 
 const rentalIncomeFAQs = [
   {
-    question: "What is rental yield and why is it important?",
-    answer: "Rental yield shows the annual return on your property investment as a percentage. Gross yield is annual rent divided by property value. Net yield considers expenses. In the UK, gross yields typically range from 3-8% depending on location. Higher yields often indicate higher risk areas or properties requiring more management."
+    question: 'What is rental yield and why is it important?',
+    answer:
+      'Rental yield shows the annual return on your property investment as a percentage. Gross yield is annual rent divided by property value. Net yield considers expenses. In the UK, gross yields typically range from 3-8% depending on location. Higher yields often indicate higher risk areas or properties requiring more management.',
   },
   {
-    question: "What expenses can I claim against rental income?",
-    answer: "You can claim legitimate business expenses including: mortgage interest (with restrictions for higher-rate taxpayers), insurance, maintenance and repairs, management fees, ground rent and service charges, accountancy fees, and advertising for tenants. You cannot claim capital improvements or your own time."
+    question: 'What expenses can I claim against rental income?',
+    answer:
+      'You can claim legitimate business expenses including: mortgage interest (with restrictions for higher-rate taxpayers), insurance, maintenance and repairs, management fees, ground rent and service charges, accountancy fees, and advertising for tenants. You cannot claim capital improvements or your own time.',
   },
   {
-    question: "How do I account for void periods?",
-    answer: "Void periods (empty property between tenants) are inevitable. Budget 1-2 weeks per year minimum, more in areas with high tenant turnover. Our calculator lets you specify void periods in months per year. Factor this into your cash flow projections as it directly impacts your actual rental income."
+    question: 'How do I account for void periods?',
+    answer:
+      'Void periods (empty property between tenants) are inevitable. Budget 1-2 weeks per year minimum, more in areas with high tenant turnover. Our calculator lets you specify void periods in months per year. Factor this into your cash flow projections as it directly impacts your actual rental income.',
   },
   {
     question: "What's a good rental yield for UK property?",
-    answer: "This varies by location and property type. Generally: 4-6% gross yield in expensive areas like London, 6-8% in most UK cities, 8%+ in cheaper areas (but often with higher management needs). Consider net yield after expenses - typically 2-4% lower than gross yield."
+    answer:
+      'This varies by location and property type. Generally: 4-6% gross yield in expensive areas like London, 6-8% in most UK cities, 8%+ in cheaper areas (but often with higher management needs). Consider net yield after expenses - typically 2-4% lower than gross yield.',
   },
   {
-    question: "Should I use a letting agent or manage the property myself?",
-    answer: "Letting agents typically charge 8-12% of rent plus setup fees, but provide tenant finding, rent collection, maintenance coordination, and legal compliance. Self-management saves money but requires time and knowledge of landlord obligations. Factor management costs into your calculations either way."
+    question: 'Should I use a letting agent or manage the property myself?',
+    answer:
+      'Letting agents typically charge 8-12% of rent plus setup fees, but provide tenant finding, rent collection, maintenance coordination, and legal compliance. Self-management saves money but requires time and knowledge of landlord obligations. Factor management costs into your calculations either way.',
   },
   {
-    question: "How much should I budget for maintenance and repairs?",
-    answer: "Budget 10-15% of annual rent for maintenance and repairs, more for older properties. This covers regular maintenance, emergency repairs, safety checks (gas/electrical), and periodic updates. New-build properties may need less initially but will require more as they age."
+    question: 'How much should I budget for maintenance and repairs?',
+    answer:
+      'Budget 10-15% of annual rent for maintenance and repairs, more for older properties. This covers regular maintenance, emergency repairs, safety checks (gas/electrical), and periodic updates. New-build properties may need less initially but will require more as they age.',
   },
   {
-    question: "What insurance do I need as a landlord?",
-    answer: "You need buildings insurance (often required by mortgage lender) and should consider landlord insurance covering liability, loss of rent, and contents if furnished. Costs vary by property value, location, and coverage level - typically £200-£600 annually for standard properties."
+    question: 'What insurance do I need as a landlord?',
+    answer:
+      'You need buildings insurance (often required by mortgage lender) and should consider landlord insurance covering liability, loss of rent, and contents if furnished. Costs vary by property value, location, and coverage level - typically £200-£600 annually for standard properties.',
   },
   {
-    question: "How do taxes work on rental income?",
-    answer: "Rental income is added to your other income and taxed at your marginal rate (20%, 40%, or 45%). You can deduct allowable expenses. Higher-rate taxpayers have restrictions on mortgage interest relief. Consider the £1,000 property allowance for small landlords. Seek professional advice for complex situations."
-  }
+    question: 'How do taxes work on rental income?',
+    answer:
+      'Rental income is added to your other income and taxed at your marginal rate (20%, 40%, or 45%). You can deduct allowable expenses. Higher-rate taxpayers have restrictions on mortgage interest relief. Consider the £1,000 property allowance for small landlords. Seek professional advice for complex situations.',
+  },
 ];

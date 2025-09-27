@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Calculator, TrendingUp, Wallet, ArrowRight } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { PoundSterling, Calculator, TrendingUp, Wallet, ArrowRight } from 'lucide-react';
 
 // Simplified tax/NI calculation, should be replaced with a robust shared function in a real app
 const calculateTakeHome = (salary) => {
-    const personalAllowance = 12570;
-    let tax = 0;
-    let ni = 0;
-    const taxableIncome = Math.max(0, salary - personalAllowance);
-    if (taxableIncome > 0) {
-        if (taxableIncome <= 37700) tax += taxableIncome * 0.20;
-        else if (taxableIncome <= 125140) tax += (37700 * 0.20) + ((taxableIncome - 37700) * 0.40);
-        else tax += (37700 * 0.20) + ((125140 - 37700) * 0.40) + ((taxableIncome - 125140) * 0.45);
-    }
-    const niableIncome = Math.max(0, salary - 12570);
-    if (niableIncome > 0) {
-        if (niableIncome <= 37700) ni += niableIncome * 0.08;
-        else ni += (37700 * 0.08) + ((niableIncome - 37700) * 0.02);
-    }
-    return salary - tax - ni;
+  const personalAllowance = 12570;
+  let tax = 0;
+  let ni = 0;
+  const taxableIncome = Math.max(0, salary - personalAllowance);
+  if (taxableIncome > 0) {
+    if (taxableIncome <= 37700) tax += taxableIncome * 0.2;
+    else if (taxableIncome <= 125140) tax += 37700 * 0.2 + (taxableIncome - 37700) * 0.4;
+    else tax += 37700 * 0.2 + (125140 - 37700) * 0.4 + (taxableIncome - 125140) * 0.45;
+  }
+  const niableIncome = Math.max(0, salary - 12570);
+  if (niableIncome > 0) {
+    if (niableIncome <= 37700) ni += niableIncome * 0.08;
+    else ni += 37700 * 0.08 + (niableIncome - 37700) * 0.02;
+  }
+  return salary - tax - ni;
 };
 
 export default function OvertimeBonusCalculator() {
@@ -52,11 +52,11 @@ export default function OvertimeBonusCalculator() {
       actualBonusReceived,
       deductionsOnBonus,
       effectiveTaxRateOnBonus,
-      bonus
+      bonus,
     });
     setHasCalculated(true);
   };
-  
+
   useEffect(() => {
     setHasCalculated(false);
     setResults(null);
@@ -71,7 +71,8 @@ export default function OvertimeBonusCalculator() {
               Overtime & Bonus Tax Calculator
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Worked extra hours or got a bonus? Find out how much you'll actually take home after tax and NI.
+              Worked extra hours or got a bonus? Find out how much you'll actually take home after
+              tax and NI.
             </p>
           </div>
         </div>
@@ -81,20 +82,36 @@ export default function OvertimeBonusCalculator() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="non-printable">
             <Card>
-              <CardHeader><CardTitle>Your Pay</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Your Pay</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="baseSalary">Your Normal Annual Salary</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="baseSalary" type="number" value={baseSalary} onChange={(e) => setBaseSalary(e.target.value)} className="pl-10" placeholder="e.g. 50000" />
+                    <Input
+                      id="baseSalary"
+                      type="number"
+                      value={baseSalary}
+                      onChange={(e) => setBaseSalary(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 50000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="extraPay">Overtime/Bonus Amount (Gross)</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="extraPay" type="number" value={extraPay} onChange={(e) => setExtraPay(e.target.value)} className="pl-10" placeholder="e.g. 5000" />
+                    <Input
+                      id="extraPay"
+                      type="number"
+                      value={extraPay}
+                      onChange={(e) => setExtraPay(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 5000"
+                    />
                   </div>
                 </div>
                 <Button onClick={handleCalculate} className="w-full text-lg">
@@ -116,9 +133,14 @@ export default function OvertimeBonusCalculator() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <p className="text-sm text-green-700">From a £{results.bonus.toLocaleString()} bonus, you take home:</p>
+                    <p className="text-sm text-green-700">
+                      From a £{results.bonus.toLocaleString()} bonus, you take home:
+                    </p>
                     <p className="text-4xl font-bold text-green-900 mt-2">
-                      £{results.actualBonusReceived.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
+                      £
+                      {results.actualBonusReceived.toLocaleString('en-GB', {
+                        minimumFractionDigits: 2,
+                      })}
                     </p>
                   </CardContent>
                 </Card>
@@ -129,20 +151,36 @@ export default function OvertimeBonusCalculator() {
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span>Gross Bonus/Overtime:</span>
-                      <span className="font-semibold text-lg">£{results.bonus.toLocaleString()}</span>
+                      <span className="font-semibold text-lg">
+                        £{results.bonus.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Estimated Tax & NI on this amount:</span>
-                      <span className="font-semibold text-lg text-red-600">-£{results.deductionsOnBonus.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                      <span className="font-semibold text-lg text-red-600">
+                        -£
+                        {results.deductionsOnBonus.toLocaleString('en-GB', {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center border-t pt-3 mt-3">
                       <span className="font-bold">Net Amount in Your Pocket:</span>
-                      <span className="font-bold text-lg text-green-700">£{results.actualBonusReceived.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</span>
+                      <span className="font-bold text-lg text-green-700">
+                        £
+                        {results.actualBonusReceived.toLocaleString('en-GB', {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-blue-800">This represents an effective tax rate of
-                        <span className="font-bold"> {results.effectiveTaxRateOnBonus.toFixed(1)}% </span>
-                         on your extra pay.
+                      <p className="text-sm text-blue-800">
+                        This represents an effective tax rate of
+                        <span className="font-bold">
+                          {' '}
+                          {results.effectiveTaxRateOnBonus.toFixed(1)}%{' '}
+                        </span>
+                        on your extra pay.
                       </p>
                     </div>
                   </CardContent>

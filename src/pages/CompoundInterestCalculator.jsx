@@ -1,12 +1,17 @@
-
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PoundSterling, Calculator, TrendingUp, Percent } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { PoundSterling, Calculator, TrendingUp, Percent } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
 
 export default function CompoundInterestCalculator() {
   const [principal, setPrincipal] = useState('');
@@ -45,29 +50,29 @@ export default function CompoundInterestCalculator() {
     }
 
     const totalAmount = futureValuePrincipal + futureValueContributions;
-    const totalContributions = p + (pmt * 12 * t);
+    const totalContributions = p + pmt * 12 * t;
     const totalInterest = totalAmount - totalContributions;
 
     const newResults = {
       totalAmount,
       totalContributions,
       totalInterest,
-      finalBalance: totalAmount
+      finalBalance: totalAmount,
     };
 
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Metric", "Value"],
-      ["Initial Investment", `£${p.toFixed(2)}`],
-      ["Monthly Contribution", `£${pmt.toFixed(2)}`],
-      ["Interest Rate", `${interestRate}%`],
-      ["Time Period", `${t} years`],
-      ["", ""],
-      ["Total Contributions", `£${totalContributions.toFixed(2)}`],
-      ["Interest Earned", `£${totalInterest.toFixed(2)}`],
-      ["Final Amount", `£${totalAmount.toFixed(2)}`]
+      ['Metric', 'Value'],
+      ['Initial Investment', `£${p.toFixed(2)}`],
+      ['Monthly Contribution', `£${pmt.toFixed(2)}`],
+      ['Interest Rate', `${interestRate}%`],
+      ['Time Period', `${t} years`],
+      ['', ''],
+      ['Total Contributions', `£${totalContributions.toFixed(2)}`],
+      ['Interest Earned', `£${totalInterest.toFixed(2)}`],
+      ['Final Amount', `£${totalAmount.toFixed(2)}`],
     ];
     setCsvData(csvExportData);
   };
@@ -86,7 +91,8 @@ export default function CompoundInterestCalculator() {
               Compound Interest Calculator
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              "Compound interest is the eighth wonder of the world" - Einstein. Discover the magic of time and compounding.
+              "Compound interest is the eighth wonder of the world" - Einstein. Discover the magic
+              of time and compounding.
             </p>
           </div>
         </div>
@@ -96,34 +102,65 @@ export default function CompoundInterestCalculator() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="non-printable">
             <Card>
-              <CardHeader><CardTitle>Investment Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Investment Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="principal">Initial Investment</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="principal" type="number" value={principal} onChange={e => setPrincipal(e.target.value)} className="pl-10" placeholder="e.g. 10000" />
+                    <Input
+                      id="principal"
+                      type="number"
+                      value={principal}
+                      onChange={(e) => setPrincipal(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 10000"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="monthlyContribution">Monthly Contribution</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="monthlyContribution" type="number" value={monthlyContribution} onChange={e => setMonthlyContribution(e.target.value)} className="pl-10" placeholder="e.g. 500" />
+                    <Input
+                      id="monthlyContribution"
+                      type="number"
+                      value={monthlyContribution}
+                      onChange={(e) => setMonthlyContribution(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 500"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="interestRate">Annual Interest Rate (%)</Label>
-                  <Input id="interestRate" type="number" value={interestRate} onChange={e => setInterestRate(e.target.value)} step="0.1" placeholder="e.g. 7" />
+                  <Input
+                    id="interestRate"
+                    type="number"
+                    value={interestRate}
+                    onChange={(e) => setInterestRate(e.target.value)}
+                    step="0.1"
+                    placeholder="e.g. 7"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="years">Time Period (Years)</Label>
-                  <Input id="years" type="number" value={years} onChange={e => setYears(e.target.value)} placeholder="e.g. 20" />
+                  <Input
+                    id="years"
+                    type="number"
+                    value={years}
+                    onChange={(e) => setYears(e.target.value)}
+                    placeholder="e.g. 20"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="compound">Compound Frequency</Label>
                   <Select value={compoundFrequency} onValueChange={setCompoundFrequency}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">Annually</SelectItem>
                       <SelectItem value="4">Quarterly</SelectItem>
@@ -139,7 +176,7 @@ export default function CompoundInterestCalculator() {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="space-y-6">
             {hasCalculated && results ? (
               <>
@@ -147,7 +184,9 @@ export default function CompoundInterestCalculator() {
                   <h2 className="text-2xl font-bold text-gray-800">Your Investment Growth</h2>
                 </div>
                 <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                  <CardHeader><CardTitle className="text-green-900">Final Amount</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle className="text-green-900">Final Amount</CardTitle>
+                  </CardHeader>
                   <CardContent>
                     <div className="text-center p-4">
                       <TrendingUp className="w-12 h-12 mx-auto text-green-600 mb-4" />
@@ -159,29 +198,38 @@ export default function CompoundInterestCalculator() {
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle>Breakdown</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle>Breakdown</CardTitle>
+                  </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
                       <span>Total Contributions:</span>
-                      <span className="font-semibold">£{results.totalContributions.toLocaleString()}</span>
+                      <span className="font-semibold">
+                        £{results.totalContributions.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Interest Earned:</span>
-                      <span className="font-semibold text-green-600">£{results.totalInterest.toLocaleString()}</span>
+                      <span className="font-semibold text-green-600">
+                        £{results.totalInterest.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between border-t pt-3">
                       <span>Total Growth:</span>
                       <span className="font-bold text-lg">
-                        {results.totalContributions > 0 ? 
-                          `${((results.totalInterest / results.totalContributions) * 100).toFixed(1)}%` : 
-                          'N/A'
-                        }
+                        {results.totalContributions > 0
+                          ? `${((results.totalInterest / results.totalContributions) * 100).toFixed(1)}%`
+                          : 'N/A'}
                       </span>
                     </div>
                   </CardContent>
                 </Card>
                 <div className="non-printable pt-6">
-                  <ExportActions csvData={csvData} fileName="compound-interest" title="Compound Interest Calculation" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="compound-interest"
+                    title="Compound Interest Calculation"
+                  />
                 </div>
               </>
             ) : (

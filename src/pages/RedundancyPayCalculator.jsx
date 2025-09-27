@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Calculator, Briefcase, AlertTriangle } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { PoundSterling, Calculator, Briefcase, AlertTriangle } from 'lucide-react';
 
 // Statutory limits for 2024/2025 - check gov.uk for latest figures
 const MAX_WEEKLY_PAY = 700;
@@ -23,7 +23,10 @@ export default function RedundancyPayCalculator() {
     const cappedPay = Math.min(pay, MAX_WEEKLY_PAY);
 
     if (currentAge < 18 || service < 2) {
-      setResults({ redundancyPay: 0, message: "You must have at least 2 years of continuous service." });
+      setResults({
+        redundancyPay: 0,
+        message: 'You must have at least 2 years of continuous service.',
+      });
       setHasCalculated(true);
       return;
     }
@@ -39,7 +42,7 @@ export default function RedundancyPayCalculator() {
         totalWeeks += 0.5;
       }
     }
-    
+
     // The number of weeks is capped at 20 years of service, but the calculation method above implicitly handles this by iterating up to `service` which is capped at 20. Total weeks can exceed 20 (e.g. 20 years at 1.5 weeks/year = 30 weeks).
 
     const redundancyPay = totalWeeks * cappedPay;
@@ -62,7 +65,8 @@ export default function RedundancyPayCalculator() {
               Statutory Redundancy Pay Calculator
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              If you're facing redundancy, know your rights. Calculate your estimated statutory redundancy entitlement.
+              If you're facing redundancy, know your rights. Calculate your estimated statutory
+              redundancy entitlement.
             </p>
           </div>
         </div>
@@ -72,23 +76,46 @@ export default function RedundancyPayCalculator() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="non-printable">
             <Card>
-              <CardHeader><CardTitle>Your Details</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Your Details</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="age">Age at Redundancy</Label>
-                  <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 45" />
+                  <Input
+                    id="age"
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    placeholder="e.g. 45"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="yearsOfService">Full Years of Service</Label>
-                  <Input id="yearsOfService" type="number" value={yearsOfService} onChange={(e) => setYearsOfService(e.target.value)} placeholder="e.g. 10" />
+                  <Input
+                    id="yearsOfService"
+                    type="number"
+                    value={yearsOfService}
+                    onChange={(e) => setYearsOfService(e.target.value)}
+                    placeholder="e.g. 10"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="weeklyPay">Average Weekly Pay (before tax)</Label>
                   <div className="relative">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="weeklyPay" type="number" value={weeklyPay} onChange={(e) => setWeeklyPay(e.target.value)} className="pl-10" placeholder="e.g. 600" />
+                    <Input
+                      id="weeklyPay"
+                      type="number"
+                      value={weeklyPay}
+                      onChange={(e) => setWeeklyPay(e.target.value)}
+                      className="pl-10"
+                      placeholder="e.g. 600"
+                    />
                   </div>
-                  <p className="text-xs text-gray-500">Weekly pay is capped at £{MAX_WEEKLY_PAY} for this calculation.</p>
+                  <p className="text-xs text-gray-500">
+                    Weekly pay is capped at £{MAX_WEEKLY_PAY} for this calculation.
+                  </p>
                 </div>
                 <Button onClick={handleCalculate} className="w-full text-lg">
                   <Calculator className="w-5 h-5 mr-2" />
@@ -115,7 +142,8 @@ export default function RedundancyPayCalculator() {
                     {results.message && <p className="text-red-600 mt-2">{results.message}</p>}
                     {!results.message && (
                       <p className="text-gray-600 mt-2">
-                        Based on {results.totalWeeks.toFixed(1)} weeks at a capped weekly pay of £{results.cappedPay.toLocaleString()}.
+                        Based on {results.totalWeeks.toFixed(1)} weeks at a capped weekly pay of £
+                        {results.cappedPay.toLocaleString()}.
                       </p>
                     )}
                   </CardContent>
@@ -128,14 +156,21 @@ export default function RedundancyPayCalculator() {
                     <div className="flex items-start gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
                       <div>
-                        This is an estimate of your <strong>statutory</strong> redundancy pay only. Your employer may offer a more generous contractual redundancy package.
+                        This is an estimate of your <strong>statutory</strong> redundancy pay only.
+                        Your employer may offer a more generous contractual redundancy package.
                       </div>
                     </div>
                     <ul className="list-disc list-inside space-y-2">
-                      <li>You must have at least 2 years of continuous service to qualify for statutory redundancy pay.</li>
+                      <li>
+                        You must have at least 2 years of continuous service to qualify for
+                        statutory redundancy pay.
+                      </li>
                       <li>The first £30,000 of redundancy pay is usually tax-free.</li>
                       <li>This calculator uses the rates for England, Scotland, and Wales.</li>
-                      <li>Always check your contract and consult with ACAS or a legal professional for advice.</li>
+                      <li>
+                        Always check your contract and consult with ACAS or a legal professional for
+                        advice.
+                      </li>
                     </ul>
                   </CardContent>
                 </Card>

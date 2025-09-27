@@ -1,34 +1,36 @@
-
-import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { PoundSterling, Calculator, Building2, User, Percent, Shield } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
-import FAQSection from "../components/calculators/FAQSection";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { PoundSterling, Calculator, Building2, User, Percent, Shield } from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
+import FAQSection from '../components/calculators/FAQSection';
 
 const payrollFAQs = [
   {
     question: "What are an employer's main payroll costs?",
-    answer: "Besides the employee's gross salary, the main costs for an employer are Employer's National Insurance contributions and mandatory employer pension contributions."
+    answer:
+      "Besides the employee's gross salary, the main costs for an employer are Employer's National Insurance contributions and mandatory employer pension contributions.",
   },
   {
     question: "How much is Employer's National Insurance?",
-    answer: "For the 2025/26 tax year, Employer's NI is 13.8% on all earnings above the Secondary Threshold, which is £9,100 per year (£175 per week)."
+    answer:
+      "For the 2025/26 tax year, Employer's NI is 13.8% on all earnings above the Secondary Threshold, which is £9,100 per year (£175 per week).",
   },
   {
-    question: "What are the minimum employer pension contributions?",
-    answer: "Under auto-enrolment rules, the minimum employer contribution is 3% of the employee's 'qualifying earnings' (between £6,240 and £50,270 per year)."
-  }
+    question: 'What are the minimum employer pension contributions?',
+    answer:
+      "Under auto-enrolment rules, the minimum employer contribution is 3% of the employee's 'qualifying earnings' (between £6,240 and £50,270 per year).",
+  },
 ];
 
 // 2025/26 Tax Year Data
 const employeeNIThresholds = [
   { min: 0, max: 12570, rate: 0 },
   { min: 12571, max: 50270, rate: 0.08 },
-  { min: 50271, max: Infinity, rate: 0.02 }
+  { min: 50271, max: Infinity, rate: 0.02 },
 ];
 
 const employerNIThreshold = 9100; // Secondary Threshold
@@ -59,51 +61,56 @@ export default function PayrollCalculator() {
     }
 
     // Employer Costs
-    const employerNI = salary > employerNIThreshold ? (salary - employerNIThreshold) * employerNIRate : 0;
-    const qualifyingEarnings = Math.max(0, Math.min(salary, pensionQualifyingMax) - pensionQualifyingMin);
+    const employerNI =
+      salary > employerNIThreshold ? (salary - employerNIThreshold) * employerNIRate : 0;
+    const qualifyingEarnings = Math.max(
+      0,
+      Math.min(salary, pensionQualifyingMax) - pensionQualifyingMin
+    );
     const employerPensionContribution = qualifyingEarnings * employerPensionRate;
     const totalCostToEmployer = salary + employerNI + employerPensionContribution;
 
     // Employee Deductions & Take-home
     const employeePensionContribution = qualifyingEarnings * employeePensionRate;
     const salaryAfterPension = salary - employeePensionContribution;
-    
+
     // Employee tax calculation
     let personalAllowance = 12570;
     if (salaryAfterPension > 100000) {
-        personalAllowance = Math.max(0, 12570 - (salaryAfterPension - 100000) / 2);
+      personalAllowance = Math.max(0, 12570 - (salaryAfterPension - 100000) / 2);
     }
     const taxableIncome = Math.max(0, salaryAfterPension - personalAllowance);
-    
+
     let tax = 0;
-    if (taxableIncome > 0) { // Only calculate if there's taxable income
-        const basicRateBand = 50270 - personalAllowance; // 20% rate up to 50270
-        const higherRateBand = 125140 - 50270; // 40% rate between 50270 and 125140
+    if (taxableIncome > 0) {
+      // Only calculate if there's taxable income
+      const basicRateBand = 50270 - personalAllowance; // 20% rate up to 50270
+      const higherRateBand = 125140 - 50270; // 40% rate between 50270 and 125140
 
-        if (taxableIncome <= basicRateBand) {
-            tax = taxableIncome * 0.20;
+      if (taxableIncome <= basicRateBand) {
+        tax = taxableIncome * 0.2;
+      } else {
+        tax = basicRateBand * 0.2;
+        const remainingTaxable = taxableIncome - basicRateBand;
+
+        if (remainingTaxable <= higherRateBand) {
+          tax += remainingTaxable * 0.4;
         } else {
-            tax = basicRateBand * 0.20;
-            const remainingTaxable = taxableIncome - basicRateBand;
-
-            if (remainingTaxable <= higherRateBand) {
-                tax += remainingTaxable * 0.40;
-            } else {
-                tax += higherRateBand * 0.40;
-                const additionalRateTaxable = remainingTaxable - higherRateBand;
-                tax += additionalRateTaxable * 0.45;
-            }
+          tax += higherRateBand * 0.4;
+          const additionalRateTaxable = remainingTaxable - higherRateBand;
+          tax += additionalRateTaxable * 0.45;
         }
+      }
     }
-    
+
     let employeeNI = 0;
     for (const threshold of employeeNIThresholds) {
-        if (salary > threshold.min) {
-            const niableAmount = Math.min(salary, threshold.max) - threshold.min;
-            if (niableAmount > 0) {
-                employeeNI += niableAmount * threshold.rate;
-            }
+      if (salary > threshold.min) {
+        const niableAmount = Math.min(salary, threshold.max) - threshold.min;
+        if (niableAmount > 0) {
+          employeeNI += niableAmount * threshold.rate;
         }
+      }
     }
 
     const totalDeductions = tax + employeeNI + employeePensionContribution;
@@ -117,24 +124,59 @@ export default function PayrollCalculator() {
       employeePensionContribution,
       tax,
       employeeNI,
-      netPay
+      netPay,
     };
-    
+
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-        ["Category", "Description", "Annual", "Monthly"],
-        ["Employer Costs", "Gross Salary", `£${salary.toFixed(2)}`, `£${(salary / 12).toFixed(2)}`],
-        ["Employer Costs", "Employer's NI", `£${employerNI.toFixed(2)}`, `£${(employerNI / 12).toFixed(2)}`],
-        ["Employer Costs", "Employer Pension", `£${employerPensionContribution.toFixed(2)}`, `£${(employerPensionContribution / 12).toFixed(2)}`],
-        ["Employer Costs", "Total Cost to Employ", `£${totalCostToEmployer.toFixed(2)}`, `£${(totalCostToEmployer / 12).toFixed(2)}`],
-        ["---"],
-        ["Employee's Payslip", "Gross Salary", `£${salary.toFixed(2)}`, `£${(salary / 12).toFixed(2)}`],
-        ["Employee's Payslip", "Income Tax", `-£${tax.toFixed(2)}`, `-£${(tax / 12).toFixed(2)}`],
-        ["Employee's Payslip", "Employee's NI", `-£${employeeNI.toFixed(2)}`, `-£${(employeeNI / 12).toFixed(2)}`],
-        ["Employee's Payslip", "Employee Pension", `-£${employeePensionContribution.toFixed(2)}`, `-£${(employeePensionContribution / 12).toFixed(2)}`],
-        ["Employee's Payslip", "Net Take-Home Pay", `£${netPay.toFixed(2)}`, `£${(netPay / 12).toFixed(2)}`],
+      ['Category', 'Description', 'Annual', 'Monthly'],
+      ['Employer Costs', 'Gross Salary', `£${salary.toFixed(2)}`, `£${(salary / 12).toFixed(2)}`],
+      [
+        'Employer Costs',
+        "Employer's NI",
+        `£${employerNI.toFixed(2)}`,
+        `£${(employerNI / 12).toFixed(2)}`,
+      ],
+      [
+        'Employer Costs',
+        'Employer Pension',
+        `£${employerPensionContribution.toFixed(2)}`,
+        `£${(employerPensionContribution / 12).toFixed(2)}`,
+      ],
+      [
+        'Employer Costs',
+        'Total Cost to Employ',
+        `£${totalCostToEmployer.toFixed(2)}`,
+        `£${(totalCostToEmployer / 12).toFixed(2)}`,
+      ],
+      ['---'],
+      [
+        "Employee's Payslip",
+        'Gross Salary',
+        `£${salary.toFixed(2)}`,
+        `£${(salary / 12).toFixed(2)}`,
+      ],
+      ["Employee's Payslip", 'Income Tax', `-£${tax.toFixed(2)}`, `-£${(tax / 12).toFixed(2)}`],
+      [
+        "Employee's Payslip",
+        "Employee's NI",
+        `-£${employeeNI.toFixed(2)}`,
+        `-£${(employeeNI / 12).toFixed(2)}`,
+      ],
+      [
+        "Employee's Payslip",
+        'Employee Pension',
+        `-£${employeePensionContribution.toFixed(2)}`,
+        `-£${(employeePensionContribution / 12).toFixed(2)}`,
+      ],
+      [
+        "Employee's Payslip",
+        'Net Take-Home Pay',
+        `£${netPay.toFixed(2)}`,
+        `£${(netPay / 12).toFixed(2)}`,
+      ],
     ];
     setCsvData(csvExportData);
   }, [grossSalary, employerPension, employeePension]);
@@ -152,7 +194,8 @@ export default function PayrollCalculator() {
               UK Payroll Calculator for Employers
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Estimate the total cost of hiring an employee and see a breakdown of their take-home pay. Updated for 2025/26 tax year.
+              Estimate the total cost of hiring an employee and see a breakdown of their take-home
+              pay. Updated for 2025/26 tax year.
             </p>
           </div>
         </div>
@@ -167,28 +210,50 @@ export default function PayrollCalculator() {
                 <CardTitle>Employee Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                 <div>
+                <div>
                   <Label htmlFor="grossSalary">Employee Gross Annual Salary</Label>
                   <div className="relative mt-2">
                     <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input id="grossSalary" type="number" value={grossSalary} onChange={(e) => setGrossSalary(e.target.value)} className="pl-10" />
+                    <Input
+                      id="grossSalary"
+                      type="number"
+                      value={grossSalary}
+                      onChange={(e) => setGrossSalary(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
                 </div>
-                 <div>
+                <div>
                   <Label htmlFor="employerPension" className="flex justify-between">
                     <span>Employer Pension Contribution</span>
                     <span className="font-semibold">{employerPension}%</span>
                   </Label>
-                  <Slider value={[Number(employerPension)]} onValueChange={(value) => setEmployerPension(String(value[0]))} max={15} step={0.5} className="mt-2" />
-                  <p className="text-xs text-gray-500 mt-1">Minimum is 3% of qualifying earnings.</p>
+                  <Slider
+                    value={[Number(employerPension)]}
+                    onValueChange={(value) => setEmployerPension(String(value[0]))}
+                    max={15}
+                    step={0.5}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Minimum is 3% of qualifying earnings.
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="employeePension" className="flex justify-between">
                     <span>Employee Pension Contribution</span>
                     <span className="font-semibold">{employeePension}%</span>
                   </Label>
-                  <Slider value={[Number(employeePension)]} onValueChange={(value) => setEmployeePension(String(value[0]))} max={15} step={0.5} className="mt-2" />
-                   <p className="text-xs text-gray-500 mt-1">Minimum is 5% of qualifying earnings.</p>
+                  <Slider
+                    value={[Number(employeePension)]}
+                    onValueChange={(value) => setEmployeePension(String(value[0]))}
+                    max={15}
+                    step={0.5}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Minimum is 5% of qualifying earnings.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -199,40 +264,94 @@ export default function PayrollCalculator() {
               <>
                 <div className="flex justify-between items-center non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Payroll Summary</h2>
-                  <ExportActions csvData={csvData} fileName="payroll-summary" title="Payroll Summary" />
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="payroll-summary"
+                    title="Payroll Summary"
+                  />
                 </div>
-                
+
                 <Card className="bg-blue-50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-blue-800">
-                        <Building2 className="w-5 h-5"/>
-                        Employer's Costs
+                      <Building2 className="w-5 h-5" />
+                      Employer's Costs
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <div className="flex justify-between text-lg"><p>Gross Salary</p> <p>£{results.grossSalary.toLocaleString('en-GB', {maximumFractionDigits:2})}</p></div>
-                    <div className="flex justify-between text-lg"><p>Employer's NI</p> <p>£{results.employerNI.toLocaleString('en-GB', {maximumFractionDigits:2})}</p></div>
-                    <div className="flex justify-between text-lg"><p>Employer Pension</p> <p>£{results.employerPensionContribution.toLocaleString('en-GB', {maximumFractionDigits:2})}</p></div>
-                    <div className="flex justify-between text-xl font-bold pt-2 border-t mt-2"><p>Total Cost to Employ</p> <p>£{results.totalCostToEmployer.toLocaleString('en-GB', {maximumFractionDigits:2})}</p></div>
-                  </CardContent>
-                </Card>
-                
-                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <User className="w-5 h-5"/>
-                        Employee's Take-Home Pay
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                     <div className="flex justify-between"><p>Gross Salary</p> <p>£{results.grossSalary.toLocaleString('en-GB', {maximumFractionDigits:2})}</p></div>
-                    <div className="flex justify-between text-red-600"><p>Income Tax</p> <p>- £{results.tax.toLocaleString('en-GB', {maximumFractionDigits:2})}</p></div>
-                    <div className="flex justify-between text-red-600"><p>Employee's NI</p> <p>- £{results.employeeNI.toLocaleString('en-GB', {maximumFractionDigits:2})}</p></div>
-                    <div className="flex justify-between text-red-600"><p>Employee Pension</p> <p>- £{results.employeePensionContribution.toLocaleString('en-GB', {maximumFractionDigits:2})}</p></div>
-                    <div className="flex justify-between text-lg font-bold pt-2 border-t mt-2"><p>Net Take-Home Pay</p> <p>£{results.netPay.toLocaleString('en-GB', {maximumFractionDigits:2})}</p></div>
+                    <div className="flex justify-between text-lg">
+                      <p>Gross Salary</p>{' '}
+                      <p>
+                        £{results.grossSalary.toLocaleString('en-GB', { maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="flex justify-between text-lg">
+                      <p>Employer's NI</p>{' '}
+                      <p>
+                        £{results.employerNI.toLocaleString('en-GB', { maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="flex justify-between text-lg">
+                      <p>Employer Pension</p>{' '}
+                      <p>
+                        £
+                        {results.employerPensionContribution.toLocaleString('en-GB', {
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex justify-between text-xl font-bold pt-2 border-t mt-2">
+                      <p>Total Cost to Employ</p>{' '}
+                      <p>
+                        £
+                        {results.totalCostToEmployer.toLocaleString('en-GB', {
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
 
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      Employee's Take-Home Pay
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between">
+                      <p>Gross Salary</p>{' '}
+                      <p>
+                        £{results.grossSalary.toLocaleString('en-GB', { maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="flex justify-between text-red-600">
+                      <p>Income Tax</p>{' '}
+                      <p>- £{results.tax.toLocaleString('en-GB', { maximumFractionDigits: 2 })}</p>
+                    </div>
+                    <div className="flex justify-between text-red-600">
+                      <p>Employee's NI</p>{' '}
+                      <p>
+                        - £
+                        {results.employeeNI.toLocaleString('en-GB', { maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="flex justify-between text-red-600">
+                      <p>Employee Pension</p>{' '}
+                      <p>
+                        - £
+                        {results.employeePensionContribution.toLocaleString('en-GB', {
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold pt-2 border-t mt-2">
+                      <p>Net Take-Home Pay</p>{' '}
+                      <p>£{results.netPay.toLocaleString('en-GB', { maximumFractionDigits: 2 })}</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </>
             ) : (
               <Card className="flex items-center justify-center h-[400px]">

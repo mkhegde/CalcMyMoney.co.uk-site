@@ -1,23 +1,32 @@
-
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { PoundSterling, Plus, Trash2, TrendingUp, TrendingDown, Calculator, Home, Car, Banknote } from "lucide-react";
-import ExportActions from "../components/calculators/ExportActions";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  PoundSterling,
+  Plus,
+  Trash2,
+  TrendingUp,
+  TrendingDown,
+  Calculator,
+  Home,
+  Car,
+  Banknote,
+} from 'lucide-react';
+import ExportActions from '../components/calculators/ExportActions';
 
 const defaultAssets = [
-  { name: "Primary Property", amount: '', category: "property" },
-  { name: "Savings Account", amount: '', category: "cash" },
-  { name: "Investment Portfolio", amount: '', category: "investments" },
-  { name: "Pension Fund", amount: '', category: "pension" },
+  { name: 'Primary Property', amount: '', category: 'property' },
+  { name: 'Savings Account', amount: '', category: 'cash' },
+  { name: 'Investment Portfolio', amount: '', category: 'investments' },
+  { name: 'Pension Fund', amount: '', category: 'pension' },
 ];
 
 const defaultLiabilities = [
-  { name: "Mortgage", amount: '', category: "property" },
-  { name: "Credit Cards", amount: '', category: "debt" },
-  { name: "Personal Loan", amount: '', category: "debt" },
+  { name: 'Mortgage', amount: '', category: 'property' },
+  { name: 'Credit Cards', amount: '', category: 'debt' },
+  { name: 'Personal Loan', amount: '', category: 'debt' },
 ];
 
 export default function NetWorthCalculator() {
@@ -40,11 +49,11 @@ export default function NetWorthCalculator() {
   };
 
   const addAsset = () => {
-    setAssets([...assets, { name: "", amount: '', category: "other" }]);
+    setAssets([...assets, { name: '', amount: '', category: 'other' }]);
   };
 
   const addLiability = () => {
-    setLiabilities([...liabilities, { name: "", amount: '', category: "debt" }]);
+    setLiabilities([...liabilities, { name: '', amount: '', category: 'debt' }]);
   };
 
   const removeAsset = (index) => {
@@ -62,38 +71,56 @@ export default function NetWorthCalculator() {
 
     // Categorize assets
     const assetCategories = {
-      property: assets.filter(a => a.category === 'property').reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
-      cash: assets.filter(a => a.category === 'cash').reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
-      investments: assets.filter(a => a.category === 'investments').reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
-      pension: assets.filter(a => a.category === 'pension').reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
-      other: assets.filter(a => a.category === 'other').reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
+      property: assets
+        .filter((a) => a.category === 'property')
+        .reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
+      cash: assets
+        .filter((a) => a.category === 'cash')
+        .reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
+      investments: assets
+        .filter((a) => a.category === 'investments')
+        .reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
+      pension: assets
+        .filter((a) => a.category === 'pension')
+        .reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
+      other: assets
+        .filter((a) => a.category === 'other')
+        .reduce((sum, a) => sum + (Number(a.amount) || 0), 0),
     };
 
     const newResults = {
       totalAssets,
       totalLiabilities,
       netWorth,
-      assetCategories
+      assetCategories,
     };
 
     setResults(newResults);
     setHasCalculated(true);
 
     const csvExportData = [
-      ["Type", "Item", "Amount"],
-      ["", "ASSETS", ""],
-      ...assets.filter(asset => Number(asset.amount) > 0).map(asset => 
-        ["Asset", asset.name || 'Unnamed Asset', `£${(Number(asset.amount) || 0).toFixed(2)}`]
-      ),
-      ["", "", ""],
-      ["", "LIABILITIES", ""],
-      ...liabilities.filter(liability => Number(liability.amount) > 0).map(liability => 
-        ["Liability", liability.name || 'Unnamed Liability', `£${(Number(liability.amount) || 0).toFixed(2)}`]
-      ),
-      ["", "", ""],
-      ["Summary", "Total Assets", `£${totalAssets.toFixed(2)}`],
-      ["Summary", "Total Liabilities", `£${totalLiabilities.toFixed(2)}`],
-      ["Summary", "Net Worth", `£${netWorth.toFixed(2)}`],
+      ['Type', 'Item', 'Amount'],
+      ['', 'ASSETS', ''],
+      ...assets
+        .filter((asset) => Number(asset.amount) > 0)
+        .map((asset) => [
+          'Asset',
+          asset.name || 'Unnamed Asset',
+          `£${(Number(asset.amount) || 0).toFixed(2)}`,
+        ]),
+      ['', '', ''],
+      ['', 'LIABILITIES', ''],
+      ...liabilities
+        .filter((liability) => Number(liability.amount) > 0)
+        .map((liability) => [
+          'Liability',
+          liability.name || 'Unnamed Liability',
+          `£${(Number(liability.amount) || 0).toFixed(2)}`,
+        ]),
+      ['', '', ''],
+      ['Summary', 'Total Assets', `£${totalAssets.toFixed(2)}`],
+      ['Summary', 'Total Liabilities', `£${totalLiabilities.toFixed(2)}`],
+      ['Summary', 'Net Worth', `£${netWorth.toFixed(2)}`],
     ];
     setCsvData(csvExportData);
   };
@@ -113,7 +140,8 @@ export default function NetWorthCalculator() {
               Net Worth Calculator
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Your net worth is your financial scorecard. Calculate the difference between what you own and what you owe.
+              Your net worth is your financial scorecard. Calculate the difference between what you
+              own and what you owe.
             </p>
           </div>
         </div>
@@ -247,19 +275,30 @@ export default function NetWorthCalculator() {
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Your Net Worth</h2>
-                  <ExportActions csvData={csvData} fileName="net-worth-calculation" title="Net Worth Calculation" />
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                    Your Net Worth
+                  </h2>
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="net-worth-calculation"
+                    title="Net Worth Calculation"
+                  />
                 </div>
 
                 {/* Net Worth Summary */}
-                <Card className={`${results.netWorth >= 0 ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700' : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700'}`}>
+                <Card
+                  className={`${results.netWorth >= 0 ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700' : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700'}`}
+                >
                   <CardHeader>
                     <CardTitle className="text-center">Your Net Worth</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-center p-6">
-                      <p className={`text-5xl font-bold ${results.netWorth >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                        {results.netWorth >= 0 ? '£' : '-£'}{Math.abs(results.netWorth).toLocaleString()}
+                      <p
+                        className={`text-5xl font-bold ${results.netWorth >= 0 ? 'text-green-700' : 'text-red-700'}`}
+                      >
+                        {results.netWorth >= 0 ? '£' : '-£'}
+                        {Math.abs(results.netWorth).toLocaleString()}
                       </p>
                       {results.netWorth < 0 && (
                         <p className="text-sm text-red-600 mt-2">
@@ -277,12 +316,20 @@ export default function NetWorthCalculator() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                      <span className="font-semibold text-green-800 dark:text-green-200">Total Assets:</span>
-                      <span className="font-bold text-green-900 dark:text-green-100 text-xl">£{results.totalAssets.toLocaleString()}</span>
+                      <span className="font-semibold text-green-800 dark:text-green-200">
+                        Total Assets:
+                      </span>
+                      <span className="font-bold text-green-900 dark:text-green-100 text-xl">
+                        £{results.totalAssets.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center p-4 bg-red-50 dark:bg-red-900/30 rounded-lg">
-                      <span className="font-semibold text-red-800 dark:text-red-200">Total Liabilities:</span>
-                      <span className="font-bold text-red-900 dark:text-red-100 text-xl">-£{results.totalLiabilities.toLocaleString()}</span>
+                      <span className="font-semibold text-red-800 dark:text-red-200">
+                        Total Liabilities:
+                      </span>
+                      <span className="font-bold text-red-900 dark:text-red-100 text-xl">
+                        -£{results.totalLiabilities.toLocaleString()}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -296,20 +343,35 @@ export default function NetWorthCalculator() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {assets.filter(asset => Number(asset.amount) > 0).map((asset, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          {asset.category === 'property' && <Home className="w-4 h-4 text-green-600" />}
-                          {asset.category === 'cash' && <Banknote className="w-4 h-4 text-green-600" />}
-                          {asset.category === 'investments' && <TrendingUp className="w-4 h-4 text-green-600" />}
-                          {asset.category === 'pension' && <Calculator className="w-4 h-4 text-green-600" />}
-                          <span className="font-medium text-gray-900 dark:text-gray-100">{asset.name}</span>
+                    {assets
+                      .filter((asset) => Number(asset.amount) > 0)
+                      .map((asset, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg"
+                        >
+                          <div className="flex items-center gap-2">
+                            {asset.category === 'property' && (
+                              <Home className="w-4 h-4 text-green-600" />
+                            )}
+                            {asset.category === 'cash' && (
+                              <Banknote className="w-4 h-4 text-green-600" />
+                            )}
+                            {asset.category === 'investments' && (
+                              <TrendingUp className="w-4 h-4 text-green-600" />
+                            )}
+                            {asset.category === 'pension' && (
+                              <Calculator className="w-4 h-4 text-green-600" />
+                            )}
+                            <span className="font-medium text-gray-900 dark:text-gray-100">
+                              {asset.name}
+                            </span>
+                          </div>
+                          <span className="font-semibold text-green-700 dark:text-green-300">
+                            £{(Number(asset.amount) || 0).toLocaleString()}
+                          </span>
                         </div>
-                        <span className="font-semibold text-green-700 dark:text-green-300">
-                          £{(Number(asset.amount) || 0).toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
+                      ))}
                   </CardContent>
                 </Card>
 
@@ -322,18 +384,29 @@ export default function NetWorthCalculator() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {liabilities.filter(liability => Number(liability.amount) > 0).map((liability, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          {liability.category === 'property' && <Home className="w-4 h-4 text-red-600" />}
-                          {liability.category === 'debt' && <TrendingDown className="w-4 h-4 text-red-600" />}
-                          <span className="font-medium text-gray-900 dark:text-gray-100">{liability.name}</span>
+                    {liabilities
+                      .filter((liability) => Number(liability.amount) > 0)
+                      .map((liability, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg"
+                        >
+                          <div className="flex items-center gap-2">
+                            {liability.category === 'property' && (
+                              <Home className="w-4 h-4 text-red-600" />
+                            )}
+                            {liability.category === 'debt' && (
+                              <TrendingDown className="w-4 h-4 text-red-600" />
+                            )}
+                            <span className="font-medium text-gray-900 dark:text-gray-100">
+                              {liability.name}
+                            </span>
+                          </div>
+                          <span className="font-semibold text-red-700 dark:text-red-300">
+                            -£{(Number(liability.amount) || 0).toLocaleString()}
+                          </span>
                         </div>
-                        <span className="font-semibold text-red-700 dark:text-red-300">
-                          -£{(Number(liability.amount) || 0).toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
+                      ))}
                   </CardContent>
                 </Card>
 
@@ -346,20 +419,23 @@ export default function NetWorthCalculator() {
                     {results.netWorth > 0 ? (
                       <div className="p-3 bg-green-100 dark:bg-green-900/40 rounded-lg">
                         <p className="text-green-800 dark:text-green-200">
-                          <strong>Positive Net Worth:</strong> You own more than you owe. Great foundation for building wealth!
+                          <strong>Positive Net Worth:</strong> You own more than you owe. Great
+                          foundation for building wealth!
                         </p>
                       </div>
                     ) : (
                       <div className="p-3 bg-orange-100 dark:bg-orange-900/40 rounded-lg">
                         <p className="text-orange-800 dark:text-orange-200">
-                          <strong>Negative Net Worth:</strong> Focus on paying down debt and building assets to improve your financial position.
+                          <strong>Negative Net Worth:</strong> Focus on paying down debt and
+                          building assets to improve your financial position.
                         </p>
                       </div>
                     )}
-                    
+
                     <div className="p-3 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
                       <p className="text-blue-800 dark:text-blue-200">
-                        <strong>Tip:</strong> Track your net worth quarterly to monitor your financial progress over time.
+                        <strong>Tip:</strong> Track your net worth quarterly to monitor your
+                        financial progress over time.
                       </p>
                     </div>
                   </CardContent>
