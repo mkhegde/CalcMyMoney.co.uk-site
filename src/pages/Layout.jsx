@@ -1000,7 +1000,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="md:col-span-1">
               <Link to={createPageUrl('Home')} className="flex items-center space-x-2 mb-4">
                 <img
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/bda5a3f4d_image.png"
+                  src="https://www.calcmymoney.co.uk/images/logo-high-res.png"
                   alt="Calculate My Money Logo"
                   className="h-8 w-8"
                 />
