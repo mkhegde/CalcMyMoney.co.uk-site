@@ -683,7 +683,7 @@ export default function Layout({ children, currentPageName }) {
       '@type': 'Organization',
       name: 'Calculate My Money',
       url: `${origin}/`,
-      logo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/bda5a3f4d_image.png', // Existing logo
+      logo: 'https://calcmymoney.co.uk/images/logo-high-res.png', // Existing logo
       sameAs: [],
     };
 
@@ -856,12 +856,8 @@ export default function Layout({ children, currentPageName }) {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex-shrink-0">
-              <Link to={createPageUrl('Home')} className="flex items-center space-x-2">
-                <img
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/bda5a3f4d_image.png"
-                  alt="Calculate My Money Logo"
-                  className="h-8 w-8"
-                />
+              <Link to="/" className="flex items-center space-x-2">
+                <PoundIconSVG size="32" className="h-8 w-8" />
                 <span className="font-bold text-xl text-gray-800">Calculate My Money</span>
               </Link>
             </div>
@@ -895,7 +891,7 @@ export default function Layout({ children, currentPageName }) {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <img
-                        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/bda5a3f4d_image.png"
+                        src="https://www.calcmymoney.co.uk/images/logo-high-res.png"
                         alt="Calculate My Money Logo"
                         className="h-8 w-8"
                       />
