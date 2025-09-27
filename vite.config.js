@@ -34,7 +34,6 @@ export default defineConfig({
         // Optimizes for a common mobile screen size (e.g., iPhone SE/mini)
         width: 375,
         height: 667,
-        minify: true,
       },
     }),
   ],
