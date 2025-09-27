@@ -1,65 +1,98 @@
 <!doctype html>
 <html lang="en">
+   
   <head>
+       
     <meta charset="UTF-8" />
+       
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+       
     <!-- Favicons -->
+       
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
+       
     <link rel="apple-touch-icon" href="/app-icon.png" />
 
-    <!-- Brand Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+       
+    <!-- Brand Font - Optimized with Preconnect & Prefetch -->
+       
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+       
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
-      crossorigin
-    />
-
+       
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
       media="print"
       onload="this.media='all'"
-      crossorigin
     />
 
+       
     <noscript>
+           
       <link
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
-        crossorigin
       />
+         
     </noscript>
 
+    <!--
+        *** IMPORTANT: Fix for "Render Blocking CSS" ***
+        The file /assets/index-ChOTkn_s.scss (or similar) is blocking the render.
+        If your build system injects the main CSS link tag here, you must add:
+        media="print" onload="this.media='all'"
+        to that injected <link rel="stylesheet"...> tag to defer it.
+
+        Example (if you add your CSS manually):
+        <link rel="stylesheet" href="/assets/index-ChOTkn_s.scss" media="print" onload="this.media='all'">
+    -->
+
+       
     <title>CalcMyMoney.co.uk</title>
 
+       
     <!-- SEO / Open Graph -->
+       
     <meta property="og:title" content="CalcMyMoney" />
+       
     <meta
       property="og:description"
       content="Smart UK Money Calculators for mortgages, tax, salary & savings."
     />
+       
     <meta property="og:image" content="/og-image.png" />
+       
     <!-- ✅ Blue theme OG image -->
+       
     <meta property="og:url" content="https://calcmymoney.co.uk" />
+       
     <meta property="og:type" content="website" />
 
+       
     <!-- Twitter Cards -->
+       
     <meta name="twitter:card" content="summary_large_image" />
+       
     <meta name="twitter:title" content="CalcMyMoney" />
+       
     <meta
       name="twitter:description"
       content="Smart UK Money Calculators for mortgages, tax, salary & savings."
     />
+       
     <meta name="twitter:image" content="/og-image.png" />
+     
   </head>
 
+   
   <body>
+       
     <div id="root"></div>
+       
     <script type="module" src="/src/main.jsx"></script>
+     
   </body>
 </html>
