@@ -856,9 +856,16 @@ export default function Layout({ children, currentPageName }) {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex-shrink-0">
-              <Link to="/" className="flex items-center space-x-2">
-                <PoundIconSVG size="32" className="h-8 w-8" />
-                <span className="font-bold text-xl text-gray-800">Calculate My Money</span>
+              <Link to={createPageUrl('Home')} className="flex items-center space-x-2">
+                               {' '}
+                <img
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/bda5a3f4d_image.png"
+                  alt="Calculate My Money Logo"
+                  className="h-8 w-8"
+                />
+                               {' '}
+                <span className="font-bold text-xl text-gray-800">Calculate My Money</span>         
+                   {' '}
               </Link>
             </div>
 
