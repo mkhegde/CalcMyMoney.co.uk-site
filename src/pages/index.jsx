@@ -1,12 +1,20 @@
+import React, { lazy, Suspense } from 'react'; // <--- NEW IMPORTS HERE
+
 import Layout from './Layout.jsx';
 
 import Home from './Home';
 
-import BudgetCalculator from './BudgetCalculator';
+//import SalaryCalculatorUK from './SalaryCalculatorUK';
+//import MortgageCalculator from './MortgageCalculator';
 
+const LazySalaryCalculatorUK = lazy(() => import('./SalaryCalculatorUK.jsx'));
+const LazyMortgageCalculator = lazy(() => import('./MortgageCalculator.jsx'));
+
+import RentalIncomeCalculator from './RentalIncomeCalculator';
+import BRRRRCalculator from './BRRRRCalculator';
 import DebtCalculator from './DebtCalculator';
-
-import MortgageCalculator from './MortgageCalculator';
+import FIRECalculator from './FIRECalculator';
+import BudgetCalculator from './BudgetCalculator';
 
 import IncomeTaxCalculator from './IncomeTaxCalculator';
 
@@ -64,8 +72,6 @@ import TermsOfService from './TermsOfService';
 
 import Disclaimer from './Disclaimer';
 
-import FIRECalculator from './FIRECalculator';
-
 import ContractorCalculator from './ContractorCalculator';
 
 import BlogSmartMoneySavingTips from './BlogSmartMoneySavingTips';
@@ -77,10 +83,6 @@ import BlogFinancialPsychology from './BlogFinancialPsychology';
 import NetWorthCalculator from './NetWorthCalculator';
 
 import EnergyBillCalculator from './EnergyBillCalculator';
-
-import RentalIncomeCalculator from './RentalIncomeCalculator';
-
-import BRRRRCalculator from './BRRRRCalculator';
 
 import PAYECalculator from './PAYECalculator';
 
@@ -187,8 +189,6 @@ import OvertimeRateCalculator from './OvertimeRateCalculator';
 import CurrencyConverter from './CurrencyConverter';
 
 import UKFinancialStats from './UKFinancialStats';
-
-import SalaryCalculatorUK from './SalaryCalculatorUK';
 
 import SalaryCalculatorTakeHomePay from './SalaryCalculatorTakeHomePay';
 
@@ -600,6 +600,29 @@ function PagesContent() {
       </Routes>
     </Layout>
   );
+}
+function PagesContent() {
+    return (
+        <Layout> {/* Keep your Layout static if needed for all pages */}
+            {/* CRITICAL STEP: Wrap the routes with Suspense. */}
+            <Suspense fallback={
+                <div className="p-10 text-center text-lg text-indigo-600">
+                    <div className="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent rounded-full mr-2"></div>
+                    Loading Calculator Page...
+                </div>
+            }>
+                <Routes>
+                    {/* Static components (like the homepage) are imported normally */}
+                    <Route path="/" element={<Home />} /> 
+
+                    {/* Lazy routes use the new lazy component name */}
+                    <Route path="/salary-calculator" element={<LazySalaryCalculatorUK />} />
+                    <Route path="/mortgage-calculator" element={<LazyMortgageCalculator />} />
+                    {/* ... all other calculator routes go here ... */}
+                </Routes>
+            </Suspense>
+        </Layout>
+    );
 }
 
 export default function Pages() {
