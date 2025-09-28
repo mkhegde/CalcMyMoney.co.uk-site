@@ -17,12 +17,15 @@ import AnimatedNumber from '../components/general/AnimatedNumber';
 
 // ----------------- Config -----------------
 const BASE = 'GBP';
-// Fetch just the set you show in the UI (fast & compact)
+
+// Limit to the set you support in UI (fast & compact)
 const SUPPORTED = ['GBP', 'USD', 'EUR', 'JPY', 'AUD', 'CAD', 'CHF', 'INR', 'NZD'];
 const CURRENCIES_PARAM = SUPPORTED.filter((c) => c !== BASE).join(','); // API param (no base)
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const LS_KEY = `fx:${BASE}:${CURRENCIES_PARAM}`;
+
+const ZERO_DEC_CURRENCIES = ['JPY', 'KRW', 'VND'];
 
 // Helper to format currency display
 const currencyNames = {
@@ -41,22 +44,22 @@ const currencyFAQs = [
   {
     question: 'How often are these rates updated?',
     answer:
-      'The exchange rates on this page are updated once per day, as provided by our data source on the free plan. For time-sensitive transactions, you should always consult a real-time financial service.',
+      'The exchange rates on this page are updated once per day. For time-sensitive transactions, always confirm with a real-time provider.',
   },
   {
     question: 'What is an exchange rate?',
     answer:
-      'An exchange rate is the value of one currency for the purpose of conversion to another. For example, if the GBP/USD exchange rate is 1.25, it means one British Pound can be exchanged for 1.25 US Dollars.',
+      'An exchange rate is how much one currency is worth in another. If GBP/USD is 1.25, £1 buys $1.25.',
   },
   {
     question: 'What influences exchange rates?',
     answer:
-      'Exchange rates are affected by a wide range of economic and political factors, including interest rates, inflation, economic stability, government debt, and trade balances. This is why they fluctuate constantly.',
+      'Interest rates, inflation, economic stability, government debt, and trade balances all impact exchange rates.',
   },
   {
     question: "Why might this rate differ from my bank's rate?",
     answer:
-      "The rates shown here are 'mid-market' rates. When you exchange money through a bank or currency service, they typically add a markup or 'spread' to this rate, which is how they make a profit. Your actual rate will likely be slightly different.",
+      'Banks and FX services usually add a markup to the mid-market rate. Your actual rate will be slightly different.',
   },
 ];
 
@@ -79,7 +82,7 @@ function setCached(data) {
 // Parse various date shapes into epoch seconds for display
 function toEpochSeconds(d) {
   if (!d) return null;
-  if (typeof d === 'number') return Math.floor(d); // already seconds
+  if (typeof d === 'number') return Math.floor(d);
   if (typeof d === 'string') {
     const ts = Date.parse(d);
     if (!Number.isNaN(ts)) return Math.floor(ts / 1000);
@@ -88,20 +91,41 @@ function toEpochSeconds(d) {
 }
 
 export default function CurrencyConverter() {
-  const [amount, setAmount] = useState('100');
+  const [amount, setAmount] = useState('1000');
   const [fromCurrency, setFromCurrency] = useState('GBP');
   const [toCurrency, setToCurrency] = useState('USD');
-  const [rates, setRates] = useState(null); // { GBP:1, USD:..., ... }
+  const [ratesMap, setRatesMap] = useState(null); // { GBP:1, USD:..., ... }
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null); // epoch seconds
 
+  // Pick a sensible default "To" based on locale (runs once)
   useEffect(() => {
-    // Try cache first (instant render), then refresh in background
+    try {
+      const loc = navigator.language || Intl.DateTimeFormat().resolvedOptions().locale || '';
+      if (loc.includes('en-IN')) setToCurrency('INR');
+      else if (loc.includes('ja')) setToCurrency('JPY');
+      else if (loc.includes('en-AU')) setToCurrency('AUD');
+      else if (loc.includes('en-NZ')) setToCurrency('NZD');
+      else if (loc.includes('en-CA')) setToCurrency('CAD');
+      else if (
+        loc.includes('de') ||
+        loc.includes('fr') ||
+        loc.includes('es') ||
+        loc.includes('it') ||
+        loc.includes('nl')
+      ) {
+        setToCurrency('EUR');
+      }
+    } catch {}
+  }, []);
+
+  // Fetch rates (edge cached 1 day; also cache locally for 1 day)
+  useEffect(() => {
     const cached = getCached(ONE_DAY_MS);
     if (cached?.rates) {
-      setRates(cached.rates);
+      setRatesMap(cached.rates);
       setLastUpdated(toEpochSeconds(cached.date));
       setLoading(false);
     }
@@ -119,7 +143,6 @@ export default function CurrencyConverter() {
           throw new Error('invalid_response');
         }
 
-        // Ensure GBP:1 is included (most APIs omit the base in the rates map)
         const withBase = { GBP: 1, ...json.rates };
         const normalized = {
           base: json.base || BASE,
@@ -128,7 +151,7 @@ export default function CurrencyConverter() {
           provider: json.provider || 'forexrateapi',
         };
 
-        setRates(normalized.rates);
+        setRatesMap(normalized.rates);
         setLastUpdated(toEpochSeconds(normalized.date));
         setCached(normalized);
         setError(null);
@@ -141,12 +164,12 @@ export default function CurrencyConverter() {
   }, []);
 
   const calculateConversion = useCallback(() => {
-    if (!rates || !amount) {
+    if (!ratesMap || !amount) {
       setResult(null);
       return;
     }
-    const rateFrom = rates[fromCurrency];
-    const rateTo = rates[toCurrency];
+    const rateFrom = ratesMap[fromCurrency];
+    const rateTo = ratesMap[toCurrency];
     const numericAmount = parseFloat(amount);
 
     if (rateFrom && rateTo && !Number.isNaN(numericAmount)) {
@@ -157,7 +180,7 @@ export default function CurrencyConverter() {
     } else {
       setResult(null);
     }
-  }, [amount, fromCurrency, toCurrency, rates]);
+  }, [amount, fromCurrency, toCurrency, ratesMap]);
 
   useEffect(() => {
     calculateConversion();
@@ -169,7 +192,11 @@ export default function CurrencyConverter() {
   };
 
   const exchangeRate =
-    rates && rates[toCurrency] && rates[fromCurrency] ? rates[toCurrency] / rates[fromCurrency] : 0;
+    ratesMap && ratesMap[toCurrency] && ratesMap[fromCurrency]
+      ? ratesMap[toCurrency] / ratesMap[fromCurrency]
+      : 0;
+
+  const fractionDigits = ZERO_DEC_CURRENCIES.includes(toCurrency) ? 0 : 2;
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -186,8 +213,9 @@ export default function CurrencyConverter() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-2 gap-8 items-start">
+          {/* Left card: inputs */}
           <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardHeader>
               <CardTitle>Convert Currency</CardTitle>
@@ -201,6 +229,7 @@ export default function CurrencyConverter() {
                   </span>
                 </div>
               )}
+
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -208,52 +237,62 @@ export default function CurrencyConverter() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              {!loading && !error && rates && (
+
+              {!loading && !error && ratesMap && (
                 <>
                   <div className="space-y-1">
                     <Label htmlFor="amount">Amount</Label>
                     <Input
                       id="amount"
                       type="number"
+                      inputMode="decimal"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       className="dark:bg-gray-700 dark:text-gray-50 dark:border-gray-600"
                       placeholder="e.g. 100"
                     />
                   </div>
-                  <div className="flex items-center gap-4">
+
+                  {/* From/To row - made responsive and full-width to avoid overflow */}
+                  <div className="flex flex-col sm:flex-row items-stretch gap-4">
                     <div className="flex-1 space-y-1">
                       <Label>From</Label>
                       <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                        <SelectTrigger className="dark:text-gray-50">
-                          <SelectValue />
+                        <SelectTrigger className="w-full max-w-full truncate dark:text-gray-50">
+                          <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
-                        <SelectContent className="dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700">
-                          {Object.keys(rates).map((curr) => (
-                            <SelectItem key={curr} value={curr}>
+                        <SelectContent className="max-h-72 dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700">
+                          {SUPPORTED.filter((c) => ratesMap[c]).map((curr) => (
+                            <SelectItem key={curr} value={curr} className="truncate">
                               {currencyNames[curr] || curr}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleSwapCurrencies}
-                      className="mt-6 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <ArrowRightLeft className="w-5 h-5 text-gray-500" />
-                    </Button>
+
+                    <div className="sm:self-end">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSwapCurrencies}
+                        className="mt-2 sm:mt-6 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        title="Swap currencies"
+                        aria-label="Swap currencies"
+                      >
+                        <ArrowRightLeft className="w-5 h-5 text-gray-500" />
+                      </Button>
+                    </div>
+
                     <div className="flex-1 space-y-1">
                       <Label>To</Label>
                       <Select value={toCurrency} onValueChange={setToCurrency}>
-                        <SelectTrigger className="dark:text-gray-50">
-                          <SelectValue />
+                        <SelectTrigger className="w-full max-w-full truncate dark:text-gray-50">
+                          <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
-                        <SelectContent className="dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700">
-                          {Object.keys(rates).map((curr) => (
-                            <SelectItem key={curr} value={curr}>
+                        <SelectContent className="max-h-72 dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700">
+                          {SUPPORTED.filter((c) => ratesMap[c]).map((curr) => (
+                            <SelectItem key={curr} value={curr} className="truncate">
                               {currencyNames[curr] || curr}
                             </SelectItem>
                           ))}
@@ -266,11 +305,12 @@ export default function CurrencyConverter() {
             </CardContent>
           </Card>
 
+          {/* Right card: result */}
           {result !== null && (
             <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/50 border-blue-200 dark:border-blue-700">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
                       {amount} {fromCurrency} equals
                     </p>
@@ -278,32 +318,40 @@ export default function CurrencyConverter() {
                       <AnimatedNumber
                         value={result}
                         options={{
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
+                          minimumFractionDigits: fractionDigits,
+                          maximumFractionDigits: fractionDigits,
                           currency: toCurrency,
                           style: 'currency',
                         }}
                       />
                     </div>
                   </div>
-                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shrink-0">
                     <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                 </div>
+
                 <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
-                  Exchange Rate: 1 {fromCurrency} = {exchangeRate.toFixed(4)} {toCurrency}
+                  Exchange Rate: 1 {fromCurrency} ={' '}
+                  {exchangeRate.toFixed(Math.max(4, fractionDigits))} {toCurrency}
                 </p>
+
                 {lastUpdated && (
-                  <div className="flex items-center gap-2 mt-4 text-xs text-gray-500 dark:text-gray-400">
-                    <Info className="w-3.5 h-3.5" />
-                    <span>
-                      Rates last updated:{' '}
-                      {new Date(lastUpdated * 1000).toLocaleString('en-GB', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      })}
-                    </span>
-                  </div>
+                  <>
+                    <div className="flex items-center gap-2 mt-4 text-xs text-gray-500 dark:text-gray-400">
+                      <Info className="w-3.5 h-3.5" />
+                      <span>
+                        Rates last updated:{' '}
+                        {new Date(lastUpdated * 1000).toLocaleString('en-GB', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Source: mid-market rates • cached daily at edge and in your browser.
+                    </p>
+                  </>
                 )}
               </CardContent>
             </Card>
