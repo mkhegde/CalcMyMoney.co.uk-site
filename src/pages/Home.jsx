@@ -12,6 +12,7 @@ import {
   getCalculatorStats,
   searchCalculators,
 } from '../components/data/calculatorConfig';
+import { prefetchPage } from '@/utils/prefetchPage';
 import FAQSection from '../components/calculators/FAQSection';
 import { HandCoins, PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
 
