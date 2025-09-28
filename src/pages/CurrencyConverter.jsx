@@ -13,8 +13,29 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowRightLeft, Loader2, AlertCircle, TrendingUp, Info } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
-import { getForexRates } from '@/api/functions';
 import AnimatedNumber from '../components/general/AnimatedNumber';
+
+// ----------------- Config -----------------
+const BASE = 'GBP';
+// Fetch just the set you show in the UI (fast & compact)
+const SUPPORTED = ['GBP', 'USD', 'EUR', 'JPY', 'AUD', 'CAD', 'CHF', 'INR', 'NZD'];
+const CURRENCIES_PARAM = SUPPORTED.filter((c) => c !== BASE).join(','); // API param (no base)
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const LS_KEY = `fx:${BASE}:${CURRENCIES_PARAM}`;
+
+// Helper to format currency display
+const currencyNames = {
+  GBP: 'GBP - British Pound',
+  USD: 'USD - United States Dollar',
+  EUR: 'EUR - Euro',
+  JPY: 'JPY - Japanese Yen',
+  AUD: 'AUD - Australian Dollar',
+  CAD: 'CAD - Canadian Dollar',
+  CHF: 'CHF - Swiss Franc',
+  INR: 'INR - Indian Rupee',
+  NZD: 'NZD - New Zealand Dollar',
+};
 
 const currencyFAQs = [
   {
@@ -39,76 +60,84 @@ const currencyFAQs = [
   },
 ];
 
-// Helper to format currency display
-const currencyNames = {
-  GBP: 'GBP - British Pound',
-  USD: 'USD - United States Dollar',
-  EUR: 'EUR - Euro',
-  JPY: 'JPY - Japanese Yen',
-  AUD: 'AUD - Australian Dollar',
-  CAD: 'CAD - Canadian Dollar',
-  CHF: 'CHF - Swiss Franc',
-  INR: 'INR - Indian Rupee',
-  NZD: 'NZD - New Zealand Dollar',
-};
+// ---------- Local cache helpers ----------
+function getCached(maxAgeMs) {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const { t, data } = JSON.parse(raw);
+    if (Date.now() - t < maxAgeMs) return data;
+  } catch {}
+  return null;
+}
+function setCached(data) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({ t: Date.now(), data }));
+  } catch {}
+}
+
+// Parse various date shapes into epoch seconds for display
+function toEpochSeconds(d) {
+  if (!d) return null;
+  if (typeof d === 'number') return Math.floor(d); // already seconds
+  if (typeof d === 'string') {
+    const ts = Date.parse(d);
+    if (!Number.isNaN(ts)) return Math.floor(ts / 1000);
+  }
+  return Math.floor(Date.now() / 1000);
+}
 
 export default function CurrencyConverter() {
   const [amount, setAmount] = useState('100');
   const [fromCurrency, setFromCurrency] = useState('GBP');
   const [toCurrency, setToCurrency] = useState('USD');
-  const [rates, setRates] = useState(null);
+  const [rates, setRates] = useState(null); // { GBP:1, USD:..., ... }
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null); // epoch seconds
 
   useEffect(() => {
-    const fetchRates = async () => {
+    // Try cache first (instant render), then refresh in background
+    const cached = getCached(ONE_DAY_MS);
+    if (cached?.rates) {
+      setRates(cached.rates);
+      setLastUpdated(toEpochSeconds(cached.date));
+      setLoading(false);
+    }
+
+    (async () => {
       try {
-        setLoading(true);
-        const response = await getForexRates();
-
-        // Handle successful API responses
-        if (response.data && response.data.success) {
-          const allRates = { ...response.data.rates, GBP: 1 };
-          setRates(allRates);
-          setLastUpdated(response.data.timestamp);
-          setError(null);
-          return; // Success, so exit
+        const res = await fetch(
+          `/api/rates?base=${encodeURIComponent(BASE)}&currencies=${encodeURIComponent(
+            CURRENCIES_PARAM
+          )}`
+        );
+        if (!res.ok) throw new Error('api_error');
+        const json = await res.json();
+        if (!json?.rates || typeof json.rates !== 'object') {
+          throw new Error('invalid_response');
         }
 
-        // If not successful, determine the error message
-        let errorMessage = 'Failed to fetch valid currency rates. Please try again later.'; // A safe default
+        // Ensure GBP:1 is included (most APIs omit the base in the rates map)
+        const withBase = { GBP: 1, ...json.rates };
+        const normalized = {
+          base: json.base || BASE,
+          date: json.date || new Date().toISOString(),
+          rates: withBase,
+          provider: json.provider || 'forexrateapi',
+        };
 
-        if (response.error) {
-          // Handle SDK-level errors
-          if (typeof response.error.message === 'string') {
-            errorMessage = response.error.message;
-          } else if (typeof response.error.message === 'object' && response.error.message?.error) {
-            // Handle errors returned from the backend function's JSON body
-            errorMessage = response.error.message.error;
-          }
-        } else if (response.data && response.data.error) {
-          // Handle API-level errors (e.g., success: false)
-          // Fix: Ensure errorMessage is always a string to prevent object rendering errors.
-          if (typeof response.data.error === 'string') {
-            errorMessage = response.data.error;
-          } else if (typeof response.data.error === 'object' && response.data.error !== null) {
-            // Attempt to get a 'message' property from the error object, or fall back to stringifying it.
-            errorMessage = response.data.error.message || JSON.stringify(response.data.error);
-          }
-        }
-
-        setError(errorMessage);
-      } catch (err) {
-        // Handle network errors or other unexpected issues
-        console.error('Currency fetch error:', err);
-        setError('A client-side error occurred while fetching rates.');
+        setRates(normalized.rates);
+        setLastUpdated(toEpochSeconds(normalized.date));
+        setCached(normalized);
+        setError(null);
+      } catch (e) {
+        if (!cached) setError('Failed to fetch valid currency rates. Please try again later.');
       } finally {
         setLoading(false);
       }
-    };
-    fetchRates();
+    })();
   }, []);
 
   const calculateConversion = useCallback(() => {
@@ -116,16 +145,17 @@ export default function CurrencyConverter() {
       setResult(null);
       return;
     }
-
     const rateFrom = rates[fromCurrency];
     const rateTo = rates[toCurrency];
     const numericAmount = parseFloat(amount);
 
-    if (rateFrom && rateTo && !isNaN(numericAmount)) {
-      // Convert amount to base currency (GBP) first, then to target currency
+    if (rateFrom && rateTo && !Number.isNaN(numericAmount)) {
+      // Convert to base (GBP) then to target
       const amountInGbp = numericAmount / rateFrom;
       const convertedAmount = amountInGbp * rateTo;
       setResult(convertedAmount);
+    } else {
+      setResult(null);
     }
   }, [amount, fromCurrency, toCurrency, rates]);
 
