@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils/createPageUrl';
 
-import { Search, Calculator, TrendingUp, Users, Star, ExternalLink } from 'lucide-react';
+import { Search, Calculator, TrendingUp, Users, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+
 import {
   calculatorCategories,
-  getAllCalculators,
-  getCalculatorsByStatus,
+  allCalculators as flatCalculators,
   getCalculatorStats,
   searchCalculators,
 } from '../components/data/calculatorConfig';
+
 import { prefetchPage } from '@/utils/prefetchPage';
 import FAQSection from '../components/calculators/FAQSection';
 import { HandCoins, PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
@@ -52,25 +52,26 @@ export default function Home() {
   const [showAllCalculators, setShowAllCalculators] = useState(false);
 
   const stats = getCalculatorStats();
-  const allCalculators = getAllCalculators();
-  const activeCalculators = getCalculatorsByStatus('active');
 
-  // Popular/Featured calculators (you can customize this list)
-  const featuredCalculators = [
-    'SalaryCalculatorUK',
-    'MortgageCalculator',
-    'BudgetCalculator',
-    'IncomeTaxCalculator',
-    'CompoundInterestCalculator',
-    'PensionCalculator',
+  // Popular/Featured calculators — use kebab-case slugs (no leading slash)
+  const featuredSlugs = [
+    'salary-calculator-uk',
+    'mortgage-calculator',
+    'budget-calculator',
+    'income-tax-calculator',
+    'compound-interest-calculator',
+    'pension-calculator',
   ];
 
-  const featuredCalcObjects = featuredCalculators
-    .map((pageName) => {
-      const target = createPageUrl(pageName); // e.g. "SalaryCalculatorUK" -> "/salary-calculator-uk"
-      return allCalculators.find((calc) => typeof calc?.url === 'string' && calc.url === target);
-    })
-    .filter(Boolean);
+  // Build featured objects by exact URL match
+  const featuredCalcObjects = (() => {
+    const picks = featuredSlugs
+      .map((slug) => flatCalculators.find((c) => c.url === `/${slug}` && c.status === 'active'))
+      .filter(Boolean);
+
+    // Fallback so the section never renders empty
+    return picks.length ? picks : flatCalculators.filter((c) => c.status === 'active').slice(0, 6);
+  })();
 
   // Handle search
   useEffect(() => {
@@ -115,7 +116,7 @@ export default function Home() {
 
   return (
     <div className="bg-white dark:bg-gray-900">
-      {/* Hero Section - calculators.net style */}
+      {/* Hero Section */}
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="text-center max-w-4xl mx-auto">
@@ -159,9 +160,12 @@ export default function Home() {
                           <div>
                             <p className="font-medium text-gray-900">{calc.name}</p>
                             <p className="text-sm text-gray-600">{calc.description}</p>
-                            <p className="text-xs text-gray-500">
-                              {calc.category} → {calc.subCategory}
-                            </p>
+                            {(calc.category || calc.subCategory) && (
+                              <p className="text-xs text-gray-500">
+                                {calc.category || 'Calculator'}{' '}
+                                {calc.subCategory ? `→ ${calc.subCategory}` : ''}
+                              </p>
+                            )}
                           </div>
                           {calc.status === 'planned' ? (
                             <Badge variant="secondary" className="text-xs">
@@ -264,7 +268,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Complete Calculator Directory - calculators.net style */}
+      {/* Complete Calculator Directory */}
       <div className="bg-gray-50 dark:bg-gray-800/50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
