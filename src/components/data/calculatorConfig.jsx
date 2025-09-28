@@ -1,3 +1,43 @@
+/*
+ * This file contains the complete, nested configuration for all calculators
+ * and exports necessary helper functions for site navigation and statistics.
+ * The primary export is 'calculatorCategories'.
+ */
+
+// Import necessary utility and icons
+import { createPageUrl } from '../../utils/createPageUrl';
+import {
+  HandCoins,
+  PoundSterling,
+  Calculator,
+  Percent,
+  Briefcase,
+  TrendingUp,
+  Calendar,
+  FileText,
+  Baby,
+  PiggyBank,
+  User,
+  Shield,
+  Building2,
+  Receipt,
+  Target,
+  MapPin,
+  Home as HomeIcon,
+  Car,
+  Repeat,
+  CreditCard,
+  TrendingDown,
+  BookOpen,
+  Banknote,
+  FileSpreadsheet,
+  Building,
+  Sparkles,
+  Heart,
+} from 'lucide-react';
+
+// --- MAIN CONFIGURATION ARRAY ---
+
 export const calculatorCategories = [
   {
     name: 'Income & Employment',
@@ -101,9 +141,7 @@ export const calculatorCategories = [
             icon: Calendar,
             status: 'active',
             description: 'Calculate UK statutory holiday pay',
-          }, // Maternity Pay Calculator moved to Life & Events
-          // Statutory Sick Pay Calculator moved to Life & Events
-          // Redundancy Pay Calculator moved to Life & Events
+          },
           {
             name: 'Severance Pay Calculator',
             url: createPageUrl('SeverancePayCalculator'),
@@ -197,7 +235,7 @@ export const calculatorCategories = [
             icon: PoundSterling,
             status: 'active',
             description: 'Calculate tax on dividend income',
-          }, // Inheritance Tax Calculator moved to Life & Events
+          },
         ],
       },
       {
@@ -277,6 +315,20 @@ export const calculatorCategories = [
             icon: Calculator,
             status: 'active',
             description: 'Calculate investment doubling time',
+          },
+          {
+            name: 'Net Worth Calculator',
+            url: createPageUrl('NetWorthCalculator'),
+            icon: Calculator,
+            status: 'active',
+            description: 'Calculate and track net worth',
+          },
+          {
+            name: 'Future Value Calculator',
+            url: createPageUrl('FutureValueCalculator'),
+            icon: TrendingUp,
+            status: 'active',
+            description: 'Calculate the future value of an investment or savings',
           },
         ],
       },
@@ -665,14 +717,13 @@ export const calculatorCategories = [
       {
         name: 'Life Events',
         calculators: [
-          // Wedding Budget Calculator moved to Life & Events
           {
             name: 'Travel Budget Calculator',
             url: createPageUrl('TravelBudgetCalculator'),
             icon: MapPin,
             status: 'active',
             description: 'Plan holiday and travel costs',
-          }, // Childcare Cost Calculator moved to Life & Events
+          },
         ],
       },
       {
@@ -779,3 +830,47 @@ export const calculatorCategories = [
     ],
   },
 ];
+
+// --- HELPER FUNCTIONS FOR EXPORT ---
+
+/**
+ * A flat list of all calculators, extracted from the nested categories.
+ * This is used internally by the other helper functions.
+ */
+export const allCalculators = calculatorCategories.flatMap((category) =>
+  category.subCategories.flatMap((subCategory) => subCategory.calculators)
+);
+
+/**
+ * Returns the total number of calculators available on the site.
+ * This is the function that was missing and causing the build error in Home.jsx.
+ */
+export const getCalculatorStats = () => {
+  return allCalculators.length;
+};
+
+/**
+ * Returns all calculators grouped by their status (e.g., 'active', 'pending').
+ */
+export const getCalculatorsByStatus = (status) => {
+  return allCalculators.filter((calc) => calc.status === status);
+};
+
+/**
+ * Returns the full nested structure of calculators, useful for site navigation.
+ */
+export const getAllCalculators = () => {
+  return calculatorCategories;
+};
+
+/**
+ * Simple utility to search all calculators by name or description.
+ */
+export const searchCalculators = (query) => {
+  const lowerQuery = query.toLowerCase();
+  return allCalculators.filter(
+    (calc) =>
+      calc.name.toLowerCase().includes(lowerQuery) ||
+      calc.description.toLowerCase().includes(lowerQuery)
+  );
+};
