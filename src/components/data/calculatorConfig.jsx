@@ -34,6 +34,7 @@ import {
   Building,
   Sparkles,
   Heart,
+  Zap,
 } from 'lucide-react';
 
 // --- MAIN CONFIGURATION ARRAY ---
@@ -674,6 +675,15 @@ export const calculatorCategories = [
             icon: TrendingUp,
             status: 'active',
             description: 'Calculate Financial Independence Retire Early',
+          },
+          // New calculator added here
+          {
+            name: 'Coast FIRE Calculator',
+            url: createPageUrl('CoastFIRECalculator'),
+            icon: Target,
+            status: 'pending',
+            description:
+              'Calculate the minimum savings needed to stop contributing and still hit your retirement goal.',
           },
         ],
       },
