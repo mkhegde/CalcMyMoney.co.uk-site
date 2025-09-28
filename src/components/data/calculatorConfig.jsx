@@ -1,38 +1,3 @@
-import { createPageUrl } from '@/utils';
-import {
-  HandCoins,
-  Briefcase,
-  PiggyBank,
-  TrendingUp,
-  Home as HomeIcon,
-  Sparkles,
-  CreditCard,
-  Building,
-  Calculator,
-  Percent,
-  User,
-  Shield,
-  PoundSterling,
-  FileText,
-  MapPin,
-  Car,
-  Baby,
-  Repeat,
-  Zap,
-  Receipt,
-  Calendar,
-  Target,
-  BookOpen,
-  Banknote,
-  Building2,
-  TrendingDown,
-  FileSpreadsheet, // Added for Amortization Calculator
-  Heart, // Added for Life & Events category
-} from 'lucide-react';
-
-// Comprehensive calculator configuration for the UK Financial Calculator Hub
-// Organized following the calculators.net model: Major Categories > Sub-Categories > Individual Calculators
-
 export const calculatorCategories = [
   {
     name: 'Income & Employment',
@@ -45,56 +10,56 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Salary Calculator',
-            url: createPageUrl('salary-calculator-uk'), // Changed from 'SalaryCalculatorUK'
+            url: createPageUrl('SalaryCalculatorUK'),
             icon: PoundSterling,
             status: 'active',
             description: 'Calculate take-home pay from gross salary',
           },
           {
             name: 'PAYE Calculator',
-            url: createPageUrl('paye-calculator'), // Confirmed working
+            url: createPageUrl('paye-calculator'),
             icon: Calculator,
             status: 'active',
             description: 'UK PAYE tax and NI calculator',
           },
           {
             name: 'Pro Rata Salary Calculator',
-            url: createPageUrl('pro-rata-salary-calculator'), // Changed from 'ProRataSalaryCalculator'
+            url: createPageUrl('ProRataSalaryCalculator'),
             icon: Percent,
             status: 'active',
             description: 'Calculate part-time or pro-rata salary',
           },
           {
             name: 'Hourly to Annual Salary Calculator',
-            url: createPageUrl('hourly-to-annual-salary-calculator'), // Changed from 'HourlyToAnnualSalaryCalculator'
+            url: createPageUrl('HourlyToAnnualSalaryCalculator'),
             icon: Calculator,
             status: 'active',
             description: 'Convert hourly rates to annual salary',
           },
           {
             name: 'Minimum Wage Calculator',
-            url: createPageUrl('minimum-wage-calculator'), // Changed from 'MinimumWageCalculator'
+            url: createPageUrl('MinimumWageCalculator'),
             icon: PoundSterling,
             status: 'active',
             description: 'Check UK minimum wage rates and calculations',
           },
           {
             name: 'Freelancer Day Rate Calculator',
-            url: createPageUrl('freelancer-day-rate-calculator'), // Changed from 'FreelancerDayRateCalculator'
+            url: createPageUrl('FreelancerDayRateCalculator'),
             icon: Briefcase,
             status: 'active',
             description: 'Calculate optimal day rates for freelancers',
           },
           {
             name: 'Salary Increase Calculator',
-            url: createPageUrl('salary-increase-calculator'), // Changed from 'SalaryIncreaseCalculator'
+            url: createPageUrl('SalaryIncreaseCalculator'),
             icon: TrendingUp,
             status: 'active',
             description: 'Calculate your new salary after a pay rise',
           },
           {
             name: 'Commission Calculator',
-            url: createPageUrl('commission-calculator'), // Changed from 'CommissionCalculator'
+            url: createPageUrl('CommissionCalculator'),
             icon: Percent,
             status: 'active',
             description: 'Calculate earnings based on commission rates',
@@ -106,21 +71,21 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Overtime & Bonus Calculator',
-            url: createPageUrl('overtime-bonus-calculator'), // Changed from 'OvertimeBonusCalculator'
+            url: createPageUrl('OvertimeBonusCalculator'),
             icon: TrendingUp,
             status: 'active',
             description: 'Calculate overtime pay and bonus amounts',
           },
           {
             name: 'Overtime Pay Calculator',
-            url: createPageUrl('overtime-pay-calculator'), // Changed from 'OvertimePayCalculator'
+            url: createPageUrl('OvertimePayCalculator'),
             icon: TrendingUp,
             status: 'active',
             description: 'Calculate overtime earnings',
           },
           {
             name: 'Overtime Rate Calculator',
-            url: createPageUrl('overtime-rate-calculator'), // Changed from 'OvertimeRateCalculator'
+            url: createPageUrl('OvertimeRateCalculator'),
             icon: Percent,
             status: 'active',
             description: 'Determine overtime hourly rates',
@@ -132,7 +97,7 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Holiday Pay Calculator',
-            url: createPageUrl('holiday-pay-calculator'), // Changed from 'HolidayPayCalculator'
+            url: createPageUrl('HolidayPayCalculator'),
             icon: Calendar,
             status: 'active',
             description: 'Calculate UK statutory holiday pay',
@@ -141,14 +106,14 @@ export const calculatorCategories = [
           // Redundancy Pay Calculator moved to Life & Events
           {
             name: 'Severance Pay Calculator',
-            url: createPageUrl('severance-pay-calculator'), // Changed from 'SeverancePayCalculator'
+            url: createPageUrl('SeverancePayCalculator'),
             icon: FileText,
             status: 'active',
             description: 'Calculate severance package amounts',
           },
           {
             name: 'Child Benefit Calculator',
-            url: createPageUrl('child-benefit-calculator'), // Changed from 'ChildBenefitCalculator'
+            url: createPageUrl('ChildBenefitCalculator'),
             icon: Baby,
             status: 'active',
             description: 'Calculate UK Child Benefit entitlement',
@@ -160,21 +125,21 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Contractor (IR35) Calculator',
-            url: createPageUrl('contractor-calculator'), // Changed from 'ContractorCalculator'
+            url: createPageUrl('ContractorCalculator'),
             icon: Briefcase,
             status: 'active',
             description: 'IR35 and contractor tax calculations',
           },
           {
             name: 'Salary Sacrifice Calculator',
-            url: createPageUrl('salary-sacrifice-calculator'), // Changed from 'SalarySacrificeCalculator'
+            url: createPageUrl('SalarySacrificeCalculator'),
             icon: PiggyBank,
             status: 'active',
             description: 'Calculate salary sacrifice benefits',
           },
           {
             name: 'Payroll Calculator',
-            url: createPageUrl('payroll-calculator'), // Changed from 'PayrollCalculator'
+            url: createPageUrl('PayrollCalculator'),
             icon: Calculator,
             status: 'active',
             description: 'Employer NI and pension calculations',
@@ -195,21 +160,21 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Income Tax Calculator',
-            url: createPageUrl('income-tax-calculator'), // Changed from 'IncomeTaxCalculator'
+            url: createPageUrl('IncomeTaxCalculator'),
             icon: User,
             status: 'active',
             description: 'Calculate UK income tax liability',
           },
           {
             name: 'National Insurance Calculator',
-            url: createPageUrl('national-insurance-calculator'), // Changed from 'NationalInsuranceCalculator'
+            url: createPageUrl('NationalInsuranceCalculator'),
             icon: Shield,
             status: 'active',
             description: 'Calculate National Insurance contributions',
           },
           {
             name: 'Effective Tax Rate Calculator',
-            url: createPageUrl('effective-tax-rate-calculator'), // Changed from 'EffectiveTaxRateCalculator'
+            url: createPageUrl('EffectiveTaxRateCalculator'),
             icon: Percent,
             status: 'active',
             description: 'Find your average tax rate',
@@ -221,14 +186,14 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Capital Gains Tax Calculator',
-            url: createPageUrl('capital-gains-tax-calculator'), // Changed from 'CapitalGainsTaxCalculator'
+            url: createPageUrl('CapitalGainsTaxCalculator'),
             icon: TrendingUp,
             status: 'active',
             description: 'Calculate CGT on investments and assets',
           },
           {
             name: 'Dividend Tax Calculator',
-            url: createPageUrl('dividend-tax-calculator'), // Changed from 'DividendTaxCalculator'
+            url: createPageUrl('DividendTaxCalculator'),
             icon: PoundSterling,
             status: 'active',
             description: 'Calculate tax on dividend income',
@@ -240,14 +205,14 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'VAT Calculator',
-            url: createPageUrl('vat-calculator'), // Changed from 'VATCalculator'
+            url: createPageUrl('VATCalculator'),
             icon: Percent,
             status: 'active',
             description: 'Calculate UK VAT amounts and rates',
           },
           {
             name: 'Corporation Tax Calculator',
-            url: createPageUrl('corporation-tax-calculator'), // Changed from 'CorporationTaxCalculator'
+            url: createPageUrl('CorporationTaxCalculator'),
             icon: Building2,
             status: 'active',
             description: 'Calculate UK corporation tax',
@@ -268,21 +233,21 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Budget Planner',
-            url: createPageUrl('budget-planner'), // Changed from 'BudgetCalculator'
+            url: createPageUrl('BudgetCalculator'),
             icon: PiggyBank,
             status: 'active',
             description: 'Create and track your monthly budget',
           },
           {
             name: 'Emergency Fund Calculator',
-            url: createPageUrl('emergency-fund-calculator'), // Changed from 'EmergencyFundCalculator'
+            url: createPageUrl('EmergencyFundCalculator'),
             icon: Shield,
             status: 'active',
             description: 'Calculate ideal emergency fund size',
           },
           {
             name: 'Household Bills Splitter',
-            url: createPageUrl('household-bills-splitter'), // Changed from 'HouseholdBillsSplitter'
+            url: createPageUrl('HouseholdBillsSplitter'),
             icon: Receipt,
             status: 'active',
             description: 'Split household bills between flatmates',
@@ -294,21 +259,21 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Savings Goal Calculator',
-            url: createPageUrl('savings-goal-calculator'), // Changed from 'SavingsGoalCalculator'
+            url: createPageUrl('SavingsGoalCalculator'),
             icon: Target,
             status: 'active',
             description: 'Plan and track savings goals',
           },
           {
             name: 'ISA Calculator',
-            url: createPageUrl('isa-calculator'), // Changed from 'ISACalculator'
+            url: createPageUrl('ISACalculator'),
             icon: PiggyBank,
             status: 'active',
             description: 'Calculate ISA contributions and growth',
           },
           {
             name: 'Rule of 72 Calculator',
-            url: createPageUrl('rule-of-72-calculator'), // Changed from 'RuleOf72Calculator'
+            url: createPageUrl('RuleOf72Calculator'),
             icon: Calculator,
             status: 'active',
             description: 'Calculate investment doubling time',
@@ -320,49 +285,49 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Cost of Living Explorer',
-            url: createPageUrl('cost-of-living'), // Changed from 'CostOfLiving'
+            url: createPageUrl('CostOfLiving'),
             icon: MapPin,
             status: 'active',
             description: 'Compare living costs across UK cities',
           },
           {
             name: 'Inflation Calculator',
-            url: createPageUrl('inflation-calculator'), // Changed from 'InflationCalculator'
+            url: createPageUrl('InflationCalculator'),
             icon: TrendingUp,
             status: 'active',
             description: 'Calculate inflation impact over time',
           },
           {
             name: 'Council Tax Calculator',
-            url: createPageUrl('council-tax-calculator'), // Changed from 'CouncilTaxCalculator'
+            url: createPageUrl('CouncilTaxCalculator'),
             icon: HomeIcon,
             status: 'active',
             description: 'Calculate council tax bands and rates',
           },
           {
             name: 'Commute Cost Calculator',
-            url: createPageUrl('commute-cost-calculator'), // Changed from 'CommuteCostCalculator'
+            url: createPageUrl('CommuteCostCalculator'),
             icon: Car,
             status: 'active',
             description: 'Calculate total commuting costs',
           },
           {
             name: 'Subscription Cost Calculator',
-            url: createPageUrl('subscription-cost-calculator'), // Changed from 'SubscriptionCostCalculator'
+            url: createPageUrl('SubscriptionCostCalculator'),
             icon: Repeat,
             status: 'active',
             description: 'Track and manage subscription expenses',
           },
           {
             name: 'Car Cost Calculator',
-            url: createPageUrl('car-cost-calculator'), // Changed from 'CarCostCalculator'
+            url: createPageUrl('CarCostCalculator'),
             icon: Car,
             status: 'active',
             description: 'Total cost of car ownership',
           },
           {
             name: 'Energy Bill Calculator',
-            url: createPageUrl('energy-bill-calculator'), // Changed from 'EnergyBillCalculator'
+            url: createPageUrl('EnergyBillCalculator'),
             icon: Zap,
             status: 'active',
             description: 'Calculate and compare energy costs',
@@ -383,21 +348,21 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Debt Repayment Calculator',
-            url: createPageUrl('debt-repayment-calculator'), // Changed from 'DebtCalculator'
+            url: createPageUrl('DebtCalculator'),
             icon: CreditCard,
             status: 'active',
             description: 'Plan debt payoff strategies',
           },
           {
             name: 'Credit Card Repayment Calculator',
-            url: createPageUrl('credit-card-repayment-calculator'), // Changed from 'CreditCardRepaymentCalculator'
+            url: createPageUrl('CreditCardRepaymentCalculator'),
             icon: CreditCard,
             status: 'active',
             description: 'Calculate credit card payoff times',
           },
           {
             name: 'Debt-to-Income Ratio Calculator',
-            url: createPageUrl('debt-to-income-ratio-calculator'), // Changed from 'DebtToIncomeRatioCalculator'
+            url: createPageUrl('DebtToIncomeRatioCalculator'),
             icon: TrendingDown,
             status: 'active',
             description: 'Calculate debt-to-income ratio',
@@ -409,14 +374,14 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Student Loan Calculator',
-            url: createPageUrl('student-loan-calculator'), // Changed from 'StudentLoanCalculator'
+            url: createPageUrl('StudentLoanCalculator'),
             icon: BookOpen,
             status: 'active',
             description: 'Calculate student loan repayments',
           },
           {
             name: 'Student Loan Repayment Calculator',
-            url: createPageUrl('student-loan-repayment-calculator'), // Changed from 'StudentLoanRepaymentCalculator'
+            url: createPageUrl('StudentLoanRepaymentCalculator'),
             icon: BookOpen,
             status: 'active',
             description: 'Detailed student loan repayment planning',
@@ -428,35 +393,35 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Personal Loan Calculator',
-            url: createPageUrl('personal-loan-calculator'), // Changed from 'PersonalLoanCalculator'
+            url: createPageUrl('PersonalLoanCalculator'),
             icon: Banknote,
             status: 'active',
             description: 'Calculate personal loan repayments',
           },
           {
             name: 'Loan Repayment Calculator',
-            url: createPageUrl('loan-repayment-calculator'), // Changed from 'LoanRepaymentCalculator'
+            url: createPageUrl('LoanRepaymentCalculator'),
             icon: Banknote,
             status: 'active',
             description: 'Simple loan repayment calculator',
           },
           {
             name: 'Car Loan Calculator',
-            url: createPageUrl('car-loan-calculator'), // Changed from 'CarLoanCalculator'
+            url: createPageUrl('CarLoanCalculator'),
             icon: Car,
             status: 'active',
             description: 'HP & PCP car finance payment calculator',
           },
           {
             name: 'Amortization Calculator',
-            url: createPageUrl('amortization-calculator'), // Changed from 'AmortizationCalculator'
+            url: createPageUrl('AmortizationCalculator'),
             icon: FileSpreadsheet,
             status: 'active',
             description: 'Generate a full loan repayment schedule',
           },
           {
             name: 'Loan Comparison Calculator',
-            url: createPageUrl('loan-comparison-calculator'), // Changed from 'LoanComparisonCalculator'
+            url: createPageUrl('LoanComparisonCalculator'),
             icon: Repeat,
             status: 'active',
             description: 'Compare different loan offers side-by-side',
@@ -477,42 +442,42 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Mortgage Calculator',
-            url: createPageUrl('mortgage-calculator'), // Changed from 'MortgageCalculator'
+            url: createPageUrl('MortgageCalculator'),
             icon: Building,
             status: 'active',
             description: 'Calculate mortgage payments and costs',
           },
           {
             name: 'Mortgage Affordability Calculator',
-            url: createPageUrl('mortgage-affordability-calculator'), // Changed from 'MortgageAffordabilityCalculator'
+            url: createPageUrl('MortgageAffordabilityCalculator'),
             icon: Building,
             status: 'active',
             description: 'Determine how much you can borrow',
           },
           {
             name: 'Remortgage Calculator',
-            url: createPageUrl('remortgage-calculator'), // Changed from 'RemortgageCalculator'
+            url: createPageUrl('RemortgageCalculator'),
             icon: Repeat,
             status: 'active',
             description: 'Calculate savings from switching deals',
           },
           {
             name: 'Home Equity Loan Calculator',
-            url: createPageUrl('home-equity-loan-calculator'), // Changed from 'HomeEquityLoanCalculator'
+            url: createPageUrl('HomeEquityLoanCalculator'),
             icon: HomeIcon,
             status: 'active',
             description: 'Calculate how much equity you can borrow',
           },
           {
             name: 'Mortgage Repayment Calculator',
-            url: createPageUrl('mortgage-repayment-calculator'), // Changed from 'MortgageRepaymentCalculator'
+            url: createPageUrl('MortgageRepaymentCalculator'),
             icon: Calculator,
             status: 'active',
             description: 'Calculate mortgage repayment schedules',
           },
           {
             name: 'First-Time Buyer Calculator',
-            url: createPageUrl('first-time-buyer-calculator'), // Changed from 'FirstTimeBuyerCalculator'
+            url: createPageUrl('FirstTimeBuyerCalculator'),
             icon: HomeIcon,
             status: 'active',
             description: 'First-time buyer affordability and costs',
@@ -524,28 +489,28 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Rental Income Calculator',
-            url: createPageUrl('rental-income-calculator'), // Changed from 'RentalIncomeCalculator'
+            url: createPageUrl('RentalIncomeCalculator'),
             icon: Building,
             status: 'active',
             description: 'Calculate buy-to-let rental yields',
           },
           {
             name: 'Property Investment Calculator',
-            url: createPageUrl('brrrr-calculator'), // Changed from 'BRRRRCalculator'
+            url: createPageUrl('BRRRRCalculator'),
             icon: Repeat,
             status: 'active',
             description: 'BRRRR property investment strategy',
           },
           {
             name: 'Buy-to-Let Mortgage Calculator',
-            url: createPageUrl('buy-to-let-mortgage-calculator'), // Changed from 'BuyToLetMortgageCalculator'
+            url: createPageUrl('BuyToLetMortgageCalculator'),
             icon: Building,
             status: 'active',
             description: 'Analyse BTL mortgage costs & profit',
           },
           {
             name: 'Rental Yield Calculator',
-            url: createPageUrl('rental-income-calculator'), // Changed from 'RentalYieldCalculator'
+            url: createPageUrl('RentalYieldCalculator'),
             icon: Building,
             status: 'active',
             description: 'Calculate the rental yield of a property investment',
@@ -557,14 +522,14 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Stamp Duty Calculator',
-            url: createPageUrl('stamp-duty-calculator'), // Changed from 'StampDutyCalculator'
+            url: createPageUrl('StampDutyCalculator'),
             icon: Receipt,
             status: 'active',
             description: 'Calculate UK stamp duty costs',
           },
           {
             name: 'Rent vs Buy Calculator',
-            url: createPageUrl('rent-vs-buy-calculator'), // Changed from 'RentVsBuyCalculator'
+            url: createPageUrl('RentVsBuyCalculator'),
             icon: HomeIcon,
             status: 'active',
             description: 'Compare renting vs buying costs',
@@ -585,35 +550,35 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Investment Growth Calculator',
-            url: createPageUrl('investment-calculator'), // Changed from 'InvestmentCalculator'
+            url: createPageUrl('InvestmentCalculator'),
             icon: Briefcase,
             status: 'active',
             description: 'Project the future value of your portfolio',
           },
           {
             name: 'Compound Interest Calculator',
-            url: createPageUrl('compound-interest-calculator'), // Changed from 'CompoundInterestCalculator'
+            url: createPageUrl('CompoundInterestCalculator'),
             icon: Percent,
             status: 'active',
             description: 'Calculate compound investment growth',
           },
           {
             name: 'Simple Interest Calculator',
-            url: createPageUrl('simple-interest-calculator'), // Changed from 'SimpleInterestCalculator'
+            url: createPageUrl('SimpleInterestCalculator'),
             icon: Calculator,
             status: 'active',
             description: 'Calculate interest without compounding',
           },
           {
             name: 'Net Worth Calculator',
-            url: createPageUrl('net-worth-calculator'), // Changed from 'NetWorthCalculator'
+            url: createPageUrl('NetWorthCalculator'),
             icon: Calculator,
             status: 'active',
             description: 'Calculate and track net worth',
           },
           {
             name: 'Future Value Calculator',
-            url: createPageUrl('future-value-calculator'), // Changed from 'FutureValueCalculator'
+            url: createPageUrl('FutureValueCalculator'),
             icon: TrendingUp,
             status: 'active',
             description: 'Calculate the future value of an investment or savings',
@@ -625,35 +590,35 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Pension Calculator',
-            url: createPageUrl('pension-calculator'), // Changed from 'PensionCalculator'
+            url: createPageUrl('PensionCalculator'),
             icon: Shield,
             status: 'active',
             description: 'Calculate pension contributions and growth',
           },
           {
             name: 'Pension Contribution Calculator',
-            url: createPageUrl('pension-contribution-calculator'), // Changed from 'PensionContributionCalculator'
+            url: createPageUrl('PensionContributionCalculator'),
             icon: PiggyBank,
             status: 'active',
             description: 'Optimize pension contributions',
           },
           {
             name: 'Retirement Savings Calculator',
-            url: createPageUrl('retirement-savings-calculator'), // Changed from 'RetirementSavingsCalculator'
+            url: createPageUrl('RetirementSavingsCalculator'),
             icon: Target,
             status: 'active',
             description: 'Plan retirement savings needs',
           },
           {
             name: 'Annuity Calculator',
-            url: createPageUrl('annuity-calculator'), // Changed from 'AnnuityCalculator'
+            url: createPageUrl('AnnuityCalculator'),
             icon: Banknote,
             status: 'active',
             description: 'Estimate income from an annuity',
           },
           {
             name: 'FIRE Calculator',
-            url: createPageUrl('fire-calculator'), // Changed from 'FIRECalculator'
+            url: createPageUrl('FIRECalculator'),
             icon: TrendingUp,
             status: 'active',
             description: 'Calculate Financial Independence Retire Early',
@@ -674,14 +639,14 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Business Loan Calculator',
-            url: createPageUrl('business-loan-calculator'), // Changed from 'BusinessLoanCalculator'
+            url: createPageUrl('BusinessLoanCalculator'),
             icon: Banknote,
             status: 'active',
             description: 'Calculate business loan repayments',
           },
           {
             name: 'Break-Even Calculator',
-            url: createPageUrl('break-even-calculator'), // Changed from 'BreakEvenCalculator'
+            url: createPageUrl('BreakEvenCalculator'),
             icon: Target,
             status: 'active',
             description: 'Calculate business break-even point',
@@ -703,7 +668,7 @@ export const calculatorCategories = [
           // Wedding Budget Calculator moved to Life & Events
           {
             name: 'Travel Budget Calculator',
-            url: createPageUrl('travel-budget-calculator'), // Changed from 'TravelBudgetCalculator'
+            url: createPageUrl('TravelBudgetCalculator'),
             icon: MapPin,
             status: 'active',
             description: 'Plan holiday and travel costs',
@@ -715,7 +680,7 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Dream Lifestyle Calculator',
-            url: createPageUrl('dream-lifestyle-calculator'), // Changed from 'DreamLifestyleCalculator'
+            url: createPageUrl('DreamLifestyleCalculator'),
             icon: Sparkles,
             status: 'active',
             description: 'Calculate costs of your dream lifestyle',
@@ -736,7 +701,7 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Currency Converter',
-            url: createPageUrl('currency-converter'), // Changed from 'CurrencyConverter'
+            url: createPageUrl('CurrencyConverter'),
             icon: PoundSterling,
             status: 'active',
             description: 'Information hub for currency exchange rates',
@@ -748,7 +713,7 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Tip Calculator',
-            url: createPageUrl('tip-calculator'), // Changed from 'TipCalculator'
+            url: createPageUrl('TipCalculator'),
             icon: Calculator,
             status: 'active',
             description: 'UK-style tip calculator',
@@ -769,42 +734,42 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Wedding Budget Calculator',
-            url: createPageUrl('wedding-budget-calculator'), // Changed from 'WeddingBudgetCalculator'
+            url: createPageUrl('WeddingBudgetCalculator'),
             icon: Sparkles,
             status: 'active',
             description: 'Plan wedding costs and budget',
           },
           {
             name: 'Maternity Pay Calculator',
-            url: createPageUrl('maternity-pay-calculator'), // Changed from 'MaternityPayCalculator'
+            url: createPageUrl('MaternityPayCalculator'),
             icon: Baby,
             status: 'active',
             description: 'Calculate statutory maternity pay',
           },
           {
             name: 'Childcare Cost Calculator',
-            url: createPageUrl('childcare-cost-calculator'), // Changed from 'ChildcareCostCalculator'
+            url: createPageUrl('ChildcareCostCalculator'),
             icon: Baby,
             status: 'active',
             description: 'Calculate childcare expenses',
           },
           {
             name: 'Statutory Sick Pay Calculator',
-            url: createPageUrl('statutory-sick-pay-calculator'), // Changed from 'StatutorySickPayCalculator'
+            url: createPageUrl('StatutorySickPayCalculator'),
             icon: Shield,
             status: 'active',
             description: 'Calculate UK statutory sick pay',
           },
           {
             name: 'Redundancy Pay Calculator',
-            url: createPageUrl('redundancy-pay-calculator'), // Changed from 'RedundancyPayCalculator'
+            url: createPageUrl('RedundancyPayCalculator'),
             icon: Briefcase,
             status: 'active',
             description: 'Calculate statutory redundancy payments',
           },
           {
             name: 'Inheritance Tax Calculator',
-            url: createPageUrl('inheritance-tax-calculator'), // Changed from 'InheritanceTaxCalculator'
+            url: createPageUrl('InheritanceTaxCalculator'),
             icon: Shield,
             status: 'active',
             description: 'Calculate UK inheritance tax liability',
@@ -814,53 +779,3 @@ export const calculatorCategories = [
     ],
   },
 ];
-// Helper functions for working with calculator data
-export const getAllCalculators = () => {
-  const allCalculators = [];
-  calculatorCategories.forEach((category) => {
-    category.subCategories.forEach((subCategory) => {
-      subCategory.calculators.forEach((calculator) => {
-        allCalculators.push({
-          ...calculator,
-          category: category.name,
-          subCategory: subCategory.name,
-          categorySlug: category.slug,
-        });
-      });
-    });
-  });
-  return allCalculators;
-};
-
-export const getCalculatorsByStatus = (status) => {
-  return getAllCalculators().filter((calc) => calc.status === status);
-};
-
-export const getCalculatorsByCategory = (categorySlug) => {
-  const category = calculatorCategories.find((cat) => cat.slug === categorySlug);
-  return category ? category : null;
-};
-
-export const searchCalculators = (query) => {
-  const allCalculators = getAllCalculators();
-  const searchTerm = query.toLowerCase();
-  return allCalculators.filter(
-    (calc) =>
-      calc.name.toLowerCase().includes(searchTerm) ||
-      calc.description.toLowerCase().includes(searchTerm) ||
-      calc.category.toLowerCase().includes(searchTerm) ||
-      calc.subCategory.toLowerCase().includes(searchTerm)
-  );
-};
-
-// Statistics for the platform
-export const getCalculatorStats = () => {
-  const all = getAllCalculators();
-  return {
-    total: all.length,
-    active: all.filter((calc) => calc.status === 'active').length,
-    planned: all.filter((calc) => calc.status === 'planned').length,
-    categories: calculatorCategories.length,
-    subCategories: calculatorCategories.reduce((sum, cat) => sum + cat.subCategories.length, 0),
-  };
-};
