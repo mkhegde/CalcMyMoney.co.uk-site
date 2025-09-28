@@ -143,7 +143,7 @@ export default function Home() {
 
               {/* Search Results Dropdown */}
               {searchResults.length > 0 && (
-                <div className="absolute z-10 w-full max-w-2xl mx-auto mt-2 bg-white border border-gray-200 rounded-lg shadow-lg">
+                <div className="absolute z-50 w-full max-w-2xl mx-auto mt-2 bg-white border border-gray-200 rounded-lg shadow-lg">
                   <div className="p-2 max-h-64 overflow-y-auto">
                     {searchResults.slice(0, 8).map((calc, index) => (
                       <Link
@@ -233,7 +233,6 @@ export default function Home() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-          import {prefetchPage} from '@/utils/prefetchPage';
           {featuredCalcObjects.map((calc, index) => (
             <Link
               key={index}
