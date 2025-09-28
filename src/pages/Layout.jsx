@@ -858,9 +858,13 @@ export default function Layout({ children, currentPageName }) {
             <div className="flex-shrink-0">
               <Link to={createPageUrl('Home')} className="flex items-center space-x-2">
                                {' '}
-                <img src="/app-icon.jpg" alt="Calculate My Money Logo" className="h-8 w-8" />       
-                <span className="font-bold text-xl text-gray-800">Calculate My Money</span>         
-                   {' '}
+                <img
+                  src="/images/app-icon.webp"
+                  alt="Calculate My Money Logo"
+                  className="h-8 w-8"
+                />
+                       <span className="font-bold text-xl text-gray-800">Calculate My Money</span> 
+                           {' '}
               </Link>
             </div>
 
