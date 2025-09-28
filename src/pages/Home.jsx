@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/utils/createPageUrl';
+
 import { Search, Calculator, TrendingUp, Users, Star, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +65,10 @@ export default function Home() {
   ];
 
   const featuredCalcObjects = featuredCalculators
-    .map((pageName) => allCalculators.find((calc) => calc.url.includes(pageName)))
+    .map((pageName) => {
+      const target = createPageUrl(pageName); // e.g. "SalaryCalculatorUK" -> "/salary-calculator-uk"
+      return allCalculators.find((calc) => typeof calc?.url === 'string' && calc.url === target);
+    })
     .filter(Boolean);
 
   // Handle search

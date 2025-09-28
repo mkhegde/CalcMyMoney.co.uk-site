@@ -856,7 +856,10 @@ export const allCalculators = calculatorCategories.flatMap((category) =>
  * This is the function that was missing and causing the build error in Home.jsx.
  */
 export const getCalculatorStats = () => {
-  return allCalculators.length;
+  const total = allCalculators.length;
+  const active = allCalculators.filter((c) => c.status === 'active').length;
+  const pending = allCalculators.filter((c) => c.status !== 'active').length;
+  return { total, active, pending };
 };
 
 /**
