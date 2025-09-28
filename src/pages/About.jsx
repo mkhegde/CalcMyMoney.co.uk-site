@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function About() {
   const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://calcmymoney.co.uk';
+    typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
   const breadcrumbJson = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',

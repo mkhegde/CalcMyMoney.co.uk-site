@@ -683,7 +683,7 @@ export default function Layout({ children, currentPageName }) {
       '@type': 'Organization',
       name: 'Calculate My Money',
       url: `${origin}/`,
-      logo: 'https://calcmymoney.co.uk/images/logo-high-res.png', // Existing logo
+      logo: 'https://www.calcmymoney.co.uk/images/logo-high-res.png', // Existing logo
       sameAs: [],
     };
 
