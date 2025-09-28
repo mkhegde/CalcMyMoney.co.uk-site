@@ -73,7 +73,7 @@ export default function ProRataSalaryCalculator() {
   }, [fullTimeSalary, fullTimeHours, partTimeHours]);
 
   const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://calcmymoney.co.uk';
+    typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
   const breadcrumbJson = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',

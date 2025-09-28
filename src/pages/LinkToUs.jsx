@@ -18,7 +18,7 @@ const POUND_ICON_SVG_HTML = `
 
 export default function LinkToUs() {
   // The badge HTML now uses the inline SVG instead of the large PNG URL.
-  const badgeHtml = `<a href="https://calcmymoney.co.uk/SalaryCalculatorUK" target="_blank" rel="noopener">
+  const badgeHtml = `<a href="https://www.calcmymoney.co.uk/SalaryCalculatorUK" target="_blank" rel="noopener">
   ${POUND_ICON_SVG_HTML}
   <span>Powered by Calculate My Money — Free UK Salary Calculator</span>
 </a>`;

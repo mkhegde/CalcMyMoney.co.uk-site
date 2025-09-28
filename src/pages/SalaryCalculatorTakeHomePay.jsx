@@ -6,7 +6,7 @@ import RelatedCalculators from '../components/calculators/RelatedCalculators';
 
 export default function SalaryCalculatorTakeHomePay() {
   const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://calcmymoney.co.uk';
+    typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
   const breadcrumbJson = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',

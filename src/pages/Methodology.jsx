@@ -6,7 +6,7 @@ export default function Methodology() {
   const LAST_UPDATED_DISPLAY = '10 September 2025';
 
   const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://calcmymoney.co.uk';
+    typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
   const breadcrumbJson = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',

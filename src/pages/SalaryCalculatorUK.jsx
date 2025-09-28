@@ -63,12 +63,12 @@ const breadcrumbJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://calcmymoney.co.uk/' },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.calcmymoney.co.uk/' },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Salary & Income',
-      item: 'https://calcmymoney.co.uk/salary-calculator-uk/',
+      item: 'https://www.calcmymoney.co.uk/salary-calculator-uk/',
     },
   ],
 };
