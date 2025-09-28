@@ -10,7 +10,7 @@ const isCI = process.env.VERCEL === '1' || process.env.CI === 'true';
 export default defineConfig({
   plugins: [react()],
 
-  // Serve from site root (don’t point at index.html)
+  // Serve from site root
   base: '/',
 
   server: {
@@ -32,37 +32,41 @@ export default defineConfig({
 
   build: {
     cssCodeSplit: true,
+    // Raise the warning threshold a bit; still keep chunking sensible
+    chunkSizeWarningLimit: 1200,
     rollupOptions: {
       output: {
-        // split vendor deps
-        manualChunks(id) {
-          if (id.includes('node_modules')) return 'vendor';
+        // Split vendor libs so the main vendor chunk doesn't balloon
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          router: ['react-router', 'react-router-dom'],
+          icons: ['lucide-react'],
+          // add other big libs you use, e.g. charts: ['recharts']
         },
       },
-      // Run Critical after the bundle is created
+      // Run Critical after the bundle is generated
       plugins: [
-        // If you want to disable this on Vercel temporarily, wrap with: ...(isCI ? [] : [critical({...})])
+        // If you need to temporarily disable on CI: ...(isCI ? [] : [critical({...})])
         critical({
-          // Where the built HTML/CSS/JS live
+          // Built assets directory
           criticalBase: 'dist/',
 
-          // Use a route, not a filename (avoids “undefinedindex.html” joins)
+          // Use a route, not a filename
           criticalPages: [{ uri: '/', template: 'index' }],
 
-          // Provide a non-empty URL base so the plugin never builds “undefined…”
-          // For purely local processing, '/' is fine.
-          criticalUrl: '/',
+          // MUST be an absolute origin to avoid "Invalid URL"
+          // (the plugin internally does new URL(base + uri))
+          criticalUrl: 'http://localhost',
 
-          // Options passed to the 'critical' library
+          // Options passed to 'critical'
           criticalConfig: {
             inline: true,
             extract: true,
             width: 375,
             height: 667,
-            // The base directory for resolving assets during critical extraction
-            // Use the built output so file lookups succeed.
+            // Resolve assets relative to the built output
             base: 'dist/',
-            // minify: true, // (optional) enable if your plugin version supports it
+            // minify: true, // enable only if your version supports it cleanly
           },
         }),
       ],
