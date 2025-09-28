@@ -232,10 +232,13 @@ export default function Home() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
+          import {prefetchPage} from '@/utils/prefetchPage';
           {featuredCalcObjects.map((calc, index) => (
             <Link
               key={index}
               to={calc.url}
+              onMouseEnter={() => calc.page && prefetchPage(calc.page)}
+              onFocus={() => calc.page && prefetchPage(calc.page)}
               className="group block p-6 bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all duration-200"
             >
               <div className="flex items-center gap-3 mb-2">
@@ -309,6 +312,8 @@ export default function Home() {
                               {calc.status === 'active' ? (
                                 <Link
                                   to={calc.url}
+                                  onMouseEnter={() => calc.page && prefetchPage(calc.page)}
+                                  onFocus={() => calc.page && prefetchPage(calc.page)}
                                   className="flex-1 text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium"
                                 >
                                   {calc.name}

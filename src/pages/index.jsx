@@ -2,7 +2,8 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Layout from './Layout.jsx';
 import NotFound from './NotFound';
-// --- STATIC IMPORTS (Small pages, always needed, or info pages) ---
+
+// --- STATIC IMPORTS (Small pages / info pages) ---
 import Home from './Home';
 import PrivacyPolicy from './PrivacyPolicy';
 import CookiePolicy from './CookiePolicy';
@@ -26,8 +27,10 @@ import About from './About';
 import SelfAssessmentGuide from './SelfAssessmentGuide';
 import LinkToUs from './LinkToUs';
 
-// --- LAZY LOADED IMPORTS (All large Calculator components) ---
-// These are dynamically loaded only when the user navigates to their specific route.
+// Pull calculator config so we can auto-generate routes for entries with `page`
+import { calculatorCategories } from '../components/data/calculatorConfig';
+
+// --- EXISTING LAZY IMPORTS (keep these; dynamic routes will coexist safely) ---
 const LazySalaryCalculatorUK = lazy(() => import('./SalaryCalculatorUK.jsx'));
 const LazyMortgageCalculator = lazy(() => import('./MortgageCalculator.jsx'));
 const LazyRentalIncomeCalculator = lazy(() => import('./RentalIncomeCalculator.jsx'));
@@ -123,7 +126,7 @@ const LazyMortgageLoanRepayment = lazy(() => import('./MortgageLoanRepayment.jsx
 const LazyHomeLoanMortgageCalculator = lazy(() => import('./HomeLoanMortgageCalculator.jsx'));
 const LazyMortgageComparison = lazy(() => import('./MortgageComparison.jsx'));
 
-// The PAGES object now only contains static imports. Lazy components are handled directly in Routes.
+// --- STATIC PAGES MAP (used for currentPageName in Layout) ---
 const PAGES = {
   Home: Home,
   PrivacyPolicy: PrivacyPolicy,
@@ -149,20 +152,39 @@ const PAGES = {
   LinkToUs: LinkToUs,
 };
 
+// Build a flattended list of calculators from the config
+const _allCalcs = calculatorCategories.flatMap((cat) =>
+  (cat?.subCategories || []).flatMap((sub) => sub?.calculators || [])
+);
+
+// Vite glob for any page component in this folder (e.g., './PAYECalculator.jsx')
+const pageModules = import.meta.glob('./*.jsx');
+const _loadPage = (pageName) => {
+  if (!pageName) return null;
+  const key = `./${pageName}.jsx`;
+  const loader = pageModules[key];
+  return loader ? lazy(loader) : null;
+};
+
+// Build dynamic routes for calculators that have `page` defined
+const DYNAMIC_CALC_ROUTES = _allCalcs
+  .filter((c) => c?.status === 'active' && typeof c.page === 'string' && c.page.trim())
+  .map((c) => {
+    const C = _loadPage(c.page);
+    return C ? { path: c.url, Component: C, name: c.name } : null;
+  })
+  .filter(Boolean);
+
+// Helper for Layout current page label
 function _getCurrentPage(url) {
-  if (url.endsWith('/')) {
-    url = url.slice(0, -1);
-  }
+  if (url.endsWith('/')) url = url.slice(0, -1);
   let urlLastPart = url.split('/').pop();
-  if (urlLastPart.includes('?')) {
-    urlLastPart = urlLastPart.split('?')[0];
-  }
+  if (urlLastPart.includes('?')) urlLastPart = urlLastPart.split('?')[0];
 
   const pageName = Object.keys(PAGES).find(
     (page) => page.toLowerCase() === urlLastPart.toLowerCase()
   );
-  // If the page is not in the static PAGES list, we assume it's a calculator and let the Router handle it.
-  // If it's still not found, default to Home.
+  // If not a known static page, treat it as a lazy/dynamic route for Layout purposes.
   return pageName || 'LazyRoute' || Object.keys(PAGES)[0];
 }
 
@@ -173,7 +195,6 @@ function PagesContent() {
 
   return (
     <Layout currentPageName={currentPage}>
-      {/* CRITICAL: Wrap the entire Routes section with Suspense for all lazy loading */}
       <Suspense
         fallback={
           <div className="p-10 text-center text-lg text-indigo-600">
@@ -183,11 +204,19 @@ function PagesContent() {
         }
       >
         <Routes>
-          {/* Home/Index Routes (STATIC) */}
+          {/* Home/Index (STATIC) */}
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
 
-          {/* --- Core Calculators & Tools (LAZY LOADED) --- */}
+          {/* --- Auto-generated calculator routes (lazy).
+               Placed BEFORE/AFTER static calculator routes both work in RRv6.
+               We place them BEFORE to allow gradual migration:
+               new calculators with `page` need no manual route. */}
+          {DYNAMIC_CALC_ROUTES.map(({ path, Component }) => (
+            <Route key={`dyn:${path}`} path={path} element={<Component />} />
+          ))}
+
+          {/* --- Existing manual calculator routes (LAZY) --- */}
           <Route path="/budget-calculator" element={<LazyBudgetCalculator />} />
           <Route path="/debt-calculator" element={<LazyDebtCalculator />} />
           <Route path="/mortgage-calculator" element={<LazyMortgageCalculator />} />
@@ -281,7 +310,7 @@ function PagesContent() {
           <Route path="/overtime-rate-calculator" element={<LazyOvertimeRateCalculator />} />
           <Route path="/currency-converter" element={<LazyCurrencyConverter />} />
 
-          {/* --- UK Tax & Payroll Calculators (LAZY LOADED) --- */}
+          {/* --- UK Tax & Payroll (LAZY) --- */}
           <Route path="/income-tax-calculator" element={<LazyIncomeTaxCalculator />} />
           <Route
             path="/national-insurance-calculator"
@@ -330,7 +359,7 @@ function PagesContent() {
           />
           <Route path="/contractor-calculator" element={<LazyContractorCalculator />} />
 
-          {/* --- Static/Blog/Data Pages (STATIC) --- */}
+          {/* --- Static/Blog/Data (STATIC) --- */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/cookie-policy" element={<CookiePolicy />} />
           <Route path="/contact" element={<Contact />} />
@@ -352,6 +381,8 @@ function PagesContent() {
           <Route path="/about" element={<About />} />
           <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
           <Route path="/link-to-us" element={<LinkToUs />} />
+
+          {/* Catch-all 404 MUST be last */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

@@ -58,6 +58,7 @@ export const calculatorCategories = [
           },
           {
             name: 'PAYE Calculator',
+            page: 'PAYECalculator',
             url: createPageUrl('paye-calculator'),
             icon: Calculator,
             status: 'active',
@@ -126,6 +127,7 @@ export const calculatorCategories = [
           },
           {
             name: 'Overtime Rate Calculator',
+            page: 'OvertimeRateCalculator',
             url: createPageUrl('OvertimeRateCalculator'),
             icon: Percent,
             status: 'active',
