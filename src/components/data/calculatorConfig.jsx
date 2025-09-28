@@ -884,3 +884,37 @@ export const searchCalculators = (query) => {
       calc.description.toLowerCase().includes(lowerQuery)
   );
 };
+// DEV validation – logs any problems once at startup
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  const problems = [];
+
+  const checkCalc = (calc, path) => {
+    if (!calc) return;
+    if (typeof calc.name !== 'string' || !calc.name.trim()) {
+      problems.push(`${path}: missing/invalid name`);
+    }
+    if (typeof calc.url !== 'string' || !calc.url.startsWith('/')) {
+      problems.push(`${path}: missing/invalid url -> ${String(calc.url)}`);
+    }
+    if (typeof calc.description !== 'string') {
+      problems.push(`${path}: missing/invalid description`);
+    }
+  };
+
+  calculatorCategories.forEach((cat, iCat) => {
+    (cat?.subCategories || []).forEach((sub, iSub) => {
+      (sub?.calculators || []).forEach((calc, iCalc) => {
+        checkCalc(
+          calc,
+          `categories[${iCat}].subCategories[${iSub}].calculators[${iCalc}] (${calc?.name || '?'})`
+        );
+      });
+    });
+  });
+
+  if (problems.length) {
+    console.group('%cCalculator config issues', 'color:crimson;font-weight:bold;');
+    problems.forEach((p) => console.error(p));
+    console.groupEnd();
+  }
+}
