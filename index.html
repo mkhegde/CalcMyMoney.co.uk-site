@@ -1,98 +1,106 @@
 <!doctype html>
 <html lang="en">
-   
   <head>
-       
     <meta charset="UTF-8" />
-       
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-       
-    <!-- Favicons -->
-       
+    <!-- Favicons / App Icons -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
-       
-    <link rel="apple-touch-icon" href="/app-icon.png" />
+    <link rel="apple-touch-icon" href="/app-icon.jpg" sizes="180x180" />
 
-       
-    <!-- Brand Font - Optimized with Preconnect & Prefetch -->
-       
+    <!-- Webfont: defer to avoid render blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-       
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-       
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
       media="print"
       onload="this.media='all'"
     />
-
-       
     <noscript>
-           
       <link
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap"
       />
-         
     </noscript>
 
-    <!--
-        *** IMPORTANT: Fix for "Render Blocking CSS" ***
-        The file /assets/index-ChOTkn_s.scss (or similar) is blocking the render.
-        If your build system injects the main CSS link tag here, you must add:
-        media="print" onload="this.media='all'"
-        to that injected <link rel="stylesheet"...> tag to defer it.
+    <!-- Primary SEO -->
+    <title>UK Salary, Tax & Mortgage Calculators (2025/26) | CalcMyMoney</title>
+    <meta
+      name="description"
+      content="Free UK calculators for salary, PAYE tax & NI, mortgages, loans, budgeting and more — updated for the 2025/26 tax year."
+    />
+    <link rel="canonical" href="https://www.calcmymoney.co.uk/" />
+    <meta name="robots" content="index,follow" />
 
-        Example (if you add your CSS manually):
-        <link rel="stylesheet" href="/assets/index-ChOTkn_s.scss" media="print" onload="this.media='all'">
-    -->
-
-       
-    <title>CalcMyMoney.co.uk</title>
-
-       
-    <!-- SEO / Open Graph -->
-       
-    <meta property="og:title" content="CalcMyMoney" />
-       
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="UK Salary, Tax & Mortgage Calculators (2025/26) | CalcMyMoney"
+    />
     <meta
       property="og:description"
-      content="Smart UK Money Calculators for mortgages, tax, salary & savings."
+      content="Free UK calculators for salary, PAYE tax & NI, mortgages, loans, budgeting and more — updated for the 2025/26 tax year."
     />
-       
-    <meta property="og:image" content="/og-image.png" />
-       
-    <!-- ✅ Blue theme OG image -->
-       
-    <meta property="og:url" content="https://www.calcmymoney.co.uk" />
-       
-    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.calcmymoney.co.uk/" />
+    <meta property="og:image" content="https://www.calcmymoney.co.uk/og-image.png" />
 
-       
-    <!-- Twitter Cards -->
-       
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-       
-    <meta name="twitter:title" content="CalcMyMoney" />
-       
+    <meta
+      name="twitter:title"
+      content="UK Salary, Tax & Mortgage Calculators (2025/26) | CalcMyMoney"
+    />
     <meta
       name="twitter:description"
-      content="Smart UK Money Calculators for mortgages, tax, salary & savings."
+      content="Free UK calculators for salary, PAYE tax & NI, mortgages, loans, budgeting and more — updated for the 2025/26 tax year."
     />
-       
-    <meta name="twitter:image" content="/og-image.png" />
-     
+    <meta name="twitter:image" content="https://www.calcmymoney.co.uk/og-image.png" />
+
+    <!-- JSON-LD: Organization -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "CalcMyMoney",
+        "url": "https://www.calcmymoney.co.uk/",
+        "logo": "https://www.calcmymoney.co.uk/app-icon.jpg"
+      }
+    </script>
+
+    <!-- JSON-LD: WebSite + SearchAction (optional) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "CalcMyMoney",
+        "url": "https://www.calcmymoney.co.uk/",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.calcmymoney.co.uk/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
   </head>
 
-   
   <body>
-       
     <div id="root"></div>
-       
+
+    <!-- No-JS fallback for basic crawlers -->
+    <noscript>
+      <h1>Free UK Salary, Tax & Mortgage Calculators (2025/26)</h1>
+      <h2>Popular tools</h2>
+      <ul>
+        <li><a href="/salary-calculator-uk">Salary Calculator UK</a></li>
+        <li><a href="/paye-calculator">PAYE Tax &amp; NI Calculator</a></li>
+        <li><a href="/mortgage-calculator">Mortgage Calculator</a></li>
+        <li><a href="/budget-calculator">Budget Planner</a></li>
+        <li><a href="/compound-interest-calculator">Compound Interest Calculator</a></li>
+      </ul>
+    </noscript>
+
     <script type="module" src="/src/main.jsx"></script>
-     
   </body>
 </html>
