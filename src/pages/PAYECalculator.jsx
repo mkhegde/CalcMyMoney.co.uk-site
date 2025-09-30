@@ -10,10 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PoundSterling, Calculator, HelpCircle } from 'lucide-react';
+import { PoundSterling, Calculator } from 'lucide-react';
+
+import SeoHead from '@/components/seo/SeoHead';
+import { JsonLd } from '@/components/seo/JsonLd';
+import buildFaqJsonLd from '@/components/seo/buildFaqJsonLd';
+import buildBreadcrumbs from '@/components/seo/buildBreadcrumbs';
+
+import { createPageUrl } from '@/utils/createPageUrl';
 import ExportActions from '../components/calculators/ExportActions';
 import FAQSection from '../components/calculators/FAQSection';
-import RelatedCalculators from '../components/calculators/RelatedCalculators'; // New import
+import RelatedCalculators from '../components/calculators/RelatedCalculators';
 
 const taxBrackets2025 = {
   england: [
@@ -43,17 +50,17 @@ const payeCalculatorFAQs = [
   {
     question: 'What is PAYE?',
     answer:
-      "PAYE (Pay As You Earn) is the UK's system for collecting income tax and National Insurance contributions directly from your salary before you receive it. Your employer calculates and deducts these amounts each pay period.",
+      "PAYE (Pay As You Earn) is the UK's system for collecting income tax and National Insurance directly from your pay before you receive it.",
   },
   {
     question: 'How is PAYE calculated?',
     answer:
-      'PAYE calculations use your tax code, salary, and pay frequency. Tax is calculated cumulatively from April to March, meaning each pay period accounts for the full tax year to date.',
+      'PAYE uses your tax code, salary, and pay frequency. UK income tax is calculated cumulatively across the tax year (6 April to 5 April).',
   },
   {
     question: "What's the difference between Scottish and English PAYE rates?",
     answer:
-      'Scotland has different income tax rates and bands from the rest of the UK, but National Insurance rates remain the same across all UK regions.',
+      'Scotland uses different income tax bands and rates. National Insurance rates are the same across the UK.',
   },
 ];
 
@@ -66,13 +73,21 @@ export default function PAYECalculator() {
   const [hasCalculated, setHasCalculated] = useState(false);
   const [csvData, setCsvData] = useState(null);
 
-  // Helper function to create page URLs. This would typically be part of a routing utility.
-  // For this example, we'll assume a simple transformation to a relative path.
-  const createPageUrl = (pageIdentifier) => {
-    // Example: "SalaryCalculatorUK" -> "/calculators/salary-calculator-uk"
-    // Adjust this logic based on your actual application's routing conventions.
-    return `/calculators/${pageIdentifier.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-  };
+  // ---------- SEO ----------
+  const title = 'PAYE Tax & NI Calculator (2025/26) | CalcMyMoney';
+  const desc =
+    'Work out PAYE income tax, National Insurance and take-home pay for the 2025/26 UK tax year. Supports England, Wales, Northern Ireland and Scotland.';
+
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
+  const canonical = `${origin}/paye-calculator`;
+
+  const faqJsonLd = buildFaqJsonLd(payeCalculatorFAQs);
+  const breadcrumbs = buildBreadcrumbs([
+    { name: 'Home', url: `${origin}/` },
+    { name: 'Tax Calculators', url: `${origin}/tax-calculators-uk` },
+    { name: 'PAYE Calculator', url: canonical },
+  ]);
 
   const calculatePAYE = () => {
     const annualSalary = Number(grossSalary) || 0;
@@ -84,26 +99,26 @@ export default function PAYECalculator() {
 
     // Personal allowance from tax code
     let personalAllowance = 12570;
-    if (taxCode.match(/^\d+L$/)) {
-      personalAllowance = parseInt(taxCode.slice(0, -1)) * 10;
+    if (/^\d+L$/.test(taxCode)) {
+      personalAllowance = parseInt(taxCode.slice(0, -1), 10) * 10;
     }
 
-    // Adjust for high earners
+    // Adjust PA for high earners
     if (annualSalary > 100000) {
       personalAllowance = Math.max(0, personalAllowance - (annualSalary - 100000) / 2);
     }
 
-    // Calculate tax
+    // Income Tax
     const taxBrackets = taxBrackets2025[location];
     let annualTax = 0;
-    let taxBreakdown = [];
+    const taxBreakdown = [];
     const taxableIncome = Math.max(0, annualSalary - personalAllowance);
 
     for (const bracket of taxBrackets) {
       if (bracket.rate === 0) continue;
 
-      const bracketMinAdjusted = Math.max(0, bracket.min - personalAllowance); // Ensure min is not negative if personalAllowance is higher
-      const bracketMaxAdjusted = Math.max(0, bracket.max - personalAllowance); // Ensure max is not negative
+      const bracketMinAdjusted = Math.max(0, bracket.min - personalAllowance);
+      const bracketMaxAdjusted = Math.max(0, bracket.max - personalAllowance);
 
       if (taxableIncome > bracketMinAdjusted) {
         const taxableInBracket = Math.min(taxableIncome, bracketMaxAdjusted) - bracketMinAdjusted;
@@ -120,21 +135,19 @@ export default function PAYECalculator() {
       }
     }
 
-    // Calculate National Insurance
+    // National Insurance (Class 1, employee)
     let annualNI = 0;
-    let niBreakdown = [];
+    const niBreakdown = [];
     for (const threshold of niThresholds) {
-      // NI is calculated on gross salary, not taxable income after PA
       if (annualSalary > threshold.min) {
         const niableAmount = Math.min(annualSalary, threshold.max) - threshold.min;
         if (niableAmount > 0) {
           const niAmount = niableAmount * threshold.rate;
           annualNI += niAmount;
           if (niAmount > 0) {
-            // Only add to breakdown if NI is actually charged in this band
             niBreakdown.push({
               rate: threshold.rate * 100,
-              niableAmount: niableAmount,
+              niableAmount,
               amount: niAmount,
             });
           }
@@ -146,19 +159,8 @@ export default function PAYECalculator() {
     const netSalary = annualSalary - totalDeductions;
 
     // Convert to pay frequency
-    let periods;
-    switch (payFrequency) {
-      case 'weekly':
-        periods = 52;
-        break;
-      case 'fortnightly':
-        periods = 26;
-        break;
-      case 'monthly':
-      default:
-        periods = 12;
-        break;
-    }
+    const periods =
+      payFrequency === 'weekly' ? 52 : payFrequency === 'fortnightly' ? 26 : 12;
 
     const grossPerPeriod = annualSalary / periods;
     const taxPerPeriod = annualTax / periods;
@@ -200,15 +202,25 @@ export default function PAYECalculator() {
 
   return (
     <div className="bg-white dark:bg-gray-900">
+      {/* SEO head + structured data */}
+      <SeoHead
+        title={title}
+        desc={desc}
+        canonical={canonical}
+        ogImage="https://www.calcmymoney.co.uk/og-image.png"
+      />
+      <JsonLd data={faqJsonLd} />
+      <JsonLd data={breadcrumbs} />
+
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              UK PAYE Calculator 2025/26
+              PAYE Tax &amp; National Insurance Calculator (2025/26)
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Calculate your exact take-home pay after income tax and National Insurance deductions
-              using the latest UK rates.
+              Calculate your take-home pay after income tax and National Insurance using the latest UK
+              rates for England, Wales, Northern Ireland and Scotland.
             </p>
           </div>
         </div>
@@ -226,10 +238,11 @@ export default function PAYECalculator() {
                 <div className="space-y-2">
                   <Label htmlFor="grossSalary">Annual Gross Salary</Label>
                   <div className="relative">
-                    <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       id="grossSalary"
                       type="number"
+                      inputMode="decimal"
                       value={grossSalary}
                       onChange={(e) => setGrossSalary(e.target.value)}
                       className="pl-10"
@@ -237,6 +250,7 @@ export default function PAYECalculator() {
                     />
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label>Location</Label>
                   <Select value={location} onValueChange={setLocation}>
@@ -244,11 +258,12 @@ export default function PAYECalculator() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="england">England, Wales & NI</SelectItem>
+                      <SelectItem value="england">England, Wales &amp; NI</SelectItem>
                       <SelectItem value="scotland">Scotland</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="taxCode">Tax Code</Label>
                   <Input
@@ -259,6 +274,7 @@ export default function PAYECalculator() {
                   />
                   <p className="text-xs text-gray-500">Found on your payslip or P60</p>
                 </div>
+
                 <div className="space-y-2">
                   <Label>Pay Frequency</Label>
                   <Select value={payFrequency} onValueChange={setPayFrequency}>
@@ -272,7 +288,8 @@ export default function PAYECalculator() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={calculatePAYE} className="w-full text-lg">
+
+                <Button onClick={calculatePAYE} className="w-full text-lg" aria-label="Calculate PAYE">
                   <Calculator className="w-5 h-5 mr-2" />
                   Calculate PAYE
                 </Button>
@@ -291,6 +308,7 @@ export default function PAYECalculator() {
                     title="PAYE Calculation"
                   />
                 </div>
+
                 <Card className="bg-green-50 border-green-200">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-green-800 mb-2">
@@ -309,6 +327,7 @@ export default function PAYECalculator() {
                     </p>
                   </CardContent>
                 </Card>
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <Card>
                     <CardHeader>
@@ -337,6 +356,7 @@ export default function PAYECalculator() {
                       ))}
                     </CardContent>
                   </Card>
+
                   <Card>
                     <CardHeader>
                       <CardTitle>National Insurance</CardTitle>
@@ -382,7 +402,6 @@ export default function PAYECalculator() {
           </div>
         </div>
 
-        {/* NEW: Related calculators to strengthen contextual internal links */}
         <RelatedCalculators
           calculators={[
             {
