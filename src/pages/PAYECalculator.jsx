@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PoundSterling, Calculator } from 'lucide-react';
+import { PoundSterling, Calculator, Copy } from 'lucide-react';
 
 import SeoHead from '@/components/seo/SeoHead';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -21,6 +21,10 @@ import { createPageUrl } from '@/utils/createPageUrl';
 import ExportActions from '../components/calculators/ExportActions';
 import FAQSection from '../components/calculators/FAQSection';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
+
+/* ==========================
+   DATA (2025/26)
+   ========================== */
 
 const taxBrackets2025 = {
   england: [
@@ -48,21 +52,140 @@ const niThresholds = [
 
 const payeCalculatorFAQs = [
   {
-    question: 'What is PAYE?',
+    question: 'What is PAYE and how does it affect my payslip?',
     answer:
-      "PAYE (Pay As You Earn) is the UK's system for collecting income tax and National Insurance directly from your pay before you receive it.",
+      "PAYE (Pay As You Earn) is the system where your employer deducts income tax and National Insurance from your pay before you receive it. You'll see the deductions clearly on your payslip each period.",
   },
   {
-    question: 'How is PAYE calculated?',
+    question: 'How do my tax code and Personal Allowance work?',
     answer:
-      'PAYE uses your tax code, salary, and pay frequency. UK income tax is calculated cumulatively across the tax year (6 April to 5 April).',
+      'Your tax code (e.g., 1257L) determines your annual Personal Allowance (1257L → £12,570). Above £100,000 of income, this allowance is tapered until it reaches £0.',
   },
   {
-    question: "What's the difference between Scottish and English PAYE rates?",
+    question: 'Why are Scottish income tax results different?',
     answer:
-      'Scotland uses different income tax bands and rates. National Insurance rates are the same across the UK.',
+      'Scotland sets different income tax bands and rates. National Insurance remains the same across the UK, which is why NI figures match while tax figures can differ.',
+  },
+  {
+    question: 'What is the difference between effective and marginal tax rates?',
+    answer:
+      'The effective rate is total tax+NI divided by your gross income. The marginal rate is what your next £1 is taxed at, combining the current income tax band and NI band.',
+  },
+  {
+    question: 'Does this include student loans, pensions or benefits-in-kind?',
+    answer:
+      'This page focuses on income tax and employee NI. For full picture use our Student Loan Repayment and Pension Contribution calculators, and check with HR for any benefits-in-kind.',
   },
 ];
+
+/* ==========================
+   HELPERS
+   ========================== */
+
+function formatGBP(n, opts = {}) {
+  const o = { minimumFractionDigits: 2, maximumFractionDigits: 2, ...opts };
+  return n.toLocaleString('en-GB', o);
+}
+
+function calculateResults({ annualSalary, location, taxCode, payFrequency }) {
+  // Personal allowance from tax code
+  let personalAllowance = 12570;
+  if (/^\d+L$/.test(taxCode)) personalAllowance = parseInt(taxCode.slice(0, -1), 10) * 10;
+
+  // High earner taper
+  if (annualSalary > 100000) {
+    personalAllowance = Math.max(0, personalAllowance - (annualSalary - 100000) / 2);
+  }
+
+  // Income tax
+  const brackets = taxBrackets2025[location] || taxBrackets2025.england;
+  const taxableIncome = Math.max(0, annualSalary - personalAllowance);
+  let annualTax = 0;
+  const taxBreakdown = [];
+
+  for (const b of brackets) {
+    if (b.rate === 0) continue;
+    const minAdj = Math.max(0, b.min - personalAllowance);
+    const maxAdj = Math.max(0, b.max - personalAllowance);
+    if (taxableIncome > minAdj) {
+      const inBand = Math.min(taxableIncome, maxAdj) - minAdj;
+      if (inBand > 0) {
+        const tax = inBand * b.rate;
+        annualTax += tax;
+        taxBreakdown.push({
+          name: b.name,
+          rate: b.rate * 100,
+          taxableAmount: inBand,
+          amount: tax,
+        });
+      }
+    }
+  }
+
+  // Employee NI (Class 1)
+  let annualNI = 0;
+  const niBreakdown = [];
+  for (const t of niThresholds) {
+    if (annualSalary > t.min) {
+      const niable = Math.min(annualSalary, t.max) - t.min;
+      if (niable > 0) {
+        const amt = niable * t.rate;
+        annualNI += amt;
+        if (amt > 0) {
+          niBreakdown.push({
+            rate: t.rate * 100,
+            niableAmount: niable,
+            amount: amt,
+          });
+        }
+      }
+    }
+  }
+
+  const totalDeductions = annualTax + annualNI;
+  const netSalary = annualSalary - totalDeductions;
+
+  const periods = payFrequency === 'weekly' ? 52 : payFrequency === 'fortnightly' ? 26 : 12;
+
+  return {
+    personalAllowance,
+    taxBreakdown,
+    niBreakdown,
+    taxAmount: annualTax,
+    niAmount: annualNI,
+    totalDeductions,
+    netSalary,
+    grossPerPeriod: annualSalary / periods,
+    taxPerPeriod: annualTax / periods,
+    niPerPeriod: annualNI / periods,
+    netPerPeriod: netSalary / periods,
+  };
+}
+
+function getMarginalRate({ annualSalary, location, personalAllowance }) {
+  const brackets = taxBrackets2025[location] || taxBrackets2025.england;
+  const taxable = Math.max(0, annualSalary - personalAllowance);
+  let taxMarginal = 0;
+
+  for (const b of brackets) {
+    const minAdj = Math.max(0, b.min - personalAllowance);
+    const maxAdj = Math.max(0, b.max - personalAllowance);
+    if (taxable >= minAdj && taxable <= maxAdj) {
+      taxMarginal = b.rate;
+      break;
+    }
+  }
+
+  let niMarginal = 0;
+  if (annualSalary >= 12571 && annualSalary <= 50270) niMarginal = 0.08;
+  else if (annualSalary > 50270) niMarginal = 0.02;
+
+  return { taxMarginal, niMarginal, combined: taxMarginal + niMarginal };
+}
+
+/* ==========================
+   COMPONENT
+   ========================== */
 
 export default function PAYECalculator() {
   const [grossSalary, setGrossSalary] = useState('');
@@ -97,102 +220,17 @@ export default function PAYECalculator() {
       return;
     }
 
-    // Personal allowance from tax code
-    let personalAllowance = 12570;
-    if (/^\d+L$/.test(taxCode)) {
-      personalAllowance = parseInt(taxCode.slice(0, -1), 10) * 10;
-    }
-
-    // Adjust PA for high earners
-    if (annualSalary > 100000) {
-      personalAllowance = Math.max(0, personalAllowance - (annualSalary - 100000) / 2);
-    }
-
-    // Income Tax
-    const taxBrackets = taxBrackets2025[location];
-    let annualTax = 0;
-    const taxBreakdown = [];
-    const taxableIncome = Math.max(0, annualSalary - personalAllowance);
-
-    for (const bracket of taxBrackets) {
-      if (bracket.rate === 0) continue;
-
-      const bracketMinAdjusted = Math.max(0, bracket.min - personalAllowance);
-      const bracketMaxAdjusted = Math.max(0, bracket.max - personalAllowance);
-
-      if (taxableIncome > bracketMinAdjusted) {
-        const taxableInBracket = Math.min(taxableIncome, bracketMaxAdjusted) - bracketMinAdjusted;
-        if (taxableInBracket > 0) {
-          const taxInBracket = taxableInBracket * bracket.rate;
-          annualTax += taxInBracket;
-          taxBreakdown.push({
-            name: bracket.name,
-            rate: bracket.rate * 100,
-            taxableAmount: taxableInBracket,
-            amount: taxInBracket,
-          });
-        }
-      }
-    }
-
-    // National Insurance (Class 1, employee)
-    let annualNI = 0;
-    const niBreakdown = [];
-    for (const threshold of niThresholds) {
-      if (annualSalary > threshold.min) {
-        const niableAmount = Math.min(annualSalary, threshold.max) - threshold.min;
-        if (niableAmount > 0) {
-          const niAmount = niableAmount * threshold.rate;
-          annualNI += niAmount;
-          if (niAmount > 0) {
-            niBreakdown.push({
-              rate: threshold.rate * 100,
-              niableAmount,
-              amount: niAmount,
-            });
-          }
-        }
-      }
-    }
-
-    const totalDeductions = annualTax + annualNI;
-    const netSalary = annualSalary - totalDeductions;
-
-    // Convert to pay frequency
-    const periods =
-      payFrequency === 'weekly' ? 52 : payFrequency === 'fortnightly' ? 26 : 12;
-
-    const grossPerPeriod = annualSalary / periods;
-    const taxPerPeriod = annualTax / periods;
-    const niPerPeriod = annualNI / periods;
-    const netPerPeriod = netSalary / periods;
-
-    const newResults = {
-      grossSalary: annualSalary,
-      taxAmount: annualTax,
-      niAmount: annualNI,
-      totalDeductions,
-      netSalary,
-      grossPerPeriod,
-      taxPerPeriod,
-      niPerPeriod,
-      netPerPeriod,
-      taxBreakdown,
-      niBreakdown,
-      personalAllowance,
-    };
-
-    setResults(newResults);
+    const r = calculateResults({ annualSalary, location, taxCode, payFrequency });
+    setResults(r);
     setHasCalculated(true);
 
-    const csvExportData = [
+    setCsvData([
       ['Item', 'Annual', `Per ${payFrequency.charAt(0).toUpperCase() + payFrequency.slice(1)}`],
-      ['Gross Salary', `£${annualSalary.toFixed(2)}`, `£${grossPerPeriod.toFixed(2)}`],
-      ['Income Tax', `-£${annualTax.toFixed(2)}`, `-£${taxPerPeriod.toFixed(2)}`],
-      ['National Insurance', `-£${annualNI.toFixed(2)}`, `-£${niPerPeriod.toFixed(2)}`],
-      ['Net Take-Home', `£${netSalary.toFixed(2)}`, `£${netPerPeriod.toFixed(2)}`],
-    ];
-    setCsvData(csvExportData);
+      ['Gross Salary', `£${formatGBP(annualSalary)}`, `£${formatGBP(r.grossPerPeriod)}`],
+      ['Income Tax', `-£${formatGBP(r.taxAmount)}`, `-£${formatGBP(r.taxPerPeriod)}`],
+      ['National Insurance', `-£${formatGBP(r.niAmount)}`, `-£${formatGBP(r.niPerPeriod)}`],
+      ['Net Take-Home', `£${formatGBP(r.netSalary)}`, `£${formatGBP(r.netPerPeriod)}`],
+    ]);
   };
 
   useEffect(() => {
@@ -212,6 +250,7 @@ export default function PAYECalculator() {
       <JsonLd data={faqJsonLd} />
       <JsonLd data={breadcrumbs} />
 
+      {/* Header */}
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
@@ -219,17 +258,48 @@ export default function PAYECalculator() {
               PAYE Tax &amp; National Insurance Calculator (2025/26)
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Calculate your take-home pay after income tax and National Insurance using the latest UK
-              rates for England, Wales, Northern Ireland and Scotland.
+              Calculate your take-home pay after income tax and National Insurance using the latest
+              UK rates for England, Wales, Northern Ireland and Scotland.
             </p>
           </div>
         </div>
       </div>
 
+      {/* Main */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="print-title hidden">PAYE Calculation 2025/26</div>
         <div className="grid lg:grid-cols-5 gap-8 printable-grid-cols-1">
+          {/* Left: inputs */}
           <div className="lg:col-span-2 non-printable">
+            {/* Common scenarios */}
+            <div className="mb-4 space-y-2">
+              <p className="text-sm text-gray-500">Try a quick scenario:</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: 'New graduate (£28k)', salary: 28000, loc: 'england' },
+                  { label: 'NHS nurse (£35k)', salary: 35000, loc: 'england' },
+                  { label: 'Scotland (£45k)', salary: 45000, loc: 'scotland' },
+                  { label: 'London tech (£75k)', salary: 75000, loc: 'england' },
+                  { label: 'High earner (£120k)', salary: 120000, loc: 'england' },
+                ].map((s) => (
+                  <Button
+                    key={s.label}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setGrossSalary(String(s.salary));
+                      setLocation(s.loc);
+                      setPayFrequency('monthly');
+                      setHasCalculated(false);
+                      setResults(null);
+                    }}
+                  >
+                    {s.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             <Card className="sticky top-24">
               <CardHeader>
                 <CardTitle>Your Details</CardTitle>
@@ -297,16 +367,44 @@ export default function PAYECalculator() {
             </Card>
           </div>
 
+          {/* Right: results */}
           <div className="lg:col-span-3 space-y-6 printable-area">
             {hasCalculated && results ? (
               <>
-                <div className="flex justify-between items-center non-printable">
+                <div className="flex flex-wrap gap-3 items-center justify-between non-printable">
                   <h2 className="text-2xl font-bold text-gray-800">Your PAYE Breakdown</h2>
-                  <ExportActions
-                    csvData={csvData}
-                    fileName="paye-calculation"
-                    title="PAYE Calculation"
-                  />
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const annualSalary = Number(grossSalary) || 0;
+                        const eff =
+                          annualSalary > 0
+                            ? ((results.totalDeductions / annualSalary) * 100).toFixed(1)
+                            : '0.0';
+                        const summary =
+                          `PAYE summary (${payFrequency}):\n` +
+                          `Gross: £${formatGBP(annualSalary)}\n` +
+                          `Income Tax: £${formatGBP(results.taxAmount)}\n` +
+                          `NI: £${formatGBP(results.niAmount)}\n` +
+                          `Net: £${formatGBP(results.netSalary)}\n` +
+                          `Effective rate: ${eff}%`;
+                        try {
+                          navigator.clipboard?.writeText(summary);
+                        } catch {}
+                      }}
+                      aria-label="Copy summary"
+                      title="Copy summary to clipboard"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy summary
+                    </Button>
+                    <ExportActions
+                      csvData={csvData}
+                      fileName="paye-calculation"
+                      title="PAYE Calculation"
+                    />
+                  </div>
                 </div>
 
                 <Card className="bg-green-50 border-green-200">
@@ -322,11 +420,67 @@ export default function PAYECalculator() {
                       })}
                     </div>
                     <p className="text-sm text-green-700">
-                      Annual: £
-                      {results.netSalary.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                      Annual: £{results.netSalary.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
                     </p>
                   </CardContent>
                 </Card>
+
+                {/* Insights */}
+                <Card>
+                  <CardContent className="p-6">
+                    {(() => {
+                      const annualSalary = Number(grossSalary) || 0;
+                      const eff = annualSalary > 0 ? results.totalDeductions / annualSalary : 0;
+                      const { taxMarginal, niMarginal, combined } = getMarginalRate({
+                        annualSalary,
+                        location,
+                        personalAllowance: results.personalAllowance,
+                      });
+                      return (
+                        <div className="grid md:grid-cols-3 gap-4">
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-xs text-gray-500">Effective tax + NI rate</p>
+                            <p className="text-2xl font-bold text-gray-900">{(eff * 100).toFixed(1)}%</p>
+                            <p className="text-xs text-gray-500">Total deductions / gross</p>
+                          </div>
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-xs text-gray-500">Marginal tax rate</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {(taxMarginal * 100).toFixed(0)}%
+                            </p>
+                            <p className="text-xs text-gray-500">On your next £1 (income tax)</p>
+                          </div>
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-xs text-gray-500">Combined marginal</p>
+                            <p className="text-2xl font-bold text-gray-900">
+                              {(combined * 100).toFixed(0)}%
+                            </p>
+                            <p className="text-xs text-gray-500">Income tax + NI on next £1</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+
+                {/* Threshold callouts */}
+                {Number(grossSalary) > 100000 && (
+                  <Card className="border-amber-300 bg-amber-50">
+                    <CardContent className="p-4 text-sm text-amber-900">
+                      Over £100,000 your Personal Allowance is tapered. For every £2 above £100k, you
+                      lose £1 of allowance until it reaches £0. That’s why your effective rate rises
+                      sharply here.
+                    </CardContent>
+                  </Card>
+                )}
+                {Number(grossSalary) <= 12570 && hasCalculated && (
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardContent className="p-4 text-sm text-blue-900">
+                      You’re within the Personal Allowance. You won’t pay income tax, but NI may still
+                      apply above the NI thresholds.
+                    </CardContent>
+                  </Card>
+                )}
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <Card>
@@ -383,6 +537,72 @@ export default function PAYECalculator() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Scotland vs rUK comparison */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Compare Scotland vs England/Wales/NI</CardTitle>
+                  </CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    {(() => {
+                      const annualSalary = Number(grossSalary) || 0;
+                      if (!annualSalary)
+                        return <p className="text-sm text-gray-500">Enter a salary to compare.</p>;
+                      const rUK = calculateResults({
+                        annualSalary,
+                        location: 'england',
+                        taxCode,
+                        payFrequency,
+                      });
+                      const sco = calculateResults({
+                        annualSalary,
+                        location: 'scotland',
+                        taxCode,
+                        payFrequency,
+                      });
+                      return (
+                        <table className="min-w-[520px] text-sm">
+                          <thead>
+                            <tr className="text-left border-b">
+                              <th className="py-2 pr-4">Metric</th>
+                              <th className="py-2 pr-4">England/Wales/NI</th>
+                              <th className="py-2">Scotland</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b">
+                              <td className="py-2 pr-4">Income Tax (annual)</td>
+                              <td className="py-2 pr-4">
+                                £{formatGBP(rUK.taxAmount, { maximumFractionDigits: 0 })}
+                              </td>
+                              <td className="py-2">
+                                £{formatGBP(sco.taxAmount, { maximumFractionDigits: 0 })}
+                              </td>
+                            </tr>
+                            <tr className="border-b">
+                              <td className="py-2 pr-4">National Insurance (annual)</td>
+                              <td className="py-2 pr-4">
+                                £{formatGBP(rUK.niAmount, { maximumFractionDigits: 0 })}
+                              </td>
+                              <td className="py-2">
+                                £{formatGBP(sco.niAmount, { maximumFractionDigits: 0 })}
+                              </td>
+                            </tr>
+                            <tr className="border-b">
+                              <td className="py-2 pr-4">Net Take-Home (annual)</td>
+                              <td className="py-2 pr-4">
+                                £{formatGBP(rUK.netSalary, { maximumFractionDigits: 0 })}
+                              </td>
+                              <td className="py-2">
+                                £{formatGBP(sco.netSalary, { maximumFractionDigits: 0 })}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
               </>
             ) : (
               <Card className="flex items-center justify-center h-[400px]">
@@ -396,12 +616,32 @@ export default function PAYECalculator() {
           </div>
         </div>
 
+        {/* FAQs */}
         <div className="bg-gray-50 py-12 non-printable mt-8">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <FAQSection faqs={payeCalculatorFAQs} />
           </div>
         </div>
 
+        {/* Methodology & assumptions */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 non-printable">
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>How this calculator works (2025/26)</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm leading-6 text-gray-700">
+              <ul className="list-disc pl-5 space-y-2">
+                <li>Tax year: 6 April 2025 – 5 April 2026. Bands and rates reflect the latest public guidance.</li>
+                <li>Personal Allowance defaults to tax code 1257L. Custom codes adjust the allowance (e.g., 1280L → £12,800).</li>
+                <li>Personal Allowance taper: above £100,000, allowance reduces by £1 for every £2 of income.</li>
+                <li>Scottish income tax bands differ from England/Wales/NI. National Insurance thresholds are UK-wide.</li>
+                <li>Results are estimates for guidance only and may vary with benefits-in-kind, adjustments, or non-standard codes.</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Related calculators */}
         <RelatedCalculators
           calculators={[
             {
