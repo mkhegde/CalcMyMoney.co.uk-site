@@ -1,8 +1,7 @@
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Layout from './Layout.jsx';
 import NotFound from './NotFound';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 
 // --- STATIC IMPORTS (Small pages / info pages) ---
 import Home from './Home';
