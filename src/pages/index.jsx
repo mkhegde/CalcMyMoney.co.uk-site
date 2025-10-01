@@ -37,16 +37,6 @@ const LEGACY_REDIRECTS = {
   '/tax-calculators-u-k': '/tax-calculators-uk',
 };
 
-function LegacyRedirectRoutes() {
-  return (
-    <>
-      {Object.entries(LEGACY_REDIRECTS).map(([from, to]) => (
-        <Route key={from} path={from} element={<Navigate to={to} replace />} />
-      ))}
-    </>
-  );
-}
-
 // Pull calculator config so we can auto-generate routes for entries with `page`
 import { calculatorCategories } from '../components/data/calculatorConfig';
 
@@ -351,12 +341,14 @@ function PagesContent() {
           <Route path="/council-tax-calculator" element={<LazyCouncilTaxCalculator />} />
           <Route path="/salary-calculator-uk" element={<LazySalaryCalculatorUK />} />
 
-          {/* Job Salaries: list and detail */}
+          {/* Job Salaries */}
           <Route path="/job-salaries" element={<JobSalaries />} />
           <Route path="/job-salaries/:slug" element={<JobSalaryPage />} />
 
-          {/* Legacy redirects as real <Route>s */}
-          <LegacyRedirectRoutes />
+          {/* Inline legacy redirects (must be <Route> children) */}
+          {Object.entries(LEGACY_REDIRECTS).map(([from, to]) => (
+            <Route key={`legacy:${from}`} path={from} element={<Navigate to={to} replace />} />
+          ))}
 
           {/* Static/Blog/Data */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
