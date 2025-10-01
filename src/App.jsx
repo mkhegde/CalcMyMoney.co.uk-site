@@ -1,14 +1,15 @@
+// src/App.jsx
 import './App.css';
 import Pages from '@/pages/index.jsx';
 import { Toaster } from '@/components/ui/toaster';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { HelmetProvider } from 'react-helmet-async';
 
 function App() {
   return (
-    <ErrorBoundary>
+    <HelmetProvider>
       <Pages />
       <Toaster />
-    </ErrorBoundary>
+    </HelmetProvider>
   );
 }
 

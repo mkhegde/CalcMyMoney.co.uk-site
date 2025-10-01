@@ -14,9 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { PoundSterling, Calculator, Copy, AlertCircle } from 'lucide-react';
 
 import SeoHead from '@/components/seo/SeoHead';
-import { JsonLd } from '@/components/seo/JsonLd';
-import buildFaqJsonLd from '@/components/seo/buildFaqJsonLd';
-import buildBreadcrumbs from '@/components/seo/buildBreadcrumbs';
+import { JsonLd, breadcrumbSchema, faqSchema } from '@/components/seo/JsonLd';
 
 import { createPageUrl } from '@/utils/createPageUrl';
 import ExportActions from '../components/calculators/ExportActions';
@@ -187,19 +185,20 @@ export default function PAYECalculator() {
 
   // ---------- SEO ----------
   const title = 'PAYE Tax & NI Calculator (2025/26) | CalcMyMoney';
-  const desc =
+  const description =
     'Work out PAYE income tax, National Insurance and take-home pay for the 2025/26 UK tax year. Supports England, Wales, Northern Ireland and Scotland.';
 
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
   const canonical = `${origin}/paye-calculator`;
 
-  const faqJsonLd = buildFaqJsonLd(payeCalculatorFAQs);
-  const breadcrumbs = buildBreadcrumbs([
-    { name: 'Home', url: `${origin}/` },
-    { name: 'Tax Calculators', url: `${origin}/tax-calculators-uk` },
-    { name: 'PAYE Calculator', url: canonical },
+  const breadcrumbLd = breadcrumbSchema([
+    { name: 'Home', item: `${origin}/` },
+    { name: 'Tax Calculators', item: `${origin}/tax-calculators-uk` },
+    { name: 'PAYE Calculator', item: canonical },
   ]);
+
+  const faqLd = faqSchema(payeCalculatorFAQs);
 
   const calculatePAYE = () => {
     setFatalError(null);
@@ -240,12 +239,12 @@ export default function PAYECalculator() {
       {/* SEO head + structured data */}
       <SeoHead
         title={title}
-        desc={desc}
+        description={description}
         canonical={canonical}
         ogImage="https://www.calcmymoney.co.uk/og-image.png"
       />
-      <JsonLd data={faqJsonLd} />
-      <JsonLd data={breadcrumbs} />
+      <JsonLd data={breadcrumbLd} />
+      <JsonLd data={faqLd} />
 
       {/* Header */}
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
