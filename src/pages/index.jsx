@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Layout from './Layout.jsx';
 import NotFound from './NotFound';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 
 // --- STATIC IMPORTS (Small pages / info pages) ---
 import Home from './Home';
@@ -338,6 +339,18 @@ function PagesContent() {
           <Route path="/salary-calculator-uk" element={<LazySalaryCalculatorUK />} />
           <Route path="/job-salaries/:slug" element={<JobSalaryPage />} />
           <Route path="/job-salaries" element={<JobSalaryPage />} />
+          <Route
+            path="/AnnuityCalculator"
+            element={<Navigate to="/annuity-calculator" replace />}
+          />
+          <Route
+            path="/ProRataSalaryCalculator"
+            element={<Navigate to="/pro-rata-salary-calculator" replace />}
+          />
+          <Route
+            path="/overtimepaycalculator"
+            element={<Navigate to="/overtime-pay-calculator" replace />}
+          />
 
           <Route
             path="/salary-calculator-take-home-pay"
