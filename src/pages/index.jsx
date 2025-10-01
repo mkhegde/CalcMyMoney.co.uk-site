@@ -207,7 +207,6 @@ function PagesContent() {
           {/* Home/Index (STATIC) */}
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-
           {/* --- Auto-generated calculator routes (lazy).
                Placed BEFORE/AFTER static calculator routes both work in RRv6.
                We place them BEFORE to allow gradual migration:
@@ -215,11 +214,20 @@ function PagesContent() {
           {DYNAMIC_CALC_ROUTES.map(({ path, Component }) => (
             <Route key={`dyn:${path}`} path={path} element={<Component />} />
           ))}
-
           {/* --- Existing manual calculator routes (LAZY) --- */}
           <Route path="/budget-calculator" element={<LazyBudgetCalculator />} />
           <Route path="/debt-calculator" element={<LazyDebtCalculator />} />
           <Route path="/mortgage-calculator" element={<LazyMortgageCalculator />} />
+          Route path="/salary-calculator-u-k" element=
+          {<Navigate to="/salary-calculator-uk" replace />}
+          <Route
+            path="/mortgage-calculator-u-k"
+            element={<Navigate to="/mortgage-calculator-uk" replace />}
+          />
+          <Route
+            path="/tax-calculators-u-k"
+            element={<Navigate to="/tax-calculators-uk" replace />}
+          />
           <Route
             path="/compound-interest-calculator"
             element={<LazyCompoundInterestCalculator />}
@@ -309,7 +317,6 @@ function PagesContent() {
           <Route path="/tip-calculator" element={<LazyTipCalculator />} />
           <Route path="/overtime-rate-calculator" element={<LazyOvertimeRateCalculator />} />
           <Route path="/currency-converter" element={<LazyCurrencyConverter />} />
-
           {/* --- UK Tax & Payroll (LAZY) --- */}
           <Route path="/income-tax-calculator" element={<LazyIncomeTaxCalculator />} />
           <Route
@@ -350,7 +357,6 @@ function PagesContent() {
             path="/overtimepaycalculator"
             element={<Navigate to="/overtime-pay-calculator" replace />}
           />
-
           <Route
             path="/salary-calculator-take-home-pay"
             element={<LazySalaryCalculatorTakeHomePay />}
@@ -373,7 +379,6 @@ function PagesContent() {
             element={<LazyMortgageAffordabilityCalculator />}
           />
           <Route path="/contractor-calculator" element={<LazyContractorCalculator />} />
-
           {/* --- Static/Blog/Data (STATIC) --- */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/cookie-policy" element={<CookiePolicy />} />
@@ -396,7 +401,6 @@ function PagesContent() {
           <Route path="/about" element={<About />} />
           <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
           <Route path="/link-to-us" element={<LinkToUs />} />
-
           {/* Catch-all 404 MUST be last */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -16,6 +16,18 @@
     { "source": "/jobsalarypage", "destination": "/job-salaries", "permanent": true },
     { "source": "/AnnuityCalculator", "destination": "/annuity-calculator", "permanent": true },
     {
+      "source": "/salary-calculator-u-k",
+      "destination": "/salary-calculator-uk",
+      "permanent": true
+    },
+    {
+      "source": "/mortgage-calculator-u-k",
+      "destination": "/mortgage-calculator-uk",
+      "permanent": true
+    },
+    { "source": "/tax-calculators-u-k", "destination": "/tax-calculators-uk", "permanent": true },
+
+    {
       "source": "/ProRataSalaryCalculator",
       "destination": "/pro-rata-salary-calculator",
       "permanent": true

@@ -1,30 +1,24 @@
+// src/utils/createpage.js
 /*
- * Convert internal page names to clean, kebab-case URLs.
- * Handles CamelCase, trims leading/trailing hyphens, collapses repeats,
- * and strips non URL-safe chars.
- *
- * Examples:
- *  "SalaryCalculatorUK"  -> "/salary-calculator-uk"
- *  " Over-time  Rate  "  -> "/over-time-rate"
- *  "calculators/-foo"    -> "/calculators-foo"  (won't emit leading '-')
+ * Robust slugger:
+ * - Converts CamelCase to kebab-case
+ * - Preserves acronyms (UK, PAYE, ISA, VAT, CGT, IR35, FIRE) → "uk", "paye", etc.
+ * - Cleans unsafe chars and trims extra dashes
+ * - Works with PascalCase ("SalaryCalculatorUK") or pre-kebab ("salary-calculator-uk")
  */
 export const createPageUrl = (pageName) => {
   if (!pageName || typeof pageName !== 'string') return '/';
-
   const trimmed = pageName.trim();
-  if (trimmed === 'Home' || trimmed === 'HomePage') return '/';
+  if (/^home(page)?$/i.test(trimmed)) return '/';
 
   const slug = trimmed
-    // Insert hyphen between lower/number -> Upper, and before Upper that follows Upper (UK -> u-k)
-    .replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2')
+    .replace(/[_\s/]+/g, '-') // spaces/underscores/slashes → hyphen
+    .replace(/([a-z\d])([A-Z])/g, '$1-$2') // lower/digit → Upper boundary
+    .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1-$2') // ACRONYM → Word boundary (keep acronym whole)
     .toLowerCase()
-    // Replace any non-url-safe chars with hyphens
-    .replace(/[^a-z0-9-]+/g, '-')
-    // Collapse multiple hyphens
-    .replace(/-+/g, '-')
-    // Trim leading/trailing hyphens
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
+    .replace(/[^a-z0-9-]+/g, '-') // strip non-url-safe chars
+    .replace(/-+/g, '-') // collapse multiple dashes
+    .replace(/^-+|-+$/g, ''); // trim leading/trailing dashes
 
   return `/${slug}`;
 };
