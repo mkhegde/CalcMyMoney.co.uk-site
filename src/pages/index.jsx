@@ -27,7 +27,7 @@ import About from './About';
 import SelfAssessmentGuide from './SelfAssessmentGuide';
 import LinkToUs from './LinkToUs';
 
-// Central legacy map (old path -> new path)
+// Legacy redirects (old path -> new path)
 const LEGACY_REDIRECTS = {
   '/AnnuityCalculator': '/annuity-calculator',
   '/ProRataSalaryCalculator': '/pro-rata-salary-calculator',
@@ -37,7 +37,6 @@ const LEGACY_REDIRECTS = {
   '/tax-calculators-u-k': '/tax-calculators-uk',
 };
 
-// This component ONLY returns <Route> elements (wrapped in a Fragment)
 function LegacyRedirectRoutes() {
   return (
     <>
@@ -51,7 +50,7 @@ function LegacyRedirectRoutes() {
 // Pull calculator config so we can auto-generate routes for entries with `page`
 import { calculatorCategories } from '../components/data/calculatorConfig';
 
-// --- EXISTING LAZY IMPORTS (keep these; dynamic routes will coexist safely) ---
+// --- LAZY IMPORTS (calculators) ---
 const LazySalaryCalculatorUK = lazy(() => import('./SalaryCalculatorUK.jsx'));
 const LazyMortgageCalculator = lazy(() => import('./MortgageCalculator.jsx'));
 const LazyRentalIncomeCalculator = lazy(() => import('./RentalIncomeCalculator.jsx'));
@@ -173,12 +172,12 @@ const PAGES = {
   LinkToUs,
 };
 
-// Build a flattened list of calculators from the config
+// Flatten calculators from config
 const _allCalcs = calculatorCategories.flatMap((cat) =>
   (cat?.subCategories || []).flatMap((sub) => sub?.calculators || [])
 );
 
-// Vite glob for any page component in this folder (e.g., './PAYECalculator.jsx')
+// Vite glob loader for pages
 const pageModules = import.meta.glob('./*.jsx');
 const _loadPage = (pageName) => {
   if (!pageName) return null;
@@ -187,7 +186,7 @@ const _loadPage = (pageName) => {
   return loader ? lazy(loader) : null;
 };
 
-// Build dynamic routes for calculators that have `page` defined
+// Build dynamic routes
 const DYNAMIC_CALC_ROUTES = _allCalcs
   .filter((c) => c?.status === 'active' && typeof c.page === 'string' && c.page.trim())
   .map((c) => {
@@ -201,15 +200,12 @@ function _getCurrentPage(url) {
   if (url.endsWith('/')) url = url.slice(0, -1);
   let urlLastPart = url.split('/').pop();
   if (urlLastPart.includes('?')) urlLastPart = urlLastPart.split('?')[0];
-
   const pageName = Object.keys(PAGES).find(
     (page) => page.toLowerCase() === urlLastPart.toLowerCase()
   );
-  // If not a known static page, treat it as a lazy/dynamic route for Layout purposes.
   return pageName || 'LazyRoute' || Object.keys(PAGES)[0];
 }
 
-// Create a wrapper component that uses useLocation inside the Router context
 function PagesContent() {
   const location = useLocation();
   const currentPage = _getCurrentPage(location.pathname);
@@ -225,16 +221,16 @@ function PagesContent() {
         }
       >
         <Routes>
-          {/* Home/Index (STATIC) */}
+          {/* Home */}
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
 
-          {/* Auto-generated calculator routes (from config, lazy) */}
+          {/* Auto-generated calculator routes */}
           {DYNAMIC_CALC_ROUTES.map(({ path, Component }) => (
             <Route key={`dyn:${path}`} path={path} element={<Component />} />
           ))}
 
-          {/* Manual calculator routes (LAZY) */}
+          {/* Manual calculator routes */}
           <Route path="/budget-calculator" element={<LazyBudgetCalculator />} />
           <Route path="/debt-calculator" element={<LazyDebtCalculator />} />
           <Route path="/mortgage-calculator" element={<LazyMortgageCalculator />} />
@@ -328,7 +324,7 @@ function PagesContent() {
           <Route path="/overtime-rate-calculator" element={<LazyOvertimeRateCalculator />} />
           <Route path="/currency-converter" element={<LazyCurrencyConverter />} />
 
-          {/* UK Tax & Payroll (LAZY) */}
+          {/* UK Tax & Payroll */}
           <Route path="/income-tax-calculator" element={<LazyIncomeTaxCalculator />} />
           <Route
             path="/national-insurance-calculator"
@@ -355,14 +351,14 @@ function PagesContent() {
           <Route path="/council-tax-calculator" element={<LazyCouncilTaxCalculator />} />
           <Route path="/salary-calculator-uk" element={<LazySalaryCalculatorUK />} />
 
-          {/* Job Salaries: list vs detail */}
+          {/* Job Salaries: list and detail */}
           <Route path="/job-salaries" element={<JobSalaries />} />
           <Route path="/job-salaries/:slug" element={<JobSalaryPage />} />
 
-          {/* Legacy redirects (must be Routes) */}
+          {/* Legacy redirects as real <Route>s */}
           <LegacyRedirectRoutes />
 
-          {/* Static/Blog/Data (STATIC) */}
+          {/* Static/Blog/Data */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/cookie-policy" element={<CookiePolicy />} />
           <Route path="/contact" element={<Contact />} />
@@ -384,7 +380,7 @@ function PagesContent() {
           <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
           <Route path="/link-to-us" element={<LinkToUs />} />
 
-          {/* Catch-all 404 MUST be last */}
+          {/* 404 LAST */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
