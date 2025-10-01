@@ -27,6 +27,27 @@ import About from './About';
 import SelfAssessmentGuide from './SelfAssessmentGuide';
 import LinkToUs from './LinkToUs';
 
+// Central legacy map (old path -> new path)
+const LEGACY_REDIRECTS = {
+  '/AnnuityCalculator': '/annuity-calculator',
+  '/ProRataSalaryCalculator': '/pro-rata-salary-calculator',
+  '/overtimepaycalculator': '/overtime-pay-calculator',
+  '/salary-calculator-u-k': '/salary-calculator-uk',
+  '/mortgage-calculator-u-k': '/mortgage-calculator-uk',
+  '/tax-calculators-u-k': '/tax-calculators-uk',
+};
+
+// This component ONLY returns <Route> elements (wrapped in a Fragment)
+function LegacyRedirectRoutes() {
+  return (
+    <>
+      {Object.entries(LEGACY_REDIRECTS).map(([from, to]) => (
+        <Route key={from} path={from} element={<Navigate to={to} replace />} />
+      ))}
+    </>
+  );
+}
+
 // Pull calculator config so we can auto-generate routes for entries with `page`
 import { calculatorCategories } from '../components/data/calculatorConfig';
 
@@ -128,31 +149,31 @@ const LazyMortgageComparison = lazy(() => import('./MortgageComparison.jsx'));
 
 // --- STATIC PAGES MAP (used for currentPageName in Layout) ---
 const PAGES = {
-  Home: Home,
-  PrivacyPolicy: PrivacyPolicy,
-  CookiePolicy: CookiePolicy,
-  Contact: Contact,
-  Resources: Resources,
-  Blog: Blog,
-  Sitemap: Sitemap,
-  JobSalaries: JobSalaries,
-  CostOfLiving: CostOfLiving,
-  UKGovernmentBudget: UKGovernmentBudget,
-  TermsOfService: TermsOfService,
-  Disclaimer: Disclaimer,
-  BlogSmartMoneySavingTips: BlogSmartMoneySavingTips,
-  BlogDebtRepaymentStrategies: BlogDebtRepaymentStrategies,
-  BlogFinancialPsychology: BlogFinancialPsychology,
-  JobSalaryPage: JobSalaryPage,
-  CostOfLivingPage: CostOfLivingPage,
-  UKFinancialStats: UKFinancialStats,
-  Methodology: Methodology,
-  About: About,
-  SelfAssessmentGuide: SelfAssessmentGuide,
-  LinkToUs: LinkToUs,
+  Home,
+  PrivacyPolicy,
+  CookiePolicy,
+  Contact,
+  Resources,
+  Blog,
+  Sitemap,
+  JobSalaries,
+  CostOfLiving,
+  UKGovernmentBudget,
+  TermsOfService,
+  Disclaimer,
+  BlogSmartMoneySavingTips,
+  BlogDebtRepaymentStrategies,
+  BlogFinancialPsychology,
+  JobSalaryPage,
+  CostOfLivingPage,
+  UKFinancialStats,
+  Methodology,
+  About,
+  SelfAssessmentGuide,
+  LinkToUs,
 };
 
-// Build a flattended list of calculators from the config
+// Build a flattened list of calculators from the config
 const _allCalcs = calculatorCategories.flatMap((cat) =>
   (cat?.subCategories || []).flatMap((sub) => sub?.calculators || [])
 );
@@ -207,27 +228,16 @@ function PagesContent() {
           {/* Home/Index (STATIC) */}
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-          {/* --- Auto-generated calculator routes (lazy).
-               Placed BEFORE/AFTER static calculator routes both work in RRv6.
-               We place them BEFORE to allow gradual migration:
-               new calculators with `page` need no manual route. */}
+
+          {/* Auto-generated calculator routes (from config, lazy) */}
           {DYNAMIC_CALC_ROUTES.map(({ path, Component }) => (
             <Route key={`dyn:${path}`} path={path} element={<Component />} />
           ))}
-          {/* --- Existing manual calculator routes (LAZY) --- */}
+
+          {/* Manual calculator routes (LAZY) */}
           <Route path="/budget-calculator" element={<LazyBudgetCalculator />} />
           <Route path="/debt-calculator" element={<LazyDebtCalculator />} />
           <Route path="/mortgage-calculator" element={<LazyMortgageCalculator />} />
-          Route path="/salary-calculator-u-k" element=
-          {<Navigate to="/salary-calculator-uk" replace />}
-          <Route
-            path="/mortgage-calculator-u-k"
-            element={<Navigate to="/mortgage-calculator-uk" replace />}
-          />
-          <Route
-            path="/tax-calculators-u-k"
-            element={<Navigate to="/tax-calculators-uk" replace />}
-          />
           <Route
             path="/compound-interest-calculator"
             element={<LazyCompoundInterestCalculator />}
@@ -317,7 +327,8 @@ function PagesContent() {
           <Route path="/tip-calculator" element={<LazyTipCalculator />} />
           <Route path="/overtime-rate-calculator" element={<LazyOvertimeRateCalculator />} />
           <Route path="/currency-converter" element={<LazyCurrencyConverter />} />
-          {/* --- UK Tax & Payroll (LAZY) --- */}
+
+          {/* UK Tax & Payroll (LAZY) */}
           <Route path="/income-tax-calculator" element={<LazyIncomeTaxCalculator />} />
           <Route
             path="/national-insurance-calculator"
@@ -343,50 +354,21 @@ function PagesContent() {
           <Route path="/inheritance-tax-calculator" element={<LazyInheritanceTaxCalculator />} />
           <Route path="/council-tax-calculator" element={<LazyCouncilTaxCalculator />} />
           <Route path="/salary-calculator-uk" element={<LazySalaryCalculatorUK />} />
+
+          {/* Job Salaries: list vs detail */}
+          <Route path="/job-salaries" element={<JobSalaries />} />
           <Route path="/job-salaries/:slug" element={<JobSalaryPage />} />
-          <Route path="/job-salaries" element={<JobSalaryPage />} />
-          <Route
-            path="/AnnuityCalculator"
-            element={<Navigate to="/annuity-calculator" replace />}
-          />
-          <Route
-            path="/ProRataSalaryCalculator"
-            element={<Navigate to="/pro-rata-salary-calculator" replace />}
-          />
-          <Route
-            path="/overtimepaycalculator"
-            element={<Navigate to="/overtime-pay-calculator" replace />}
-          />
-          <Route
-            path="/salary-calculator-take-home-pay"
-            element={<LazySalaryCalculatorTakeHomePay />}
-          />
-          <Route path="/salary-calculator-paycheck" element={<LazySalaryCalculatorPaycheck />} />
-          <Route path="/gross-to-net-calculator" element={<LazyGrossToNetCalculator />} />
-          <Route path="/tax-calculators-uk" element={<LazyTaxCalculatorsUK />} />
-          <Route path="/tax-after-tax-calculator" element={<LazyTaxAfterTaxCalculator />} />
-          <Route path="/tax-and-ni-calculator" element={<LazyTaxAndNICalculator />} />
-          <Route path="/net-income-uk-calculator" element={<LazyNetIncomeUKCalculator />} />
-          <Route path="/mortgage-calculator-uk" element={<LazyMortgageCalculatorUK />} />
-          <Route path="/mortgage-loan-repayment" element={<LazyMortgageLoanRepayment />} />
-          <Route
-            path="/home-loan-mortgage-calculator"
-            element={<LazyHomeLoanMortgageCalculator />}
-          />
-          <Route path="/mortgage-comparison" element={<LazyMortgageComparison />} />
-          <Route
-            path="/mortgage-affordability-calculator"
-            element={<LazyMortgageAffordabilityCalculator />}
-          />
-          <Route path="/contractor-calculator" element={<LazyContractorCalculator />} />
-          {/* --- Static/Blog/Data (STATIC) --- */}
+
+          {/* Legacy redirects (must be Routes) */}
+          <LegacyRedirectRoutes />
+
+          {/* Static/Blog/Data (STATIC) */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/cookie-policy" element={<CookiePolicy />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/sitemap" element={<Sitemap />} />
-          <Route path="/job-salaries" element={<JobSalaries />} />
           <Route path="/cost-of-living" element={<CostOfLiving />} />
           <Route path="/uk-government-budget" element={<UKGovernmentBudget />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
@@ -401,6 +383,7 @@ function PagesContent() {
           <Route path="/about" element={<About />} />
           <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
           <Route path="/link-to-us" element={<LinkToUs />} />
+
           {/* Catch-all 404 MUST be last */}
           <Route path="*" element={<NotFound />} />
         </Routes>
