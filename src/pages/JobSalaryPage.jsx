@@ -1,3 +1,19 @@
+import { useEffect } from 'react';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
+
+export default function JobSalaryPage() {
+  const { slug } = useParams();
+  const { search } = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!slug) {
+      const p = new URLSearchParams(search);
+      const s = p.get('slug');
+      if (s) navigate(`/job-salaries/${s}`, { replace: true });
+    }
+  }, [slug, search, navigate]);
+
 import React, { useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';

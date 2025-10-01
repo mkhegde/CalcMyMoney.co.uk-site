@@ -1,3 +1,5 @@
+import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -47,6 +49,8 @@ const homepageFaqs = [
 ];
 
 export default function Home() {
+  const { search } = useLocation();
+  const hasQuery = new URLSearchParams(search).has('q');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showAllCalculators, setShowAllCalculators] = useState(false);
@@ -116,6 +120,12 @@ export default function Home() {
 
   return (
     <div className="bg-white dark:bg-gray-900">
+      {hasQuery && (
+        <Helmet>
+          <meta name="robots" content="noindex,follow" />
+          <link rel="canonical" href="https://www.calcmymoney.co.uk/" />
+        </Helmet>
+      )}
       {/* Hero Section */}
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">

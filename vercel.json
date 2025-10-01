@@ -1,6 +1,25 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "calcmymoney.co.uk" }],
+      "destination": "https://www.calcmymoney.co.uk/:path*",
+      "permanent": true
+    },
+
+    { "source": "/salarycalculator", "destination": "/salary-calculator-uk", "permanent": true },
+    { "source": "/salarycalculatoruk", "destination": "/salary-calculator-uk", "permanent": true },
+    { "source": "/SalaryCalculatorUK", "destination": "/salary-calculator-uk", "permanent": true },
+
+    { "source": "/calculators/-:slug*", "destination": "/:slug", "permanent": true },
+
+    { "source": "/jobsalarypage", "destination": "/job-salaries", "permanent": true }
+  ],
+
   "rewrites": [{ "source": "/(.*)", "destination": "/" }],
+
   "cleanUrls": true,
   "trailingSlash": false
 }

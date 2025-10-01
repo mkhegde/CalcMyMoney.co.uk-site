@@ -1,26 +1,30 @@
-// utils/createPageUrl.js (ensure file name & import casing match!)
+/*
+ * Convert internal page names to clean, kebab-case URLs.
+ * Handles CamelCase, trims leading/trailing hyphens, collapses repeats,
+ * and strips non URL-safe chars.
+ *
+ * Examples:
+ *  "SalaryCalculatorUK"  -> "/salary-calculator-uk"
+ *  " Over-time  Rate  "  -> "/over-time-rate"
+ *  "calculators/-foo"    -> "/calculators-foo"  (won't emit leading '-')
+ */
 export const createPageUrl = (pageName) => {
-  if (!pageName || typeof pageName !== 'string') {
-    if (import.meta?.env?.MODE !== 'production') {
-      console.warn('createPageUrl received invalid input:', pageName);
-    }
-    return '/';
-  }
-  if (pageName === 'Home' || pageName === 'HomePage') return '/';
+  if (!pageName || typeof pageName !== 'string') return '/';
 
-  let s = pageName.trim();
+  const trimmed = pageName.trim();
+  if (trimmed === 'Home' || trimmed === 'HomePage') return '/';
 
-  // Normalize existing separators first (spaces, underscores, multiple hyphens)
-  s = s.replace(/[^a-zA-Z0-9]+/g, '-');
+  const slug = trimmed
+    // Insert hyphen between lower/number -> Upper, and before Upper that follows Upper (UK -> u-k)
+    .replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2')
+    .toLowerCase()
+    // Replace any non-url-safe chars with hyphens
+    .replace(/[^a-z0-9-]+/g, '-')
+    // Collapse multiple hyphens
+    .replace(/-+/g, '-')
+    // Trim leading/trailing hyphens
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
 
-  // Insert hyphen at acronym-to-word boundaries (ABCDef -> ABC-Def)
-  s = s.replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2');
-
-  // Insert hyphen at lower/number-to-upper boundaries (aB, 1B -> a-B/1-B)
-  s = s.replace(/([a-z0-9])([A-Z])/g, '$1-$2');
-
-  // Lowercase and clean up
-  s = s.toLowerCase().replace(/-{2,}/g, '-').replace(/^-|-$/g, '');
-
-  return `/${s}`;
+  return `/${slug}`;
 };

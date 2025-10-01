@@ -336,6 +336,9 @@ function PagesContent() {
           <Route path="/inheritance-tax-calculator" element={<LazyInheritanceTaxCalculator />} />
           <Route path="/council-tax-calculator" element={<LazyCouncilTaxCalculator />} />
           <Route path="/salary-calculator-uk" element={<LazySalaryCalculatorUK />} />
+          <Route path="/job-salaries/:slug" element={<JobSalaryPage />} />
+          <Route path="/job-salaries" element={<JobSalaryPage />} />
+
           <Route
             path="/salary-calculator-take-home-pay"
             element={<LazySalaryCalculatorTakeHomePay />}
