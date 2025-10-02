@@ -1,0 +1,14 @@
+name: Deploy Dev (Preview)
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel DEV Deploy Hook
+        run: curl -X POST "$VERCEL_DEV_DEPLOY_HOOK_URL"
+        env:
+          VERCEL_DEV_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEV_DEPLOY_HOOK_URL }}

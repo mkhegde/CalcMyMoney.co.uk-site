@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +50,7 @@ export default function JobSalaries() {
             {filteredJobs.length > 0 ? (
               filteredJobs.map((job) => (
                 <Link
-                  to={createPageUrl(`JobSalaryPage?slug=${createSlug(job.title)}`)}
+                  to={`/job-salaries/${createSlug(job.title)}`}
                   key={job.title}
                   className="group"
                 >
@@ -91,7 +90,7 @@ export default function JobSalaries() {
                   .filter((job) => job.category === category)
                   .map((job) => (
                     <Link
-                      to={createPageUrl(`JobSalaryPage?slug=${createSlug(job.title)}`)}
+                      to={`/job-salaries/${createSlug(job.title)}`}
                       key={job.title}
                       className="group"
                     >

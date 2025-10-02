@@ -70,12 +70,13 @@ export default function Sitemap() {
     .sort((a, b) => a.title.localeCompare(b.title));
 
   const jobLinks = jobTitles.map((job) => ({
-    url: createPageUrl(`JobSalaryPage?slug=${createSlug(job.title)}`),
+    url: `/job-salaries/${createSlug(job.title)}`,
     title: `${job.title} Salary`,
   }));
 
+  const costOfLivingPageBase = createPageUrl('CostOfLivingPage');
   const cityLinks = ukCities.map((city) => ({
-    url: createPageUrl(`CostOfLivingPage?slug=${createSlug(city.name)}`),
+    url: `${costOfLivingPageBase}?slug=${createSlug(city.name)}`,
     title: `Cost of Living in ${city.name}`,
   }));
 

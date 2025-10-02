@@ -14,7 +14,7 @@ import CalculatorIndex from '../components/general/CalculatorIndex';
 // Define a mapping for page names to titles and descriptions for SEO
 // This object will be used to programmatically set SEO meta tags for each page.
 // In a larger application, this data might come from a CMS or a more complex routing configuration.
-const pageSeo = {
+export const pageSeo = {
   Home: {
     title: 'UK Salary, Tax & Mortgage Calculators | Calculate My Money',
     description:
