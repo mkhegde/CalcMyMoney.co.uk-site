@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import Layout from './Layout.jsx';
+import Layout, { pageSeo } from './Layout.jsx';
+import { createPageUrl } from '../utils/createPageUrl';
 import NotFound from './NotFound';
 
 // --- STATIC IMPORTS (Small pages / info pages) ---
@@ -185,15 +186,79 @@ const DYNAMIC_CALC_ROUTES = _allCalcs
   })
   .filter(Boolean);
 
+const _normalizeSlug = (value = '') => {
+  if (typeof value !== 'string') return '';
+  const [path] = value.split('?');
+  const [cleanPath] = path.split('#');
+  return cleanPath.replace(/^\/+|\/+$/g, '').toLowerCase();
+};
+
+const _registerSlug = (map, slug, pageName) => {
+  if (!pageName || typeof pageName !== 'string') return;
+  const normalized = _normalizeSlug(slug);
+  if (normalized === undefined) return;
+  if (!map.has(normalized)) {
+    map.set(normalized, pageName);
+  }
+};
+
+const _slugToPageName = (() => {
+  const map = new Map();
+
+  const registerPageKey = (pageKey) => {
+    _registerSlug(map, createPageUrl(pageKey), pageKey);
+  };
+
+  // Home variations
+  _registerSlug(map, '/', 'Home');
+  _registerSlug(map, 'home', 'Home');
+
+  Object.keys(PAGES).forEach(registerPageKey);
+  Object.keys(pageSeo || {}).forEach(registerPageKey);
+
+  _allCalcs.forEach((calc) => {
+    if (!calc) return;
+    if (calc.url) {
+      const target =
+        (typeof calc.page === 'string' && calc.page.trim()) || undefined;
+      _registerSlug(map, calc.url, target);
+    }
+
+    if (typeof calc?.page === 'string' && calc.page.trim()) {
+      _registerSlug(map, createPageUrl(calc.page), calc.page.trim());
+    }
+  });
+
+  return map;
+})();
+
 // Helper for Layout current page label
-function _getCurrentPage(url) {
-  if (url.endsWith('/')) url = url.slice(0, -1);
-  let urlLastPart = url.split('/').pop();
-  if (urlLastPart.includes('?')) urlLastPart = urlLastPart.split('?')[0];
-  const pageName = Object.keys(PAGES).find(
-    (page) => page.toLowerCase() === urlLastPart.toLowerCase()
-  );
-  return pageName || 'LazyRoute' || Object.keys(PAGES)[0];
+function _getCurrentPage(pathname) {
+  const normalizedPath = _normalizeSlug(pathname || '/');
+  if (!normalizedPath || normalizedPath === 'home') {
+    return 'Home';
+  }
+
+  const segments = normalizedPath.split('/').filter(Boolean);
+  const candidateSlugs = new Set([normalizedPath]);
+
+  if (segments.length > 0) {
+    candidateSlugs.add(segments[segments.length - 1]);
+    let running = '';
+    segments.forEach((segment) => {
+      running = running ? `${running}/${segment}` : segment;
+      if (running !== normalizedPath) {
+        candidateSlugs.add(running);
+      }
+    });
+  }
+
+  for (const slug of candidateSlugs) {
+    const match = _slugToPageName.get(slug);
+    if (match) return match;
+  }
+
+  return 'LazyRoute';
 }
 
 function PagesContent() {
