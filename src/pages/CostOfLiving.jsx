@@ -7,6 +7,7 @@ import { MapPin, Users, TrendingUp } from 'lucide-react';
 
 export default function CostOfLiving() {
   const regions = [...new Set(ukCities.map((city) => city.region))];
+  const costOfLivingPageBase = createPageUrl('CostOfLivingPage');
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -33,7 +34,7 @@ export default function CostOfLiving() {
                 .filter((city) => city.region === region)
                 .map((city) => (
                   <Link
-                    to={createPageUrl(`CostOfLivingPage?slug=${createSlug(city.name)}`)}
+                    to={`${costOfLivingPageBase}?slug=${createSlug(city.name)}`}
                     key={city.name}
                     className="group"
                   >
