@@ -28,6 +28,7 @@ const costOfLivingFAQs = [
 
 export default function CostOfLivingPage() {
   const location = useLocation();
+  const costOfLivingPageBase = createPageUrl('CostOfLivingPage');
   const city = useMemo(() => {
     const urlParams = new URLSearchParams(location.search);
     const slug = urlParams.get('slug');
@@ -140,7 +141,7 @@ export default function CostOfLivingPage() {
                 {relatedCities.length > 0 ? (
                   relatedCities.map((relatedCity) => (
                     <Link
-                      to={createPageUrl(`CostOfLivingPage?slug=${createSlug(relatedCity.name)}`)}
+                      to={`${costOfLivingPageBase}?slug=${createSlug(relatedCity.name)}`}
                       key={relatedCity.name}
                       className="block p-3 bg-white border rounded-lg hover:bg-gray-100 transition-colors"
                     >
