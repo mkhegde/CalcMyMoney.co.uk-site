@@ -1,0 +1,17 @@
+name: Deploy Production (Manual Approval)
+
+on:
+  push:
+    branches: [main]      # runs when main is updated (e.g., PR merge)
+  workflow_dispatch: {}   # allow manual run from Actions tab too
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production    # gate with required reviewers
+    steps:
+      - name: Trigger Vercel PROD Deploy Hook
+        run: curl -X POST "$VERCEL_PROD_DEPLOY_HOOK_URL"
+        env:
+          VERCEL_PROD_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_PROD_DEPLOY_HOOK_URL }}
