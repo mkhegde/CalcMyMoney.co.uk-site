@@ -131,6 +131,11 @@ export const pageSeo = {
     description:
       "Estimate your Statutory Maternity Pay (SMP) with our free UK calculator. See how much you'll receive for the 39 weeks of your maternity leave.",
   },
+  SeverancePayCalculator: {
+    title: 'UK Severance Pay Calculator | Redundancy & Exit Package Estimate',
+    description:
+      'Estimate UK severance pay including statutory redundancy, notice pay, unused holiday and contractual enhancements.',
+  },
   InflationCalculator: {
     title: 'UK Inflation Calculator | Calculate the Changing Value of Money',
     description:
@@ -260,6 +265,11 @@ export const pageSeo = {
     title: 'Childcare Cost Calculator UK | Nursery Fees Estimator - Calculate My Money',
     description:
       'Estimate the weekly, monthly, and annual cost of childcare based on daily rates and the number of days required.',
+  },
+  ChildBenefitCalculator: {
+    title: 'UK Child Benefit Calculator | High Income Charge & Payments',
+    description:
+      'Check your weekly Child Benefit payments, see any High Income Child Benefit Charge and estimate how much you keep.',
   },
   TipCalculator: {
     title: 'UK Tip & Bill Splitting Calculator | Calculate My Money',
