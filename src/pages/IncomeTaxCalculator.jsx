@@ -10,6 +10,12 @@ import CalculatorWrapper from '../components/calculators/CalculatorWrapper';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
 import Breadcrumbs from '../components/general/Breadcrumbs'; // Added import for Breadcrumbs
 import { createPageUrl } from '@/utils';
+import { JsonLd } from '@/components/seo/JsonLd';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { calculatorFaqs } from '../components/data/calculatorConfig';
+
+const siteOrigin = 'https://www.calcmymoney.co.uk';
+const incomeTaxCanonicalUrl = `${siteOrigin}${createPageUrl('IncomeTaxCalculator')}`;
 
 // Site-wide SEO (JSON-LD) definition for the page
 const incomeTaxJsonLd = {
@@ -18,7 +24,7 @@ const incomeTaxJsonLd = {
   name: 'UK Income Tax Calculator 2025/26',
   description:
     'Calculate your UK Income Tax for the 2025/26 financial year. Understand how your income is taxed across different bands including Personal Allowance, Basic, Higher, and Additional Rates.',
-  url: 'https://www.yourdomain.com/income-tax-calculator', // Replace with actual URL
+  url: incomeTaxCanonicalUrl,
   mainEntity: {
     '@type': 'Calculator',
     name: 'UK Income Tax Calculator',
@@ -28,7 +34,7 @@ const incomeTaxJsonLd = {
     accessModeSufficient: ['visual'],
     operatingSystem: 'Any',
     softwareRequirements: 'Web browser',
-    url: 'https://www.yourdomain.com/income-tax-calculator', // Replace with actual URL
+    url: incomeTaxCanonicalUrl,
     citation: [
       {
         '@type': 'WebSite',
@@ -44,18 +50,19 @@ const incomeTaxJsonLd = {
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: createPageUrl('Home'),
+        item: `${siteOrigin}${createPageUrl('Home')}`,
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'Tax Calculators',
-        item: `${createPageUrl('Home')}#tax-calculators`,
+        item: `${siteOrigin}${createPageUrl('Home')}#tax-calculators`,
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: 'Income Tax Calculator',
+        item: incomeTaxCanonicalUrl,
       },
     ],
   },
@@ -82,34 +89,14 @@ const taxBrackets = [
   { min: 125141, max: Infinity, rate: 0.45, name: 'Additional Rate' },
 ];
 
-const incomeTaxFAQs = [
-  {
-    question: 'What is the Personal Allowance?',
-    answer:
-      'The Personal Allowance is the amount of income you can earn each year before you have to pay any Income Tax. For the 2025/26 tax year, the standard Personal Allowance is £12,570. This allowance is reduced by £1 for every £2 you earn over £100,000.',
-  },
-  {
-    question: 'How do tax bands work?',
-    answer:
-      "Tax bands are the different levels of income on which you pay tax. In England, Wales, and Northern Ireland, once your income exceeds the Personal Allowance, you start paying the Basic Rate (20%). If your income is high enough, you'll move into the Higher Rate (40%) and then the Additional Rate (45%) bands. You only pay the higher rate on the portion of your income that falls within that specific band.",
-  },
-  {
-    question: 'Is this calculator suitable for Scotland?',
-    answer:
-      "This calculator uses the tax bands for England, Wales, and Northern Ireland. Scotland has its own set of income tax bands and rates which are different. For precise calculations for Scotland, please use our main Salary Calculator and select 'Scotland' in the advanced options.",
-  },
-  {
-    question: 'Does this include National Insurance?',
-    answer:
-      'No, this calculator focuses exclusively on Income Tax to give you a clear understanding of that specific deduction. To see a full breakdown including National Insurance, pension, and student loan, please use our comprehensive Salary Calculator.',
-  },
-];
+const incomeTaxFAQs = calculatorFaqs.IncomeTaxCalculator || [];
 
 export default function IncomeTaxCalculator() {
   const [grossIncome, setGrossIncome] = useState('');
   const [results, setResults] = useState(null);
   const [hasCalculated, setHasCalculated] = useState(false);
   const [csvData, setCsvData] = useState(null);
+  const { schemaNodes } = useCalculatorSchema('IncomeTaxCalculator');
 
   // Breadcrumb path definition
   const breadcrumbPath = [
@@ -224,7 +211,10 @@ export default function IncomeTaxCalculator() {
 
   return (
     <>
-      <script type="application/ld+json">{JSON.stringify(incomeTaxJsonLd)}</script>
+      {schemaNodes.map((node, index) => (
+        <JsonLd key={node?.['@type'] ?? index} data={node} />
+      ))}
+      <JsonLd data={incomeTaxJsonLd} />
       <div className="bg-white dark:bg-gray-900">
         <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

@@ -17,6 +17,8 @@ import {
 import ExportActions from '../components/calculators/ExportActions';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils'; // Imported createPageUrl from utils
+import { JsonLd } from '@/components/seo/JsonLd';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 
 // Define placeholder data for government budget
 const governmentBudget2025 = {
@@ -48,6 +50,7 @@ export default function BudgetCalculator() {
   const [csvData, setCsvData] = useState(null);
   const [results, setResults] = useState(null);
   const [hasCalculated, setHasCalculated] = useState(false);
+  const { schemaNodes } = useCalculatorSchema('BudgetCalculator');
 
   const updateIncomeItem = (index, field, value) => {
     const newItems = [...incomeItems];
@@ -131,6 +134,9 @@ export default function BudgetCalculator() {
 
   return (
     <div className="bg-white dark:bg-gray-900">
+      {schemaNodes.map((node, index) => (
+        <JsonLd key={node?.['@type'] ?? index} data={node} />
+      ))}
       {/* Page Header */}
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

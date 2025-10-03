@@ -37,6 +37,82 @@ import {
   Zap,
 } from 'lucide-react';
 
+// --- CALCULATOR METADATA (FAQs, etc.) ---
+
+export const calculatorFaqs = {
+  BudgetCalculator: [
+    {
+      question: 'How often should I review my budget?',
+      answer:
+        'Review your budget at least once a month so you can compare planned spending with what actually happened. Adjust sooner if your income or expenses change.',
+    },
+    {
+      question: 'What percentage of income should go to savings?',
+      answer:
+        'A common rule of thumb is the 50/30/20 framework—50% needs, 30% wants, 20% savings or debt repayments. Use it as a starting point and tweak the percentages to suit your goals.',
+    },
+    {
+      question: 'How can I reduce non-essential spending?',
+      answer:
+        'Start by categorising expenses, identify discretionary items such as subscriptions or dining out, then set caps or pause services you rarely use. Small changes across several categories add up quickly.',
+    },
+  ],
+  MortgageCalculator: [
+    {
+      question: 'How much can I borrow for a mortgage?',
+      answer:
+        'UK lenders typically offer around 4 to 4.5 times your annual income, but affordability assessments also look at monthly expenses, credit score, and existing debts. Some lenders may stretch to 5–6 times income in special cases.',
+    },
+    {
+      question: 'What is Loan-to-Value (LTV) and why does it matter?',
+      answer:
+        "LTV is the percentage of the property value you are borrowing. A lower LTV (meaning a higher deposit) usually unlocks better interest rates. For example, 90% LTV means a 10% deposit, while 75% LTV means a 25% deposit.",
+    },
+    {
+      question: 'What is stamp duty and how much will I pay?',
+      answer:
+        'Stamp Duty Land Tax is paid on property purchases in England and Wales. For 2025/26 you pay 5% on the portion between £250k and £925k, 10% between £925k and £1.5m, and 12% above £1.5m. First-time buyers get relief on homes up to £425k.',
+    },
+    {
+      question: 'Should I choose a fixed or variable rate mortgage?',
+      answer:
+        'Fixed rates provide payment certainty for a set term, while variable rates can fall—or rise— with the market. Consider how long you plan to stay in the property and how much payment fluctuation you can handle.',
+    },
+    {
+      question: "What is the difference between repayment and interest-only mortgages?",
+      answer:
+        'Repayment mortgages pay down both the loan and interest, so you own the property outright at the end of the term. Interest-only mortgages have lower monthly payments but the original balance must be cleared separately when the term ends.',
+    },
+    {
+      question: 'What extra costs should I budget for when buying a home?',
+      answer:
+        'Allow for legal fees, surveys, mortgage arrangement fees, moving costs, and insurance. A 3–5% buffer on top of your deposit is a sensible contingency for upfront costs.',
+    },
+  ],
+  IncomeTaxCalculator: [
+    {
+      question: 'What is the Personal Allowance?',
+      answer:
+        'It is the amount of income you can earn before paying Income Tax. For the 2025/26 tax year the standard Personal Allowance is £12,570, although it tapers once your income exceeds £100,000.',
+    },
+    {
+      question: 'How do the tax bands work?',
+      answer:
+        'After the Personal Allowance, income is taxed in bands—20% Basic Rate, 40% Higher Rate, and 45% Additional Rate for England, Wales, and Northern Ireland. You only pay the higher rate on the portion of income within that band.',
+    },
+    {
+      question: 'Does the calculator include National Insurance?',
+      answer:
+        'No, it focuses purely on Income Tax so you can see that deduction clearly. For a combined view including NI, pension, and student loan deductions, use the main Salary Calculator.',
+    },
+    {
+      question: 'Is the calculator suitable for Scotland?',
+      answer:
+        'Scottish income tax rates differ from the rest of the UK, so use the Salary Calculator and select the Scotland option for accurate figures.',
+    },
+  ],
+};
+
 // --- MAIN CONFIGURATION ARRAY ---
 
 export const calculatorCategories = [
@@ -203,10 +279,12 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Income Tax Calculator',
+            page: 'IncomeTaxCalculator',
             url: createPageUrl('IncomeTaxCalculator'),
             icon: User,
             status: 'active',
             description: 'Calculate UK income tax liability',
+            faq: calculatorFaqs.IncomeTaxCalculator,
           },
           {
             name: 'National Insurance Calculator',
@@ -276,10 +354,12 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Budget Planner',
+            page: 'BudgetCalculator',
             url: createPageUrl('BudgetCalculator'),
             icon: PiggyBank,
             status: 'active',
             description: 'Create and track your monthly budget',
+            faq: calculatorFaqs.BudgetCalculator,
           },
           {
             name: 'Emergency Fund Calculator',
@@ -499,10 +579,12 @@ export const calculatorCategories = [
         calculators: [
           {
             name: 'Mortgage Calculator',
+            page: 'MortgageCalculator',
             url: createPageUrl('MortgageCalculator'),
             icon: Building,
             status: 'active',
             description: 'Calculate mortgage payments and costs',
+            faq: calculatorFaqs.MortgageCalculator,
           },
           {
             name: 'Mortgage Affordability Calculator',

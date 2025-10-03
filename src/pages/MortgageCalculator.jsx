@@ -18,6 +18,9 @@ import CalculatorWrapper from '../components/calculators/CalculatorWrapper';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
 import Breadcrumbs from '../components/general/Breadcrumbs';
 import { createPageUrl } from '@/utils';
+import { JsonLd } from '@/components/seo/JsonLd';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { calculatorFaqs } from '../components/data/calculatorConfig';
 
 const mortgageCalculatorJsonLd = {
   '@context': 'https://schema.org',
@@ -34,38 +37,7 @@ const mortgageCalculatorJsonLd = {
   },
 };
 
-const mortgageCalculatorFAQs = [
-  {
-    question: 'How much can I borrow for a mortgage?',
-    answer:
-      'UK lenders typically offer 4-4.5 times your annual income, but this depends on affordability assessments including your monthly expenses, credit score, and existing debts. Some lenders may offer up to 5-6 times income in certain circumstances.',
-  },
-  {
-    question: 'What is Loan-to-Value (LTV) and why does it matter?',
-    answer:
-      "LTV is the percentage of the property value you're borrowing. A lower LTV (higher deposit) typically gets you better interest rates. For example, 90% LTV means a 10% deposit, while 75% LTV means a 25% deposit.",
-  },
-  {
-    question: 'What is stamp duty and how much will I pay?',
-    answer:
-      'Stamp duty is a tax on property purchases in England and Wales. For 2025/26, you pay 5% on the portion between £250k-£925k, 10% on £925k-£1.5m, and 12% above £1.5m. First-time buyers get relief up to £425k.',
-  },
-  {
-    question: 'Should I choose a fixed or variable rate mortgage?',
-    answer:
-      'Fixed rates provide payment certainty but may be higher initially. Variable rates can go up or down but offer potential savings if rates fall. Consider your risk tolerance and how long you plan to stay in the property.',
-  },
-  {
-    question: "What's the difference between capital repayment and interest-only mortgages?",
-    answer:
-      'Capital repayment mortgages pay off both the loan and interest, so you own the property outright at the end. Interest-only mortgages have lower monthly payments but you still owe the full loan amount at the end of the term.',
-  },
-  {
-    question: 'What additional costs should I budget for when buying a home?',
-    answer:
-      'Beyond the deposit and stamp duty, budget for: legal fees (£1,000-£2,000), survey costs (£400-£1,200), mortgage arrangement fees (£0-£2,000), buildings insurance, and moving costs. Allow 3-5% of purchase price for total costs.',
-  },
-];
+const mortgageCalculatorFAQs = calculatorFaqs.MortgageCalculator || [];
 
 export default function MortgageCalculator() {
   const [propertyValue, setPropertyValue] = useState('');
@@ -78,6 +50,7 @@ export default function MortgageCalculator() {
   const [results, setResults] = useState(null);
   const [csvData, setCsvData] = useState(null);
   const [hasCalculated, setHasCalculated] = useState(false); // New state for tracking calculation attempt
+  const { schemaNodes } = useCalculatorSchema('MortgageCalculator');
 
   const location = useLocation(); // Get location object
 
@@ -218,7 +191,10 @@ export default function MortgageCalculator() {
 
   return (
     <>
-      <script type="application/ld+json">{JSON.stringify(mortgageCalculatorJsonLd)}</script>
+      {schemaNodes.map((node, index) => (
+        <JsonLd key={node?.['@type'] ?? index} data={node} />
+      ))}
+      <JsonLd data={mortgageCalculatorJsonLd} />
 
       <div className="bg-white dark:bg-gray-900">
         {/* Page Header */}

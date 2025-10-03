@@ -396,7 +396,7 @@ const defaultOgImage =
   'https://xifmvsuddgebmlleggqz.supabase.co/storage/v1/object/public/CalcMyMoney.co.uk/og-default.png';
 const defaultOgAlt = 'Calculate My Money – Free UK Calculators';
 
-const faqPages = ['Home', 'SalaryCalculatorUK', 'MortgageCalculator', 'PensionCalculator', 'BudgetCalculator'];
+const faqPages = ['Home', 'SalaryCalculatorUK', 'PensionCalculator'];
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
