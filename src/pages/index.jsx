@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import Layout, { pageSeo } from './Layout.jsx';
+import Layout from './Layout.jsx';
+import { pageSeo } from '../components/data/pageSeo';
 import { createPageUrl } from '../utils/createPageUrl';
 import NotFound from './NotFound';
 
