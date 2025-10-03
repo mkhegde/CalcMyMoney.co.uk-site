@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Menu, ChevronDown, ChevronRight } from 'lucide-react';
@@ -10,6 +10,8 @@ import ScrollToTop from '../components/general/ScrollToTop';
 import CookieConsentBanner from '../components/general/CookieConsentBanner';
 import { calculatorCategories } from '../components/data/calculatorConfig';
 import CalculatorIndex from '../components/general/CalculatorIndex';
+import SeoHead from '@/components/seo/SeoHead';
+import { SeoProvider } from '@/components/seo/SeoContext';
 
 // Define a mapping for page names to titles and descriptions for SEO
 // This object will be used to programmatically set SEO meta tags for each page.
@@ -382,33 +384,192 @@ const defaultOgImage =
   'https://xifmvsuddgebmlleggqz.supabase.co/storage/v1/object/public/CalcMyMoney.co.uk/og-default.png';
 const defaultOgAlt = 'Calculate My Money – Free UK Calculators';
 
-// Helper function to get or create a meta tag dynamically
-const getOrCreateMeta = (name, attribute = 'name') => {
-  let element = document.head.querySelector(`meta[${attribute}="${name}"]`);
-  if (!element) {
-    element = document.createElement('meta');
-    element.setAttribute(attribute, name);
-    document.head.appendChild(element);
-  }
-  return element;
-};
-
-// Helper function to get or create a link tag dynamically
-const getOrCreateLink = (rel) => {
-  let element = document.head.querySelector(`link[rel="${rel}"]`);
-  if (!element) {
-    element = document.createElement('link');
-    element.setAttribute('rel', rel);
-    document.head.appendChild(element);
-  }
-  return element;
-};
+const faqPages = ['Home', 'SalaryCalculatorUK', 'MortgageCalculator', 'PensionCalculator', 'BudgetCalculator'];
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openCategories, setOpenCategories] = useState({});
+  const [seoOverrides, setSeoOverrides] = useState({});
   const isHomePage = location.pathname === createPageUrl('Home');
+
+  const rawOrigin =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://www.calcmymoney.co.uk';
+  const normalizedOrigin = rawOrigin.endsWith('/') ? rawOrigin.slice(0, -1) : rawOrigin;
+
+  const canonicalUrl = useMemo(() => {
+    const pathname = location.pathname || '/';
+    if (currentPageName === 'Home' || pathname === '/') {
+      return `${normalizedOrigin}/`;
+    }
+
+    const dynamicCanonicalPages = new Set(['CostOfLiving', 'JobSalaries']);
+
+    if (dynamicCanonicalPages.has(currentPageName)) {
+      const params = new URLSearchParams(location.search || '');
+      const slug = params.get('slug');
+      const canonicalParams = new URLSearchParams();
+      if (slug) {
+        canonicalParams.set('slug', slug);
+      }
+      const search = canonicalParams.toString();
+      return `${normalizedOrigin}${pathname}${search ? `?${search}` : ''}`;
+    }
+
+    return `${normalizedOrigin}${pathname}`;
+  }, [currentPageName, location.pathname, location.search, normalizedOrigin]);
+
+  const pageData = pageSeo[currentPageName] || {};
+
+  const jsonLd = useMemo(() => {
+    const schemas = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'Calculate My Money',
+        url: `${normalizedOrigin}/`,
+        logo: 'https://www.calcmymoney.co.uk/images/logo-high-res.png',
+        sameAs: [],
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Calculate My Money',
+        url: `${normalizedOrigin}/`,
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${normalizedOrigin}/?q={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ];
+
+    if (faqPages.includes(currentPageName)) {
+      schemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'How accurate are your UK salary/tax calculators?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Our calculators are designed for high accuracy, using the latest UK tax laws for the specified tax year (2025/26). They cover Income Tax, National Insurance, and more. While we strive for precision, these tools are for estimation purposes and should not be considered financial advice.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Which tax year do the calculators use (2025/26)?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'All relevant financial calculators have been updated for the 2025/26 UK tax year, which runs from 6 April 2025 to 5 April 2026. Rates and thresholds for all UK nations are applied where applicable.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Can I download or print the results?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: "Yes. Most of our calculators feature 'Export' or 'Print' buttons, allowing you to download your results as a CSV/PDF file or generate a printer-friendly version of the summary for your records.",
+            },
+          },
+        ],
+      });
+    }
+
+    return schemas;
+  }, [currentPageName, normalizedOrigin]);
+
+  const defaultSeo = useMemo(() => {
+    const defaultTitle = 'Calculate My Money - Free UK Financial Calculators';
+    const defaultDescription =
+      'Your go-to source for free UK financial calculators including salary, tax, mortgage, pension, and budget tools from Calculate My Money. Make smart money decisions.';
+
+    const title = pageData.title || defaultTitle;
+    const description = pageData.description || defaultDescription;
+
+    return {
+      title,
+      description,
+      canonical: canonicalUrl,
+      robots: pageData.robots || 'index,follow,max-image-preview:large',
+      themeColor: '#0b5fff',
+      ogTitle: pageData.ogTitle || title,
+      ogDescription: pageData.ogDescription || description,
+      ogType: pageData.ogType || 'website',
+      ogUrl: canonicalUrl,
+      ogImage: pageData.ogImage || defaultOgImage,
+      ogImageAlt: pageData.ogImageAlt || defaultOgAlt,
+      ogSiteName: 'Calculate My Money',
+      ogLocale: 'en_GB',
+      twitterCard: pageData.twitterCard || 'summary_large_image',
+      twitterTitle: pageData.twitterTitle || title,
+      twitterDescription: pageData.twitterDescription || description,
+      twitterImage: pageData.twitterImage || pageData.ogImage || defaultOgImage,
+      twitterImageAlt: pageData.twitterImageAlt || pageData.ogImageAlt || defaultOgAlt,
+      jsonLd,
+    };
+  }, [canonicalUrl, jsonLd, pageData]);
+
+  const setSeo = useCallback((updates) => {
+    if (!updates) return;
+
+    setSeoOverrides((prev) => {
+      const nextUpdates = typeof updates === 'function' ? updates(prev) : updates;
+      if (!nextUpdates) {
+        return prev;
+      }
+
+      const next = { ...prev };
+      let changed = false;
+
+      Object.entries(nextUpdates).forEach(([key, value]) => {
+        if (value === undefined) {
+          if (key in next) {
+            delete next[key];
+            changed = true;
+          }
+          return;
+        }
+
+        if (next[key] !== value) {
+          next[key] = value;
+          changed = true;
+        }
+      });
+
+      return changed ? next : prev;
+    });
+  }, []);
+
+  const resetSeo = useCallback(() => {
+    setSeoOverrides({});
+  }, []);
+
+  useEffect(() => {
+    resetSeo();
+  }, [location.pathname, location.search, resetSeo]);
+
+  const mergedSeo = useMemo(() => {
+    const base = { ...defaultSeo };
+    Object.entries(seoOverrides).forEach(([key, value]) => {
+      if (value === undefined) {
+        return;
+      }
+      base[key] = value;
+    });
+    return base;
+  }, [defaultSeo, seoOverrides]);
+
+  const seoContextValue = useMemo(
+    () => ({ seo: mergedSeo, defaults: defaultSeo, overrides: seoOverrides, setSeo, resetSeo }),
+    [mergedSeo, defaultSeo, seoOverrides, setSeo, resetSeo]
+  );
 
   // Toggle category expansion in mobile menu
   const toggleCategory = (categorySlug) => {
@@ -576,229 +737,6 @@ export default function Layout({ children, currentPageName }) {
     }
   }, [currentPageName]);
 
-  // SEO: Update page title and meta description based on currentPageName
-  useEffect(() => {
-    const defaultTitle = 'Calculate My Money - Free UK Financial Calculators';
-    const defaultDescription =
-      'Your go-to source for free UK financial calculators including salary, tax, mortgage, pension, and budget tools from Calculate My Money. Make smart money decisions.';
-
-    const pageData = pageSeo[currentPageName];
-
-    // Set document title
-    document.title = pageData?.title || defaultTitle;
-
-    // Set main meta description
-    const descriptionMeta = getOrCreateMeta('description');
-    descriptionMeta.setAttribute('content', pageData?.description || defaultDescription);
-
-    // Add robots meta tag
-    const robotsMeta = getOrCreateMeta('robots');
-    robotsMeta.setAttribute('content', 'index,follow,max-image-preview:large');
-
-    // Add theme-color meta tag
-    const themeColorMeta = getOrCreateMeta('theme-color');
-    themeColorMeta.setAttribute('content', '#0b5fff');
-
-    // Add canonical link tag (updated to support dynamic pages with slug)
-    const canonicalLink = getOrCreateLink('canonical');
-    const origin = window.location.origin.endsWith('/')
-      ? window.location.origin.slice(0, -1)
-      : window.location.origin;
-    const pathname = location.pathname;
-
-    // Pages that rely on a "slug" query param for unique content
-    const dynamicCanonicalPages = new Set(['CostOfLiving', 'JobSalaries']); // Updated CostOfLivingPage to CostOfLiving
-
-    let canonicalUrl;
-    if (currentPageName === 'Home' || pathname === '/') {
-      canonicalUrl = `${origin}/`;
-    } else if (dynamicCanonicalPages.has(currentPageName)) {
-      // Keep only the slug param; drop tracking and other params
-      const urlParams = new URLSearchParams(window.location.search);
-      const slug = urlParams.get('slug');
-      const canonicalParams = new URLSearchParams();
-      if (slug) canonicalParams.set('slug', slug);
-      const search = canonicalParams.toString();
-      canonicalUrl = `${origin}${pathname}${search ? `?${search}` : ''}`;
-    } else {
-      // For all other pages, strip query params from canonical
-      canonicalUrl = `${origin}${pathname}`;
-    }
-    canonicalLink.setAttribute('href', canonicalUrl);
-
-    // Set Open Graph (for Facebook, LinkedIn, etc.) meta tags
-    const ogTitleMeta = getOrCreateMeta('og:title', 'property');
-    ogTitleMeta.setAttribute('content', pageData?.title || defaultTitle);
-
-    const ogDescriptionMeta = getOrCreateMeta('og:description', 'property');
-    ogDescriptionMeta.setAttribute('content', pageData?.description || defaultDescription);
-
-    const ogUrlMeta = getOrCreateMeta('og:url', 'property');
-    ogUrlMeta.setAttribute('content', canonicalUrl); // Use canonical URL for consistency
-
-    const ogTypeMeta = getOrCreateMeta('og:type', 'property');
-    ogTypeMeta.setAttribute('content', 'website'); // Default type for general pages
-
-    const ogSiteNameMeta = getOrCreateMeta('og:site_name', 'property');
-    ogSiteNameMeta.setAttribute('content', 'Calculate My Money');
-
-    // NEW: locale for consistency
-    const ogLocaleMeta = getOrCreateMeta('og:locale', 'property');
-    ogLocaleMeta.setAttribute('content', 'en_GB');
-
-    // Set OG/Twitter images (use page-specific if provided, else default)
-    const ogImageMeta = getOrCreateMeta('og:image', 'property');
-    ogImageMeta.setAttribute('content', pageData?.ogImage || defaultOgImage);
-
-    // Explicit dimensions and alt for OG image
-    const ogImageWidthMeta = getOrCreateMeta('og:image:width', 'property');
-    ogImageWidthMeta.setAttribute('content', '1200');
-
-    const ogImageHeightMeta = getOrCreateMeta('og:image:height', 'property');
-    ogImageHeightMeta.setAttribute('content', '630');
-
-    const ogImageAltMeta = getOrCreateMeta('og:image:alt', 'property');
-    ogImageAltMeta.setAttribute('content', pageData?.ogImageAlt || defaultOgAlt);
-
-    // Set Twitter Card meta tags
-    const twitterCardMeta = getOrCreateMeta('twitter:card');
-    twitterCardMeta.setAttribute('content', 'summary_large_image'); // Or 'summary' for smaller image/no image
-
-    const twitterTitleMeta = getOrCreateMeta('twitter:title');
-    twitterTitleMeta.setAttribute('content', pageData?.title || defaultTitle);
-
-    const twitterDescriptionMeta = getOrCreateMeta('twitter:description');
-    twitterDescriptionMeta.setAttribute('content', pageData?.description || defaultDescription);
-
-    const twitterImageMeta = getOrCreateMeta('twitter:image');
-    twitterImageMeta.setAttribute('content', pageData?.ogImage || defaultOgImage);
-
-    // NEW: twitter image alt for accessibility
-    const twitterImageAltMeta = getOrCreateMeta('twitter:image:alt');
-    twitterImageAltMeta.setAttribute('content', pageData?.ogImageAlt || defaultOgAlt);
-
-    // --- Add JSON-LD Schema ---
-    const organizationSchema = {
-      '@context': 'https://schema.org',
-      '@type': 'Organization',
-      name: 'Calculate My Money',
-      url: `${origin}/`,
-      logo: 'https://www.calcmymoney.co.uk/images/logo-high-res.png', // Existing logo
-      sameAs: [],
-    };
-
-    const websiteSchema = {
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: 'Calculate My Money',
-      url: `${origin}/`,
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: `${origin}/?q={search_term_string}`,
-        },
-        'query-input': 'required name=search_term_string',
-      },
-    };
-
-    // Function to create or update script tags
-    const createOrUpdateJsonLd = (id, schema) => {
-      let script = document.head.querySelector(`script[id="${id}"]`);
-      if (!script) {
-        script = document.createElement('script');
-        script.id = id;
-        script.type = 'application/ld+json';
-        document.head.appendChild(script);
-      }
-      script.textContent = JSON.stringify(schema);
-    };
-
-    createOrUpdateJsonLd('organization-schema', organizationSchema);
-    createOrUpdateJsonLd('website-schema', websiteSchema);
-
-    // Add FAQ schema for specific pages
-    const faqPages = [
-      'Home',
-      'SalaryCalculatorUK',
-      'MortgageCalculator',
-      'PensionCalculator',
-      'BudgetCalculator',
-    ];
-
-    const existingFaqSchemaElement = document.head.querySelector(`script[id="faq-schema"]`);
-
-    // NEW: detect if the page already includes any FAQPage JSON-LD to avoid duplicates
-    const pageHasFAQSchema = () => {
-      const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
-      const hasFAQ = (node) => {
-        if (!node) return false;
-        if (Array.isArray(node)) {
-          // If node is an array (e.g., '@graph'), check each item
-          return node.some(hasFAQ);
-        }
-        if (typeof node === 'object' && node !== null) {
-          // Check for @type directly
-          if (node['@type'] === 'FAQPage') return true;
-          // If there's an @graph, recurse into it
-          if (node['@graph']) return hasFAQ(node['@graph']);
-        }
-        return false;
-      };
-
-      for (const s of scripts) {
-        // Skip the specific script we control if it's currently being removed
-        if (s.id === 'faq-schema' && !faqPages.includes(currentPageName)) {
-          continue;
-        }
-        try {
-          const json = JSON.parse(s.textContent || '{}');
-          if (hasFAQ(json)) return true;
-        } catch (_) {
-          // ignore parse errors on unrelated JSON-LD
-        }
-      }
-      return false;
-    };
-
-    if (faqPages.includes(currentPageName) && !pageHasFAQSchema()) {
-      const faqSchema = {
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: [
-          {
-            '@type': 'Question',
-            name: 'How accurate are your UK salary/tax calculators?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Our calculators are designed for high accuracy, using the latest UK tax laws for the specified tax year (2025/26). They cover Income Tax, National Insurance, and more. While we strive for precision, these tools are for estimation purposes and should not be considered financial advice.',
-            },
-          },
-          {
-            '@type': 'Question',
-            name: 'Which tax year do the calculators use (2025/26)?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'All relevant financial calculators have been updated for the 2025/26 UK tax year, which runs from 6 April 2025 to 5 April 2026. Rates and thresholds for all UK nations are applied where applicable.',
-            },
-          },
-          {
-            '@type': 'Question',
-            name: 'Can I download or print the results?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: "Yes. Most of our calculators feature 'Export' or 'Print' buttons, allowing you to download your results as a CSV/PDF file or generate a printer-friendly version of the summary for your records.",
-            },
-          },
-        ],
-      };
-      createOrUpdateJsonLd('faq-schema', faqSchema);
-    } else if (!faqPages.includes(currentPageName) && existingFaqSchemaElement) {
-      // Clean up our injected FAQ schema if we navigate away from the specified FAQ pages
-      document.head.removeChild(existingFaqSchemaElement);
-    }
-  }, [currentPageName, location.pathname]); // Dependency array: re-run when currentPageName changes, or location for accurate og:url
-
   const mainNavLinks = [
     { name: 'All Calculators', url: createPageUrl('home') },
     { name: 'Job Salaries', url: createPageUrl('job-salaries') },
@@ -809,8 +747,10 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
-      <ScrollToTop />
+    <SeoProvider value={seoContextValue}>
+      <div className="min-h-screen bg-gray-50 text-gray-800">
+        <ScrollToTop />
+        <SeoHead {...mergedSeo} />
       <style jsx global>{`
         html {
           scroll-behavior: smooth;
@@ -851,7 +791,7 @@ export default function Layout({ children, currentPageName }) {
         }
       `}</style>
 
-      {/* Header */}
+        {/* Header */}
       <header className="bg-white/95 backdrop-blur-sm sticky top-0 z-40 border-b border-gray-200 non-printable">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -1178,7 +1118,8 @@ export default function Layout({ children, currentPageName }) {
         </div>
       </footer>
 
-      <CookieConsentBanner />
-    </div>
+        <CookieConsentBanner />
+      </div>
+    </SeoProvider>
   );
 }
