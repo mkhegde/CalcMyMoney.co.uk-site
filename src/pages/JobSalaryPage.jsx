@@ -1,6 +1,6 @@
 // --- ALL IMPORTS MUST BE AT THE TOP ---
 import React, { useEffect, useMemo } from 'react';
-import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
+import { Navigate, useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useSeo } from '@/components/seo/SeoContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,14 +30,17 @@ export default function JobSalaryPage() {
 
   useEffect(() => {
     if (slug && !selectedRole) {
-      navigate('/job-salaries', { replace: true });
+      resetSeo();
     }
-  }, [slug, selectedRole, navigate]);
+  }, [slug, selectedRole, resetSeo]);
 
   // If we just redirected (no slug yet), render nothing
-  if (!slug || !selectedRole) {
-    resetSeo();
+  if (!slug) {
     return null;
+  }
+
+  if (slug && !selectedRole) {
+    return <Navigate to="/job-salaries" replace />;
   }
 
   const origin =
