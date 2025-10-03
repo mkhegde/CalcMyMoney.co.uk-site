@@ -1,7 +1,7 @@
 // --- ALL IMPORTS MUST BE AT THE TOP ---
 import React, { useEffect } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useSeo } from '@/components/seo/SeoContext';
 
 // Small helper to make a nice title from the slug
 const toTitle = (s) =>
@@ -13,6 +13,7 @@ export default function JobSalaryPage() {
   const { slug } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
+  const { setSeo, resetSeo } = useSeo();
 
   // --- Legacy support: /jobsalarypage?slug=teacher -> /job-salaries/teacher
   useEffect(() => {
@@ -28,22 +29,36 @@ export default function JobSalaryPage() {
   // If we just redirected (no slug yet), render nothing
   if (!slug) return null;
 
-  // SEO bits
   const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://www.calcmymoney.co.uk';
   const roleTitle = toTitle(slug);
   const pageTitle = `${roleTitle} Salary (UK) | Job Pay Explorer`;
   const pageDesc = `Typical UK salary data for ${roleTitle}: pay ranges, percentiles, and related roles.`;
   const canonical = `${origin}/job-salaries/${slug}`;
 
+  useEffect(() => {
+    if (!slug) return;
+
+    setSeo({
+      title: pageTitle,
+      description: pageDesc,
+      canonical,
+      ogTitle: pageTitle,
+      ogDescription: pageDesc,
+      ogUrl: canonical,
+      twitterTitle: pageTitle,
+      twitterDescription: pageDesc,
+    });
+
+    return () => {
+      resetSeo();
+    };
+  }, [slug, pageTitle, pageDesc, canonical, setSeo, resetSeo]);
+
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDesc} />
-        <link rel="canonical" href={canonical} />
-      </Helmet>
-
       <h1 className="text-2xl font-bold mb-2">{roleTitle} salary (UK)</h1>
       <p className="text-sm text-gray-500 mb-6">
         Clean path detected. Legacy query URLs are redirected to this canonical route.
