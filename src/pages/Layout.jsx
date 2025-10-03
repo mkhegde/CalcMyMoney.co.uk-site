@@ -13,6 +13,8 @@ import CalculatorIndex from '../components/general/CalculatorIndex';
 import SeoHead from '@/components/seo/SeoHead';
 import { SeoProvider } from '@/components/seo/SeoContext';
 
+const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
+
 // Define a mapping for page names to titles and descriptions for SEO
 // This object will be used to programmatically set SEO meta tags for each page.
 // In a larger application, this data might come from a CMS or a more complex routing configuration.
@@ -393,6 +395,31 @@ export default function Layout({ children, currentPageName }) {
   const [seoOverrides, setSeoOverrides] = useState({});
   const isHomePage = location.pathname === createPageUrl('Home');
 
+  const costOfLivingBaseSlug = useMemo(
+    () => COST_OF_LIVING_BASE_PATH.replace(/^\/+|\/+$/g, ''),
+    []
+  );
+
+  const getCostOfLivingSlug = useCallback(() => {
+    const pathnameSegments = (location.pathname || '')
+      .replace(/^\/+|\/+$/g, '')
+      .split('/')
+      .filter(Boolean);
+
+    if (pathnameSegments[0] === costOfLivingBaseSlug && pathnameSegments[1]) {
+      const segment = pathnameSegments[1];
+      try {
+        return decodeURIComponent(segment).toLowerCase();
+      } catch (error) {
+        return segment.toLowerCase();
+      }
+    }
+
+    const params = new URLSearchParams(location.search || '');
+    const slugFromQuery = params.get('slug');
+    return slugFromQuery ? slugFromQuery.trim().toLowerCase() : '';
+  }, [costOfLivingBaseSlug, location.pathname, location.search]);
+
   const rawOrigin =
     typeof window !== 'undefined' && window.location?.origin
       ? window.location.origin
@@ -405,9 +432,9 @@ export default function Layout({ children, currentPageName }) {
       return `${normalizedOrigin}/`;
     }
 
-    const dynamicCanonicalPages = new Set(['CostOfLiving', 'JobSalaries']);
+    const searchCanonicalPages = new Set(['JobSalaries']);
 
-    if (dynamicCanonicalPages.has(currentPageName)) {
+    if (searchCanonicalPages.has(currentPageName)) {
       const params = new URLSearchParams(location.search || '');
       const slug = params.get('slug');
       const canonicalParams = new URLSearchParams();
@@ -615,15 +642,11 @@ export default function Layout({ children, currentPageName }) {
       case 'PAYECalculator':
         return 'UK PAYE Calculator';
       case 'CostOfLiving': {
-        // hub page with optional slug
-        const params = new URLSearchParams(window.location.search);
-        const slug = params.get('slug');
+        const slug = getCostOfLivingSlug();
         return slug ? `Cost of Living in ${toTitleCase(slug)}` : 'UK Cost of Living Explorer';
       }
       case 'CostOfLivingPage': {
-        // dynamic city page
-        const params = new URLSearchParams(window.location.search);
-        const slug = params.get('slug');
+        const slug = getCostOfLivingSlug();
         return slug ? `Cost of Living in ${toTitleCase(slug)}` : 'UK Cost of Living Explorer';
       }
       case 'StudentLoanRepaymentCalculator':

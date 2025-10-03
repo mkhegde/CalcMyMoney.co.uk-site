@@ -1,4 +1,3 @@
 User-agent: *
 Disallow: /*?q=
-Disallow: /*?slug=
 Sitemap: https://www.calcmymoney.co.uk/sitemap.xml

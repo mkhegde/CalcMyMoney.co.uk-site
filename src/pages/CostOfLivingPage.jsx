@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ukCities, createSlug } from '../components/data/seo-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,13 +27,13 @@ const costOfLivingFAQs = [
 ];
 
 export default function CostOfLivingPage() {
-  const location = useLocation();
-  const costOfLivingPageBase = createPageUrl('CostOfLivingPage');
+  const { slug: rawSlug } = useParams();
+  const costOfLivingBase = createPageUrl('CostOfLiving');
+  const slug = (rawSlug || '').toLowerCase();
   const city = useMemo(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const slug = urlParams.get('slug');
+    if (!slug) return undefined;
     return ukCities.find((c) => createSlug(c.name) === slug);
-  }, [location.search]);
+  }, [slug]);
 
   if (!city) {
     return (
@@ -41,7 +41,7 @@ export default function CostOfLivingPage() {
         <h1 className="text-2xl font-bold">City Not Found</h1>
         <p className="text-gray-600">The city you're looking for could not be found.</p>
         <Link
-          to={createPageUrl('CostOfLiving')}
+          to={costOfLivingBase}
           className="mt-4 inline-block text-blue-600 hover:underline"
         >
           &larr; Back to Cost of Living Explorer
@@ -59,7 +59,7 @@ export default function CostOfLivingPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-6">
           <Link
-            to={createPageUrl('CostOfLiving')}
+            to={costOfLivingBase}
             className="text-sm text-gray-600 hover:text-gray-900 inline-flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -141,7 +141,7 @@ export default function CostOfLivingPage() {
                 {relatedCities.length > 0 ? (
                   relatedCities.map((relatedCity) => (
                     <Link
-                      to={`${costOfLivingPageBase}?slug=${createSlug(relatedCity.name)}`}
+                      to={`${costOfLivingBase}/${createSlug(relatedCity.name)}`}
                       key={relatedCity.name}
                       className="block p-3 bg-white border rounded-lg hover:bg-gray-100 transition-colors"
                     >

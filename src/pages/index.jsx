@@ -40,6 +40,9 @@ const LEGACY_REDIRECTS = {
 
 // Pull calculator config so we can auto-generate routes for entries with `page`
 import { calculatorCategories } from '../components/data/calculatorConfig';
+import { ukCities, createSlug } from '../components/data/seo-data';
+
+const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
 
 // --- LAZY IMPORTS (calculators) ---
 const LazySalaryCalculatorUK = lazy(() => import('./SalaryCalculatorUK.jsx'));
@@ -229,14 +232,39 @@ const _slugToPageName = (() => {
     }
   });
 
+  const costOfLivingBase = COST_OF_LIVING_BASE_PATH.replace(/^\/+|\/+$/g, '');
+  if (costOfLivingBase) {
+    ukCities.forEach((city) => {
+      if (!city?.name) return;
+      const slug = createSlug(city.name);
+      if (!slug) return;
+      _registerSlug(map, `${costOfLivingBase}/${slug}`, 'CostOfLivingPage');
+    });
+  }
+
   return map;
 })();
+
+function LegacyCostOfLivingRedirect() {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search || '');
+  const slug = params.get('slug');
+  const normalizedSlug = slug ? createSlug(slug) : '';
+  if (normalizedSlug) {
+    return <Navigate to={`${COST_OF_LIVING_BASE_PATH}/${normalizedSlug}`} replace />;
+  }
+  return <Navigate to={COST_OF_LIVING_BASE_PATH} replace />;
+}
 
 // Helper for Layout current page label
 function _getCurrentPage(pathname) {
   const normalizedPath = _normalizeSlug(pathname || '/');
   if (!normalizedPath || normalizedPath === 'home') {
     return 'Home';
+  }
+
+  if (normalizedPath.startsWith('cost-of-living/')) {
+    return 'CostOfLivingPage';
   }
 
   const segments = normalizedPath.split('/').filter(Boolean);
@@ -423,6 +451,7 @@ function PagesContent() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/sitemap" element={<Sitemap />} />
           <Route path="/cost-of-living" element={<CostOfLiving />} />
+          <Route path="/cost-of-living/:slug" element={<CostOfLivingPage />} />
           <Route path="/uk-government-budget" element={<UKGovernmentBudget />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
@@ -431,7 +460,7 @@ function PagesContent() {
           <Route path="/blog-financial-psychology" element={<BlogFinancialPsychology />} />
           <Route path="/job-salary-page" element={<JobSalaryPage />} />
           <Route path="/jobsalarypage" element={<JobSalaryPage />} />
-          <Route path="/cost-of-living-page" element={<CostOfLivingPage />} />
+          <Route path="/cost-of-living-page" element={<LegacyCostOfLivingRedirect />} />
           <Route path="/uk-financial-stats" element={<UKFinancialStats />} />
           <Route path="/methodology" element={<Methodology />} />
           <Route path="/about" element={<About />} />
