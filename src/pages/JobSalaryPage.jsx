@@ -10,6 +10,7 @@ export default function JobSalaryPage() {
   const { slug } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
+  const { setSeo, resetSeo } = useSeo();
 
   const selectedRole = useMemo(
     () => jobTitles.find((job) => createSlug(job.title) === slug),
@@ -36,7 +37,6 @@ export default function JobSalaryPage() {
   // If we just redirected (no slug yet), render nothing
   if (!slug || !selectedRole) return null;
 
-  // SEO bits
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
   const roleTitle = selectedRole.title;

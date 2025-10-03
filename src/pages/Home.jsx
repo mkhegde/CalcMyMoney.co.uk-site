@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -17,6 +16,7 @@ import {
 import { prefetchPage } from '@/utils/prefetchPage';
 import FAQSection from '../components/calculators/FAQSection';
 import { HandCoins, PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
+import { useSeo } from '@/components/seo/SeoContext';
 
 const homepageFaqs = [
   {
@@ -54,6 +54,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showAllCalculators, setShowAllCalculators] = useState(false);
+  const { setSeo, resetSeo } = useSeo();
 
   const stats = getCalculatorStats();
 
@@ -118,14 +119,30 @@ export default function Home() {
     },
   ];
 
+  useEffect(() => {
+    if (!hasQuery) {
+      resetSeo();
+      return;
+    }
+
+    const origin =
+      typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'https://www.calcmymoney.co.uk';
+    const canonical = origin.endsWith('/') ? origin : `${origin}/`;
+
+    setSeo({
+      robots: 'noindex,follow',
+      canonical,
+    });
+
+    return () => {
+      resetSeo();
+    };
+  }, [hasQuery, setSeo, resetSeo]);
+
   return (
     <div className="bg-white dark:bg-gray-900">
-      {hasQuery && (
-        <Helmet>
-          <meta name="robots" content="noindex,follow" />
-          <link rel="canonical" href="https://www.calcmymoney.co.uk/" />
-        </Helmet>
-      )}
       {/* Hero Section */}
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
