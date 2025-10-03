@@ -430,6 +430,7 @@ function PagesContent() {
           <Route path="/blog-debt-repayment-strategies" element={<BlogDebtRepaymentStrategies />} />
           <Route path="/blog-financial-psychology" element={<BlogFinancialPsychology />} />
           <Route path="/job-salary-page" element={<JobSalaryPage />} />
+          <Route path="/jobsalarypage" element={<JobSalaryPage />} />
           <Route path="/cost-of-living-page" element={<CostOfLivingPage />} />
           <Route path="/uk-financial-stats" element={<UKFinancialStats />} />
           <Route path="/methodology" element={<Methodology />} />
