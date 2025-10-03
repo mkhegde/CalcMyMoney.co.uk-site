@@ -1,14 +1,31 @@
 import React, { createContext, useContext } from 'react';
 
+const loggedWarnings = new Set();
+
+const warnMissingProvider = (methodName = 'useSeo') => {
+  if (loggedWarnings.has(methodName)) {
+    return;
+  }
+
+  loggedWarnings.add(methodName);
+
+  if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+    console.warn(
+      `[SeoContext] ${methodName} called before <SeoProvider> was initialised. Returning safe no-op defaults.`,
+    );
+  }
+};
+
 const defaultContextValue = {
   seo: {},
   defaults: {},
   overrides: {},
-  setSeo: () => {
-    throw new Error('setSeo called outside of SeoProvider');
+  setSeo: (...args) => {
+    warnMissingProvider('setSeo');
+    return args?.[0];
   },
   resetSeo: () => {
-    throw new Error('resetSeo called outside of SeoProvider');
+    warnMissingProvider('resetSeo');
   },
 };
 
@@ -20,9 +37,12 @@ export function SeoProvider({ value, children }) {
 
 export function useSeo() {
   const context = useContext(SeoContext);
+
   if (!context || context === defaultContextValue) {
-    throw new Error('useSeo must be used within a SeoProvider');
+    warnMissingProvider('useSeo');
+    return defaultContextValue;
   }
+
   return context;
 }
 

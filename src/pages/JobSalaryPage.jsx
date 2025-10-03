@@ -1,7 +1,7 @@
 // --- ALL IMPORTS MUST BE AT THE TOP ---
 import React, { useEffect, useMemo } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useSeo } from '@/components/seo/SeoContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { jobTitles, createSlug } from '../components/data/seo-data';
@@ -35,7 +35,10 @@ export default function JobSalaryPage() {
   }, [slug, selectedRole, navigate]);
 
   // If we just redirected (no slug yet), render nothing
-  if (!slug || !selectedRole) return null;
+  if (!slug || !selectedRole) {
+    resetSeo();
+    return null;
+  }
 
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
@@ -103,13 +106,28 @@ export default function JobSalaryPage() {
       : null,
   ].filter(Boolean);
 
+  useEffect(() => {
+    const seoPayload = {
+      title: pageTitle,
+      description: pageDesc,
+      canonical,
+      robots: 'index,follow,max-image-preview:large',
+      ogTitle: pageTitle,
+      ogDescription: pageDesc,
+      ogUrl: canonical,
+      twitterTitle: pageTitle,
+      twitterDescription: pageDesc,
+    };
+
+    setSeo(seoPayload);
+
+    return () => {
+      resetSeo();
+    };
+  }, [canonical, pageDesc, pageTitle, resetSeo, setSeo]);
+
   return (
     <div className="bg-white dark:bg-gray-900">
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDesc} />
-        <link rel="canonical" href={canonical} />
-      </Helmet>
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <div className="flex flex-col gap-4">
           <Link className="text-blue-600 hover:text-blue-700 font-medium" to="/job-salaries">
