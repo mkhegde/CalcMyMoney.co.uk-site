@@ -147,6 +147,7 @@ export const calculatorCategories = [
           },
           {
             name: 'Severance Pay Calculator',
+            page: 'SeverancePayCalculator',
             url: createPageUrl('SeverancePayCalculator'),
             icon: FileText,
             status: 'active',
@@ -154,6 +155,7 @@ export const calculatorCategories = [
           },
           {
             name: 'Child Benefit Calculator',
+            page: 'ChildBenefitCalculator',
             url: createPageUrl('ChildBenefitCalculator'),
             icon: Baby,
             status: 'active',

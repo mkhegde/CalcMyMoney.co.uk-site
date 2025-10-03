@@ -61,10 +61,12 @@ export default function Sitemap() {
   const calculatorLinks = calculatorCategories
     .flatMap((category) =>
       category.subCategories.flatMap((sub) =>
-        sub.calculators.map((calc) => ({
-          url: calc.url,
-          title: calc.name,
-        }))
+        sub.calculators
+          .filter((calc) => calc.status === 'active')
+          .map((calc) => ({
+            url: calc.url,
+            title: calc.name,
+          }))
       )
     )
     .sort((a, b) => a.title.localeCompare(b.title));
