@@ -74,9 +74,9 @@ export default function Sitemap() {
     title: `${job.title} Salary`,
   }));
 
-  const costOfLivingPageBase = createPageUrl('CostOfLivingPage');
+  const costOfLivingBase = createPageUrl('CostOfLiving');
   const cityLinks = ukCities.map((city) => ({
-    url: `${costOfLivingPageBase}?slug=${createSlug(city.name)}`,
+    url: `${costOfLivingBase}/${createSlug(city.name)}`,
     title: `Cost of Living in ${city.name}`,
   }));
 
