@@ -398,84 +398,83 @@ export default function Layout({ children, currentPageName }) {
       <div className="min-h-screen bg-background text-foreground">
         <ScrollToTop />
         <SeoHead {...mergedSeo} />
-      <style jsx global>{`
-        html {
-          scroll-behavior: smooth;
-        }
-        * {
-          transition:
-            background-color 0.3s ease,
-            color 0.3s ease,
-            border-color 0.3s ease;
-        }
-        @media print {
+        <style jsx global>{`
           html {
-            scroll-behavior: auto;
+            scroll-behavior: smooth;
           }
-          .non-printable {
-            display: none !important;
+          * {
+            transition:
+              background-color 0.3s ease,
+              color 0.3s ease,
+              border-color 0.3s ease;
           }
-          .printable-area {
-            display: block !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            flex: 1 !important;
+          @media print {
+            html {
+              scroll-behavior: auto;
+            }
+            .non-printable {
+              display: none !important;
+            }
+            .printable-area {
+              display: block !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              flex: 1 !important;
+            }
+            .printable-grid-cols-1 {
+              grid-template-columns: 1fr !important;
+            }
+            .printable-content {
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+            .print-title {
+              display: block !important;
+              text-align: center;
+              font-size: 24px;
+              font-weight: bold;
+              margin-bottom: 2rem;
+            }
           }
-          .printable-grid-cols-1 {
-            grid-template-columns: 1fr !important;
-          }
-          .printable-content {
-            padding: 0 !important;
-            margin: 0 !important;
-          }
-          .print-title {
-            display: block !important;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 2rem;
-          }
-        }
-      `}</style>
+        `}</style>
 
         {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-sm non-printable">
-        <nav className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex-shrink-0">
-            <Link to={createPageUrl('Home')} className="flex items-center space-x-2">
-                             {' '}
-              <img src="/app-icon.webp" alt="Calculate My Money Logo" className="h-8 w-8" />
-               <span className="text-xl font-bold text-foreground">Calculate My Money</span>
-                   {' '}
-            </Link>
-          </div>
+        <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-sm non-printable">
+          <nav className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+            <div className="flex-shrink-0">
+              <Link to={createPageUrl('Home')} className="flex items-center space-x-2">
+                               {' '}
+                <img src="/app-icon.webp" alt="Calculate My Money Logo" className="h-8 w-8" /> 
+                <span className="text-xl font-bold text-foreground">Calculate My Money</span>   
+                 {' '}
+              </Link>
+            </div>
 
-          {/* Desktop Navigation */}
-          <NavigationMenu className="ml-6 hidden md:flex items-center">
-            <NavigationMenuList className="flex items-center gap-1">
-              {mainNavLinks.map((link) => {
-                const active = isActiveLink(link.url);
-                return (
-                  <NavigationMenuItem key={link.name}>
-                    <NavigationMenuLink asChild>
-                      <Link
-                        to={link.url}
-                        className={`${navLinkBaseClass} ${active ? 'text-foreground after:scale-x-100' : ''}`}
-                        aria-current={active ? 'page' : undefined}
-                      >
-                        {link.name}
-                      </Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                );
-              })}
+            {/* Desktop Navigation */}
+            <NavigationMenu className="ml-6 hidden md:flex items-center">
+              <NavigationMenuList className="flex items-center gap-1">
+                {mainNavLinks.map((link) => {
+                  const active = isActiveLink(link.url);
+                  return (
+                    <NavigationMenuItem key={link.name}>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to={link.url}
+                          className={`${navLinkBaseClass} ${active ? 'text-foreground after:scale-x-100' : ''}`}
+                          aria-current={active ? 'page' : undefined}
+                        >
+                          {link.name}
+                        </Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  );
+                })}
+              </NavigationMenuList>
+              <NavigationMenuIndicator className="hidden md:flex" />
+            </NavigationMenu>
 
-            </NavigationMenuList>
-            <NavigationMenuIndicator className="hidden md:flex" />
-          </NavigationMenu>
-
-          {/* Mobile Menu Button */}
-          <div className="flex items-center md:hidden">
+            {/* Mobile Menu Button */}
+            <div className="flex items-center md:hidden">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-muted-foreground">
@@ -570,209 +569,254 @@ export default function Layout({ children, currentPageName }) {
                 </SheetContent>
               </Sheet>
             </div>
-        </nav>
-      </header>
+          </nav>
+        </header>
 
-      {/* Main Content */}
-      <main className="flex-1 bg-background printable-content">
-        {/* NEW: Fallback H1 (only shows if page has no H1 and is one of the designated fallback pages) */}
-        {needsFallbackH1 && fallbackH1Pages.has(currentPageName) && (
-          <div className="non-printable border-b border-border bg-card">
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-              <Heading as="h1" size="h1" weight="bold" className="text-foreground">
-                {getFallbackH1Text()}
-              </Heading>
+        {/* Main Content */}
+        <main className="flex-1 bg-background printable-content">
+          {/* NEW: Fallback H1 (only shows if page has no H1 and is one of the designated fallback pages) */}
+          {needsFallbackH1 && fallbackH1Pages.has(currentPageName) && (
+            <div className="non-printable border-b border-border bg-card">
+              <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <Heading as="h1" size="h1" weight="bold" className="text-foreground">
+                  {getFallbackH1Text()}
+                </Heading>
+              </div>
             </div>
-          </div>
-        )}
-        {children}
-      </main>
+          )}
+          {children}
+        </main>
 
-      {/* NEW: Global collapsed calculator index to add strong internal linking */}
-      <CalculatorIndex />
+        {/* NEW: Global collapsed calculator index to add strong internal linking */}
+        <CalculatorIndex />
 
-      {/* Footer */}
-      <footer className="mt-16 border-t border-border bg-background non-printable">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-5 gap-8">
-            <div className="md:col-span-1">
-              <Link to={createPageUrl('Home')} className="flex items-center space-x-2 mb-4">
-                <img
-                  src="https://www.calcmymoney.co.uk/images/logo-high-res.png"
-                  alt="Calculate My Money Logo"
-                  className="h-8 w-8"
-                />
-                <span className="text-xl font-bold text-foreground">Calculate My Money</span>
-              </Link>
-              <p className="text-sm text-muted-foreground">
-                Free UK financial calculators for salary, tax, mortgages, pensions, budgets and
-                investments.
-              </p>
-            </div>
+        {/* Footer */}
+        <footer className="mt-16 border-t border-border bg-background non-printable">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-5 gap-8">
+              <div className="md:col-span-1">
+                <Link to={createPageUrl('Home')} className="flex items-center space-x-2 mb-4">
+                  <img
+                    src="https://www.calcmymoney.co.uk/logo-high-res.png"
+                    alt="Calculate My Money Logo"
+                    className="h-8 w-8"
+                  />
+                  <span className="text-xl font-bold text-foreground">Calculate My Money</span>
+                </Link>
+                <p className="text-sm text-muted-foreground">
+                  Free UK financial calculators for salary, tax, mortgages, pensions, budgets and
+                  investments.
+                </p>
+              </div>
 
-            <div>
-              <h4 className="mb-4 font-semibold text-foreground">Popular Calculators</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    to={createPageUrl('salary-calculator-uk')}
-                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
-                  >
-                    Salary Calculator
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to={createPageUrl('mortgage-calculator')}
-                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
-                  >
-                    Mortgage Calculator
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to={createPageUrl('budget-calculator')}
-                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
-                  >
-                    Budget Planner
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to={createPageUrl('compound-interest-calculator')}
-                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
-                  >
-                    Compound Interest
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to={createPageUrl('pension-calculator')}
-                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
-                  >
-                    Pension Calculator
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 font-semibold text-foreground">Categories</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                {calculatorCategories.slice(0, 6).map((category) => (
-                  <li key={category.slug}>
-                    {isHomePage ? (
-                      <a
-                        href={`#${category.slug}`}
-                        className="text-muted-foreground transition-colors hover:text-primary hover:underline"
-                      >
-                        {category.name}
-                      </a>
-                    ) : (
-                      <Link
-                        to={`${createPageUrl('Home')}#${category.slug}`}
-                        className="text-muted-foreground transition-colors hover:text-primary hover:underline"
-                      >
-                        {category.name}
-                      </Link>
-                    )}
+              <div>
+                <h4 className="mb-4 font-semibold text-foreground">Popular Calculators</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <Link
+                      to={createPageUrl('salary-calculator-uk')}
+                      className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                    >
+                      Salary Calculator
+                    </Link>
                   </li>
-                ))}
-              </ul>
+                  <li>
+                    <Link
+                      to={createPageUrl('mortgage-calculator')}
+                      className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                    >
+                      Mortgage Calculator
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('budget-calculator')}
+                      className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                    >
+                      Budget Planner
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('compound-interest-calculator')}
+                      className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                    >
+                      Compound Interest
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('pension-calculator')}
+                      className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                    >
+                      Pension Calculator
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="mb-4 font-semibold text-foreground">Categories</h4>
+                <ul className="space-y-2 text-muted-foreground">
+                  {calculatorCategories.slice(0, 6).map((category) => (
+                    <li key={category.slug}>
+                      {isHomePage ? (
+                        <a
+                          href={`#${category.slug}`}
+                          className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                        >
+                          {category.name}
+                        </a>
+                      ) : (
+                        <Link
+                          to={`${createPageUrl('Home')}#${category.slug}`}
+                          className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                        >
+                          {category.name}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="mb-4 font-semibold text-foreground">Information</h4>
+                <ul className="space-y-2 text-muted-foreground">
+                  <li>
+                    <Link
+                      to={createPageUrl('About')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      About
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('methodology')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Methodology
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('blog')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Blog
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('resources')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Resources
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('uk-government-budget')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      UK Budget Analysis
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('job-salaries')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Job Salaries
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('cost-of-living')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Cost of Living
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('uk-financial-stats')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Financial Stats
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('contact')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Contact Us
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('sitemap')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Sitemap
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('link-to-us')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Link to Us
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="mb-4 font-semibold text-foreground">Legal</h4>
+                <ul className="space-y-2 text-muted-foreground">
+                  <li>
+                    <Link
+                      to={createPageUrl('privacy-policy')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Privacy Policy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('cookie-policy')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Cookie Policy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('terms-of-service')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Terms of Service
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to={createPageUrl('disclaimer')}
+                      className="transition-colors hover:text-primary"
+                    >
+                      Disclaimer
+                    </Link>
+                  </li>
+                </ul>
+              </div>
             </div>
 
-            <div>
-              <h4 className="mb-4 font-semibold text-foreground">Information</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>
-                  <Link to={createPageUrl('About')} className="transition-colors hover:text-primary">
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('methodology')} className="transition-colors hover:text-primary">
-                    Methodology
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('blog')} className="transition-colors hover:text-primary">
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('resources')} className="transition-colors hover:text-primary">
-                    Resources
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('uk-government-budget')} className="transition-colors hover:text-primary">
-                    UK Budget Analysis
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('job-salaries')} className="transition-colors hover:text-primary">
-                    Job Salaries
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('cost-of-living')} className="transition-colors hover:text-primary">
-                    Cost of Living
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('uk-financial-stats')} className="transition-colors hover:text-primary">
-                    Financial Stats
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('contact')} className="transition-colors hover:text-primary">
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('sitemap')} className="transition-colors hover:text-primary">
-                    Sitemap
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('link-to-us')} className="transition-colors hover:text-primary">
-                    Link to Us
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-4 font-semibold text-foreground">Legal</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>
-                  <Link to={createPageUrl('privacy-policy')} className="transition-colors hover:text-primary">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('cookie-policy')} className="transition-colors hover:text-primary">
-                    Cookie Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('terms-of-service')} className="transition-colors hover:text-primary">
-                    Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <Link to={createPageUrl('disclaimer')} className="transition-colors hover:text-primary">
-                    Disclaimer
-                  </Link>
-                </li>
-              </ul>
+            <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
+              <p>&copy; 2025 Calculate My Money - UK Financial Calculator Tools</p>
             </div>
           </div>
-
-          <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Calculate My Money - UK Financial Calculator Tools</p>
-          </div>
-        </div>
-      </footer>
+        </footer>
 
         <CookieConsentBanner />
       </div>
