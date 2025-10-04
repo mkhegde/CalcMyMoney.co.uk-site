@@ -169,6 +169,11 @@ export default function Layout({ children, currentPageName }) {
       twitterDescription: pageData.twitterDescription || description,
       twitterImage: pageData.twitterImage || pageData.ogImage || defaultOgImage,
       twitterImageAlt: pageData.twitterImageAlt || pageData.ogImageAlt || defaultOgAlt,
+      articlePublishedTime: pageData.publishedTime,
+      articleModifiedTime: pageData.modifiedTime || pageData.publishedTime,
+      articleSection: pageData.section,
+      articleAuthor: pageData.author,
+      articleTags: pageData.tags,
       jsonLd,
     };
   }, [canonicalUrl, jsonLd, pageData]);

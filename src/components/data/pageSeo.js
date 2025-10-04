@@ -18,16 +18,52 @@ export const pageSeo = {
     title: 'Smart Money-Saving Tips for UK Families | Calculate My Money',
     description:
       'Discover practical tips for UK families to save money on groceries, energy bills, and everyday expenses. A complete guide to cut costs and budget effectively.',
+    ogType: 'article',
+    ogImage:
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    ogImageAlt: 'A family happily unpacking groceries in a bright, modern kitchen.',
+    twitterImage:
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    twitterImageAlt: 'A family happily unpacking groceries in a bright, modern kitchen.',
+    publishedTime: '2023-10-26T08:00:00+00:00',
+    modifiedTime: '2023-10-26T08:00:00+00:00',
+    author: 'CalcMyMoney Team',
+    section: 'Money Saving',
+    tags: ['Money Saving', 'Family Budgeting', 'Energy Bills', 'UK Finance'],
   },
   BlogDebtRepaymentStrategies: {
     title: 'Debt Snowball vs. Avalanche in the UK | Calculate My Money',
     description:
       'Compare the Debt Snowball and Debt Avalanche methods. Find the best strategy to pay off your debts in the UK, from credit cards to loans.',
+    ogType: 'article',
+    ogImage:
+      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    ogImageAlt: 'Person organizing financial documents and calculating debt payments',
+    twitterImage:
+      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    twitterImageAlt: 'Person organizing financial documents and calculating debt payments',
+    publishedTime: '2023-10-24T08:00:00+00:00',
+    modifiedTime: '2023-10-24T08:00:00+00:00',
+    author: 'CalcMyMoney Team',
+    section: 'Debt Management',
+    tags: ['Debt Repayment', 'Personal Finance', 'UK Debt Advice', 'Budgeting'],
   },
   BlogFinancialPsychology: {
     title: 'Your Relationship with Money: A Guide to Financial Psychology',
     description:
       'Understand the psychology behind your spending and saving habits. Learn how your money mindset impacts your financial health and future prosperity in the UK.',
+    ogType: 'article',
+    ogImage:
+      'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    ogImageAlt: 'Person meditating with financial symbols and growth charts in the background',
+    twitterImage:
+      'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    twitterImageAlt: 'Person meditating with financial symbols and growth charts in the background',
+    publishedTime: '2023-10-22T08:00:00+00:00',
+    modifiedTime: '2023-10-22T08:00:00+00:00',
+    author: 'CalcMyMoney Team',
+    section: 'Mindset',
+    tags: ['Financial Psychology', 'Money Mindset', 'Behavioural Finance', 'Personal Finance'],
   },
   Contact: {
     title: 'Contact Us | Calculate My Money',
