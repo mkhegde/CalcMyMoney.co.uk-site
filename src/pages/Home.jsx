@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Search, Calculator, TrendingUp, Users, ExternalLink } from 'lucide-react';
@@ -50,12 +50,14 @@ const homepageFaqs = [
 ];
 
 export default function Home() {
-  const { search } = useLocation();
+  const location = useLocation();
+  const { search, hash } = location;
   const hasQuery = new URLSearchParams(search).has('q');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showAllCalculators, setShowAllCalculators] = useState(false);
   const [pendingScrollSlug, setPendingScrollSlug] = useState(null);
+  const lastHandledHashRef = useRef(null);
   const { setSeo, resetSeo } = useSeo();
 
   const stats = getCalculatorStats();
@@ -102,7 +104,7 @@ export default function Home() {
       description: 'Calculate take-home pay, tax, and more.',
     },
     {
-      title: 'Tax Tools',
+      title: 'Tax Calculators',
       icon: PoundSterling,
       link: '#tax-calculators',
       description: 'Tools for income tax, NI, VAT, and CGT.',
@@ -158,6 +160,26 @@ export default function Home() {
     }
     setPendingScrollSlug(null);
   }, [showAllCalculators, pendingScrollSlug]);
+
+  useEffect(() => {
+    if (!hash) {
+      lastHandledHashRef.current = null;
+      return;
+    }
+
+    const slug = hash.replace(/^#/, '').trim();
+    if (!slug) {
+      return;
+    }
+
+    if (lastHandledHashRef.current === slug) {
+      return;
+    }
+
+    lastHandledHashRef.current = slug;
+    setShowAllCalculators(true);
+    setPendingScrollSlug(slug);
+  }, [hash]);
 
   return (
     <div className="bg-background text-foreground">
