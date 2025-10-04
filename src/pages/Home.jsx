@@ -17,6 +17,7 @@ import { prefetchPage } from '@/utils/prefetchPage';
 import FAQSection from '../components/calculators/FAQSection';
 import { HandCoins, PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
 import { useSeo } from '@/components/seo/SeoContext';
+import Heading from '@/components/common/Heading';
 
 const homepageFaqs = [
   {
@@ -147,10 +148,10 @@ export default function Home() {
       <div className="border-b border-border/70 bg-hero bg-hero-pattern">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="text-center max-w-4xl mx-auto text-hero-foreground">
-            <h1 className="text-4xl md:text-5xl font-bold text-hero-foreground mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-hero-foreground mb-4">
               Free UK Salary, Tax & Mortgage Calculators
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
+            </Heading>
+            <p className="lead text-muted-foreground mb-8">
               Use our fast, accurate UK calculators to estimate take-home pay, tax & NI, mortgage
               repayments, and savings growth for the 2025/26 tax year. Start with salary, tax,
               mortgage or finance tools below.
@@ -241,9 +242,13 @@ export default function Home() {
                 <div className="rounded-full bg-pill p-3 text-pill-foreground">
                   <card.icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
+                <Heading
+                  as="h3"
+                  size="h4"
+                  className="text-foreground transition-colors group-hover:text-primary"
+                >
                   {card.title}
-                </h3>
+                </Heading>
               </div>
               <p className="text-sm text-muted-foreground">{card.description}</p>
             </a>
@@ -254,11 +259,16 @@ export default function Home() {
       {/* Featured/Popular Calculators */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-            <Calculator className="mr-2 inline h-9 w-9 text-primary" />
+          <Heading
+            as="h2"
+            size="h2"
+            weight="bold"
+            className="mb-4 flex items-center justify-center gap-3 text-foreground"
+          >
+            <Calculator className="h-9 w-9 text-primary" />
             Popular Calculators
-          </h2>
-          <p className="text-muted-foreground">
+          </Heading>
+          <p className="lead text-muted-foreground">
             The most used financial calculators on our platform
           </p>
         </div>
@@ -274,9 +284,13 @@ export default function Home() {
             >
               <div className="flex items-center gap-3 mb-2">
                 <calc.icon className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-foreground transition-colors group-hover:text-primary">
+                <Heading
+                  as="h3"
+                  size="h4"
+                  className="text-foreground transition-colors group-hover:text-primary"
+                >
                   {calc.name}
-                </h3>
+                </Heading>
               </div>
               <p className="mb-2 text-sm text-muted-foreground">{calc.description}</p>
               <p className="text-xs text-neutral-soft-foreground">{calc.category}</p>
@@ -288,9 +302,9 @@ export default function Home() {
       {/* Homepage FAQ Section */}
       <div className="bg-background py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
+          <Heading as="h2" size="h2" weight="bold" underline className="text-foreground text-center mb-10">
             Common Questions
-          </h2>
+          </Heading>
           <FAQSection faqs={homepageFaqs} />
         </div>
       </div>
@@ -299,10 +313,10 @@ export default function Home() {
       <div className="bg-neutral-soft py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+            <Heading as="h2" size="h2" weight="bold" underline className="text-foreground mb-4">
               Complete Calculator Directory
-            </h2>
-            <p className="mb-6 text-muted-foreground">
+            </Heading>
+            <p className="mb-6 lead text-muted-foreground">
               Browse all {stats.total} financial calculators organized by category
             </p>
             <button
@@ -322,9 +336,9 @@ export default function Home() {
                   <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
                     <category.icon className="h-8 w-8 text-primary" />
                     <div>
-                      <h3 className="text-2xl font-bold text-foreground">
+                      <Heading as="h3" size="h3" weight="bold" className="text-foreground">
                         {category.name}
-                      </h3>
+                      </Heading>
                       <p className="text-muted-foreground">{category.description}</p>
                     </div>
                   </div>
@@ -333,9 +347,13 @@ export default function Home() {
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {category.subCategories.map((subCategory) => (
                       <div key={subCategory.name} className="space-y-3">
-                        <h4 className="border-l-4 border-primary pl-3 text-lg font-semibold text-foreground">
+                        <Heading
+                          as="h4"
+                          size="h4"
+                          className="border-l-4 border-primary pl-3 text-foreground"
+                        >
                           {subCategory.name}
-                        </h4>
+                        </Heading>
                         <div className="space-y-2 pl-3">
                           {subCategory.calculators
                             .filter((calc) => showAllCalculators || calc.status === 'active')
@@ -375,9 +393,9 @@ export default function Home() {
 
           {/* Quick Stats Footer */}
           <div className="mt-16 rounded-lg border border-card-muted bg-card p-8 text-center">
-            <h3 className="text-xl font-semibold text-foreground mb-4">
+            <Heading as="h3" size="h3" className="text-foreground mb-4">
               Why Choose Our Calculators?
-            </h3>
+            </Heading>
             <div className="grid md:grid-cols-3 gap-6 text-sm">
               <div>
                 <div className="mb-2 text-3xl font-bold text-primary">{stats.active}</div>
