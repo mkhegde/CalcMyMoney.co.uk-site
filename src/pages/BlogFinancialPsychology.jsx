@@ -1,10 +1,15 @@
 import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ArrowLeft, Calendar, User, Clock, Heart, Brain, Target } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Clock, Brain, Target } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useSeo } from '@/components/seo/SeoContext';
+
+const createUnsplashUrl = (baseUrl, params, width) => `${baseUrl}?${params}&w=${width}`;
+
+const createUnsplashSrcSet = (baseUrl, params, widths) =>
+  widths.map((width) => `${createUnsplashUrl(baseUrl, params, width)} ${width}w`).join(', ');
 
 export default function BlogFinancialPsychology() {
   const post = useMemo(
@@ -17,9 +22,60 @@ export default function BlogFinancialPsychology() {
       publishedTime: '2023-10-22T08:00:00+00:00',
       modifiedTime: '2023-10-22T08:00:00+00:00',
       imageUrl:
-        'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       imageAlt: 'Person meditating with financial symbols and growth charts in the background',
       tags: ['Financial Psychology', 'Money Mindset', 'Behavioural Finance', 'Personal Finance'],
+    }),
+    []
+  );
+  const heroImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1280,
+      height: 853,
+      srcSetWidths: [480, 768, 1024, 1280],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 75vw, 896px',
+    }),
+    []
+  );
+  const childhoodMoneyImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 640px',
+      alt: "Child's hands holding coins, representing early money experiences",
+    }),
+    []
+  );
+  const breakingBeliefsImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1551836022-4c4c79ecde51',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 640px',
+      alt: 'Person breaking free from chains, representing breaking limiting money beliefs',
+    }),
+    []
+  );
+  const celebrationImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1521791136064-7986c2920216',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 640px',
+      alt: 'Person celebrating success with arms raised against sunset',
     }),
     []
   );
@@ -121,8 +177,14 @@ export default function BlogFinancialPsychology() {
           </header>
 
           <img
-            src={post.imageUrl}
+            src={createUnsplashUrl(heroImage.baseUrl, heroImage.params, heroImage.width)}
+            srcSet={createUnsplashSrcSet(heroImage.baseUrl, heroImage.params, heroImage.srcSetWidths)}
+            sizes={heroImage.sizes}
             alt={post.imageAlt}
+            width={heroImage.width}
+            height={heroImage.height}
+            loading="eager"
+            decoding="async"
             className="w-full h-auto max-h-[400px] object-cover rounded-lg mb-8"
           />
 
@@ -172,8 +234,22 @@ export default function BlogFinancialPsychology() {
 
             <div className="my-8">
               <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Child's hands holding coins, representing early money experiences"
+                src={createUnsplashUrl(
+                  childhoodMoneyImage.baseUrl,
+                  childhoodMoneyImage.params,
+                  childhoodMoneyImage.width
+                )}
+                srcSet={createUnsplashSrcSet(
+                  childhoodMoneyImage.baseUrl,
+                  childhoodMoneyImage.params,
+                  childhoodMoneyImage.srcSetWidths
+                )}
+                sizes={childhoodMoneyImage.sizes}
+                alt={childhoodMoneyImage.alt}
+                width={childhoodMoneyImage.width}
+                height={childhoodMoneyImage.height}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-64 object-cover rounded-lg"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">
@@ -302,8 +378,22 @@ export default function BlogFinancialPsychology() {
 
             <div className="my-8">
               <img
-                src="https://images.unsplash.com/photo-1551836022-4c4c79ecde51?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Person breaking free from chains, representing breaking limiting money beliefs"
+                src={createUnsplashUrl(
+                  breakingBeliefsImage.baseUrl,
+                  breakingBeliefsImage.params,
+                  breakingBeliefsImage.width
+                )}
+                srcSet={createUnsplashSrcSet(
+                  breakingBeliefsImage.baseUrl,
+                  breakingBeliefsImage.params,
+                  breakingBeliefsImage.srcSetWidths
+                )}
+                sizes={breakingBeliefsImage.sizes}
+                alt={breakingBeliefsImage.alt}
+                width={breakingBeliefsImage.width}
+                height={breakingBeliefsImage.height}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-64 object-cover rounded-lg"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">
@@ -377,8 +467,22 @@ export default function BlogFinancialPsychology() {
 
             <div className="my-8">
               <img
-                src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Person celebrating success with arms raised against sunset"
+                src={createUnsplashUrl(
+                  celebrationImage.baseUrl,
+                  celebrationImage.params,
+                  celebrationImage.width
+                )}
+                srcSet={createUnsplashSrcSet(
+                  celebrationImage.baseUrl,
+                  celebrationImage.params,
+                  celebrationImage.srcSetWidths
+                )}
+                sizes={celebrationImage.sizes}
+                alt={celebrationImage.alt}
+                width={celebrationImage.width}
+                height={celebrationImage.height}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-64 object-cover rounded-lg"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">

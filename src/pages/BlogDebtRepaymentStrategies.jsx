@@ -6,6 +6,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useSeo } from '@/components/seo/SeoContext';
 
+const createUnsplashUrl = (baseUrl, params, width) => `${baseUrl}?${params}&w=${width}`;
+
+const createUnsplashSrcSet = (baseUrl, params, widths) =>
+  widths.map((width) => `${createUnsplashUrl(baseUrl, params, width)} ${width}w`).join(', ');
+
 export default function BlogDebtRepaymentStrategies() {
   const post = useMemo(
     () => ({
@@ -17,9 +22,47 @@ export default function BlogDebtRepaymentStrategies() {
       publishedTime: '2023-10-24T08:00:00+00:00',
       modifiedTime: '2023-10-24T08:00:00+00:00',
       imageUrl:
-        'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       imageAlt: 'Person organizing financial documents and calculating debt payments',
       tags: ['Debt Repayment', 'Personal Finance', 'UK Debt Advice', 'Budgeting'],
+    }),
+    []
+  );
+  const heroImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1280,
+      height: 853,
+      srcSetWidths: [480, 768, 1024, 1280],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 75vw, 896px',
+    }),
+    []
+  );
+  const avalancheImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 640px',
+      alt: 'Calculator and financial documents showing debt reduction strategy planning',
+    }),
+    []
+  );
+  const successImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 640px',
+      alt: 'Person celebrating financial success with calculator and paperwork',
     }),
     []
   );
@@ -121,8 +164,14 @@ export default function BlogDebtRepaymentStrategies() {
           </header>
 
           <img
-            src={post.imageUrl}
+            src={createUnsplashUrl(heroImage.baseUrl, heroImage.params, heroImage.width)}
+            srcSet={createUnsplashSrcSet(heroImage.baseUrl, heroImage.params, heroImage.srcSetWidths)}
+            sizes={heroImage.sizes}
             alt={post.imageAlt}
+            width={heroImage.width}
+            height={heroImage.height}
+            loading="eager"
+            decoding="async"
             className="w-full h-auto max-h-[400px] object-cover rounded-lg mb-8"
           />
 
@@ -164,8 +213,22 @@ export default function BlogDebtRepaymentStrategies() {
 
             <div className="my-8">
               <img
-                src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Calculator and financial documents showing debt reduction strategy planning"
+                src={createUnsplashUrl(
+                  avalancheImage.baseUrl,
+                  avalancheImage.params,
+                  avalancheImage.width
+                )}
+                srcSet={createUnsplashSrcSet(
+                  avalancheImage.baseUrl,
+                  avalancheImage.params,
+                  avalancheImage.srcSetWidths
+                )}
+                sizes={avalancheImage.sizes}
+                alt={avalancheImage.alt}
+                width={avalancheImage.width}
+                height={avalancheImage.height}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-64 object-cover rounded-lg"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">
@@ -308,8 +371,22 @@ export default function BlogDebtRepaymentStrategies() {
 
             <div className="my-8">
               <img
-                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Person celebrating financial success with calculator and paperwork"
+                src={createUnsplashUrl(
+                  successImage.baseUrl,
+                  successImage.params,
+                  successImage.width
+                )}
+                srcSet={createUnsplashSrcSet(
+                  successImage.baseUrl,
+                  successImage.params,
+                  successImage.srcSetWidths
+                )}
+                sizes={successImage.sizes}
+                alt={successImage.alt}
+                width={successImage.width}
+                height={successImage.height}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-64 object-cover rounded-lg"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">
