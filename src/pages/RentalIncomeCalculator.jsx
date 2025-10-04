@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import ExportActions from '../components/calculators/ExportActions';
 import { TooltipProvider } from '@/components/ui/tooltip'; // New import for TooltipProvider
+import Heading from '@/components/common/Heading';
 import {
   Accordion,
   AccordionContent,
