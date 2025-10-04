@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, User, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useSeo } from '@/components/seo/SeoContext';
+import Heading from '@/components/common/Heading';
 
 const createUnsplashUrl = (baseUrl, params, width) => `${baseUrl}?${params}&w=${width}`;
 
@@ -126,11 +127,11 @@ export default function BlogSmartMoneySavingTips() {
   }, [articleJsonLd, defaults?.jsonLd, post, resetSeo, setSeo]);
 
   return (
-    <div className="bg-white dark:bg-gray-900 py-12">
+    <div className="bg-background py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link
           to={createPageUrl('Blog')}
-          className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline mb-8"
+          className="mb-8 inline-flex items-center text-primary hover:underline"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to all articles
@@ -138,13 +139,13 @@ export default function BlogSmartMoneySavingTips() {
 
         <article>
           <header className="mb-8">
-            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium dark:bg-blue-900/50 dark:text-blue-300">
+            <span className="bg-pill text-pill-foreground px-3 py-1 rounded-full text-sm font-medium">
               {post.category}
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mt-4 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="mt-4 mb-4 text-foreground">
               {post.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
+            </Heading>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 <span>{post.author}</span>
@@ -172,8 +173,8 @@ export default function BlogSmartMoneySavingTips() {
             className="w-full h-auto max-h-[400px] object-cover rounded-lg mb-8"
           />
 
-          <div className="prose prose-lg dark:prose-invert max-w-none mx-auto text-gray-700 dark:text-gray-300">
-            <p className="lead text-xl">
+          <div className="prose prose-lg dark:prose-invert max-w-none mx-auto text-muted-foreground">
+            <p className="lead">
               The cost of living in the UK continues to be a hot topic, with rising prices hitting
               household budgets hard. This guide focuses on two of the biggest drains on family
               finances – groceries and energy bills – offering actionable tips specifically for UK
@@ -182,7 +183,7 @@ export default function BlogSmartMoneySavingTips() {
 
             <Separator className="my-8" />
 
-            <h2>Winning the Grocery Game: Strategies for the Supermarket</h2>
+            <h2 className="heading-2">Winning the Grocery Game: Strategies for the Supermarket</h2>
             <p>
               Groceries are often one of the largest flexible expenses for families. Small changes
               here can lead to significant savings.
@@ -235,7 +236,7 @@ export default function BlogSmartMoneySavingTips() {
               </p>
             </div>
 
-            <h2>Taming the Energy Beast: Heating, Lighting & Appliances</h2>
+            <h2 className="heading-2">Taming the Energy Beast: Heating, Lighting &amp; Appliances</h2>
             <p>With fluctuating energy prices, making your home more energy-efficient is key.</p>
             <ul>
               <li>
@@ -283,7 +284,7 @@ export default function BlogSmartMoneySavingTips() {
               </p>
             </div>
 
-            <h2>Quick Wins: Small Changes, Big Impact</h2>
+            <h2 className="heading-2">Quick Wins: Small Changes, Big Impact</h2>
             <p>Sometimes the smallest adjustments yield the greatest results:</p>
             <ul>
               <li>
@@ -306,7 +307,7 @@ export default function BlogSmartMoneySavingTips() {
 
             <Separator className="my-8" />
 
-            <h2>Making it Sustainable: The Long Game</h2>
+            <h2 className="heading-2">Making it Sustainable: The Long Game</h2>
             <p>
               The key to lasting financial change isn't dramatic overnight transformations – it's
               building sustainable habits that compound over time. Start with one or two changes
@@ -316,9 +317,9 @@ export default function BlogSmartMoneySavingTips() {
 
             <Card className="my-8 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700">
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-3">
+                <Heading as="h3" size="h4" className="mb-3 text-green-800 dark:text-green-200">
                   💡 Pro Tip: Track Your Progress
-                </h3>
+                </Heading>
                 <p className="text-green-700 dark:text-green-300">
                   Use our{' '}
                   <Link to={createPageUrl('BudgetCalculator')} className="underline font-medium">
