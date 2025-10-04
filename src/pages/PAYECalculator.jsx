@@ -254,7 +254,7 @@ export default function PAYECalculator() {
             <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               PAYE Tax &amp; National Insurance Calculator (2025/26)
             </Heading>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <p className="lead text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Calculate your take-home pay after income tax and National Insurance using the latest
               UK rates for England, Wales, Northern Ireland and Scotland.
             </p>
@@ -280,7 +280,7 @@ export default function PAYECalculator() {
           <div className="lg:col-span-2 non-printable">
             {/* Common scenarios */}
             <div className="mb-4 space-y-2">
-              <p className="text-sm text-gray-500">Try a quick scenario:</p>
+              <p className="body text-gray-500">Try a quick scenario:</p>
               <div className="flex flex-wrap gap-2">
                 {[
                   { label: 'New graduate (£28k)', salary: 28000, loc: 'england' },
@@ -347,7 +347,7 @@ export default function PAYECalculator() {
                     onChange={(e) => setTaxCode(e.target.value)}
                     placeholder="e.g. 1257L"
                   />
-                  <p className="text-xs text-gray-500">Found on your payslip or P60</p>
+                  <p className="caption text-gray-500">Found on your payslip or P60</p>
                 </div>
 
                 <div className="space-y-2">
@@ -424,7 +424,7 @@ export default function PAYECalculator() {
                     <div className="text-4xl font-bold text-green-900">
                       £{safeGBP(results.netPerPeriod)}
                     </div>
-                    <p className="text-sm text-green-700">
+                    <p className="body text-green-700">
                       Annual: £
                       {(results.netSalary ?? 0).toLocaleString('en-GB', {
                         maximumFractionDigits: 0,
@@ -447,25 +447,25 @@ export default function PAYECalculator() {
                       return (
                         <div className="grid md:grid-cols-3 gap-4">
                           <div className="p-4 bg-gray-50 rounded-lg">
-                            <p className="text-xs text-gray-500">Effective tax + NI rate</p>
+                            <p className="caption text-gray-500">Effective tax + NI rate</p>
                             <p className="text-2xl font-bold text-gray-900">
                               {safeFixed(eff * 100, 1)}%
                             </p>
-                            <p className="text-xs text-gray-500">Total deductions / gross</p>
+                            <p className="caption text-gray-500">Total deductions / gross</p>
                           </div>
                           <div className="p-4 bg-gray-50 rounded-lg">
-                            <p className="text-xs text-gray-500">Marginal tax rate</p>
+                            <p className="caption text-gray-500">Marginal tax rate</p>
                             <p className="text-2xl font-bold text-gray-900">
                               {safeFixed((taxMarginal || 0) * 100, 0)}%
                             </p>
-                            <p className="text-xs text-gray-500">On your next £1 (income tax)</p>
+                            <p className="caption text-gray-500">On your next £1 (income tax)</p>
                           </div>
                           <div className="p-4 bg-gray-50 rounded-lg">
-                            <p className="text-xs text-gray-500">Combined marginal</p>
+                            <p className="caption text-gray-500">Combined marginal</p>
                             <p className="text-2xl font-bold text-gray-900">
                               {safeFixed((combined || 0) * 100, 0)}%
                             </p>
-                            <p className="text-xs text-gray-500">Income tax + NI on next £1</p>
+                            <p className="caption text-gray-500">Income tax + NI on next £1</p>
                           </div>
                         </div>
                       );
@@ -476,7 +476,7 @@ export default function PAYECalculator() {
                 {/* Threshold callouts */}
                 {Number(String(grossSalary).replace(/[, ]+/g, '')) > 100000 && (
                   <Card className="border-amber-300 bg-amber-50">
-                    <CardContent className="p-4 text-sm text-amber-900">
+                    <CardContent className="p-4 body text-amber-900">
                       Over £100,000 your Personal Allowance is tapered. For every £2 above £100k,
                       you lose £1 of allowance until it reaches £0. That’s why your effective rate
                       rises sharply here.
@@ -485,7 +485,7 @@ export default function PAYECalculator() {
                 )}
                 {Number(String(grossSalary).replace(/[, ]+/g, '')) <= 12570 && hasCalculated && (
                   <Card className="border-blue-200 bg-blue-50">
-                    <CardContent className="p-4 text-sm text-blue-900">
+                    <CardContent className="p-4 body text-blue-900">
                       You’re within the Personal Allowance. You won’t pay income tax, but NI may
                       still apply above the NI thresholds.
                     </CardContent>
@@ -499,21 +499,21 @@ export default function PAYECalculator() {
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="text-center p-4 bg-red-50 rounded-lg">
-                        <p className="text-sm text-red-600">Annual Tax</p>
+                        <p className="body text-red-600">Annual Tax</p>
                         <p className="text-xl font-bold text-red-800">
                           £
                           {(results.taxAmount ?? 0).toLocaleString('en-GB', {
                             maximumFractionDigits: 0,
                           })}
                         </p>
-                        <p className="text-xs text-red-500">
+                        <p className="caption text-red-500">
                           {payFrequency}: £{safeFixed(results.taxPerPeriod)}
                         </p>
                       </div>
                       {(results.taxBreakdown ?? []).map((bracket, index) => (
                         <div
                           key={index}
-                          className="flex justify-between text-sm p-2 border-l-2 border-red-300"
+                          className="flex justify-between body p-2 border-l-2 border-red-300"
                         >
                           <span>
                             {bracket?.name} ({safeFixed(bracket?.rate, 0)}%)
@@ -530,21 +530,21 @@ export default function PAYECalculator() {
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-blue-600">Annual NI</p>
+                        <p className="body text-blue-600">Annual NI</p>
                         <p className="text-xl font-bold text-blue-800">
                           £
                           {(results.niAmount ?? 0).toLocaleString('en-GB', {
                             maximumFractionDigits: 0,
                           })}
                         </p>
-                        <p className="text-xs text-blue-500">
+                        <p className="caption text-blue-500">
                           {payFrequency}: £{safeFixed(results.niPerPeriod)}
                         </p>
                       </div>
                       {(results.niBreakdown ?? []).map((ni, index) => (
                         <div
                           key={index}
-                          className="flex justify-between text-sm p-2 border-l-2 border-blue-300"
+                          className="flex justify-between body p-2 border-l-2 border-blue-300"
                         >
                           <span>Class 1 NI ({safeFixed(ni?.rate, 0)}%)</span>
                           <span>£{safeFixed(ni?.amount, 0)}</span>
@@ -563,7 +563,7 @@ export default function PAYECalculator() {
                     {(() => {
                       const annualSalary = Number(String(grossSalary).replace(/[, ]+/g, '')) || 0;
                       if (!annualSalary)
-                        return <p className="text-sm text-gray-500">Enter a salary to compare.</p>;
+                        return <p className="body text-gray-500">Enter a salary to compare.</p>;
                       const rUK = calculateResults({
                         annualSalary,
                         location: 'england',
@@ -577,7 +577,7 @@ export default function PAYECalculator() {
                         payFrequency,
                       });
                       return (
-                        <table className="min-w-[520px] text-sm">
+                        <table className="min-w-[520px] body">
                           <thead>
                             <tr className="text-left border-b">
                               <th className="py-2 pr-4">Metric</th>
@@ -663,7 +663,7 @@ export default function PAYECalculator() {
             <CardHeader>
               <CardTitle>How this calculator works (2025/26)</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm leading-6 text-gray-700">
+            <CardContent className="body leading-6 text-gray-700">
               <ul className="list-disc pl-5 space-y-2">
                 <li>
                   Tax year: 6 April 2025 – 5 April 2026. Bands and rates reflect the latest public
