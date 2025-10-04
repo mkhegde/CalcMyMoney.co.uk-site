@@ -13,6 +13,7 @@ import { pageSeo, defaultOgImage, defaultOgAlt } from '../components/data/pageSe
 import CalculatorIndex from '../components/general/CalculatorIndex';
 import SeoHead from '@/components/seo/SeoHead';
 import { SeoProvider } from '@/components/seo/SeoContext';
+import Container from '@/components/common/Container';
 
 const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
 
@@ -416,7 +417,7 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-sm non-printable">
-        <nav className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Container as="nav" className="flex h-16 items-center justify-between" paddingY="none">
           <div className="flex-shrink-0">
             <Link to={createPageUrl('Home')} className="flex items-center space-x-2">
                              {' '}
@@ -535,7 +536,7 @@ export default function Layout({ children, currentPageName }) {
                 </SheetContent>
               </Sheet>
             </div>
-        </nav>
+        </Container>
       </header>
 
       {/* Main Content */}
@@ -543,11 +544,11 @@ export default function Layout({ children, currentPageName }) {
         {/* NEW: Fallback H1 (only shows if page has no H1 and is one of the designated fallback pages) */}
         {needsFallbackH1 && fallbackH1Pages.has(currentPageName) && (
           <div className="non-printable border-b border-border bg-card">
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <Container paddingY="md">
               <h1 className="text-3xl font-bold text-foreground md:text-4xl">
                 {getFallbackH1Text()}
               </h1>
-            </div>
+            </Container>
           </div>
         )}
         {children}
@@ -558,7 +559,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Footer */}
       <footer className="mt-16 border-t border-border bg-background non-printable">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <Container paddingY="lg">
           <div className="grid md:grid-cols-5 gap-8">
             <div className="md:col-span-1">
               <Link to={createPageUrl('Home')} className="flex items-center space-x-2 mb-4">
@@ -736,7 +737,7 @@ export default function Layout({ children, currentPageName }) {
           <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
             <p>&copy; 2025 Calculate My Money - UK Financial Calculator Tools</p>
           </div>
-        </div>
+        </Container>
       </footer>
 
         <CookieConsentBanner />

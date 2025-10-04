@@ -17,6 +17,7 @@ import { prefetchPage } from '@/utils/prefetchPage';
 import FAQSection from '../components/calculators/FAQSection';
 import { HandCoins, PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
 import { useSeo } from '@/components/seo/SeoContext';
+import Section from '@/components/common/Section';
 
 const homepageFaqs = [
   {
@@ -144,92 +145,93 @@ export default function Home() {
   return (
     <div className="bg-background text-foreground">
       {/* Hero Section */}
-      <div className="border-b border-border/70 bg-hero bg-hero-pattern">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-          <div className="text-center max-w-4xl mx-auto text-hero-foreground">
-            <h1 className="text-4xl md:text-5xl font-bold text-hero-foreground mb-4">
-              Free UK Salary, Tax & Mortgage Calculators
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              Use our fast, accurate UK calculators to estimate take-home pay, tax & NI, mortgage
-              repayments, and savings growth for the 2025/26 tax year. Start with salary, tax,
-              mortgage or finance tools below.
-            </p>
+      <Section
+        variant="muted"
+        className="border-b border-border/70 bg-hero bg-hero-pattern"
+        spacing="py-16 md:py-20"
+        contentClassName="max-w-4xl mx-auto text-center text-hero-foreground"
+      >
+        <h1 className="text-4xl md:text-5xl font-bold text-hero-foreground mb-4">
+          Free UK Salary, Tax & Mortgage Calculators
+        </h1>
+        <p className="text-xl text-muted-foreground mb-8">
+          Use our fast, accurate UK calculators to estimate take-home pay, tax & NI, mortgage
+          repayments, and savings growth for the 2025/26 tax year. Start with salary, tax,
+          mortgage or finance tools below.
+        </p>
 
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto mb-8">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/70" />
-                <Input
-                  type="text"
-                  placeholder="Search calculators... (e.g. salary, mortgage, tax)"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="pl-12 pr-4 py-4 text-lg border-2 border-input bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 rounded-xl"
-                />
-              </div>
+        {/* Search Bar */}
+        <div className="max-w-2xl mx-auto mb-8">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/70" />
+            <Input
+              type="text"
+              placeholder="Search calculators... (e.g. salary, mortgage, tax)"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="pl-12 pr-4 py-4 text-lg border-2 border-input bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 rounded-xl"
+            />
+          </div>
 
-              {/* Search Results Dropdown */}
-              {searchResults.length > 0 && (
-                <div className="absolute z-50 w-full max-w-2xl mx-auto mt-2 rounded-lg border border-border bg-card shadow-lg">
-                  <div className="p-2 max-h-64 overflow-y-auto text-left">
-                    {searchResults.slice(0, 8).map((calc, index) => (
-                      <Link
-                        key={index}
-                        to={calc.url}
-                        className="block rounded-lg p-3 transition-colors hover:bg-muted"
-                        onClick={() => {
-                          setSearchQuery('');
-                          setSearchResults([]);
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-foreground">{calc.name}</p>
-                            <p className="text-sm text-muted-foreground">{calc.description}</p>
-                            {(calc.category || calc.subCategory) && (
-                              <p className="text-xs text-neutral-soft-foreground">
-                                {calc.category || 'Calculator'}{' '}
-                                {calc.subCategory ? `→ ${calc.subCategory}` : ''}
-                              </p>
-                            )}
-                          </div>
-                          {calc.status === 'planned' ? (
-                            <Badge variant="secondary" className="text-xs">
-                              Coming Soon
-                            </Badge>
-                          ) : (
-                            <ExternalLink className="h-4 w-4 text-muted-foreground/60" />
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Stats */}
-            <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calculator className="h-4 w-4 text-primary" />
-                <span>{stats.total} Calculators</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span>{stats.active} Active</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                <span>Free to Use</span>
+          {/* Search Results Dropdown */}
+          {searchResults.length > 0 && (
+            <div className="absolute z-50 w-full max-w-2xl mx-auto mt-2 rounded-lg border border-border bg-card shadow-lg">
+              <div className="p-2 max-h-64 overflow-y-auto text-left">
+                {searchResults.slice(0, 8).map((calc, index) => (
+                  <Link
+                    key={index}
+                    to={calc.url}
+                    className="block rounded-lg p-3 transition-colors hover:bg-muted"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">{calc.name}</p>
+                        <p className="text-sm text-muted-foreground">{calc.description}</p>
+                        {(calc.category || calc.subCategory) && (
+                          <p className="text-xs text-neutral-soft-foreground">
+                            {calc.category || 'Calculator'}{' '}
+                            {calc.subCategory ? `→ ${calc.subCategory}` : ''}
+                          </p>
+                        )}
+                      </div>
+                      {calc.status === 'planned' ? (
+                        <Badge variant="secondary" className="text-xs">
+                          Coming Soon
+                        </Badge>
+                      ) : (
+                        <ExternalLink className="h-4 w-4 text-muted-foreground/60" />
+                      )}
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Quick Stats */}
+        <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Calculator className="h-4 w-4 text-primary" />
+            <span>{stats.total} Calculators</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <span>{stats.active} Active</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <span>Free to Use</span>
           </div>
         </div>
-      </div>
+      </Section>
 
       {/* Hub Cards Section */}
-      <div className="relative z-10 -mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Section className="relative z-10 -mt-16" spacing="lg">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {hubCards.map((card, index) => (
             <a
@@ -249,10 +251,10 @@ export default function Home() {
             </a>
           ))}
         </div>
-      </div>
+      </Section>
 
       {/* Featured/Popular Calculators */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Section spacing="lg">
         <div className="mb-8 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             <Calculator className="mr-2 inline h-9 w-9 text-primary" />
@@ -283,118 +285,114 @@ export default function Home() {
             </Link>
           ))}
         </div>
-      </div>
+      </Section>
 
       {/* Homepage FAQ Section */}
-      <div className="bg-background py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
-            Common Questions
-          </h2>
-          <FAQSection faqs={homepageFaqs} />
-        </div>
-      </div>
+      <Section spacing="xl" width="narrow">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-10">
+          Common Questions
+        </h2>
+        <FAQSection faqs={homepageFaqs} />
+      </Section>
 
       {/* Complete Calculator Directory */}
-      <div className="bg-neutral-soft py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Complete Calculator Directory
-            </h2>
-            <p className="mb-6 text-muted-foreground">
-              Browse all {stats.total} financial calculators organized by category
-            </p>
-            <button
-              onClick={() => setShowAllCalculators(!showAllCalculators)}
-              className="font-medium text-primary transition-colors hover:text-primary/80"
-            >
-              {showAllCalculators ? 'Hide' : 'Show'} All Calculators
-            </button>
-          </div>
+      <Section className="bg-neutral-soft" spacing="xl">
+        <div className="mb-12 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+            Complete Calculator Directory
+          </h2>
+          <p className="mb-6 text-muted-foreground">
+            Browse all {stats.total} financial calculators organized by category
+          </p>
+          <button
+            onClick={() => setShowAllCalculators(!showAllCalculators)}
+            className="font-medium text-primary transition-colors hover:text-primary/80"
+          >
+            {showAllCalculators ? 'Hide' : 'Show'} All Calculators
+          </button>
+        </div>
 
-          {/* Calculator Categories */}
-          {showAllCalculators ? (
-            <div className="space-y-12">
-              {calculatorCategories.map((category) => (
-                <div key={category.slug} id={category.slug} className="scroll-mt-20">
-                  {/* Category Header */}
-                  <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
-                    <category.icon className="h-8 w-8 text-primary" />
-                    <div>
-                      <h3 className="text-2xl font-bold text-foreground">
-                        {category.name}
-                      </h3>
-                      <p className="text-muted-foreground">{category.description}</p>
-                    </div>
-                  </div>
-
-                  {/* Sub-categories and Calculators */}
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {category.subCategories.map((subCategory) => (
-                      <div key={subCategory.name} className="space-y-3">
-                        <h4 className="border-l-4 border-primary pl-3 text-lg font-semibold text-foreground">
-                          {subCategory.name}
-                        </h4>
-                        <div className="space-y-2 pl-3">
-                          {subCategory.calculators
-                            .filter((calc) => showAllCalculators || calc.status === 'active')
-                            .map((calc, index) => (
-                              <div key={index} className="flex items-center justify-between group">
-                                {calc.status === 'active' ? (
-                                  <Link
-                                    to={calc.url}
-                                    onMouseEnter={() => calc.page && prefetchPage(calc.page)}
-                                    onFocus={() => calc.page && prefetchPage(calc.page)}
-                                    className="flex-1 text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-                                  >
-                                    {calc.name}
-                                  </Link>
-                                ) : (
-                                  <span className="flex-1 text-sm text-muted-foreground/60">{calc.name}</span>
-                                )}
-                                {(calc.status === 'planned' || calc.status === 'pending') && (
-                                  <Badge variant="outline" className="ml-2 text-xs text-primary">
-                                    Coming Soon
-                                  </Badge>
-                                )}
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    ))}
+        {/* Calculator Categories */}
+        {showAllCalculators ? (
+          <div className="space-y-12">
+            {calculatorCategories.map((category) => (
+              <div key={category.slug} id={category.slug} className="scroll-mt-20">
+                {/* Category Header */}
+                <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
+                  <category.icon className="h-8 w-8 text-primary" />
+                  <div>
+                    <h3 className="text-2xl font-bold text-foreground">
+                      {category.name}
+                    </h3>
+                    <p className="text-muted-foreground">{category.description}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center text-muted-foreground">
-              Expand the directory to explore every calculator we offer.
-            </div>
-          )}
 
-          {/* Quick Stats Footer */}
-          <div className="mt-16 rounded-lg border border-card-muted bg-card p-8 text-center">
-            <h3 className="text-xl font-semibold text-foreground mb-4">
-              Why Choose Our Calculators?
-            </h3>
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
-              <div>
-                <div className="mb-2 text-3xl font-bold text-primary">{stats.active}</div>
-                <p className="text-muted-foreground">Active Calculators</p>
+                {/* Sub-categories and Calculators */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {category.subCategories.map((subCategory) => (
+                    <div key={subCategory.name} className="space-y-3">
+                      <h4 className="border-l-4 border-primary pl-3 text-lg font-semibold text-foreground">
+                        {subCategory.name}
+                      </h4>
+                      <div className="space-y-2 pl-3">
+                        {subCategory.calculators
+                          .filter((calc) => showAllCalculators || calc.status === 'active')
+                          .map((calc, index) => (
+                            <div key={index} className="flex items-center justify-between group">
+                              {calc.status === 'active' ? (
+                                <Link
+                                  to={calc.url}
+                                  onMouseEnter={() => calc.page && prefetchPage(calc.page)}
+                                  onFocus={() => calc.page && prefetchPage(calc.page)}
+                                  className="flex-1 text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                                >
+                                  {calc.name}
+                                </Link>
+                              ) : (
+                                <span className="flex-1 text-sm text-muted-foreground/60">{calc.name}</span>
+                              )}
+                              {(calc.status === 'planned' || calc.status === 'pending') && (
+                                <Badge variant="outline" className="ml-2 text-xs text-primary">
+                                  Coming Soon
+                                </Badge>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div>
-                <div className="mb-2 text-3xl font-bold text-hero-accent">100%</div>
-                <p className="text-muted-foreground">Free to Use</p>
-              </div>
-              <div>
-                <div className="mb-2 text-3xl font-bold text-brandAqua">2025/26</div>
-                <p className="text-muted-foreground">Up-to-Date Tax Rates</p>
-              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground">
+            Expand the directory to explore every calculator we offer.
+          </div>
+        )}
+
+        {/* Quick Stats Footer */}
+        <div className="mt-16 rounded-lg border border-card-muted bg-card p-8 text-center">
+          <h3 className="text-xl font-semibold text-foreground mb-4">
+            Why Choose Our Calculators?
+          </h3>
+          <div className="grid md:grid-cols-3 gap-6 text-sm">
+            <div>
+              <div className="mb-2 text-3xl font-bold text-primary">{stats.active}</div>
+              <p className="text-muted-foreground">Active Calculators</p>
+            </div>
+            <div>
+              <div className="mb-2 text-3xl font-bold text-hero-accent">100%</div>
+              <p className="text-muted-foreground">Free to Use</p>
+            </div>
+            <div>
+              <div className="mb-2 text-3xl font-bold text-brandAqua">2025/26</div>
+              <p className="text-muted-foreground">Up-to-Date Tax Rates</p>
             </div>
           </div>
         </div>
-      </div>
+      </Section>
     </div>
   );
 }

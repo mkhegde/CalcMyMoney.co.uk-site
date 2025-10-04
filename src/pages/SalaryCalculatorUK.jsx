@@ -42,6 +42,7 @@ import RelatedCalculators from '../components/calculators/RelatedCalculators'; /
 import Breadcrumbs from '../components/general/Breadcrumbs';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom'; // Added Link import
+import Section from '@/components/common/Section';
 
 // Adding structured data for better rich snippets
 const salaryCalculatorJsonLd = {
@@ -907,10 +908,12 @@ export default function SalaryCalculatorUK() {
 
       <div className="bg-white dark:bg-gray-900">
         {/* Page Header - Optimized for SEO */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <Breadcrumbs path={breadcrumbPath} />
-            <div className="text-center">
+        <Section
+          className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable"
+          spacing="lg"
+        >
+          <Breadcrumbs path={breadcrumbPath} />
+          <div className="text-center">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 UK Salary Calculator – Take-Home Pay 2025/26
               </h1>
@@ -956,11 +959,10 @@ export default function SalaryCalculatorUK() {
                 </p>
               </div>
             </div>
-          </div>
-        </div>
+        </Section>
 
         {/* Main Calculator Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Section spacing="md">
           <div className="print-title hidden">UK Salary Calculator Results</div>
 
           <div className="grid lg:grid-cols-5 gap-8 printable-grid-cols-1">
@@ -1721,7 +1723,7 @@ export default function SalaryCalculatorUK() {
               )}
             </div>
           </div>
-        </div>
+        </Section>
 
         <CalculatorWrapper>
           <div className="space-y-8">
@@ -1793,17 +1795,16 @@ export default function SalaryCalculatorUK() {
         />
 
         {/* Added: Explore Salary Tools section */}
-        <div className="bg-white dark:bg-gray-900 py-12 non-printable">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-              Explore Salary Tools
-            </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Link
-                to={createPageUrl('SalaryCalculatorTakeHomePay')}
-                className="block p-5 border rounded-lg hover:shadow-md hover:border-blue-300 transition dark:border-gray-700 dark:hover:border-blue-700 dark:bg-gray-800 dark:text-gray-100"
-              >
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+        <Section className="bg-white dark:bg-gray-900 non-printable" spacing="lg">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Explore Salary Tools
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link
+              to={createPageUrl('SalaryCalculatorTakeHomePay')}
+              className="block p-5 border rounded-lg hover:shadow-md hover:border-blue-300 transition dark:border-gray-700 dark:hover:border-blue-700 dark:bg-gray-800 dark:text-gray-100"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                   Take-Home Pay Calculator
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
@@ -1844,64 +1845,71 @@ export default function SalaryCalculatorUK() {
                 </p>
               </Link>
             </div>
-          </div>
+        </Section>
         </div>
 
         {/* Visible FAQ section aligned with JSON-LD */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 py-12 non-printable">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <FAQSection faqs={salaryHubFaqs} title="Salary Calculator FAQs" />
-            <p className="text-xs text-gray-500 mt-6">
-              Last updated: <time dateTime={LAST_UPDATED_ISO}>{LAST_UPDATED_DISPLAY}</time>
-            </p>
-          </div>
-        </div>
+        <Section
+          className="bg-gray-50 dark:bg-gray-800/50 non-printable"
+          spacing="lg"
+          width="narrow"
+        >
+          <FAQSection faqs={salaryHubFaqs} title="Salary Calculator FAQs" />
+          <p className="text-xs text-gray-500 mt-6">
+            Last updated: <time dateTime={LAST_UPDATED_ISO}>{LAST_UPDATED_DISPLAY}</time>
+          </p>
+        </Section>
 
         {/* Replace the second FAQ section to keep alignment */}
-        <div id="faq-section" className="bg-gray-50 dark:bg-gray-800/50 py-12 non-printable">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <FAQSection faqs={salaryHubFaqs} />
-          </div>
-        </div>
+        <Section
+          id="faq-section"
+          className="bg-gray-50 dark:bg-gray-800/50 non-printable"
+          spacing="lg"
+          width="narrow"
+        >
+          <FAQSection faqs={salaryHubFaqs} />
+        </Section>
 
         {/* Additional content section for keywords */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 py-12 non-printable">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                UK Salary Calculator - Everything You Need to Know
-              </h2>
+        <Section
+          className="bg-gray-50 dark:bg-gray-800/50 non-printable"
+          spacing="lg"
+          width="narrow"
+        >
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              UK Salary Calculator - Everything You Need to Know
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8 text-sm text-gray-700 dark:text-gray-300">
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                How Our UK Tax Calculator Works
+              </h3>
+              <ul className="space-y-2">
+                <li>• Accurate 2025/26 UK tax rates and thresholds</li>
+                <li>• Income tax calculation for all UK regions</li>
+                <li>• National Insurance contributions (Classes 1 & 4)</li>
+                <li>• Student loan repayment calculations (Plans 1-5)</li>
+                <li>• Pension contribution tax relief</li>
+                <li>• Scottish income tax rates included</li>
+              </ul>
             </div>
-            <div className="grid md:grid-cols-2 gap-8 text-sm text-gray-700 dark:text-gray-300">
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                  How Our UK Tax Calculator Works
-                </h3>
-                <ul className="space-y-2">
-                  <li>• Accurate 2025/26 UK tax rates and thresholds</li>
-                  <li>• Income tax calculation for all UK regions</li>
-                  <li>• National Insurance contributions (Classes 1 & 4)</li>
-                  <li>• Student loan repayment calculations (Plans 1-5)</li>
-                  <li>• Pension contribution tax relief</li>
-                  <li>• Scottish income tax rates included</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                  Perfect for UK Employees & Contractors
-                </h3>
-                <ul className="space-y-2">
-                  <li>• PAYE employees and contractors</li>
-                  <li>• Job offer salary comparisons</li>
-                  <li>• Annual and monthly salary planning</li>
-                  <li>• Gross to net pay calculations</li>
-                  <li>• Net to gross salary requirements</li>
-                  <li>• Tax code adjustments supported</li>
-                </ul>
-              </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                Perfect for UK Employees & Contractors
+              </h3>
+              <ul className="space-y-2">
+                <li>• PAYE employees and contractors</li>
+                <li>• Job offer salary comparisons</li>
+                <li>• Annual and monthly salary planning</li>
+                <li>• Gross to net pay calculations</li>
+                <li>• Net to gross salary requirements</li>
+                <li>• Tax code adjustments supported</li>
+              </ul>
             </div>
           </div>
-        </div>
+        </Section>
       </div>
     </>
   );
