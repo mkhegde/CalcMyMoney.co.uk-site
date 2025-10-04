@@ -2,10 +2,9 @@ import { useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Search, Calculator, TrendingUp, Users, ExternalLink, ArrowRight } from 'lucide-react';
+import { Search, Calculator, TrendingUp, Users, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 
 import {
   calculatorCategories,
@@ -160,8 +159,8 @@ export default function Home() {
 
             {/* Search Bar */}
             <div className="max-w-3xl mx-auto mb-10">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
-                <div className="relative flex-1">
+              <div className="flex justify-center">
+                <div className="relative w-full sm:max-w-xl">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/70" />
                   <Input
                     type="text"
@@ -208,13 +207,6 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-
-                <Button asChild size="lg" className="h-full min-h-[56px] sm:w-auto">
-                  <Link to="#calculator-directory" className="text-base">
-                    Explore calculators
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
               </div>
             </div>
 
