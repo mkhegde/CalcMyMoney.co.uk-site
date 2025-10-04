@@ -414,26 +414,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Quick Stats Footer */}
-          <div className="mt-16 rounded-lg border border-card-muted bg-card p-8 text-center">
-            <Heading as="h3" size="h3" className="text-foreground mb-4">
-              Why Choose Our Calculators?
-            </Heading>
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
-              <div>
-                <div className="mb-2 text-3xl font-bold text-primary">{stats.active}</div>
-                <p className="text-muted-foreground">Active Calculators</p>
-              </div>
-              <div>
-                <div className="mb-2 text-3xl font-bold text-hero-accent">100%</div>
-                <p className="text-muted-foreground">Free to Use</p>
-              </div>
-              <div>
-                <div className="mb-2 text-3xl font-bold text-brandAqua">2025/26</div>
-                <p className="text-muted-foreground">Up-to-Date Tax Rates</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
