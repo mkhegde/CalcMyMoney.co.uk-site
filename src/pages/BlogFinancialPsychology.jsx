@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useSeo } from '@/components/seo/SeoContext';
 
+import Heading from '@/components/common/Heading';
 const createUnsplashUrl = (baseUrl, params, width) => `${baseUrl}?${params}&w=${width}`;
 
 const createUnsplashSrcSet = (baseUrl, params, widths) =>
@@ -157,9 +158,9 @@ export default function BlogFinancialPsychology() {
             <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium dark:bg-purple-900/50 dark:text-purple-300">
               {post.category}
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mt-4 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mt-4 mb-4">
               {post.title}
-            </h1>
+            </Heading>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
@@ -198,7 +199,7 @@ export default function BlogFinancialPsychology() {
 
             <Separator className="my-8" />
 
-            <h2>The Hidden Forces Shaping Your Money Decisions</h2>
+            <Heading as="h2" size="h2">The Hidden Forces Shaping Your Money Decisions</Heading>
             <div className="flex items-center gap-3 mb-4">
               <Brain className="w-6 h-6 text-purple-600" />
               <p className="text-lg font-semibold text-purple-800 dark:text-purple-300 mb-0">
@@ -257,7 +258,7 @@ export default function BlogFinancialPsychology() {
               </p>
             </div>
 
-            <h2>The Four Common UK Money Personalities</h2>
+            <Heading as="h2" size="h2">The Four Common UK Money Personalities</Heading>
             <p>
               Most people fall into one (or a combination) of these money personality types.
               Recognizing yourself can be the first step toward financial awareness:
@@ -333,7 +334,7 @@ export default function BlogFinancialPsychology() {
               </Card>
             </div>
 
-            <h2>Common Money Myths That Hold Us Back</h2>
+            <Heading as="h2" size="h2">Common Money Myths That Hold Us Back</Heading>
             <p>
               Many of the beliefs we hold about money aren't actually true, but they feel true
               because we've never questioned them. Here are some common ones among UK residents:
@@ -401,7 +402,7 @@ export default function BlogFinancialPsychology() {
               </p>
             </div>
 
-            <h2>The UK Context: Cultural Money Messages</h2>
+            <Heading as="h2" size="h2">The UK Context: Cultural Money Messages</Heading>
             <p>
               In the UK, we have some unique cultural attitudes toward money that can impact our
               financial wellbeing:
@@ -425,7 +426,7 @@ export default function BlogFinancialPsychology() {
               </li>
             </ul>
 
-            <h2>Rewiring Your Money Mindset: Practical Steps</h2>
+            <Heading as="h2" size="h2">Rewiring Your Money Mindset: Practical Steps</Heading>
             <div className="flex items-center gap-3 mb-4">
               <Target className="w-6 h-6 text-green-600" />
               <p className="text-lg font-semibold text-green-800 dark:text-green-300 mb-0">
@@ -492,7 +493,7 @@ export default function BlogFinancialPsychology() {
 
             <Separator className="my-8" />
 
-            <h2>Your Money, Your Journey</h2>
+            <Heading as="h2" size="h2">Your Money, Your Journey</Heading>
             <p>
               There's no "perfect" relationship with money, just like there's no perfect
               relationship with anything else that matters. The goal isn't to eliminate all emotion

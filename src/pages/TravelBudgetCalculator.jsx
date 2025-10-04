@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Trash2, Plane, Calculator } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
 
+import Heading from '@/components/common/Heading';
 const travelFAQs = [
   {
     question: 'How do I estimate costs accurately?',
@@ -56,7 +57,7 @@ export default function TravelBudgetCalculator() {
     <div className="bg-white">
       <div className="bg-gray-50 border-b">
         <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-          <h1 className="text-3xl font-bold">Travel &amp; Holiday Budget Calculator</h1>
+          <Heading as="h1" size="h1" weight="bold">Travel &amp; Holiday Budget Calculator</Heading>
           <p className="text-lg text-gray-600 mt-2">
             Plan your next holiday with our easy-to-use travel budget calculator. Estimate costs for
             flights, accommodation, food, and activities.

@@ -23,6 +23,7 @@ import CalculatorIndex from '../components/general/CalculatorIndex';
 import SeoHead from '@/components/seo/SeoHead';
 import { SeoProvider } from '@/components/seo/SeoContext';
 
+import Heading from '@/components/common/Heading';
 const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
 
 export default function Layout({ children, currentPageName }) {
@@ -578,9 +579,9 @@ export default function Layout({ children, currentPageName }) {
         {needsFallbackH1 && fallbackH1Pages.has(currentPageName) && (
           <div className="non-printable border-b border-border bg-card">
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-              <h1 className="text-3xl font-bold text-foreground md:text-4xl">
+              <Heading as="h1" size="h1" weight="bold" className="text-foreground">
                 {getFallbackH1Text()}
-              </h1>
+              </Heading>
             </div>
           </div>
         )}

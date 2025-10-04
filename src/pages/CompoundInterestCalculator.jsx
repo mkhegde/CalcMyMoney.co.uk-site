@@ -13,6 +13,7 @@ import {
 import { PoundSterling, Calculator, TrendingUp, Percent } from 'lucide-react';
 import ExportActions from '../components/calculators/ExportActions';
 
+import Heading from '@/components/common/Heading';
 export default function CompoundInterestCalculator() {
   const [principal, setPrincipal] = useState('');
   const [monthlyContribution, setMonthlyContribution] = useState('');
@@ -87,9 +88,9 @@ export default function CompoundInterestCalculator() {
       <div className="bg-gray-50 border-b border-gray-200 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 mb-4">
               Compound Interest Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               "Compound interest is the eighth wonder of the world" - Einstein. Discover the magic
               of time and compounding.
@@ -181,7 +182,7 @@ export default function CompoundInterestCalculator() {
             {hasCalculated && results ? (
               <>
                 <div className="non-printable">
-                  <h2 className="text-2xl font-bold text-gray-800">Your Investment Growth</h2>
+                  <Heading as="h2" size="h2" weight="bold" className="text-gray-800">Your Investment Growth</Heading>
                 </div>
                 <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
                   <CardHeader>

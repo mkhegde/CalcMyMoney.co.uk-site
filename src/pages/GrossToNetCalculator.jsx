@@ -2,7 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import FAQSection from '../components/calculators/FAQSection';
-import RelatedCalculators from '../components/calculators/RelatedCalculators'; // Added import
+import RelatedCalculators from '../components/calculators/RelatedCalculators'; import Heading from '@/components/common/Heading';
+// Added import
 
 export default function GrossToNetCalculator() {
   const origin =
@@ -62,9 +63,9 @@ export default function GrossToNetCalculator() {
       <div className="bg-white">
         <div className="bg-gray-50 border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900">
               Gross to Net Income Calculator (UK)
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto mt-3">
               Convert gross salary to net take‑home pay with UK tax and NI for 2025/26.
             </p>
@@ -95,7 +96,7 @@ export default function GrossToNetCalculator() {
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Convert Gross to Net</h2>
+            <Heading as="h2" size="h2" className="text-gray-900">Convert Gross to Net</Heading>
             <p className="text-gray-700">
               Use the hub calculator to enter your gross pay and see an instant net figure after tax
               and NI.

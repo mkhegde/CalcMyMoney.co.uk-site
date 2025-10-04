@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PoundSterling, Calculator, Shield, TrendingUp } from 'lucide-react';
 import ExportActions from '../components/calculators/ExportActions';
 
+import Heading from '@/components/common/Heading';
 export default function PensionCalculator() {
   const [currentAge, setCurrentAge] = useState('');
   const [retirementAge, setRetirementAge] = useState('');
@@ -97,9 +98,9 @@ export default function PensionCalculator() {
       <div className="bg-gray-50 border-b border-gray-200 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 mb-4">
               UK Pension Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               The best time to plant a tree was 20 years ago. The second best time is now. Start
               planning your retirement today.
@@ -203,7 +204,7 @@ export default function PensionCalculator() {
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
-                  <h2 className="text-2xl font-bold text-gray-800">Your Retirement Forecast</h2>
+                  <Heading as="h2" size="h2" weight="bold" className="text-gray-800">Your Retirement Forecast</Heading>
                   <ExportActions
                     csvData={csvData}
                     fileName="pension-forecast"

@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import FAQSection from '../components/calculators/FAQSection';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
 
+import Heading from '@/components/common/Heading';
 export default function SalaryCalculatorTakeHomePay() {
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
@@ -62,9 +63,9 @@ export default function SalaryCalculatorTakeHomePay() {
       <div className="bg-white">
         <div className="bg-gray-50 border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900">
               UK Take-Home Pay Calculator (2025/26)
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto mt-3">
               Estimate UK take-home pay after tax, NI, pension and student loans for the 2025/26 tax
               year.
@@ -96,7 +97,7 @@ export default function SalaryCalculatorTakeHomePay() {
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Calculate Your Take-Home Pay</h2>
+            <Heading as="h2" size="h2" className="text-gray-900">Calculate Your Take-Home Pay</Heading>
             <p className="text-gray-700">
               For the most accurate take-home estimate (including tax, NI, pension, and student loan
               options), use our main Salary Calculator hub below.

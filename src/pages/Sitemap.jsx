@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import { calculatorCategories } from '../components/data/calculatorConfig';
 import { jobTitles, ukCities, createSlug } from '../components/data/seo-data';
 
+import Heading from '@/components/common/Heading';
 const staticPages = [
   { url: createPageUrl('Home'), title: 'Home' },
   { url: createPageUrl('Resources'), title: 'Resources' },
@@ -42,9 +43,9 @@ const blogPosts = [
 
 const SitemapSection = ({ title, links, columns = 1 }) => (
   <div className="mb-8">
-    <h2 className="text-2xl font-bold text-gray-800 border-b-2 border-gray-200 pb-2 mb-4">
+    <Heading as="h2" size="h2" weight="bold" className="text-gray-800 border-b-2 border-gray-200 pb-2 mb-4">
       {title}
-    </h2>
+    </Heading>
     <ul className={`space-y-2 list-disc list-inside columns-${columns}`}>
       {links.map((link, index) => (
         <li key={index} className="break-inside-avoid">
@@ -86,7 +87,7 @@ export default function Sitemap() {
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-extrabold text-gray-900">Sitemap</h1>
+          <Heading as="h1" size="h1" weight="extrabold" className="text-gray-900">Sitemap</Heading>
           <p className="mt-2 text-lg text-gray-600">
             A complete list of all pages on CalcMyMoney.co.uk
           </p>

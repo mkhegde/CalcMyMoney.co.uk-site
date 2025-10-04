@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import ExportActions from '../components/calculators/ExportActions';
 
+import Heading from '@/components/common/Heading';
 const calculateTakeHome = (salary) => {
   // Simplified tax/NI calculation for demonstration purposes
   // A real implementation would use the detailed logic from the main Salary Calculator
@@ -109,9 +110,9 @@ export default function SalarySacrificeCalculator() {
       <div className="bg-gray-50 border-b border-gray-200 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 mb-4">
               Salary Sacrifice Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Pay less tax and boost your pension pot. See how sacrificing a portion of your salary
               can increase your overall wealth.
@@ -168,7 +169,7 @@ export default function SalarySacrificeCalculator() {
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
-                  <h2 className="text-2xl font-bold text-gray-800">Sacrifice Summary</h2>
+                  <Heading as="h2" size="h2" weight="bold" className="text-gray-800">Sacrifice Summary</Heading>
                   <ExportActions
                     csvData={csvData}
                     fileName="salary-sacrifice"
