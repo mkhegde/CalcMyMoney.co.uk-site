@@ -469,60 +469,6 @@ export default function Layout({ children, currentPageName }) {
                 );
               })}
 
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="group relative inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-muted-foreground transition-all duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 data-[state=open]:text-foreground data-[state=open]:after:scale-x-100">
-                  Browse calculators
-                </NavigationMenuTrigger>
-                <NavigationMenuContent className="rounded-xl border border-border bg-card p-6 shadow-xl">
-                  <div className="grid gap-6 sm:grid-cols-2">
-                    {calculatorCategories.slice(0, 4).map((category) => (
-                      <div key={category.slug} className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <category.icon className="h-4 w-4 text-primary" />
-                          <p className="text-sm font-semibold text-foreground">{category.name}</p>
-                        </div>
-                        <div className="space-y-2 text-sm text-muted-foreground">
-                          {(category.subCategories ?? []).slice(0, 2).map((subCategory) => (
-                            <div key={subCategory.name}>
-                              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-soft-foreground">
-                                {subCategory.name}
-                              </p>
-                              <ul className="mt-1 space-y-1">
-                                {(subCategory.calculators ?? [])
-                                  .filter((calc) => calc.status === 'active')
-                                  .slice(0, 2)
-                                  .map((calc) => (
-                                    <li key={calc.name}>
-                                      <NavigationMenuLink asChild>
-                                        <Link
-                                          to={calc.url}
-                                          className="block rounded-md px-2 py-1 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-primary"
-                                        >
-                                          {calc.name}
-                                        </Link>
-                                      </NavigationMenuLink>
-                                    </li>
-                                  ))}
-                              </ul>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-6 flex justify-end">
-                    <NavigationMenuLink asChild>
-                      <Link
-                        to={`${createPageUrl('Home')}#calculator-directory`}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
-                      >
-                        Browse full directory
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </NavigationMenuLink>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
             </NavigationMenuList>
             <NavigationMenuIndicator className="hidden md:flex" />
           </NavigationMenu>
