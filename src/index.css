@@ -11,14 +11,14 @@
 
     /* Brand palette */
     --brand-blue: 226 100% 20%; /* Deep royal blue */
-    --brand-teal: 193 100% 50%; /* Teal */
-    --brand-aqua: 164 100% 50%; /* Aqua */
+    --brand-teal: 193 90% 56%; /* Teal */
+    --brand-aqua: 164 88% 58%; /* Aqua */
 
     /* Marketing surfaces */
     --hero: 212 100% 97%;
     --hero-foreground: 226 100% 18%;
-    --hero-accent: 193 95% 40%;
-    --hero-ring: 193 95% 46%;
+    --hero-accent: 193 88% 48%;
+    --hero-ring: 193 90% 52%;
     --hero-gradient: radial-gradient(120% 120% at 50% -20%, hsl(var(--hero)) 0%, hsl(var(--background)) 70%);
 
     --card-muted: 214 30% 96%;
