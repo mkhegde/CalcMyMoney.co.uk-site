@@ -57,6 +57,24 @@ module.exports = {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
+        hero: {
+          DEFAULT: 'hsl(var(--hero))',
+          foreground: 'hsl(var(--hero-foreground))',
+          accent: 'hsl(var(--hero-accent))',
+          ring: 'hsl(var(--hero-ring))',
+        },
+        'card-muted': {
+          DEFAULT: 'hsl(var(--card-muted))',
+          foreground: 'hsl(var(--card-muted-foreground))',
+        },
+        pill: {
+          DEFAULT: 'hsl(var(--pill))',
+          foreground: 'hsl(var(--pill-foreground))',
+        },
+        neutral: {
+          soft: 'hsl(var(--neutral-soft))',
+          'soft-foreground': 'hsl(var(--neutral-soft-foreground))',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -82,6 +100,9 @@ module.exports = {
         brand: 'hsl(var(--brand-blue))',
         brandTeal: 'hsl(var(--brand-teal))',
         brandAqua: 'hsl(var(--brand-aqua))',
+      },
+      backgroundImage: {
+        'hero-pattern': 'var(--hero-gradient)',
       },
       keyframes: {
         'accordion-down': {
