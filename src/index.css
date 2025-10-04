@@ -150,7 +150,7 @@
     line-height: 1.05;
     text-wrap: balance;
     color: hsl(var(--foreground));
-    font-size: clamp(2.75rem, 2.35rem + 1.5vw, 3.65rem);
+    font-size: clamp(2.25rem, 1.9rem + 1vw, 3rem);
   }
 
   h2,
