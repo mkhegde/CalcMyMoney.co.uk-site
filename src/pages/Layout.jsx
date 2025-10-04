@@ -95,7 +95,7 @@ export default function Layout({ children, currentPageName }) {
         '@type': 'Organization',
         name: 'Calculate My Money',
         url: `${normalizedOrigin}/`,
-        logo: 'https://www.calcmymoney.co.uk/images/logo-high-res.png',
+        logo: 'https://www.calcmymoney.co.uk/logo-high-res.png',
         sameAs: [],
       },
       {
