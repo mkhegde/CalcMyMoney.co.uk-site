@@ -1198,7 +1198,9 @@ export default function SalaryCalculatorUK() {
                               width={40}
                             />
                             <RechartsTooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: '14px' }} />{' '}
+                            <Legend
+                              formatter={(value) => <span className="caption">{value}</span>}
+                            />{' '}
                             {/* Apply text color to legend */}
                             <Bar dataKey="Take Home" stackId="a" fill={CHART_COLORS.takeHome} />
                             <Bar dataKey="Tax" stackId="a" fill={CHART_COLORS.tax} />
