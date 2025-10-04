@@ -27,6 +27,7 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+import Heading from '@/components/common/Heading';
 const governmentBudget2024 = {
   // Data reflecting 2024/25 fiscal year estimates
   revenue: [
@@ -317,10 +318,10 @@ export default function UKGovernmentBudget() {
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               UK Government Budget {selectedYear}/
               {(parseInt(selectedYear) + 1).toString().slice(-2)} | Where Your Taxes Go
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-4xl mx-auto">
               Understand how the UK government manages the nation's finances. See exactly where tax
               revenue comes from and how every pound of public money is spent.
@@ -572,9 +573,9 @@ export default function UKGovernmentBudget() {
         {/* Educational Section */}
         <Card className="mt-12 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
           <CardContent className="p-8">
-            <h2 className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-4">
+            <Heading as="h2" size="h2" weight="bold" className="text-blue-900 dark:text-blue-100 mb-4">
               What This Means for Your Personal Budget
-            </h2>
+            </Heading>
             <p className="text-blue-800 dark:text-blue-200 mb-6">
               The government's budget management principles apply to personal finances too. Just
               like the Treasury balances income and expenditure, you should track where your money

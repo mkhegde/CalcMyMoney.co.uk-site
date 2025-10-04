@@ -12,6 +12,7 @@ import RelatedCalculators from '../components/calculators/RelatedCalculators';
 import AnimatedNumber from '../components/general/AnimatedNumber';
 import { createPageUrl } from '@/utils';
 
+import Heading from '@/components/common/Heading';
 const MAX_WEEKLY_PAY = 700; // Statutory cap 2024/25 (England, Scotland, Wales)
 const MAX_SERVICE_YEARS = 20;
 const TAX_FREE_LIMIT = 30000;
@@ -194,9 +195,9 @@ export default function SeverancePayCalculator() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Breadcrumbs path={breadcrumbPath} />
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               UK Severance Pay Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Model your potential payout when leaving a job. Combine statutory redundancy,
               contractual enhancements, pay in lieu of notice and unused holiday pay.
@@ -506,7 +507,7 @@ export default function SeverancePayCalculator() {
               <Card className="flex items-center justify-center h-full min-h-[320px] bg-white dark:bg-gray-800">
                 <div className="text-center text-gray-500 dark:text-gray-400 space-y-2">
                   <Briefcase className="w-12 h-12 mx-auto" />
-                  <h2 className="text-xl font-semibold">Work out your severance package</h2>
+                  <Heading as="h2" size="h2">Work out your severance package</Heading>
                   <p>Enter your details and employer terms to see a full breakdown.</p>
                 </div>
               </Card>
@@ -517,9 +518,9 @@ export default function SeverancePayCalculator() {
 
       <CalculatorWrapper>
         <div className="space-y-6 text-gray-700 dark:text-gray-300">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <Heading as="h2" size="h2" weight="bold" className="text-gray-900 dark:text-gray-100">
             How the calculator works
-          </h2>
+          </Heading>
           <p>
             Severance packages vary widely between employers. We combine the statutory redundancy
             calculation with common contractual elements so you can stress test different scenarios.

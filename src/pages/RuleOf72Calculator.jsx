@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Percent, Activity, Calculator } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
 
+import Heading from '@/components/common/Heading';
 const ruleOf72FAQs = [
   {
     question: 'What is the Rule of 72?',
@@ -43,7 +44,7 @@ export default function RuleOf72Calculator() {
     <div className="bg-white">
       <div className="bg-gray-50 border-b">
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold text-center">Rule of 72 Calculator</h1>
+          <Heading as="h1" size="h1" weight="bold" className="text-center">Rule of 72 Calculator</Heading>
         </div>
       </div>
       <div className="max-w-4xl mx-auto p-4 py-8">

@@ -183,7 +183,7 @@ export default function BlogSmartMoneySavingTips() {
 
             <Separator className="my-8" />
 
-            <h2 className="heading-2">Winning the Grocery Game: Strategies for the Supermarket</h2>
+            <Heading as="h2" size="h2" className="heading-2">Winning the Grocery Game: Strategies for the Supermarket</Heading>
             <p>
               Groceries are often one of the largest flexible expenses for families. Small changes
               here can lead to significant savings.
@@ -236,7 +236,7 @@ export default function BlogSmartMoneySavingTips() {
               </p>
             </div>
 
-            <h2 className="heading-2">Taming the Energy Beast: Heating, Lighting &amp; Appliances</h2>
+            <Heading as="h2" size="h2" className="heading-2">Taming the Energy Beast: Heating, Lighting &amp; Appliances</Heading>
             <p>With fluctuating energy prices, making your home more energy-efficient is key.</p>
             <ul>
               <li>
@@ -284,7 +284,7 @@ export default function BlogSmartMoneySavingTips() {
               </p>
             </div>
 
-            <h2 className="heading-2">Quick Wins: Small Changes, Big Impact</h2>
+            <Heading as="h2" size="h2" className="heading-2">Quick Wins: Small Changes, Big Impact</Heading>
             <p>Sometimes the smallest adjustments yield the greatest results:</p>
             <ul>
               <li>
@@ -307,7 +307,7 @@ export default function BlogSmartMoneySavingTips() {
 
             <Separator className="my-8" />
 
-            <h2 className="heading-2">Making it Sustainable: The Long Game</h2>
+            <Heading as="h2" size="h2" className="heading-2">Making it Sustainable: The Long Game</Heading>
             <p>
               The key to lasting financial change isn't dramatic overnight transformations – it's
               building sustainable habits that compound over time. Start with one or two changes

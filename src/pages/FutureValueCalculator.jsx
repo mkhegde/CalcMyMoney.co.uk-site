@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { PoundSterling, Percent, Calendar, TrendingUp } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
 
+import Heading from '@/components/common/Heading';
 const fvFAQs = [
   {
     question: 'What is Future Value (FV)?',
@@ -54,9 +55,9 @@ export default function FutureValueCalculator() {
       <div className="bg-gray-50 border-b border-gray-200 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 mb-4">
               Future Value Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Calculate the future value of a single sum investment with compound interest.
             </p>

@@ -7,7 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button'; // Added Button import
+import { Button } from '@/components/ui/button'; import Heading from '@/components/common/Heading';
+// Added Button import
 import { Home } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
 
@@ -65,7 +66,7 @@ export default function CouncilTaxCalculator() {
     <div className="bg-white">
       <div className="bg-gray-50 border-b">
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold text-center">Council Tax Estimator</h1>
+          <Heading as="h1" size="h1" weight="bold" className="text-center">Council Tax Estimator</Heading>
           {/* Added description paragraph */}
           <p className="text-center text-gray-600 mt-2">
             Get an estimate for your annual council tax bill based on your property band in England.

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin, Users, TrendingUp, Home, Utensils, Bus } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
 
+import Heading from '@/components/common/Heading';
 const costOfLivingFAQs = [
   {
     question: 'Where does this cost of living data come from?',
@@ -38,7 +39,7 @@ export default function CostOfLivingPage() {
   if (!city) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold">City Not Found</h1>
+        <Heading as="h1" size="h1" weight="bold">City Not Found</Heading>
         <p className="text-gray-600">The city you're looking for could not be found.</p>
         <Link
           to={costOfLivingBase}

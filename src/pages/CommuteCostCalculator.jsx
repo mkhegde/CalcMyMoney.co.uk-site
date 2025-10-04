@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Car, Train, Calculator } from 'lucide-react';
 
+import Heading from '@/components/common/Heading';
 export default function CommuteCostCalculator() {
   const [distance, setDistance] = useState('');
   const [mpg, setMpg] = useState('');
@@ -38,7 +39,7 @@ export default function CommuteCostCalculator() {
     <div className="bg-white">
       <div className="bg-gray-50 border-b">
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold text-center">Commute Cost Calculator</h1>
+          <Heading as="h1" size="h1" weight="bold" className="text-center">Commute Cost Calculator</Heading>
         </div>
       </div>
       <div className="max-w-4xl mx-auto p-4 py-8">
