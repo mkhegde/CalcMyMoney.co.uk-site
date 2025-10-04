@@ -187,7 +187,7 @@ export default function Home() {
       <div className="relative border-b border-border/70 bg-hero-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="text-center max-w-4xl mx-auto text-hero-foreground">
-            <Heading as="h1" size="h1" weight="bold" className="text-hero-foreground mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="title-hero text-hero-foreground mb-4">
               Free UK Salary, Tax & Mortgage Calculators
             </Heading>
             <p className="lead text-muted-foreground mb-8">
@@ -224,16 +224,16 @@ export default function Home() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="font-medium text-foreground">{calc.name}</p>
-                                <p className="text-sm text-muted-foreground">{calc.description}</p>
+                                <p className="body text-muted-foreground">{calc.description}</p>
                                 {(calc.category || calc.subCategory) && (
-                                  <p className="text-xs text-neutral-soft-foreground">
+                                  <p className="caption text-neutral-soft-foreground">
                                     {calc.category || 'Calculator'}{' '}
                                     {calc.subCategory ? `→ ${calc.subCategory}` : ''}
                                   </p>
                                 )}
                               </div>
                               {calc.status === 'planned' ? (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="caption">
                                   Coming Soon
                                 </Badge>
                               ) : (
@@ -250,7 +250,7 @@ export default function Home() {
             </div>
 
             {/* Quick Stats */}
-            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground sm:gap-8">
+            <div className="flex flex-wrap items-center justify-center gap-4 body text-muted-foreground sm:gap-8">
               <div className="flex items-center gap-2">
                 <Calculator className="h-4 w-4 text-primary" />
                 <span>{stats.total} Calculators</span>
@@ -289,13 +289,13 @@ export default function Home() {
                 </div>
                 <Heading
                   as="h3"
-                  size="h4"
+                  size="h3"
                   className="text-foreground transition-colors group-hover:text-primary"
                 >
                   {card.title}
                 </Heading>
               </div>
-              <p className="text-sm text-muted-foreground">{card.description}</p>
+              <p className="body text-muted-foreground">{card.description}</p>
             </button>
           ))}
         </div>
@@ -331,14 +331,14 @@ export default function Home() {
                 <calc.icon className="h-5 w-5 text-primary" />
                 <Heading
                   as="h3"
-                  size="h4"
+                  size="h3"
                   className="text-foreground transition-colors group-hover:text-primary"
                 >
                   {calc.name}
                 </Heading>
               </div>
-              <p className="mb-2 text-sm text-muted-foreground">{calc.description}</p>
-              <p className="text-xs text-neutral-soft-foreground">{calc.category}</p>
+              <p className="mb-2 body text-muted-foreground">{calc.description}</p>
+              <p className="caption text-neutral-soft-foreground">{calc.category}</p>
             </Link>
           ))}
         </div>
@@ -384,7 +384,7 @@ export default function Home() {
                       <Heading as="h3" size="h3" weight="bold" className="text-foreground">
                         {category.name}
                       </Heading>
-                      <p className="text-muted-foreground">{category.description}</p>
+                      <p className="body text-muted-foreground">{category.description}</p>
                     </div>
                   </div>
 
@@ -394,7 +394,7 @@ export default function Home() {
                       <div key={subCategory.name} className="space-y-3">
                         <Heading
                           as="h4"
-                          size="h4"
+                          size="h3"
                           className="border-l-4 border-primary pl-3 text-foreground"
                         >
                           {subCategory.name}
@@ -409,15 +409,15 @@ export default function Home() {
                                     to={calc.url}
                                     onMouseEnter={() => calc.page && prefetchPage(calc.page)}
                                     onFocus={() => calc.page && prefetchPage(calc.page)}
-                                    className="flex-1 text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                                    className="flex-1 body font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
                                   >
                                     {calc.name}
                                   </Link>
                                 ) : (
-                                  <span className="flex-1 text-sm text-muted-foreground/60">{calc.name}</span>
+                                  <span className="flex-1 body text-muted-foreground/60">{calc.name}</span>
                                 )}
                                 {(calc.status === 'planned' || calc.status === 'pending') && (
-                                  <Badge variant="outline" className="ml-2 text-xs text-primary">
+                                  <Badge variant="outline" className="ml-2 caption text-primary">
                                     Coming Soon
                                   </Badge>
                                 )}

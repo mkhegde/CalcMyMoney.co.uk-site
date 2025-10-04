@@ -412,7 +412,7 @@ const AdvancedOptions = React.memo(
           onChange={(e) => onValueChange('taxCode', e.target.value)}
           className="dark:bg-gray-700 dark:text-gray-50 dark:border-gray-600"
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="caption text-gray-500 dark:text-gray-400">
           Default for {taxData[taxYear].name} is {taxData[taxYear].defaultTaxCode}
         </p>
       </div>
@@ -472,7 +472,7 @@ const AdvancedOptions = React.memo(
               className="pl-10 dark:bg-gray-700 dark:text-gray-50 dark:border-gray-600"
             />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="caption text-gray-500 dark:text-gray-400">
             Annual investment limit: £200,000
           </p>
         </div>
@@ -490,7 +490,7 @@ const AdvancedOptions = React.memo(
               className="pl-10 dark:bg-gray-700 dark:text-gray-50 dark:border-gray-600"
             />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="caption text-gray-500 dark:text-gray-400">
             Annual investment limit: £1,000,000
           </p>
         </div>
@@ -506,16 +506,16 @@ const AdvancedOptions = React.memo(
                 <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:text-gray-300 cursor-help" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs bg-gray-800 text-white p-3 rounded-lg">
-                <p className="text-sm">
+                <p className="body">
                   <strong>Common allowances include:</strong>
                 </p>
-                <ul className="text-xs mt-1 space-y-1">
+                <ul className="caption mt-1 space-y-1">
                   <li>• Marriage Allowance: £1,260</li>
                   <li>• Blind Person's Allowance: £3,070</li>
                   <li>• Property Allowance: up to £1,000</li>
                   <li>• Trading Allowance: up to £1,000</li>
                 </ul>
-                <p className="text-xs mt-2 italic">
+                <p className="caption mt-2 italic">
                   Only include if you're already entitled to these allowances.
                 </p>
               </TooltipContent>
@@ -532,7 +532,7 @@ const AdvancedOptions = React.memo(
             placeholder="e.g. 1260"
           />
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="caption text-gray-500 dark:text-gray-400">
           e.g. Marriage Allowance, Blind Person's Allowance.
           <a
             href="#faq-section"
@@ -833,7 +833,7 @@ export default function SalaryCalculatorUK() {
               maximumFractionDigits: 2,
             })}
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="caption text-gray-500 dark:text-gray-400">
             {results.grossAnnual > 0 ? ((data.value / results.grossAnnual) * 100).toFixed(1) : 0}%
             of gross salary
           </p>
@@ -857,7 +857,7 @@ export default function SalaryCalculatorUK() {
         fill="currentColor" // Use currentColor to pick up CSS text color
         textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
-        className="text-xs text-gray-800 dark:text-gray-200" // Tailwind classes for text color and size
+        className="caption text-gray-800 dark:text-gray-200" // Tailwind classes for text color and size
       >
         {`${name} ${(percent * 100).toFixed(0)}%`}
       </text>
@@ -912,7 +912,7 @@ export default function SalaryCalculatorUK() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <Breadcrumbs path={breadcrumbPath} />
             <div className="text-center">
-              <Heading as="h1" size="h1" weight="bold" className="mb-4 text-hero-foreground">
+              <Heading as="h1" size="h1" weight="bold" className="title-hero mb-4 text-hero-foreground">
                 UK Salary Calculator – Take-Home Pay 2025/26
               </Heading>
               <p className="lead text-muted-foreground max-w-3xl mx-auto">
@@ -950,7 +950,7 @@ export default function SalaryCalculatorUK() {
               </div>
 
               {/* Additional keyword-rich content */}
-              <div className="mt-6 text-sm text-muted-foreground max-w-4xl mx-auto">
+              <div className="mt-6 body text-muted-foreground max-w-4xl mx-auto">
                 <p>
                   Supports gross-to-net and net-to-gross calculations • Updated for 2025/26 tax
                   rates • Includes student loan repayments • Scottish income tax rates supported
@@ -1097,7 +1097,7 @@ export default function SalaryCalculatorUK() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                            <p className="body font-medium text-green-800 dark:text-green-300">
                               Annual Take-Home
                             </p>
                             <div className="text-3xl font-bold text-green-900 dark:text-green-100">
@@ -1112,7 +1112,7 @@ export default function SalaryCalculatorUK() {
                             <TrendingUp className="w-6 h-6 text-white" />
                           </div>
                         </div>
-                        <p className="text-sm text-green-700 dark:text-green-300 mt-2">
+                        <p className="body text-green-700 dark:text-green-300 mt-2">
                           £
                           {(results.takeHomeAnnual / 12)?.toLocaleString('en-GB', {
                             minimumFractionDigits: 2,
@@ -1127,7 +1127,7 @@ export default function SalaryCalculatorUK() {
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                            <p className="body font-medium text-red-800 dark:text-red-300">
                               Total Deductions
                             </p>
                             <div className="text-3xl font-bold text-red-900 dark:text-red-100">
@@ -1142,7 +1142,7 @@ export default function SalaryCalculatorUK() {
                             <TrendingDown className="w-6 h-6 text-white" />
                           </div>
                         </div>
-                        <p className="text-sm text-red-700 dark:text-red-300 mt-2">
+                        <p className="body text-red-700 dark:text-red-300 mt-2">
                           {results.grossAnnual > 0
                             ? ((results.totalDeductions / results.grossAnnual) * 100).toFixed(1)
                             : 0}
@@ -1275,7 +1275,7 @@ export default function SalaryCalculatorUK() {
                             </div>
 
                             <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                              <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                              <p className="body text-yellow-800 dark:text-yellow-300">
                                 💡{' '}
                                 <strong>
                                   To earn £
@@ -1296,7 +1296,7 @@ export default function SalaryCalculatorUK() {
                                   .
                                 </strong>
                               </p>
-                              <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
+                              <p className="caption text-yellow-700 dark:text-yellow-400 mt-1">
                                 Here's how that gross salary breaks down:
                               </p>
                             </div>
@@ -1308,7 +1308,7 @@ export default function SalaryCalculatorUK() {
                                   3. Personal Allowance (Tax-Free)
                                 </span>
                                 {showAdvanced && (
-                                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                                  <p className="body text-gray-600 dark:text-gray-300">
                                     Tax code: {taxCode}{' '}
                                     {Number(otherAllowances) > 0
                                       ? `+ £${Number(otherAllowances).toLocaleString()} other allowances`
@@ -1349,7 +1349,7 @@ export default function SalaryCalculatorUK() {
                                   2. Personal Allowance (Tax-Free)
                                 </span>
                                 {showAdvanced && (
-                                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                                  <p className="body text-gray-600 dark:text-gray-300">
                                     Tax code: {taxCode}{' '}
                                     {Number(otherAllowances) > 0
                                       ? `+ £${Number(otherAllowances).toLocaleString()} other allowances`
@@ -1376,7 +1376,7 @@ export default function SalaryCalculatorUK() {
                                 {activeTab === 'netToGross' ? '4' : '3'}. Pension Contribution
                                 (Pre-Tax)
                               </span>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                              <p className="body text-gray-600 dark:text-gray-300">
                                 {pensionValue}
                                 {pensionType === 'percent' ? '%' : ' Fixed PM'}
                               </p>
@@ -1418,7 +1418,7 @@ export default function SalaryCalculatorUK() {
 
                         {/* Income Tax Breakdown */}
                         <div className="space-y-2">
-                          <Heading as="h4" size="h4" weight="medium" className="text-foreground">
+                          <Heading as="h4" size="h3" weight="medium" className="text-foreground">
                             {activeTab === 'netToGross'
                               ? showAdvanced && results.pension > 0
                                 ? '6'
@@ -1437,7 +1437,7 @@ export default function SalaryCalculatorUK() {
                                 <span className="font-medium text-gray-900 dark:text-gray-100">
                                   {bracket.name} ({bracket.rate}%)
                                 </span>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">
+                                <p className="body text-gray-600 dark:text-gray-300">
                                   {bracket.bracketMin !== undefined
                                     ? `£${bracket.bracketMin.toLocaleString()} - `
                                     : ''}
@@ -1472,7 +1472,7 @@ export default function SalaryCalculatorUK() {
 
                         {/* National Insurance Breakdown */}
                         <div className="space-y-2">
-                          <Heading as="h4" size="h4" weight="medium" className="text-foreground">
+                          <Heading as="h4" size="h3" weight="medium" className="text-foreground">
                             {activeTab === 'netToGross'
                               ? showAdvanced && results.pension > 0
                                 ? '7'
@@ -1491,7 +1491,7 @@ export default function SalaryCalculatorUK() {
                                 <span className="font-medium text-gray-900 dark:text-gray-100">
                                   {bracket.rate}% Rate
                                 </span>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">
+                                <p className="body text-gray-600 dark:text-gray-300">
                                   {bracket.min !== undefined
                                     ? `£${bracket.min.toLocaleString()} - `
                                     : ''}
@@ -1542,7 +1542,7 @@ export default function SalaryCalculatorUK() {
                                   .replace('postgraduate', 'Postgraduate')}
                                 )
                               </span>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                              <p className="body text-gray-600 dark:text-gray-300">
                                 {taxData[taxYear].studentLoanRates[studentLoanPlan]?.rate * 100}% on
                                 income above £
                                 {taxData[taxYear].studentLoanRates[
@@ -1567,7 +1567,7 @@ export default function SalaryCalculatorUK() {
                               <span className="font-medium text-gray-900 dark:text-gray-100">
                                 SEIS Tax Relief (50%)
                               </span>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                              <p className="body text-gray-600 dark:text-gray-300">
                                 On £{(Number(seisInvestment) || 0).toLocaleString('en-GB')}{' '}
                                 investment
                               </p>
@@ -1589,7 +1589,7 @@ export default function SalaryCalculatorUK() {
                               <span className="font-medium text-gray-900 dark:text-gray-100">
                                 EIS Tax Relief (30%)
                               </span>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                              <p className="body text-gray-600 dark:text-gray-300">
                                 On £{(Number(eisInvestment) || 0).toLocaleString('en-GB')}{' '}
                                 investment
                               </p>
@@ -1622,7 +1622,7 @@ export default function SalaryCalculatorUK() {
 
                         {activeTab === 'netToGross' && (
                           <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                            <p className="text-sm text-green-800 dark:text-green-300">
+                            <p className="body text-green-800 dark:text-green-300">
                               ✅ <strong>Perfect match!</strong> A gross salary of £
                               {results.grossAnnual?.toLocaleString('en-GB', {
                                 maximumFractionDigits: 0,
@@ -1638,7 +1638,7 @@ export default function SalaryCalculatorUK() {
 
                         <div className="grid md:grid-cols-4 gap-4 mt-6 pt-6 border-t dark:border-gray-700">
                           <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                            <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
+                            <p className="body text-blue-800 dark:text-blue-300 font-medium">
                               Monthly Take-Home
                             </p>
                             <p className="text-xl font-bold text-blue-900 dark:text-blue-100">
@@ -1650,7 +1650,7 @@ export default function SalaryCalculatorUK() {
                             </p>
                           </div>
                           <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                            <p className="text-sm text-purple-800 dark:text-purple-300 font-medium">
+                            <p className="body text-purple-800 dark:text-purple-300 font-medium">
                               Weekly Take-Home
                             </p>
                             <p className="text-xl font-bold text-purple-900 dark:text-purple-100">
@@ -1662,7 +1662,7 @@ export default function SalaryCalculatorUK() {
                             </p>
                           </div>
                           <div className="text-center p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                            <p className="text-sm text-green-800 dark:text-green-300 font-medium">
+                            <p className="body text-green-800 dark:text-green-300 font-medium">
                               Daily Take-Home
                             </p>
                             <p className="text-xl font-bold text-green-900 dark:text-green-100">
@@ -1672,12 +1672,12 @@ export default function SalaryCalculatorUK() {
                                 maximumFractionDigits: 2,
                               })}
                             </p>
-                            <p className="text-xs text-green-600 dark:text-green-400">
+                            <p className="caption text-green-600 dark:text-green-400">
                               (5days/week)
                             </p>
                           </div>
                           <div className="text-center p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-                            <p className="text-sm text-indigo-800 dark:text-indigo-300 font-medium">
+                            <p className="body text-indigo-800 dark:text-indigo-300 font-medium">
                               Hourly Take-Home
                             </p>
                             <p className="text-xl font-bold text-indigo-900 dark:text-indigo-100">
@@ -1687,7 +1687,7 @@ export default function SalaryCalculatorUK() {
                                 maximumFractionDigits: 2,
                               })}
                             </p>
-                            <p className="text-xs text-indigo-600 dark:text-indigo-400">
+                            <p className="caption text-indigo-600 dark:text-indigo-400">
                               (40hrs/week)
                             </p>
                           </div>
@@ -1707,7 +1707,7 @@ export default function SalaryCalculatorUK() {
                   <Card className="bg-amber-50 dark:bg-yellow-900/30 border-amber-200 dark:border-yellow-700">
                     <CardContent className="p-4 flex items-start gap-3">
                       <HelpCircle className="w-5 h-5 text-amber-700 dark:text-yellow-400 mt-0.5" />
-                      <p className="text-sm text-amber-800 dark:text-yellow-300">
+                      <p className="body text-amber-800 dark:text-yellow-300">
                         <strong>Disclaimer:</strong> This calculator provides estimates based on UK
                         tax rates for the selected tax year. Results are for guidance only and
                         should not be considered as professional financial advice. Actual deductions
@@ -1810,10 +1810,10 @@ export default function SalaryCalculatorUK() {
                 to={createPageUrl('SalaryCalculatorTakeHomePay')}
                 className="block rounded-lg border border-card-muted bg-card p-5 transition hover:border-primary/40 hover:shadow-md"
               >
-                <Heading as="h3" size="h4" className="text-card-foreground">
+                <Heading as="h3" size="h3" className="text-card-foreground">
                   Take-Home Pay Calculator
                 </Heading>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="body text-muted-foreground mt-1">
                   Estimate your net pay after tax & NI.
                 </p>
               </Link>
@@ -1821,10 +1821,10 @@ export default function SalaryCalculatorUK() {
                 to={createPageUrl('SalaryCalculatorPaycheck')}
                 className="block rounded-lg border border-card-muted bg-card p-5 transition hover:border-primary/40 hover:shadow-md"
               >
-                <Heading as="h3" size="h4" className="text-card-foreground">
+                <Heading as="h3" size="h3" className="text-card-foreground">
                   Paycheck Calculator
                 </Heading>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="body text-muted-foreground mt-1">
                   Weekly, fortnightly or monthly.
                 </p>
               </Link>
@@ -1832,10 +1832,10 @@ export default function SalaryCalculatorUK() {
                 to={createPageUrl('GrossToNetCalculator')}
                 className="block rounded-lg border border-card-muted bg-card p-5 transition hover:border-primary/40 hover:shadow-md"
               >
-                <Heading as="h3" size="h4" className="text-card-foreground">
+                <Heading as="h3" size="h3" className="text-card-foreground">
                   Gross to Net Calculator
                 </Heading>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="body text-muted-foreground mt-1">
                   Convert gross salary to take-home.
                 </p>
               </Link>
@@ -1843,10 +1843,10 @@ export default function SalaryCalculatorUK() {
                 to={createPageUrl('ProRataSalaryCalculator')}
                 className="block rounded-lg border border-card-muted bg-card p-5 transition hover:border-primary/40 hover:shadow-md"
               >
-                <Heading as="h3" size="h4" className="text-card-foreground">
+                <Heading as="h3" size="h3" className="text-card-foreground">
                   Pro-Rata Salary Calculator
                 </Heading>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="body text-muted-foreground mt-1">
                   Part-time & pro-rata earnings.
                 </p>
               </Link>
@@ -1858,7 +1858,7 @@ export default function SalaryCalculatorUK() {
         <div className="bg-neutral-soft py-12 non-printable">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <FAQSection faqs={salaryHubFaqs} title="Salary Calculator FAQs" />
-            <p className="text-xs text-muted-foreground mt-6">
+            <p className="caption text-muted-foreground mt-6">
               Last updated: <time dateTime={LAST_UPDATED_ISO}>{LAST_UPDATED_DISPLAY}</time>
             </p>
           </div>
@@ -1879,9 +1879,9 @@ export default function SalaryCalculatorUK() {
                 UK Salary Calculator - Everything You Need to Know
               </Heading>
             </div>
-            <div className="grid md:grid-cols-2 gap-8 text-sm text-muted-foreground">
+            <div className="grid md:grid-cols-2 gap-8 body text-muted-foreground">
               <div>
-                <Heading as="h3" size="h4" className="mb-3 text-foreground">
+                <Heading as="h3" size="h3" className="mb-3 text-foreground">
                   How Our UK Tax Calculator Works
                 </Heading>
                 <ul className="space-y-2">
@@ -1894,7 +1894,7 @@ export default function SalaryCalculatorUK() {
                 </ul>
               </div>
               <div>
-                <Heading as="h3" size="h4" className="mb-3 text-foreground">
+                <Heading as="h3" size="h3" className="mb-3 text-foreground">
                   Perfect for UK Employees &amp; Contractors
                 </Heading>
                 <ul className="space-y-2">
