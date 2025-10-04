@@ -1,11 +1,137 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Percent, Home, Landmark, Zap, ExternalLink } from 'lucide-react';
 import Heading from '@/components/common/Heading';
 
-const StatCard = ({ title, value, change, description, trend, link, Icon }) => {
+const percentFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'decimal',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+const monthFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
+
+const STAT_CONFIG = [
+  {
+    id: 'bankRate',
+    title: 'BoE Bank Rate',
+    icon: Landmark,
+    link: 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp',
+    buildDescription: (stat) => {
+      if (stat?.period?.start) {
+        const date = new Date(stat.period.start);
+        if (!Number.isNaN(date.getTime())) {
+          return `Official Bank Rate as at ${monthFormatter.format(date)}.`;
+        }
+      }
+      return 'Official rate set by the Bank of England.';
+    },
+  },
+  {
+    id: 'cpih',
+    title: 'Inflation (CPIH)',
+    icon: Percent,
+    link: 'https://www.ons.gov.uk/economy/inflationandpriceindices',
+    buildDescription: (stat) => {
+      if (stat?.period?.start) {
+        const date = new Date(stat.period.start);
+        if (!Number.isNaN(date.getTime())) {
+          return `12-month CPIH rate for ${monthFormatter.format(date)}.`;
+        }
+      }
+      return '12-month growth rate published by the ONS.';
+    },
+  },
+  {
+    id: 'housePrice',
+    title: 'Average UK House Price',
+    icon: Home,
+    link: 'https://landregistry.data.gov.uk/app/hpi/',
+    buildDescription: (stat) => {
+      if (stat?.period?.start) {
+        const date = new Date(stat.period.start);
+        if (!Number.isNaN(date.getTime())) {
+          return `UK HPI average for ${monthFormatter.format(date)}.`;
+        }
+      }
+      return 'UK House Price Index nationwide average.';
+    },
+  },
+  {
+    id: 'ofgemCap',
+    title: 'Ofgem Energy Price Cap',
+    icon: Zap,
+    link: 'https://www.ofgem.gov.uk/energy-price-cap',
+    buildDescription: (stat) => {
+      if (stat?.period?.start) {
+        const start = new Date(stat.period.start);
+        const end = stat?.period?.end ? new Date(stat.period.end) : null;
+        if (!Number.isNaN(start.getTime())) {
+          const startLabel = monthFormatter.format(start);
+          if (end && !Number.isNaN(end.getTime())) {
+            const endLabel = monthFormatter.format(end);
+            return `Cap for ${startLabel} – ${endLabel}.`;
+          }
+          return `Cap effective from ${startLabel}.`;
+        }
+      }
+      return 'Typical household annualised cap published quarterly by Ofgem.';
+    },
+  },
+];
+
+function formatValue(stat) {
+  if (!stat) return null;
+  const { value, unit } = stat;
+  if (typeof value !== 'number' || Number.isNaN(value)) return null;
+  if (unit === 'percent') {
+    return `${percentFormatter.format(value)}%`;
+  }
+  if (unit === 'gbp') {
+    return currencyFormatter.format(value);
+  }
+  return percentFormatter.format(value);
+}
+
+function formatChange(change) {
+  if (!change || typeof change.value !== 'number' || Number.isNaN(change.value)) return null;
+  const { unit } = change;
+  if (unit === 'percent') {
+    return `${percentFormatter.format(change.value)}%`;
+  }
+  if (unit === 'percentagePoints') {
+    return `${percentFormatter.format(change.value)} pp`;
+  }
+  if (unit === 'gbp' || unit === 'currency') {
+    return currencyFormatter.format(change.value);
+  }
+  return percentFormatter.format(change.value);
+}
+
+const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
+  const formattedValue = status === 'ready' ? formatValue(stat) : null;
+  const formattedChange = status === 'ready' ? formatChange(stat?.change) : null;
+  const trend = stat?.change?.direction;
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : null;
-  const trendColor = trend === 'up' ? 'text-red-600' : 'text-green-600';
+  const trendColor = trend === 'up' ? 'text-red-600' : trend === 'down' ? 'text-green-600' : 'text-gray-600';
+
+  let description = '';
+  if (status === 'ready') {
+    description = stat?.description ?? stat?.period?.label ?? '';
+  } else if (status === 'loading') {
+    description = 'Fetching latest figures…';
+  } else if (status === 'error') {
+    description = error ?? 'Unable to load data right now.';
+  } else {
+    description = 'No data available right now.';
+  }
 
   return (
     <Card className="h-full flex flex-col">
@@ -14,12 +140,17 @@ const StatCard = ({ title, value, change, description, trend, link, Icon }) => {
         <Icon className="w-5 h-5 text-gray-500" />
       </CardHeader>
       <CardContent className="flex-grow flex flex-col justify-center">
-        <div className="text-3xl font-bold">{value}</div>
-        {change && (
+        <div className="text-3xl font-bold">
+          {status === 'ready' && formattedValue}
+          {status === 'loading' && <span className="text-gray-400">Loading…</span>}
+          {status === 'error' && <span className="text-gray-400">—</span>}
+          {status === 'empty' && <span className="text-gray-400">—</span>}
+        </div>
+        {status === 'ready' && formattedChange && (
           <div className="text-sm text-gray-600 flex items-center gap-1">
             {TrendIcon && <TrendIcon className={`w-4 h-4 ${trendColor}`} />}
-            <span className={trendColor}>{change}</span>
-            <span>vs last year</span>
+            <span className={trendColor}>{formattedChange}</span>
+            <span>{stat?.change?.label ?? 'vs previous period'}</span>
           </div>
         )}
         <p className="text-xs text-gray-500 mt-2">{description}</p>
@@ -41,8 +172,68 @@ const StatCard = ({ title, value, change, description, trend, link, Icon }) => {
 };
 
 export default function UKFinancialStats() {
-  // Data is now static to prevent fetching errors from blocked external APIs.
-  // Users are directed to the official sources for the most up-to-date information.
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/uk-financial-stats', {
+          headers: { accept: 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+        const data = await response.json();
+        if (!cancelled) {
+          setStats(data?.stats ?? null);
+        }
+        if (data?.errors && Object.keys(data.errors).length && !cancelled) {
+          setError('Some data sources are temporarily unavailable.');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError('Unable to fetch the latest data.');
+          setStats(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const cards = useMemo(
+    () =>
+      STAT_CONFIG.map((config) => {
+        const stat = stats?.[config.id];
+        let status = 'empty';
+        if (loading) status = 'loading';
+        else if (error && !stat) status = 'error';
+        else if (stat) status = 'ready';
+        return {
+          ...config,
+          stat: stat
+            ? {
+                ...stat,
+                description: config.buildDescription(stat),
+              }
+            : null,
+          status,
+        };
+      }),
+    [error, loading, stats],
+  );
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -61,39 +252,23 @@ export default function UKFinancialStats() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {!loading && error && (
+          <div className="mb-6 text-sm text-amber-700 bg-amber-100 border border-amber-200 rounded-md p-3">
+            {error}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <StatCard
-            title="BoE Bank Rate"
-            Icon={Landmark}
-            value="5.25%"
-            description="Official rate set by the Bank of England. Data is illustrative, check source for live rate."
-            link="https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp"
-          />
-          <StatCard
-            title="Inflation (CPIH)"
-            Icon={Percent}
-            value="3.8%"
-            description="12-month growth rate (Apr 2024). Data is illustrative, check source for live rate."
-            link="https://www.ons.gov.uk/economy/inflationandpriceindices"
-            trend="down"
-            change="3.8%"
-          />
-          <StatCard
-            title="Average UK House Price"
-            Icon={Home}
-            value="£281,000"
-            description="Average price (Mar 2024). Data is illustrative, check source for live rate."
-            change="-0.2%"
-            trend="down"
-            link="https://landregistry.data.gov.uk/app/hpi/"
-          />
-          <StatCard
-            title="Ofgem Energy Price Cap"
-            Icon={Zap}
-            value="£1,568"
-            description="Typical household, per year (1 Jul - 30 Sep 2024). Source updated quarterly."
-            link="https://www.ofgem.gov.uk/energy-price-cap"
-          />
+          {cards.map((card) => (
+            <StatCard
+              key={card.id}
+              title={card.title}
+              icon={card.icon}
+              link={card.link}
+              status={card.status}
+              stat={card.stat}
+              error={error}
+            />
+          ))}
         </div>
         <div className="mt-12 text-center text-sm text-gray-500">
           <p>
