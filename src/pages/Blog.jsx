@@ -75,18 +75,20 @@ const categoryColors = {
 
 export default function Blog() {
   return (
-    <div className="bg-neutral-soft py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <Heading as="h1" size="h1" weight="bold" underline className="mb-6 text-foreground">
+    <div className="bg-background">
+      <div className="bg-hero bg-hero-pattern text-hero-foreground">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+          <Heading as="h1" size="h1" weight="bold" underline className="mb-6">
             Financial Insights &amp; Updates
           </Heading>
-          <p className="lead text-muted-foreground max-w-3xl mx-auto">
+          <p className="lead text-hero-foreground/80 max-w-3xl mx-auto">
             Stay informed with the latest UK financial news, tax updates, and money management
             strategies.
           </p>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {blogPosts.map((post, index) => (
             <Link
@@ -111,7 +113,7 @@ export default function Blog() {
                 <CardHeader>
                   <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
                     <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${categoryColors[post.category] || 'bg-gray-100 text-gray-800'}`}
+                      className={`px-2 py-1 rounded text-xs font-medium ${categoryColors[post.category] || 'bg-muted text-foreground'}`}
                     >
                       {post.category}
                     </span>

@@ -18,12 +18,12 @@ export default function About() {
     <>
       <script type="application/ld+json">{JSON.stringify(breadcrumbJson)}</script>
       <div className="bg-background">
-        <div className="bg-hero border-b border-border/60">
+        <div className="bg-hero bg-hero-pattern text-hero-foreground border-b border-border/60">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-            <Heading as="h1" size="h1" weight="bold" underline className="text-hero-foreground">
+            <Heading as="h1" size="h1" weight="bold" underline>
               About Calculate My Money
             </Heading>
-            <p className="lead text-muted-foreground max-w-3xl mx-auto mt-3">
+            <p className="lead text-hero-foreground/80 max-w-3xl mx-auto mt-3">
               Who we are and how we build accurate, transparent UK financial calculators.
             </p>
           </div>

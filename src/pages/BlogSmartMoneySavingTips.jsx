@@ -127,40 +127,44 @@ export default function BlogSmartMoneySavingTips() {
   }, [articleJsonLd, defaults?.jsonLd, post, resetSeo, setSeo]);
 
   return (
-    <div className="bg-background py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link
-          to={createPageUrl('Blog')}
-          className="mb-8 inline-flex items-center text-primary hover:underline"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to all articles
-        </Link>
+    <div className="bg-background">
+      <article>
+        <div className="bg-hero bg-hero-pattern text-hero-foreground">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <Link
+              to={createPageUrl('Blog')}
+              className="mb-6 inline-flex items-center text-hero-foreground hover:text-hero-foreground/80"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to all articles
+            </Link>
 
-        <article>
-          <header className="mb-8">
-            <span className="bg-pill text-pill-foreground px-3 py-1 rounded-full text-sm font-medium">
-              {post.category}
-            </span>
-            <Heading as="h1" size="h1" weight="bold" className="mt-4 mb-4 text-foreground">
-              {post.title}
-            </Heading>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span>{post.author}</span>
+            <header className="mb-8">
+              <span className="bg-pill text-pill-foreground px-3 py-1 rounded-full text-sm font-medium">
+                {post.category}
+              </span>
+              <Heading as="h1" size="h1" weight="bold" className="mt-4 mb-4">
+                {post.title}
+              </Heading>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-hero-foreground/80">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>{post.author}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <time dateTime={post.publishedTime}>{post.displayDate}</time>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  <span>{post.readTime}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <time dateTime={post.publishedTime}>{post.displayDate}</time>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                <span>{post.readTime}</span>
-              </div>
-            </div>
-          </header>
+            </header>
+          </div>
+        </div>
 
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <img
             src={createUnsplashUrl(heroImage.baseUrl, heroImage.params, heroImage.width)}
             srcSet={createUnsplashSrcSet(heroImage.baseUrl, heroImage.params, heroImage.srcSetWidths)}
@@ -183,7 +187,9 @@ export default function BlogSmartMoneySavingTips() {
 
             <Separator className="my-8" />
 
-            <h2 className="heading-2">Winning the Grocery Game: Strategies for the Supermarket</h2>
+            <Heading as="h2" size="h2" className="mt-12">
+              Winning the Grocery Game: Strategies for the Supermarket
+            </Heading>
             <p>
               Groceries are often one of the largest flexible expenses for families. Small changes
               here can lead to significant savings.
@@ -236,7 +242,9 @@ export default function BlogSmartMoneySavingTips() {
               </p>
             </div>
 
-            <h2 className="heading-2">Taming the Energy Beast: Heating, Lighting &amp; Appliances</h2>
+            <Heading as="h2" size="h2" className="mt-12">
+              Taming the Energy Beast: Heating, Lighting &amp; Appliances
+            </Heading>
             <p>With fluctuating energy prices, making your home more energy-efficient is key.</p>
             <ul>
               <li>
@@ -284,7 +292,9 @@ export default function BlogSmartMoneySavingTips() {
               </p>
             </div>
 
-            <h2 className="heading-2">Quick Wins: Small Changes, Big Impact</h2>
+            <Heading as="h2" size="h2" className="mt-12">
+              Quick Wins: Small Changes, Big Impact
+            </Heading>
             <p>Sometimes the smallest adjustments yield the greatest results:</p>
             <ul>
               <li>
@@ -307,7 +317,9 @@ export default function BlogSmartMoneySavingTips() {
 
             <Separator className="my-8" />
 
-            <h2 className="heading-2">Making it Sustainable: The Long Game</h2>
+            <Heading as="h2" size="h2" className="mt-12">
+              Making it Sustainable: The Long Game
+            </Heading>
             <p>
               The key to lasting financial change isn't dramatic overnight transformations – it's
               building sustainable habits that compound over time. Start with one or two changes

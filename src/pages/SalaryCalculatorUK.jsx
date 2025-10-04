@@ -908,14 +908,14 @@ export default function SalaryCalculatorUK() {
 
       <div className="bg-background">
         {/* Page Header - Optimized for SEO */}
-        <div className="bg-hero border-b border-border/60 non-printable">
+        <div className="bg-hero bg-hero-pattern text-hero-foreground border-b border-border/60 non-printable">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <Breadcrumbs path={breadcrumbPath} />
             <div className="text-center">
-              <Heading as="h1" size="h1" weight="bold" className="mb-4 text-hero-foreground">
+              <Heading as="h1" size="h1" weight="bold" className="mb-4">
                 UK Salary Calculator – Take-Home Pay 2025/26
               </Heading>
-              <p className="lead text-muted-foreground max-w-3xl mx-auto">
+              <p className="lead text-hero-foreground/80 max-w-3xl mx-auto">
                 Calculate your UK take-home pay for the 2025/26 tax year. Free salary calculator
                 with accurate income tax, National Insurance, and pension contributions. Works for
                 England, Wales, Scotland & Northern Ireland.
@@ -925,32 +925,32 @@ export default function SalaryCalculatorUK() {
               <div className="mt-6 flex flex-wrap justify-center gap-2">
                 <Link
                   to={createPageUrl('SalaryCalculatorTakeHomePay')}
-                  className="px-4 py-2 rounded-md border border-blue-200 text-blue-700 bg-white hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-300 dark:border-blue-700"
+                  className="px-4 py-2 rounded-md border border-hero-ring/60 bg-hero-foreground/10 text-hero-foreground transition-colors hover:bg-hero-foreground/20"
                 >
                   Take‑Home Pay
                 </Link>
                 <Link
                   to={createPageUrl('SalaryCalculatorPaycheck')}
-                  className="px-4 py-2 rounded-md border border-blue-200 text-blue-700 bg-white hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-300 dark:border-blue-700"
+                  className="px-4 py-2 rounded-md border border-hero-ring/60 bg-hero-foreground/10 text-hero-foreground transition-colors hover:bg-hero-foreground/20"
                 >
                   Paycheck
                 </Link>
                 <Link
                   to={createPageUrl('GrossToNetCalculator')}
-                  className="px-4 py-2 rounded-md border border-blue-200 text-blue-700 bg-white hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-300 dark:border-blue-700"
+                  className="px-4 py-2 rounded-md border border-hero-ring/60 bg-hero-foreground/10 text-hero-foreground transition-colors hover:bg-hero-foreground/20"
                 >
                   Gross‑to‑Net
                 </Link>
                 <Link
                   to={createPageUrl('ProRataSalaryCalculator')}
-                  className="px-4 py-2 rounded-md border border-blue-200 text-blue-700 bg-white hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-300 dark:border-blue-700"
+                  className="px-4 py-2 rounded-md border border-hero-ring/60 bg-hero-foreground/10 text-hero-foreground transition-colors hover:bg-hero-foreground/20"
                 >
                   Pro‑Rata
                 </Link>
               </div>
 
               {/* Additional keyword-rich content */}
-              <div className="mt-6 text-sm text-muted-foreground max-w-4xl mx-auto">
+              <div className="mt-6 text-sm text-hero-foreground/80 max-w-4xl mx-auto">
                 <p>
                   Supports gross-to-net and net-to-gross calculations • Updated for 2025/26 tax
                   rates • Includes student loan repayments • Scottish income tax rates supported
@@ -1855,7 +1855,7 @@ export default function SalaryCalculatorUK() {
         </div>
 
         {/* Visible FAQ section aligned with JSON-LD */}
-        <div className="bg-neutral-soft py-12 non-printable">
+        <div className="bg-muted py-12 non-printable">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <FAQSection faqs={salaryHubFaqs} title="Salary Calculator FAQs" />
             <p className="text-xs text-muted-foreground mt-6">
@@ -1865,14 +1865,14 @@ export default function SalaryCalculatorUK() {
         </div>
 
         {/* Replace the second FAQ section to keep alignment */}
-        <div id="faq-section" className="bg-neutral-soft py-12 non-printable">
+        <div id="faq-section" className="bg-muted py-12 non-printable">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <FAQSection faqs={salaryHubFaqs} />
           </div>
         </div>
 
         {/* Additional content section for keywords */}
-        <div className="bg-neutral-soft py-12 non-printable">
+        <div className="bg-muted py-12 non-printable">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
               <Heading as="h2" size="h2" weight="bold" className="mb-4 text-foreground">

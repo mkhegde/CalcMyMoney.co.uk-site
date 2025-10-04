@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Percent, Home, Landmark, Zap, ExternalLink } from 'lucide-react';
+import Heading from '@/components/common/Heading';
 
 const StatCard = ({ title, value, change, description, trend, link, Icon }) => {
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : null;
@@ -10,18 +11,18 @@ const StatCard = ({ title, value, change, description, trend, link, Icon }) => {
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-medium">{title}</CardTitle>
-        <Icon className="w-5 h-5 text-gray-500" />
+        <Icon className="w-5 h-5 text-muted-foreground" />
       </CardHeader>
       <CardContent className="flex-grow flex flex-col justify-center">
         <div className="text-3xl font-bold">{value}</div>
         {change && (
-          <div className="text-sm text-gray-600 flex items-center gap-1">
+          <div className="text-sm text-muted-foreground flex items-center gap-1">
             {TrendIcon && <TrendIcon className={`w-4 h-4 ${trendColor}`} />}
             <span className={trendColor}>{change}</span>
             <span>vs last year</span>
           </div>
         )}
-        <p className="text-xs text-gray-500 mt-2">{description}</p>
+        <p className="text-xs text-muted-foreground mt-2">{description}</p>
       </CardContent>
       {link && (
         <div className="p-4 pt-0 text-xs">
@@ -29,7 +30,7 @@ const StatCard = ({ title, value, change, description, trend, link, Icon }) => {
             href={link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-blue-600 hover:underline"
+            className="flex items-center gap-1 text-primary hover:underline"
           >
             Source <ExternalLink className="w-3 h-3" />
           </a>
@@ -44,18 +45,16 @@ export default function UKFinancialStats() {
   // Users are directed to the official sources for the most up-to-date information.
 
   return (
-    <div className="bg-white dark:bg-gray-900">
-      <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              UK Financial Statistics Dashboard
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Track key UK economic indicators. Data is sourced directly from official channels like
-              the Bank of England and the Office for National Statistics.
-            </p>
-          </div>
+    <div className="bg-background text-foreground">
+      <div className="bg-hero bg-hero-pattern text-hero-foreground">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+          <Heading as="h1" size="h1" weight="bold" className="mb-4">
+            UK Financial Statistics Dashboard
+          </Heading>
+          <p className="lead text-hero-foreground/80 max-w-3xl mx-auto">
+            Track key UK economic indicators. Data is sourced directly from official channels like
+            the Bank of England and the Office for National Statistics.
+          </p>
         </div>
       </div>
 
@@ -94,7 +93,7 @@ export default function UKFinancialStats() {
             link="https://www.ofgem.gov.uk/energy-price-cap"
           />
         </div>
-        <div className="mt-12 text-center text-sm text-gray-500">
+        <div className="mt-12 text-center text-sm text-muted-foreground">
           <p>
             Disclaimer: Data shown here is for informational purposes only. Please consult the
             official sources linked in each card for the most current and accurate figures before

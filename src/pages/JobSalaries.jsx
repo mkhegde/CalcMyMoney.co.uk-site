@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import Heading from '@/components/common/Heading';
 import { jobTitles, createSlug } from '../components/data/seo-data';
-import { Briefcase, Search, PoundSterling } from 'lucide-react';
+import { Briefcase, Search } from 'lucide-react';
 
 export default function JobSalaries() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,25 +17,23 @@ export default function JobSalaries() {
   );
 
   return (
-    <div className="bg-white dark:bg-gray-900">
-      <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              UK Job Salary Explorer
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Discover average salaries for hundreds of jobs across the UK. Find out what you could
-              be earning.
-            </p>
-          </div>
+    <div className="bg-background text-foreground">
+      <div className="bg-hero bg-hero-pattern text-hero-foreground">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+          <Heading as="h1" size="h1" weight="bold" className="mb-4">
+            UK Job Salary Explorer
+          </Heading>
+          <p className="lead text-hero-foreground/80 max-w-3xl mx-auto">
+            Discover average salaries for hundreds of jobs across the UK. Find out what you could be
+            earning.
+          </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search for a job title..."
@@ -54,15 +53,15 @@ export default function JobSalaries() {
                   key={job.title}
                   className="group"
                 >
-                  <Card className="hover:shadow-lg hover:border-blue-300 transition-all">
+                  <Card className="hover:shadow-lg hover:border-primary/60 transition-all">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <Briefcase className="w-5 h-5 text-blue-600" />
+                        <Briefcase className="w-5 h-5 text-primary" />
                         <span>{job.title}</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-gray-600 mb-2">{job.description}</p>
+                      <p className="text-sm text-muted-foreground mb-2">{job.description}</p>
                       <div className="flex items-center justify-between">
                         <Badge variant="secondary">{job.category}</Badge>
                         <span className="font-semibold text-lg">
@@ -74,7 +73,7 @@ export default function JobSalaries() {
                 </Link>
               ))
             ) : (
-              <p className="text-center md:col-span-3 text-gray-500">
+              <p className="text-center md:col-span-3 text-muted-foreground">
                 No job titles found for "{searchTerm}".
               </p>
             )}
@@ -82,9 +81,9 @@ export default function JobSalaries() {
         ) : (
           categories.map((category) => (
             <div key={category} className="mb-10">
-              <h2 className="text-2xl font-bold border-b-2 border-blue-500 pb-2 mb-4">
+              <Heading as="h2" size="h2" weight="bold" className="mb-4 border-b-2 border-primary pb-2">
                 {category}
-              </h2>
+              </Heading>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {jobTitles
                   .filter((job) => job.category === category)
@@ -94,11 +93,11 @@ export default function JobSalaries() {
                       key={job.title}
                       className="group"
                     >
-                      <div className="p-4 bg-gray-50 rounded-lg hover:bg-blue-100 transition-colors">
-                        <p className="font-semibold text-gray-800 group-hover:text-blue-700">
+                      <div className="p-4 rounded-lg border border-card-muted bg-card transition-colors hover:border-primary/40">
+                        <p className="font-semibold text-card-foreground group-hover:text-primary">
                           {job.title}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           ~£{job.averageSalary.toLocaleString()}
                         </p>
                       </div>
