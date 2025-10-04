@@ -3,6 +3,7 @@
 /* global fetch */
 
 const USER_AGENT = 'CalcMyMoney.co.uk/uk-financial-stats (+https://www.calcmymoney.co.uk)';
+const DEFAULT_TIMEOUT_MS = 12_000;
 
 const BANK_OF_ENGLAND_URL = 'https://www.bankofengland.co.uk/boeapps/database/_iadb-download.aspx';
 const ONS_CPIH_URL = 'https://api.beta.ons.gov.uk/v1/timeseries/L55O/dataset/mm23/data';
@@ -10,6 +11,8 @@ const LAND_REGISTRY_URL =
   'https://landregistry.data.gov.uk/app/ukhpi/download?format=json&geography=country&regionName=united-kingdom&propertyType=all-property-types';
 const OFGEM_CAP_URL =
   'https://www.ofgem.gov.uk/energy-data-and-research/data-portal/price-cap-results?format=json';
+
+/* ------------------------ helpers: parsing/formatting ----------------------- */
 
 function cleanCsvValue(value) {
   if (typeof value !== 'string') return value;
@@ -51,10 +54,12 @@ function formatPeriodLabel(isoDate, fallback) {
   if (!isoDate) return fallback ?? null;
   try {
     return new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' }).format(new Date(isoDate));
-  } catch (err) {
+  } catch {
     return fallback ?? null;
   }
 }
+
+/* ------------------------------- parsers ----------------------------------- */
 
 export function parseBankRateCsv(csvText) {
   if (typeof csvText !== 'string') {
@@ -153,13 +158,16 @@ export function parseOnsResponse(json) {
   });
 
   const latest = sorted[sorted.length - 1];
-  const previousYear = sorted.findLast
-    ? sorted.findLast((entry) => entry !== latest && entry.label === latest.label?.replace(/(\d{4})/, (y) => `${Number(y) - 1}`))
-    : [...sorted]
-        .reverse()
-        .find((entry) => entry !== latest && entry.label === latest.label?.replace(/(\d{4})/, (y) => `${Number(y) - 1}`));
+  const prevSameMonthLastYear = (arr => {
+    const target = latest.label?.replace(/(\d{4})/, (y) => `${Number(y) - 1}`);
+    for (let i = arr.length - 1; i >= 0; i -= 1) {
+      const e = arr[i];
+      if (e !== latest && e.label === target) return e;
+    }
+    return null;
+  })(sorted);
 
-  const previous = previousYear ?? (sorted.length > 1 ? sorted[sorted.length - 2] : null);
+  const previous = prevSameMonthLastYear ?? (sorted.length > 1 ? sorted[sorted.length - 2] : null);
 
   return {
     value: latest.value,
@@ -290,41 +298,63 @@ export function parseOfgemResponse(payload) {
   };
 }
 
+/* ------------------------------ fetch helpers ------------------------------ */
+
+function withTimeout(ms = DEFAULT_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error('timeout')), ms);
+  return { signal: controller.signal, clear: () => clearTimeout(timer) };
+}
+
 async function fetchJson(url, params = {}) {
-  const res = await fetch(url, {
-    headers: {
-      'user-agent': USER_AGENT,
-      accept: 'application/json,text/csv;q=0.9,*/*;q=0.8',
-      ...params.headers,
-    },
-    ...params,
-  });
+  const t = withTimeout(DEFAULT_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'user-agent': USER_AGENT,
+        accept: 'application/json,text/csv;q=0.9,*/*;q=0.8',
+        ...params.headers,
+      },
+      signal: t.signal,
+      ...params,
+    });
 
-  if (!res.ok) {
-    const details = await res.text().catch(() => '');
-    throw new Error(`http_${res.status}:${details.slice(0, 120)}`);
+    if (!res.ok) {
+      const details = await res.text().catch(() => '');
+      throw new Error(`http_${res.status}:${details.slice(0, 120)}`);
+    }
+
+    return res.json();
+  } finally {
+    t.clear();
   }
-
-  return res.json();
 }
 
 async function fetchText(url, params = {}) {
-  const res = await fetch(url, {
-    headers: {
-      'user-agent': USER_AGENT,
-      accept: 'text/csv,application/json;q=0.8,*/*;q=0.5',
-      ...params.headers,
-    },
-    ...params,
-  });
+  const t = withTimeout(DEFAULT_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'user-agent': USER_AGENT,
+        accept: 'text/csv,application/json;q=0.8,*/*;q=0.5',
+        ...params.headers,
+      },
+      signal: t.signal,
+      ...params,
+    });
 
-  if (!res.ok) {
-    const details = await res.text().catch(() => '');
-    throw new Error(`http_${res.status}:${details.slice(0, 120)}`);
+    if (!res.ok) {
+      const details = await res.text().catch(() => '');
+      throw new Error(`http_${res.status}:${details.slice(0, 120)}`);
+    }
+
+    return res.text();
+  } finally {
+    t.clear();
   }
-
-  return res.text();
 }
+
+/* --------------------------- main aggregation ------------------------------ */
 
 export async function getUkFinancialStats() {
   const result = {
@@ -342,7 +372,9 @@ export async function getUkFinancialStats() {
         url.searchParams.set('UsingCodes', 'Y');
         url.searchParams.set('VPD', 'Y');
         url.searchParams.set('VFD', 'N');
-        const csv = await fetchText(url.toString());
+        const csv = await fetchText(url.toString(), {
+          headers: { referer: 'https://www.bankofengland.co.uk/' },
+        });
         const parsed = parseBankRateCsv(csv);
         result.stats.bankRate = {
           ...parsed,
@@ -354,6 +386,7 @@ export async function getUkFinancialStats() {
           },
         };
       } catch (error) {
+        console.error('[bankRate] fetch/parse failed:', error?.message);
         result.errors.bankRate = error?.message ?? 'unknown_error';
       }
     })(),
@@ -378,7 +411,8 @@ export async function getUkFinancialStats() {
             };
           }
         } catch (err) {
-          // ignore secondary fetch failures
+          // secondary fetch is optional; log but continue
+          console.warn('[cpih] previous-year fetch failed:', err?.message);
         }
 
         const parsed = parseOnsResponse(combined);
@@ -392,6 +426,7 @@ export async function getUkFinancialStats() {
           },
         };
       } catch (error) {
+        console.error('[cpih] fetch/parse failed:', error?.message);
         result.errors.cpih = error?.message ?? 'unknown_error';
       }
     })(),
@@ -409,12 +444,15 @@ export async function getUkFinancialStats() {
           },
         };
       } catch (error) {
+        console.error('[housePrice] fetch/parse failed:', error?.message);
         result.errors.housePrice = error?.message ?? 'unknown_error';
       }
     })(),
     (async () => {
       try {
-        const payload = await fetchJson(OFGEM_CAP_URL);
+        const payload = await fetchJson(OFGEM_CAP_URL, {
+          headers: { referer: 'https://www.ofgem.gov.uk/' },
+        });
         const parsed = parseOfgemResponse(payload);
         result.stats.ofgemCap = {
           ...parsed,
@@ -426,6 +464,7 @@ export async function getUkFinancialStats() {
           },
         };
       } catch (error) {
+        console.error('[ofgemCap] fetch/parse failed:', error?.message);
         result.errors.ofgemCap = error?.message ?? 'unknown_error';
       }
     })(),
@@ -434,15 +473,19 @@ export async function getUkFinancialStats() {
   return result;
 }
 
+/* -------------------------------- handler ---------------------------------- */
+
 export default async function handler(req, res) {
   try {
     const payload = await getUkFinancialStats();
     const hasData = Object.keys(payload.stats).length > 0;
     const hasErrors = Object.keys(payload.errors).length > 0;
 
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=43200');
+    // Serve cached values quickly; allow 6h stale while revalidating.
+    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=21600');
 
-    return res.status(hasData ? 200 : 502).json({
+    // Always return 200 with status flags so the client can render partial data.
+    return res.status(200).json({
       ...payload,
       status: hasData ? 'ok' : 'error',
       partial: hasData && hasErrors,
@@ -450,6 +493,12 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('uk-financial-stats handler error', error);
     res.setHeader('Cache-Control', 's-maxage=600');
-    return res.status(500).json({ error: 'uk_financial_stats_failed' });
+    return res.status(200).json({
+      generatedAt: new Date().toISOString(),
+      stats: {},
+      errors: { fatal: 'uk_financial_stats_failed' },
+      status: 'error',
+      partial: false,
+    });
   }
 }
