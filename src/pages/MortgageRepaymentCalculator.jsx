@@ -16,6 +16,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
+import Heading from '@/components/common/Heading';
 export default function MortgageRepaymentCalculator() {
   const [loanAmount, setLoanAmount] = useState('250000');
   const [interestRate, setInterestRate] = useState('5');
@@ -95,7 +96,7 @@ export default function MortgageRepaymentCalculator() {
     <div className="bg-white">
       <div className="bg-gray-50 border-b">
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold text-center">Mortgage Repayment Schedule Calculator</h1>
+          <Heading as="h1" size="h1" weight="bold" className="text-center">Mortgage Repayment Schedule Calculator</Heading>
         </div>
       </div>
       <div className="max-w-7xl mx-auto p-4 py-8">
@@ -141,7 +142,7 @@ export default function MortgageRepaymentCalculator() {
               <div className="space-y-6 printable-area">
                 <div className="non-printable">
                   <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-gray-800">Repayment Schedule</h2>
+                    <Heading as="h2" size="h2" weight="bold" className="text-gray-800">Repayment Schedule</Heading>
                   </div>
                 </div>
                 <Card>

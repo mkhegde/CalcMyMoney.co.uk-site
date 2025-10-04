@@ -12,6 +12,7 @@ import AnimatedNumber from '../components/general/AnimatedNumber';
 import Breadcrumbs from '../components/general/Breadcrumbs';
 import { createPageUrl } from '@/utils';
 
+import Heading from '@/components/common/Heading';
 const niThresholds = {
   '2025-26': {
     primaryThreshold: 12570,
@@ -127,9 +128,9 @@ export default function NationalInsuranceCalculator() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Breadcrumbs path={breadcrumbPath} />
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               UK National Insurance Calculator 2025/26
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Estimate your employee National Insurance contributions for the 2025/26 tax year. See
               exactly how much you'll pay based on your gross salary.
@@ -172,9 +173,9 @@ export default function NationalInsuranceCalculator() {
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                  <Heading as="h2" size="h2" weight="bold" className="text-gray-800 dark:text-gray-200">
                     Your NI Breakdown
-                  </h2>
+                  </Heading>
                   <ExportActions
                     csvData={csvData}
                     fileName="national-insurance-calculation"
@@ -246,9 +247,9 @@ export default function NationalInsuranceCalculator() {
 
       <CalculatorWrapper>
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <Heading as="h2" size="h2" weight="bold" className="text-gray-900 dark:text-gray-100">
             What is National Insurance?
-          </h2>
+          </Heading>
           <p className="text-gray-700 dark:text-gray-300">
             National Insurance (NI) is a fundamental tax in the United Kingdom paid by employees,
             employers, and the self-employed. It plays a crucial role in funding key public services

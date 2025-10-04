@@ -11,6 +11,7 @@ import AnimatedNumber from '../components/general/AnimatedNumber';
 import Breadcrumbs from '../components/general/Breadcrumbs';
 import { createPageUrl } from '@/utils';
 
+import Heading from '@/components/common/Heading';
 const SMP_WEEKS_90_PERCENT = 6;
 const SMP_WEEKS_FLAT_RATE = 33;
 const SMP_FLAT_RATE_WEEKLY = 184.03; // For 2024/25, assumed for 2025/26
@@ -84,9 +85,9 @@ export default function MaternityPayCalculator() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Breadcrumbs path={breadcrumbPath} />
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               UK Statutory Maternity Pay (SMP) Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Planning for a new arrival? Estimate your statutory maternity pay to help you budget
               during your maternity leave.
@@ -131,9 +132,9 @@ export default function MaternityPayCalculator() {
           <div className="space-y-6">
             {hasCalculated && results ? (
               <>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                <Heading as="h2" size="h2" weight="bold" className="text-gray-800 dark:text-gray-200">
                   Your SMP Estimate
-                </h2>
+                </Heading>
                 <Card className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/50 dark:to-pink-800/50 border-pink-200 dark:border-pink-700">
                   <CardHeader>
                     <CardTitle className="text-pink-900 dark:text-pink-200">
@@ -190,9 +191,9 @@ export default function MaternityPayCalculator() {
 
       <CalculatorWrapper>
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <Heading as="h2" size="h2" weight="bold" className="text-gray-900 dark:text-gray-100">
             Understanding Statutory Maternity Pay
-          </h2>
+          </Heading>
           <p className="text-gray-700 dark:text-gray-300">
             Statutory Maternity Pay (SMP) is the legal minimum your employer must pay you while
             you're on maternity leave, provided you meet the eligibility criteria. It's designed to

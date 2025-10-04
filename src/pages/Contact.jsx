@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Send, Loader2, CheckCircle } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
 
+import Heading from '@/components/common/Heading';
 // We are removing the base44 SendEmail integration as it won't work on a static site.
 // import { SendEmail } from "@/api/integrations";
 
@@ -73,9 +74,9 @@ export default function Contact() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <Send className="w-12 h-12 mx-auto text-blue-600" />
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mt-4">
+          <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mt-4">
             Contact Us
-          </h1>
+          </Heading>
           <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
             Have a question, feedback, or a suggestion? We'd love to hear from you.
           </p>
@@ -148,9 +149,9 @@ export default function Contact() {
         {/* NEW: Helpful content to increase value and word count */}
         <div className="mt-12 space-y-8">
           <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-            <h2 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <Heading as="h2" size="h2" className="text-gray-900 dark:text-gray-100">
               Before you get in touch
-            </h2>
+            </Heading>
             <p className="text-gray-700 dark:text-gray-300 mt-2">
               Many common questions are answered within our calculator pages and resources. If
               you’re writing about a specific result, please include the calculator name, your
@@ -167,9 +168,9 @@ export default function Contact() {
           </section>
 
           <section className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-            <h2 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <Heading as="h2" size="h2" className="text-gray-900 dark:text-gray-100">
               Our typical response
-            </h2>
+            </Heading>
             <p className="text-gray-700 dark:text-gray-300 mt-2">
               We aim to reply within 1–2 business days. If your question relates to a specific
               calculation, providing a screenshot and the URL helps us respond faster. For urgent

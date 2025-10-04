@@ -7,6 +7,7 @@ import { PoundSterling, Calculator, Building, Percent } from 'lucide-react';
 import ExportActions from '../components/calculators/ExportActions';
 import FAQSection from '../components/calculators/FAQSection';
 
+import Heading from '@/components/common/Heading';
 const btlFAQs = [
   {
     question: 'What is rental yield?',
@@ -96,9 +97,9 @@ export default function BuyToLetMortgageCalculator() {
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               Buy-to-Let Mortgage &amp; Rental Yield Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Analyse the profitability and viability of a UK property investment. Calculate rental
               yield, monthly profit, and key lender metrics like ICR.
@@ -197,7 +198,7 @@ export default function BuyToLetMortgageCalculator() {
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
-                  <h2 className="text-2xl font-bold text-gray-800">Investment Analysis</h2>
+                  <Heading as="h2" size="h2" weight="bold" className="text-gray-800">Investment Analysis</Heading>
                   <ExportActions csvData={csvData} fileName="btl-summary" title="BTL Summary" />
                 </div>
 

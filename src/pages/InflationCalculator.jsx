@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import Heading from '@/components/common/Heading';
 import { PoundSterling, Calculator, TrendingUp } from 'lucide-react';
 import CalculatorWrapper from '../components/calculators/CalculatorWrapper';
 import FAQSection from '../components/calculators/FAQSection';
@@ -100,9 +101,9 @@ export default function InflationCalculator() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Breadcrumbs path={breadcrumbPath} />
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               UK Inflation Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Discover the changing value of the pound over time. See how inflation affects
               purchasing power between different years.
@@ -176,7 +177,9 @@ export default function InflationCalculator() {
           <div className="space-y-6">
             {hasCalculated && results ? (
               <>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Results</h2>
+                <Heading as="h2" size="h2" weight="bold" className="text-gray-800 dark:text-gray-200">
+                  Results
+                </Heading>
                 <Card className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/50 dark:to-teal-800/50 border-teal-200 dark:border-teal-700">
                   <CardContent className="p-6">
                     <p className="text-center text-gray-700 dark:text-gray-300">
@@ -241,9 +244,9 @@ export default function InflationCalculator() {
 
       <CalculatorWrapper>
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <Heading as="h2" size="h2" weight="bold" className="text-gray-900 dark:text-gray-100">
             What This Calculator Shows
-          </h2>
+          </Heading>
           <p className="text-gray-700 dark:text-gray-300">
             The Inflation Calculator is a tool that demonstrates the concept of "purchasing power."
             It shows how the value of money erodes over time due to inflation. By inputting an

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PoundSterling, Calculator, PartyPopper, Trash2 } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
 
+import Heading from '@/components/common/Heading';
 const weddingFAQs = [
   {
     question: 'How should I estimate these costs?',
@@ -105,7 +106,7 @@ export default function WeddingBudgetCalculator() {
     <div className="bg-white dark:bg-gray-900">
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold">Wedding Budget Calculator</h1>
+          <Heading as="h1" size="h1" weight="bold">Wedding Budget Calculator</Heading>
           <p className="text-lg text-gray-600 mt-2">
             Plan and track your wedding expenses to stay on budget.
           </p>

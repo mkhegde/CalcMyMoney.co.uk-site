@@ -8,7 +8,8 @@ import ExportActions from '../components/calculators/ExportActions';
 import FAQSection from '../components/calculators/FAQSection';
 import CalculatorWrapper from '../components/calculators/CalculatorWrapper';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
-import Breadcrumbs from '../components/general/Breadcrumbs'; // Added import for Breadcrumbs
+import Breadcrumbs from '../components/general/Breadcrumbs'; import Heading from '@/components/common/Heading';
+// Added import for Breadcrumbs
 import { createPageUrl } from '@/utils';
 
 // Site-wide SEO (JSON-LD) definition for the page
@@ -231,9 +232,9 @@ export default function IncomeTaxCalculator() {
             {/* Breadcrumbs added here */}
             <Breadcrumbs path={breadcrumbPath} />
             <div className="text-center">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
                 UK Income Tax Calculator 2025/26
-              </h1>
+              </Heading>
               <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
                 Demystify your tax bill. See exactly how your income is taxed across the different
                 UK tax bands for the 2025/26 financial year.
@@ -279,7 +280,7 @@ export default function IncomeTaxCalculator() {
               {hasCalculated && results ? (
                 <>
                   <div className="non-printable">
-                    <h2 className="text-2xl font-bold text-gray-800">Your Tax Breakdown</h2>
+                    <Heading as="h2" size="h2" weight="bold" className="text-gray-800">Your Tax Breakdown</Heading>
                   </div>
                   <Card>
                     <CardHeader>
@@ -366,9 +367,9 @@ export default function IncomeTaxCalculator() {
 
         <CalculatorWrapper>
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <Heading as="h2" size="h2" weight="bold" className="text-gray-900 dark:text-gray-100">
               Understanding UK Income Tax
-            </h2>
+            </Heading>
             <p className="text-gray-700 dark:text-gray-300">
               Income Tax is the UK government's primary source of revenue, levied on most forms of
               income including employment earnings, profits from self-employment, rental income, and

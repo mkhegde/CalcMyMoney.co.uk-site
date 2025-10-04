@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useSeo } from '@/components/seo/SeoContext';
 
+import Heading from '@/components/common/Heading';
 const createUnsplashUrl = (baseUrl, params, width) => `${baseUrl}?${params}&w=${width}`;
 
 const createUnsplashSrcSet = (baseUrl, params, widths) =>
@@ -144,9 +145,9 @@ export default function BlogDebtRepaymentStrategies() {
             <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium dark:bg-red-900/50 dark:text-red-300">
               {post.category}
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mt-4 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mt-4 mb-4">
               {post.title}
-            </h1>
+            </Heading>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
@@ -184,7 +185,7 @@ export default function BlogDebtRepaymentStrategies() {
 
             <Separator className="my-8" />
 
-            <h2>Understanding the Debt Avalanche Method</h2>
+            <Heading as="h2" size="h2">Understanding the Debt Avalanche Method</Heading>
             <div className="flex items-center gap-3 mb-4">
               <TrendingDown className="w-6 h-6 text-red-600" />
               <p className="text-lg font-semibold text-red-800 dark:text-red-300 mb-0">
@@ -236,7 +237,7 @@ export default function BlogDebtRepaymentStrategies() {
               </p>
             </div>
 
-            <h2>Understanding the Debt Snowball Method</h2>
+            <Heading as="h2" size="h2">Understanding the Debt Snowball Method</Heading>
             <div className="flex items-center gap-3 mb-4">
               <Target className="w-6 h-6 text-blue-600" />
               <p className="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-0">
@@ -263,7 +264,7 @@ export default function BlogDebtRepaymentStrategies() {
               </ol>
             </div>
 
-            <h2>Real UK Example: Sarah's Debt Journey</h2>
+            <Heading as="h2" size="h2">Real UK Example: Sarah's Debt Journey</Heading>
             <p>Let's look at Sarah, a teacher from Birmingham, with typical UK debts:</p>
 
             <div className="grid md:grid-cols-2 gap-6 my-8">
@@ -314,7 +315,7 @@ export default function BlogDebtRepaymentStrategies() {
               </Card>
             </div>
 
-            <h2>Which Method Should You Choose?</h2>
+            <Heading as="h2" size="h2">Which Method Should You Choose?</Heading>
 
             <div className="grid md:grid-cols-2 gap-6 my-8">
               <Card className="bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700">
@@ -348,7 +349,7 @@ export default function BlogDebtRepaymentStrategies() {
               </Card>
             </div>
 
-            <h2>UK-Specific Considerations</h2>
+            <Heading as="h2" size="h2">UK-Specific Considerations</Heading>
             <p>When choosing your debt repayment strategy in the UK, keep these factors in mind:</p>
             <ul>
               <li>
@@ -396,7 +397,7 @@ export default function BlogDebtRepaymentStrategies() {
 
             <Separator className="my-8" />
 
-            <h2>The Bottom Line</h2>
+            <Heading as="h2" size="h2">The Bottom Line</Heading>
             <p>
               The "perfect" debt repayment strategy is the one you'll actually stick to. While the
               debt avalanche saves more money mathematically, the debt snowball's psychological

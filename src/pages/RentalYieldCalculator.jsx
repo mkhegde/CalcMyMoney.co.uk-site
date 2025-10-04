@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Building, Calculator, PiggyBank, TrendingUp, TrendingDown, Percent } from 'lucide-react';
 import ExportActions from '../components/calculators/ExportActions';
 
+import Heading from '@/components/common/Heading';
 const rentalYieldCalculatorJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FinancialProduct',
@@ -157,7 +158,7 @@ export default function RentalYieldCalculator() {
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700 mb-4">
               <Percent className="w-4 h-4 mr-1" /> Rental Investment Tool
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Rental Yield Calculator</h1>
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 mb-4">Rental Yield Calculator</Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Work out gross and net rental yields, monthly cash flow and the cash-on-cash return for your buy-to-let property.
               Enter your rent, costs and investment details to see whether the numbers stack up.
@@ -328,7 +329,7 @@ export default function RentalYieldCalculator() {
               results ? (
                 <>
                   <div className="flex items-center justify-between non-printable">
-                    <h2 className="text-2xl font-bold text-gray-800">Investment Summary</h2>
+                    <Heading as="h2" size="h2" weight="bold" className="text-gray-800">Investment Summary</Heading>
                     {csvData ? (
                       <ExportActions csvData={csvData} fileName="rental-yield-results" title="Rental Yield Summary" />
                     ) : null}

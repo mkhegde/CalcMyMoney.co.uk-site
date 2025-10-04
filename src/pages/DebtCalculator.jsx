@@ -24,7 +24,8 @@ import {
 } from 'lucide-react';
 import ExportActions from '../components/calculators/ExportActions';
 import FAQSection from '../components/calculators/FAQSection';
-import RelatedCalculators from '../components/calculators/RelatedCalculators'; // NEW IMPORT
+import RelatedCalculators from '../components/calculators/RelatedCalculators'; import Heading from '@/components/common/Heading';
+// NEW IMPORT
 
 const debtCalculatorFAQs = [
   {
@@ -300,9 +301,9 @@ export default function DebtCalculator() {
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900">
               UK Debt Repayment Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
               The best way out is always through. Create a clear debt-free plan and see how much
               interest you can save with a focused strategy.
@@ -464,9 +465,9 @@ export default function DebtCalculator() {
             {hasCalculated && results ? (
               <>
                 <div className="flex justify-between items-center non-printable">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                  <Heading as="h2" size="h2" weight="bold" className="text-gray-800 dark:text-gray-100">
                     Your Repayment Plan
-                  </h2>
+                  </Heading>
                   <ExportActions
                     csvData={csvData}
                     fileName="debt-repayment-plan"
