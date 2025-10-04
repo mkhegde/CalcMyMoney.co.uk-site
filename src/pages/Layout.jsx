@@ -1,11 +1,20 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Menu, ChevronDown, ChevronRight } from 'lucide-react';
+import { Menu, ChevronDown, ChevronRight, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuTrigger,
+  NavigationMenuContent,
+  NavigationMenuLink,
+  NavigationMenuIndicator,
+} from '@/components/ui/navigation-menu';
 import ScrollToTop from '../components/general/ScrollToTop';
 import CookieConsentBanner from '../components/general/CookieConsentBanner';
 import { calculatorCategories } from '../components/data/calculatorConfig';
@@ -369,6 +378,20 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Resources', url: createPageUrl('resources') },
   ];
 
+  const isActiveLink = useCallback(
+    (url) => {
+      if (!url) return false;
+      if (url === '/') {
+        return location.pathname === '/' || location.pathname === '';
+      }
+      return location.pathname === url || location.pathname.startsWith(`${url}/`);
+    },
+    [location.pathname]
+  );
+
+  const navLinkBaseClass =
+    'relative inline-flex items-center px-1 py-2 text-sm font-semibold text-muted-foreground transition-all duration-200 after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 hover:text-foreground hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+
   return (
     <SeoProvider value={seoContextValue}>
       <div className="min-h-screen bg-background text-foreground">
@@ -426,18 +449,83 @@ export default function Layout({ children, currentPageName }) {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Simple Links */}
-          <div className="hidden items-center space-x-6 md:flex">
-            {mainNavLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.url}
-                className="font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
+          {/* Desktop Navigation */}
+          <NavigationMenu className="ml-6 hidden md:flex items-center">
+            <NavigationMenuList className="flex items-center gap-1">
+              {mainNavLinks.map((link) => {
+                const active = isActiveLink(link.url);
+                return (
+                  <NavigationMenuItem key={link.name}>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to={link.url}
+                        className={`${navLinkBaseClass} ${active ? 'text-foreground after:scale-x-100' : ''}`}
+                        aria-current={active ? 'page' : undefined}
+                      >
+                        {link.name}
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                );
+              })}
+
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="group relative inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-muted-foreground transition-all duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 data-[state=open]:text-foreground data-[state=open]:after:scale-x-100">
+                  Browse calculators
+                </NavigationMenuTrigger>
+                <NavigationMenuContent className="rounded-xl border border-border bg-card p-6 shadow-xl">
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    {calculatorCategories.slice(0, 4).map((category) => (
+                      <div key={category.slug} className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <category.icon className="h-4 w-4 text-primary" />
+                          <p className="text-sm font-semibold text-foreground">{category.name}</p>
+                        </div>
+                        <div className="space-y-2 text-sm text-muted-foreground">
+                          {(category.subCategories ?? []).slice(0, 2).map((subCategory) => (
+                            <div key={subCategory.name}>
+                              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-soft-foreground">
+                                {subCategory.name}
+                              </p>
+                              <ul className="mt-1 space-y-1">
+                                {(subCategory.calculators ?? [])
+                                  .filter((calc) => calc.status === 'active')
+                                  .slice(0, 2)
+                                  .map((calc) => (
+                                    <li key={calc.name}>
+                                      <NavigationMenuLink asChild>
+                                        <Link
+                                          to={calc.url}
+                                          className="block rounded-md px-2 py-1 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-primary"
+                                        >
+                                          {calc.name}
+                                        </Link>
+                                      </NavigationMenuLink>
+                                    </li>
+                                  ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-6 flex justify-end">
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to={`${createPageUrl('Home')}#calculator-directory`}
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                      >
+                        Browse full directory
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </NavigationMenuLink>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+            <NavigationMenuIndicator className="hidden md:flex" />
+          </NavigationMenu>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center md:hidden">
