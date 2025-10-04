@@ -85,26 +85,23 @@ export default function FAQSection({
   }, [defaults?.jsonLd, disableSchema, faqSchema, setSeo]);
 
   return (
-    <Card className="bg-blue-50 dark:bg-gray-800 border-blue-200 dark:border-gray-700">
+    <Card className="border border-card-muted bg-card-muted">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-400">
-          <HelpCircle className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2 text-primary">
+          <HelpCircle className="h-5 w-5" />
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {faqs.map((faq, index) => (
-          <div
-            key={index}
-            className="border border-blue-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800/50 overflow-hidden"
-          >
+          <div key={index} className="overflow-hidden rounded-lg border border-card-muted bg-card">
             <button
               onClick={() => toggleFAQ(index)}
-              className="w-full p-4 text-left flex justify-between items-center hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-colors"
+              className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-neutral-soft"
             >
-              <span className="font-medium text-gray-900 dark:text-gray-100">{faq.question}</span>
+              <span className="font-medium text-foreground">{faq.question}</span>
               <ChevronDown
-                className={`w-5 h-5 text-blue-600 dark:text-blue-400 transform transition-transform duration-300 ${openIndex === index ? 'rotate-180' : 'rotate-0'}`}
+                className={`h-5 w-5 text-primary transition-transform duration-300 ${openIndex === index ? 'rotate-180' : 'rotate-0'}`}
               />
             </button>
             <div
@@ -112,9 +109,7 @@ export default function FAQSection({
             >
               <div className="overflow-hidden">
                 <div className="px-4 pb-4 pt-1">
-                  <div className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                    {faq.answer}
-                  </div>
+                  <div className="text-sm leading-relaxed text-muted-foreground">{faq.answer}</div>
                 </div>
               </div>
             </div>

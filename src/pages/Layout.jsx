@@ -371,7 +371,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <SeoProvider value={seoContextValue}>
-      <div className="min-h-screen bg-gray-50 text-gray-800">
+      <div className="min-h-screen bg-background text-foreground">
         <ScrollToTop />
         <SeoHead {...mergedSeo} />
       <style jsx global>{`
@@ -415,40 +415,39 @@ export default function Layout({ children, currentPageName }) {
       `}</style>
 
         {/* Header */}
-      <header className="bg-white/95 backdrop-blur-sm sticky top-0 z-40 border-b border-gray-200 non-printable">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex-shrink-0">
-              <Link to={createPageUrl('Home')} className="flex items-center space-x-2">
-                               {' '}
-                <img src="/app-icon.webp" alt="Calculate My Money Logo" className="h-8 w-8" />     
-                 <span className="font-bold text-xl text-gray-800">Calculate My Money</span>       
-                     {' '}
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur-sm non-printable">
+        <nav className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex-shrink-0">
+            <Link to={createPageUrl('Home')} className="flex items-center space-x-2">
+                             {' '}
+              <img src="/app-icon.webp" alt="Calculate My Money Logo" className="h-8 w-8" />
+               <span className="text-xl font-bold text-foreground">Calculate My Money</span>
+                   {' '}
+            </Link>
+          </div>
+
+          {/* Desktop Navigation - Simple Links */}
+          <div className="hidden items-center space-x-6 md:flex">
+            {mainNavLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.url}
+                className="font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                {link.name}
               </Link>
-            </div>
+            ))}
+          </div>
 
-            {/* Desktop Navigation - Simple Links */}
-            <div className="hidden md:flex md:items-center md:space-x-6">
-              {mainNavLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.url}
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center">
+          {/* Mobile Menu Button */}
+          <div className="flex items-center md:hidden">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-gray-600">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground">
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="bg-white border-gray-200 w-[300px] sm:w-[340px] overflow-y-auto">
+                <SheetContent className="w-[300px] overflow-y-auto border-border bg-background sm:w-[340px]">
                   <SheetHeader>
                     <Link
                       to={createPageUrl('Home')}
@@ -460,7 +459,7 @@ export default function Layout({ children, currentPageName }) {
                         alt="Calculate My Money Logo"
                         className="h-8 w-8"
                       />
-                      <span className="font-bold text-xl text-gray-800">Calculate My Money</span>
+                      <span className="text-xl font-bold text-foreground">Calculate My Money</span>
                     </Link>
                   </SheetHeader>
 
@@ -471,7 +470,7 @@ export default function Layout({ children, currentPageName }) {
                         <SheetClose key={link.name} asChild>
                           <Link
                             to={link.url}
-                            className="block text-lg font-medium text-gray-700 hover:text-blue-600 py-2"
+                            className="block py-2 text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
                           >
                             {link.name}
                           </Link>
@@ -483,28 +482,28 @@ export default function Layout({ children, currentPageName }) {
 
                     {/* Calculator Categories with Collapsibles */}
                     <div className="space-y-2">
-                      <h3 className="font-semibold text-gray-900 mb-3">Browse Calculators</h3>
+                      <h3 className="mb-3 font-semibold text-foreground">Browse Calculators</h3>
                       {calculatorCategories.map((category) => (
                         <Collapsible
                           key={category.slug}
                           open={openCategories[category.slug]}
                           onOpenChange={() => toggleCategory(category.slug)}
                         >
-                          <CollapsibleTrigger className="flex items-center justify-between w-full p-2 text-left hover:bg-gray-50 rounded-lg transition-colors">
-                            <div className="flex items-center gap-2">
-                              <category.icon className="w-4 h-4 text-gray-600" />
-                              <span className="font-medium text-gray-800">{category.name}</span>
+                          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg p-2 text-left transition-colors hover:bg-neutral-soft">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <category.icon className="h-4 w-4" />
+                              <span className="font-medium text-foreground">{category.name}</span>
                             </div>
                             {openCategories[category.slug] ? (
-                              <ChevronDown className="w-4 h-4 text-gray-500" />
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
                             ) : (
-                              <ChevronRight className="w-4 h-4 text-gray-500" />
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             )}
                           </CollapsibleTrigger>
                           <CollapsibleContent className="pl-6 mt-2 space-y-3">
                             {category.subCategories.map((subCategory) => (
                               <div key={subCategory.name} className="space-y-2">
-                                <h4 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-1">
+                                <h4 className="border-b border-card-muted pb-1 text-sm font-medium text-muted-foreground">
                                   {subCategory.name}
                                 </h4>
                                 <div className="space-y-1 pl-2">
@@ -512,10 +511,10 @@ export default function Layout({ children, currentPageName }) {
                                     <SheetClose key={calc.name} asChild>
                                       <Link
                                         to={calc.url}
-                                        className={`block text-sm py-1 transition-colors ${
+                                        className={`block py-1 text-sm transition-colors ${
                                           calc.status === 'active'
-                                            ? 'text-gray-600 hover:text-blue-600'
-                                            : 'text-gray-400 cursor-not-allowed'
+                                            ? 'text-muted-foreground hover:text-primary'
+                                            : 'cursor-not-allowed text-muted-foreground/60'
                                         }`}
                                       >
                                         {calc.name}{' '}
@@ -536,17 +535,16 @@ export default function Layout({ children, currentPageName }) {
                 </SheetContent>
               </Sheet>
             </div>
-          </div>
         </nav>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 printable-content bg-gray-50">
+      <main className="flex-1 bg-background printable-content">
         {/* NEW: Fallback H1 (only shows if page has no H1 and is one of the designated fallback pages) */}
         {needsFallbackH1 && fallbackH1Pages.has(currentPageName) && (
-          <div className="bg-white border-b border-gray-200 non-printable">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+          <div className="non-printable border-b border-border bg-card">
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+              <h1 className="text-3xl font-bold text-foreground md:text-4xl">
                 {getFallbackH1Text()}
               </h1>
             </div>
@@ -559,8 +557,8 @@ export default function Layout({ children, currentPageName }) {
       <CalculatorIndex />
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16 non-printable">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <footer className="mt-16 border-t border-border bg-background non-printable">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-5 gap-8">
             <div className="md:col-span-1">
               <Link to={createPageUrl('Home')} className="flex items-center space-x-2 mb-4">
@@ -569,21 +567,21 @@ export default function Layout({ children, currentPageName }) {
                   alt="Calculate My Money Logo"
                   className="h-8 w-8"
                 />
-                <span className="font-bold text-xl text-gray-800">Calculate My Money</span>
+                <span className="text-xl font-bold text-foreground">Calculate My Money</span>
               </Link>
-              <p className="text-gray-600 text-sm">
+              <p className="text-sm text-muted-foreground">
                 Free UK financial calculators for salary, tax, mortgages, pensions, budgets and
                 investments.
               </p>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Popular Calculators</h4>
+              <h4 className="mb-4 font-semibold text-foreground">Popular Calculators</h4>
               <ul className="space-y-2">
                 <li>
                   <Link
                     to={createPageUrl('salary-calculator-uk')}
-                    className="text-gray-700 hover:text-blue-600 hover:underline"
+                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
                   >
                     Salary Calculator
                   </Link>
@@ -591,7 +589,7 @@ export default function Layout({ children, currentPageName }) {
                 <li>
                   <Link
                     to={createPageUrl('mortgage-calculator')}
-                    className="text-gray-700 hover:text-blue-600 hover:underline"
+                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
                   >
                     Mortgage Calculator
                   </Link>
@@ -599,7 +597,7 @@ export default function Layout({ children, currentPageName }) {
                 <li>
                   <Link
                     to={createPageUrl('budget-calculator')}
-                    className="text-gray-700 hover:text-blue-600 hover:underline"
+                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
                   >
                     Budget Planner
                   </Link>
@@ -607,7 +605,7 @@ export default function Layout({ children, currentPageName }) {
                 <li>
                   <Link
                     to={createPageUrl('compound-interest-calculator')}
-                    className="text-gray-700 hover:text-blue-600 hover:underline"
+                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
                   >
                     Compound Interest
                   </Link>
@@ -615,7 +613,7 @@ export default function Layout({ children, currentPageName }) {
                 <li>
                   <Link
                     to={createPageUrl('pension-calculator')}
-                    className="text-gray-700 hover:text-blue-600 hover:underline"
+                    className="text-muted-foreground transition-colors hover:text-primary hover:underline"
                   >
                     Pension Calculator
                   </Link>
@@ -624,21 +622,21 @@ export default function Layout({ children, currentPageName }) {
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Categories</h4>
-              <ul className="space-y-2 text-gray-600">
+              <h4 className="mb-4 font-semibold text-foreground">Categories</h4>
+              <ul className="space-y-2 text-muted-foreground">
                 {calculatorCategories.slice(0, 6).map((category) => (
                   <li key={category.slug}>
                     {isHomePage ? (
                       <a
                         href={`#${category.slug}`}
-                        className="text-gray-700 hover:text-blue-600 hover:underline"
+                        className="text-muted-foreground transition-colors hover:text-primary hover:underline"
                       >
                         {category.name}
                       </a>
                     ) : (
                       <Link
                         to={`${createPageUrl('Home')}#${category.slug}`}
-                        className="text-gray-700 hover:text-blue-600 hover:underline"
+                        className="text-muted-foreground transition-colors hover:text-primary hover:underline"
                       >
                         {category.name}
                       </Link>
@@ -649,85 +647,85 @@ export default function Layout({ children, currentPageName }) {
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Information</h4>
-              <ul className="space-y-2 text-gray-600">
+              <h4 className="mb-4 font-semibold text-foreground">Information</h4>
+              <ul className="space-y-2 text-muted-foreground">
                 <li>
-                  <Link to={createPageUrl('About')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('About')} className="transition-colors hover:text-primary">
                     About
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('methodology')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('methodology')} className="transition-colors hover:text-primary">
                     Methodology
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('blog')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('blog')} className="transition-colors hover:text-primary">
                     Blog
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('resources')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('resources')} className="transition-colors hover:text-primary">
                     Resources
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('uk-government-budget')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('uk-government-budget')} className="transition-colors hover:text-primary">
                     UK Budget Analysis
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('job-salaries')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('job-salaries')} className="transition-colors hover:text-primary">
                     Job Salaries
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('cost-of-living')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('cost-of-living')} className="transition-colors hover:text-primary">
                     Cost of Living
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('uk-financial-stats')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('uk-financial-stats')} className="transition-colors hover:text-primary">
                     Financial Stats
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('contact')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('contact')} className="transition-colors hover:text-primary">
                     Contact Us
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('sitemap')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('sitemap')} className="transition-colors hover:text-primary">
                     Sitemap
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('link-to-us')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('link-to-us')} className="transition-colors hover:text-primary">
                     Link to Us
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Legal</h4>
-              <ul className="space-y-2 text-gray-600">
+              <h4 className="mb-4 font-semibold text-foreground">Legal</h4>
+              <ul className="space-y-2 text-muted-foreground">
                 <li>
-                  <Link to={createPageUrl('privacy-policy')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('privacy-policy')} className="transition-colors hover:text-primary">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('cookie-policy')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('cookie-policy')} className="transition-colors hover:text-primary">
                     Cookie Policy
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('terms-of-service')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('terms-of-service')} className="transition-colors hover:text-primary">
                     Terms of Service
                   </Link>
                 </li>
                 <li>
-                  <Link to={createPageUrl('disclaimer')} className="hover:text-blue-600">
+                  <Link to={createPageUrl('disclaimer')} className="transition-colors hover:text-primary">
                     Disclaimer
                   </Link>
                 </li>
@@ -735,7 +733,7 @@ export default function Layout({ children, currentPageName }) {
             </div>
           </div>
 
-          <div className="border-t border-gray-200 mt-8 pt-8 text-center text-gray-500 text-sm">
+          <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
             <p>&copy; 2025 Calculate My Money - UK Financial Calculator Tools</p>
           </div>
         </div>
