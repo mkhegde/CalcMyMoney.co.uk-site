@@ -1,13 +1,88 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
+import { ChevronDown, HelpCircle } from 'lucide-react';
+import { useSeo } from '@/components/seo/SeoContext';
+import useFaqSchema from '@/components/seo/useFaqSchema';
 
-export default function FAQSection({ faqs, title = 'Frequently Asked Questions' }) {
+export default function FAQSection({
+  faqs,
+  title = 'Frequently Asked Questions',
+  disableSchema = false,
+}) {
   const [openIndex, setOpenIndex] = useState(null);
+  const { setSeo, defaults } = useSeo();
+  const faqSchema = useFaqSchema(faqs);
 
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
+
+  useEffect(() => {
+    if (!faqSchema) {
+      return;
+    }
+
+    const removeSchema = () => {
+      setSeo((prevOverrides) => {
+        if (!prevOverrides || !Array.isArray(prevOverrides.jsonLd)) {
+          return prevOverrides;
+        }
+
+        const nextJsonLd = prevOverrides.jsonLd.filter((schema) => schema !== faqSchema);
+
+        if (nextJsonLd.length === prevOverrides.jsonLd.length) {
+          return prevOverrides;
+        }
+
+        if (nextJsonLd.length === 0) {
+          const nextOverrides = { ...prevOverrides };
+          delete nextOverrides.jsonLd;
+          return nextOverrides;
+        }
+
+        if (
+          Array.isArray(defaults?.jsonLd) &&
+          nextJsonLd.length === defaults.jsonLd.length &&
+          nextJsonLd.every((schema, index) => schema === defaults.jsonLd[index])
+        ) {
+          const nextOverrides = { ...prevOverrides };
+          delete nextOverrides.jsonLd;
+          return nextOverrides;
+        }
+
+        return {
+          ...prevOverrides,
+          jsonLd: nextJsonLd,
+        };
+      });
+    };
+
+    if (disableSchema) {
+      removeSchema();
+      return;
+    }
+
+    setSeo((prevOverrides) => {
+      const baseJsonLd = Array.isArray(prevOverrides?.jsonLd)
+        ? prevOverrides.jsonLd
+        : Array.isArray(defaults?.jsonLd)
+          ? defaults.jsonLd
+          : [];
+
+      if (baseJsonLd.includes(faqSchema)) {
+        return prevOverrides;
+      }
+
+      const nextJsonLd = [...baseJsonLd, faqSchema];
+
+      return {
+        ...prevOverrides,
+        jsonLd: nextJsonLd,
+      };
+    });
+
+    return removeSchema;
+  }, [defaults?.jsonLd, disableSchema, faqSchema, setSeo]);
 
   return (
     <Card className="bg-blue-50 dark:bg-gray-800 border-blue-200 dark:border-gray-700">

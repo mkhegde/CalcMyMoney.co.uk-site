@@ -16,8 +16,6 @@ import { SeoProvider } from '@/components/seo/SeoContext';
 
 const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
 
-const faqPages = ['Home', 'SalaryCalculatorUK', 'MortgageCalculator', 'PensionCalculator', 'BudgetCalculator'];
-
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -105,39 +103,6 @@ export default function Layout({ children, currentPageName }) {
         },
       },
     ];
-
-    if (faqPages.includes(currentPageName)) {
-      schemas.push({
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: [
-          {
-            '@type': 'Question',
-            name: 'How accurate are your UK salary/tax calculators?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'Our calculators are designed for high accuracy, using the latest UK tax laws for the specified tax year (2025/26). They cover Income Tax, National Insurance, and more. While we strive for precision, these tools are for estimation purposes and should not be considered financial advice.',
-            },
-          },
-          {
-            '@type': 'Question',
-            name: 'Which tax year do the calculators use (2025/26)?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: 'All relevant financial calculators have been updated for the 2025/26 UK tax year, which runs from 6 April 2025 to 5 April 2026. Rates and thresholds for all UK nations are applied where applicable.',
-            },
-          },
-          {
-            '@type': 'Question',
-            name: 'Can I download or print the results?',
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: "Yes. Most of our calculators feature 'Export' or 'Print' buttons, allowing you to download your results as a CSV/PDF file or generate a printer-friendly version of the summary for your records.",
-            },
-          },
-        ],
-      });
-    }
 
     return schemas;
   }, [currentPageName, normalizedOrigin]);
