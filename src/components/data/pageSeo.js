@@ -232,6 +232,11 @@ export const pageSeo = {
     description:
       'Assess your affordability as a first-time buyer. Calculate your loan-to-income ratio, deposit percentage, and estimated stamp duty.',
   },
+  RentalYieldCalculator: {
+    title: 'Rental Yield Calculator UK | Gross & Net Yield - Calculate My Money',
+    description:
+      'Calculate gross and net rental yield, annual cash flow and cash-on-cash return for UK buy-to-let properties. Understand the true performance of your rental investment.',
+  },
   RentVsBuyCalculator: {
     title: 'Rent vs Buy Calculator UK | Financial Comparison - Calculate My Money',
     description:
