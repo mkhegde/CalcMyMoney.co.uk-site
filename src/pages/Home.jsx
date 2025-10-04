@@ -314,58 +314,64 @@ export default function Home() {
           </div>
 
           {/* Calculator Categories */}
-          <div className="space-y-12">
-            {calculatorCategories.map((category) => (
-              <div key={category.slug} id={category.slug} className="scroll-mt-20">
-                {/* Category Header */}
-                <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
-                  <category.icon className="h-8 w-8 text-primary" />
-                  <div>
-                    <h3 className="text-2xl font-bold text-foreground">
-                      {category.name}
-                    </h3>
-                    <p className="text-muted-foreground">{category.description}</p>
+          {showAllCalculators ? (
+            <div className="space-y-12">
+              {calculatorCategories.map((category) => (
+                <div key={category.slug} id={category.slug} className="scroll-mt-20">
+                  {/* Category Header */}
+                  <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
+                    <category.icon className="h-8 w-8 text-primary" />
+                    <div>
+                      <h3 className="text-2xl font-bold text-foreground">
+                        {category.name}
+                      </h3>
+                      <p className="text-muted-foreground">{category.description}</p>
+                    </div>
+                  </div>
+
+                  {/* Sub-categories and Calculators */}
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {category.subCategories.map((subCategory) => (
+                      <div key={subCategory.name} className="space-y-3">
+                        <h4 className="border-l-4 border-primary pl-3 text-lg font-semibold text-foreground">
+                          {subCategory.name}
+                        </h4>
+                        <div className="space-y-2 pl-3">
+                          {subCategory.calculators
+                            .filter((calc) => showAllCalculators || calc.status === 'active')
+                            .map((calc, index) => (
+                              <div key={index} className="flex items-center justify-between group">
+                                {calc.status === 'active' ? (
+                                  <Link
+                                    to={calc.url}
+                                    onMouseEnter={() => calc.page && prefetchPage(calc.page)}
+                                    onFocus={() => calc.page && prefetchPage(calc.page)}
+                                    className="flex-1 text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                                  >
+                                    {calc.name}
+                                  </Link>
+                                ) : (
+                                  <span className="flex-1 text-sm text-muted-foreground/60">{calc.name}</span>
+                                )}
+                                {(calc.status === 'planned' || calc.status === 'pending') && (
+                                  <Badge variant="outline" className="ml-2 text-xs text-primary">
+                                    Coming Soon
+                                  </Badge>
+                                )}
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                {/* Sub-categories and Calculators */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {category.subCategories.map((subCategory) => (
-                    <div key={subCategory.name} className="space-y-3">
-                      <h4 className="border-l-4 border-primary pl-3 text-lg font-semibold text-foreground">
-                        {subCategory.name}
-                      </h4>
-                      <div className="space-y-2 pl-3">
-                        {subCategory.calculators
-                          .filter((calc) => showAllCalculators || calc.status === 'active')
-                          .map((calc, index) => (
-                            <div key={index} className="flex items-center justify-between group">
-                              {calc.status === 'active' ? (
-                                <Link
-                                  to={calc.url}
-                                  onMouseEnter={() => calc.page && prefetchPage(calc.page)}
-                                  onFocus={() => calc.page && prefetchPage(calc.page)}
-                                  className="flex-1 text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-                                >
-                                  {calc.name}
-                                </Link>
-                              ) : (
-                                <span className="flex-1 text-sm text-muted-foreground/60">{calc.name}</span>
-                              )}
-                              {calc.status === 'planned' && (
-                                <Badge variant="outline" className="ml-2 text-xs text-primary">
-                                  Coming Soon
-                                </Badge>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-muted-foreground">
+              Expand the directory to explore every calculator we offer.
+            </div>
+          )}
 
           {/* Quick Stats Footer */}
           <div className="mt-16 rounded-lg border border-card-muted bg-card p-8 text-center">
