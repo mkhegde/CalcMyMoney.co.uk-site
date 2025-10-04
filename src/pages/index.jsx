@@ -49,6 +49,7 @@ const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
 const LazySalaryCalculatorUK = lazy(() => import('./SalaryCalculatorUK.jsx'));
 const LazyMortgageCalculator = lazy(() => import('./MortgageCalculator.jsx'));
 const LazyRentalIncomeCalculator = lazy(() => import('./RentalIncomeCalculator.jsx'));
+const LazyRentalYieldCalculator = lazy(() => import('./RentalYieldCalculator.jsx'));
 const LazyBRRRRCalculator = lazy(() => import('./BRRRRCalculator.jsx'));
 const LazyDebtCalculator = lazy(() => import('./DebtCalculator.jsx'));
 const LazyFIRECalculator = lazy(() => import('./FIRECalculator.jsx'));
@@ -347,6 +348,7 @@ function PagesContent() {
           <Route path="/net-worth-calculator" element={<LazyNetWorthCalculator />} />
           <Route path="/energy-bill-calculator" element={<LazyEnergyBillCalculator />} />
           <Route path="/rental-income-calculator" element={<LazyRentalIncomeCalculator />} />
+          <Route path="/rental-yield-calculator" element={<LazyRentalYieldCalculator />} />
           <Route path="/brrrr-calculator" element={<LazyBRRRRCalculator />} />
           <Route path="/contractor-calculator" element={<LazyContractorCalculator />} />
           <Route
