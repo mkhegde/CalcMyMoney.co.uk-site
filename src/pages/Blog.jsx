@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, User, ArrowRight, Clock } from 'lucide-react';
+import { User, ArrowRight, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import Heading from '@/components/common/Heading';
 
 const blogPosts = [
   {
@@ -74,13 +75,13 @@ const categoryColors = {
 
 export default function Blog() {
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 py-12">
+    <div className="bg-neutral-soft py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Financial Insights & Updates
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          <Heading as="h1" size="h1" weight="bold" underline className="mb-6 text-foreground">
+            Financial Insights &amp; Updates
+          </Heading>
+          <p className="lead text-muted-foreground max-w-3xl mx-auto">
             Stay informed with the latest UK financial news, tax updates, and money management
             strategies.
           </p>
@@ -93,7 +94,7 @@ export default function Blog() {
               key={index}
               className={`group ${post.url === '#' ? 'pointer-events-none' : ''}`}
             >
-              <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300 bg-white dark:bg-gray-800">
+              <Card className="flex h-full flex-col transition-shadow duration-300 hover:shadow-lg">
                 <img
                   src={`${post.image.baseUrl}?${post.image.params}&w=${post.image.width}`}
                   srcSet={post.image.srcSetWidths
@@ -108,7 +109,7 @@ export default function Blog() {
                   className="w-full h-48 object-cover rounded-t-lg"
                 />
                 <CardHeader>
-                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${categoryColors[post.category] || 'bg-gray-100 text-gray-800'}`}
                     >
@@ -119,15 +120,15 @@ export default function Blog() {
                       {post.readTime}
                     </div>
                   </div>
-                  <CardTitle className="group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <CardTitle className="heading-3 transition-colors group-hover:text-primary">
                     {post.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow flex flex-col">
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed flex-grow">
+                  <p className="mb-4 flex-grow leading-relaxed text-muted-foreground">
                     {post.excerpt}
                   </p>
-                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="mt-auto flex items-center justify-between border-t border-border pt-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4" />
                       {post.author}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Heading from '@/components/common/Heading';
 
 export default function About() {
   const origin =
@@ -16,22 +17,22 @@ export default function About() {
   return (
     <>
       <script type="application/ld+json">{JSON.stringify(breadcrumbJson)}</script>
-      <div className="bg-white">
-        <div className="bg-gray-50 border-b border-gray-200">
+      <div className="bg-background">
+        <div className="bg-hero border-b border-border/60">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+            <Heading as="h1" size="h1" weight="bold" underline className="text-hero-foreground">
               About Calculate My Money
-            </h1>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto mt-3">
+            </Heading>
+            <p className="lead text-muted-foreground max-w-3xl mx-auto mt-3">
               Who we are and how we build accurate, transparent UK financial calculators.
             </p>
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 text-muted-foreground">
           <Card>
             <CardHeader>
-              <CardTitle>Mission</CardTitle>
+              <CardTitle className="heading-3 text-card-foreground">Mission</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <p>
@@ -45,7 +46,7 @@ export default function About() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Who We Are</CardTitle>
+              <CardTitle className="heading-3 text-card-foreground">Who We Are</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <p>
@@ -59,10 +60,10 @@ export default function About() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Our Approach</CardTitle>
+              <CardTitle className="heading-3 text-card-foreground">Our Approach</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <ul className="list-disc list-inside space-y-2 text-gray-700">
+              <ul className="list-disc list-inside space-y-2">
                 <li>
                   <strong>Accuracy first</strong> – always based on HMRC and Bank of England sources
                 </li>
@@ -82,7 +83,7 @@ export default function About() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Contact</CardTitle>
+              <CardTitle className="heading-3 text-card-foreground">Contact</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <p>For questions, corrections, or feedback, please email:</p>
@@ -90,7 +91,7 @@ export default function About() {
                 📧{' '}
                 <a
                   href="mailto:support@calcmymoney.co.uk"
-                  className="text-blue-600 hover:underline"
+                  className="text-primary hover:underline"
                 >
                   support@calcmymoney.co.uk
                 </a>

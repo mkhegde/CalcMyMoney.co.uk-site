@@ -42,6 +42,7 @@ import RelatedCalculators from '../components/calculators/RelatedCalculators'; /
 import Breadcrumbs from '../components/general/Breadcrumbs';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom'; // Added Link import
+import Heading from '@/components/common/Heading';
 
 // Adding structured data for better rich snippets
 const salaryCalculatorJsonLd = {
@@ -905,16 +906,16 @@ export default function SalaryCalculatorUK() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJson) }}
       />
 
-      <div className="bg-white dark:bg-gray-900">
+      <div className="bg-background">
         {/* Page Header - Optimized for SEO */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
+        <div className="bg-hero border-b border-border/60 non-printable">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <Breadcrumbs path={breadcrumbPath} />
             <div className="text-center">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              <Heading as="h1" size="h1" weight="bold" className="mb-4 text-hero-foreground">
                 UK Salary Calculator – Take-Home Pay 2025/26
-              </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              </Heading>
+              <p className="lead text-muted-foreground max-w-3xl mx-auto">
                 Calculate your UK take-home pay for the 2025/26 tax year. Free salary calculator
                 with accurate income tax, National Insurance, and pension contributions. Works for
                 England, Wales, Scotland & Northern Ireland.
@@ -949,7 +950,7 @@ export default function SalaryCalculatorUK() {
               </div>
 
               {/* Additional keyword-rich content */}
-              <div className="mt-6 text-sm text-gray-500 dark:text-gray-400 max-w-4xl mx-auto">
+              <div className="mt-6 text-sm text-muted-foreground max-w-4xl mx-auto">
                 <p>
                   Supports gross-to-net and net-to-gross calculations • Updated for 2025/26 tax
                   rates • Includes student loan repayments • Scottish income tax rates supported
@@ -1080,9 +1081,15 @@ export default function SalaryCalculatorUK() {
               {hasCalculated && results ? ( // Conditional rendering for results
                 <>
                   <div className="non-printable">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                      Your Results for {taxData[taxYear].name}
-                    </h2>
+                    <Heading
+                      as="h2"
+                      size="h2"
+                      weight="bold"
+                      className="text-foreground"
+                      eyebrow={`Tax year ${taxData[taxYear].name}`}
+                    >
+                      Your Results
+                    </Heading>
                   </div>
                   {/* Summary Cards */}
                   <div className="grid md:grid-cols-2 gap-6">
@@ -1411,7 +1418,7 @@ export default function SalaryCalculatorUK() {
 
                         {/* Income Tax Breakdown */}
                         <div className="space-y-2">
-                          <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                          <Heading as="h4" size="h4" weight="medium" className="text-foreground">
                             {activeTab === 'netToGross'
                               ? showAdvanced && results.pension > 0
                                 ? '6'
@@ -1420,7 +1427,7 @@ export default function SalaryCalculatorUK() {
                                 ? '5'
                                 : '4'}
                             . Income Tax Calculation:
-                          </h4>
+                          </Heading>
                           {results.tax?.breakdown?.map((bracket, index) => (
                             <div
                               key={index}
@@ -1465,7 +1472,7 @@ export default function SalaryCalculatorUK() {
 
                         {/* National Insurance Breakdown */}
                         <div className="space-y-2">
-                          <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                          <Heading as="h4" size="h4" weight="medium" className="text-foreground">
                             {activeTab === 'netToGross'
                               ? showAdvanced && results.pension > 0
                                 ? '7'
@@ -1474,7 +1481,7 @@ export default function SalaryCalculatorUK() {
                                 ? '6'
                                 : '5'}
                             . National Insurance Calculation:
-                          </h4>
+                          </Heading>
                           {results.nationalInsurance?.breakdown?.map((bracket, index) => (
                             <div
                               key={index}
@@ -1711,10 +1718,12 @@ export default function SalaryCalculatorUK() {
                 </>
               ) : (
                 // Placeholder when no calculation has been made
-                <Card className="lg:col-span-3 flex items-center justify-center h-[400px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <div className="text-center text-gray-500 dark:text-gray-400">
+                <Card className="lg:col-span-3 flex items-center justify-center h-[400px]">
+                  <div className="text-center text-muted-foreground">
                     <Calculator className="w-12 h-12 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold">Ready for your results?</h3>
+                    <Heading as="h3" size="h3" className="text-foreground">
+                      Ready for your results?
+                    </Heading>
                     <p>Fill in your details and click "Calculate" to see your salary breakdown.</p>
                   </div>
                 </Card>
@@ -1725,10 +1734,10 @@ export default function SalaryCalculatorUK() {
 
         <CalculatorWrapper className="space-y-8">
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+            <Heading as="h2" size="h2" weight="bold" className="mb-3 text-foreground">
               Calculate Your Take-Home Pay
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300">
+            </Heading>
+            <p className="lead text-muted-foreground">
               The UK Salary Calculator is an essential tool for anyone employed in the United
               Kingdom. It demystifies your payslip by translating your gross annual salary—the
               headline figure offered in a job contract—into your net take-home pay, which is the
@@ -1740,10 +1749,10 @@ export default function SalaryCalculatorUK() {
             </p>
           </section>
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-              Pro-Rata & Pay Frequency (weekly, monthly)
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300">
+            <Heading as="h2" size="h2" weight="bold" className="mb-3 text-foreground">
+              Pro-Rata &amp; Pay Frequency (weekly, monthly)
+            </Heading>
+            <p className="text-muted-foreground">
               Our calculator seamlessly handles various pay frequencies. Whether you are paid
               annually, monthly, weekly, or daily, you can input your gross pay for that period,
               and the tool will annualize it to provide a complete tax breakdown. For part-time
@@ -1758,10 +1767,10 @@ export default function SalaryCalculatorUK() {
             </p>
           </section>
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-              Student Loan & Pension Options
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300">
+            <Heading as="h2" size="h2" weight="bold" className="mb-3 text-foreground">
+              Student Loan &amp; Pension Options
+            </Heading>
+            <p className="text-muted-foreground">
               Use the 'Advanced Options' to tailor the calculation to your specific circumstances.
               You can select your student loan plan (including Plan 1, 2, 4, 5, and Postgraduate)
               and specify your workplace pension contributions as either a percentage or a fixed
@@ -1791,53 +1800,53 @@ export default function SalaryCalculatorUK() {
         />
 
         {/* Added: Explore Salary Tools section */}
-        <div className="bg-white dark:bg-gray-900 py-12 non-printable">
+        <div className="bg-background py-12 non-printable">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            <Heading as="h2" size="h2" weight="bold" className="mb-6 text-foreground">
               Explore Salary Tools
-            </h2>
+            </Heading>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Link
                 to={createPageUrl('SalaryCalculatorTakeHomePay')}
-                className="block p-5 border rounded-lg hover:shadow-md hover:border-blue-300 transition dark:border-gray-700 dark:hover:border-blue-700 dark:bg-gray-800 dark:text-gray-100"
+                className="block rounded-lg border border-card-muted bg-card p-5 transition hover:border-primary/40 hover:shadow-md"
               >
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                <Heading as="h3" size="h4" className="text-card-foreground">
                   Take-Home Pay Calculator
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                </Heading>
+                <p className="text-sm text-muted-foreground mt-1">
                   Estimate your net pay after tax & NI.
                 </p>
               </Link>
               <Link
                 to={createPageUrl('SalaryCalculatorPaycheck')}
-                className="block p-5 border rounded-lg hover:shadow-md hover:border-blue-300 transition dark:border-gray-700 dark:hover:border-blue-700 dark:bg-gray-800 dark:text-gray-100"
+                className="block rounded-lg border border-card-muted bg-card p-5 transition hover:border-primary/40 hover:shadow-md"
               >
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                <Heading as="h3" size="h4" className="text-card-foreground">
                   Paycheck Calculator
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                </Heading>
+                <p className="text-sm text-muted-foreground mt-1">
                   Weekly, fortnightly or monthly.
                 </p>
               </Link>
               <Link
                 to={createPageUrl('GrossToNetCalculator')}
-                className="block p-5 border rounded-lg hover:shadow-md hover:border-blue-300 transition dark:border-gray-700 dark:hover:border-blue-700 dark:bg-gray-800 dark:text-gray-100"
+                className="block rounded-lg border border-card-muted bg-card p-5 transition hover:border-primary/40 hover:shadow-md"
               >
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                <Heading as="h3" size="h4" className="text-card-foreground">
                   Gross to Net Calculator
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                </Heading>
+                <p className="text-sm text-muted-foreground mt-1">
                   Convert gross salary to take-home.
                 </p>
               </Link>
               <Link
                 to={createPageUrl('ProRataSalaryCalculator')}
-                className="block p-5 border rounded-lg hover:shadow-md hover:border-blue-300 transition dark:border-gray-700 dark:hover:border-blue-700 dark:bg-gray-800 dark:text-gray-100"
+                className="block rounded-lg border border-card-muted bg-card p-5 transition hover:border-primary/40 hover:shadow-md"
               >
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                <Heading as="h3" size="h4" className="text-card-foreground">
                   Pro-Rata Salary Calculator
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                </Heading>
+                <p className="text-sm text-muted-foreground mt-1">
                   Part-time & pro-rata earnings.
                 </p>
               </Link>
@@ -1846,35 +1855,35 @@ export default function SalaryCalculatorUK() {
         </div>
 
         {/* Visible FAQ section aligned with JSON-LD */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 py-12 non-printable">
+        <div className="bg-neutral-soft py-12 non-printable">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <FAQSection faqs={salaryHubFaqs} title="Salary Calculator FAQs" />
-            <p className="text-xs text-gray-500 mt-6">
+            <p className="text-xs text-muted-foreground mt-6">
               Last updated: <time dateTime={LAST_UPDATED_ISO}>{LAST_UPDATED_DISPLAY}</time>
             </p>
           </div>
         </div>
 
         {/* Replace the second FAQ section to keep alignment */}
-        <div id="faq-section" className="bg-gray-50 dark:bg-gray-800/50 py-12 non-printable">
+        <div id="faq-section" className="bg-neutral-soft py-12 non-printable">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <FAQSection faqs={salaryHubFaqs} />
           </div>
         </div>
 
         {/* Additional content section for keywords */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 py-12 non-printable">
+        <div className="bg-neutral-soft py-12 non-printable">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              <Heading as="h2" size="h2" weight="bold" className="mb-4 text-foreground">
                 UK Salary Calculator - Everything You Need to Know
-              </h2>
+              </Heading>
             </div>
-            <div className="grid md:grid-cols-2 gap-8 text-sm text-gray-700 dark:text-gray-300">
+            <div className="grid md:grid-cols-2 gap-8 text-sm text-muted-foreground">
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                <Heading as="h3" size="h4" className="mb-3 text-foreground">
                   How Our UK Tax Calculator Works
-                </h3>
+                </Heading>
                 <ul className="space-y-2">
                   <li>• Accurate 2025/26 UK tax rates and thresholds</li>
                   <li>• Income tax calculation for all UK regions</li>
@@ -1885,9 +1894,9 @@ export default function SalaryCalculatorUK() {
                 </ul>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                  Perfect for UK Employees & Contractors
-                </h3>
+                <Heading as="h3" size="h4" className="mb-3 text-foreground">
+                  Perfect for UK Employees &amp; Contractors
+                </Heading>
                 <ul className="space-y-2">
                   <li>• PAYE employees and contractors</li>
                   <li>• Job offer salary comparisons</li>
