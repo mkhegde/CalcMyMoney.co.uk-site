@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "cross-env ROLLUP_SKIP_NATIVE=true vite build",
+    "build": "npm run sitemap && cross-env ROLLUP_SKIP_NATIVE=true vite build",
+    "sitemap": "node scripts/generate-sitemap.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

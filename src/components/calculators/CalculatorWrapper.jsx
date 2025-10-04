@@ -1,10 +1,11 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
-export default function CalculatorWrapper({ children }) {
+export default function CalculatorWrapper({ children, className = '' }) {
   return (
-    <div className="bg-white dark:bg-gray-900 py-12 non-printable">
+    <div className="non-printable bg-background py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className={cn('rounded-lg border border-card-muted bg-card-muted p-8', className)}>
           {children}
         </div>
       </div>

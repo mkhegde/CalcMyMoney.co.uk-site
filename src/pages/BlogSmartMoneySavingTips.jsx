@@ -1,21 +1,129 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, Calendar, User, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useSeo } from '@/components/seo/SeoContext';
+
+const createUnsplashUrl = (baseUrl, params, width) => `${baseUrl}?${params}&w=${width}`;
+
+const createUnsplashSrcSet = (baseUrl, params, widths) =>
+  widths.map((width) => `${createUnsplashUrl(baseUrl, params, width)} ${width}w`).join(', ');
 
 export default function BlogSmartMoneySavingTips() {
-  const post = {
-    title: 'Smart Money-Saving Tips for UK Families: Tackling Groceries & Energy Bills',
-    category: 'Money Saving',
-    readTime: '7 min read',
-    author: 'CalcMyMoney Team',
-    date: 'October 26, 2023',
-    imageUrl:
-      'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    imageAlt: 'A family happily unpacking groceries in a bright, modern kitchen.',
-  };
+  const post = useMemo(
+    () => ({
+      title: 'Smart Money-Saving Tips for UK Families: Tackling Groceries & Energy Bills',
+      category: 'Money Saving',
+      readTime: '7 min read',
+      author: 'CalcMyMoney Team',
+      displayDate: 'October 26, 2023',
+      publishedTime: '2023-10-26T08:00:00+00:00',
+      modifiedTime: '2023-10-26T08:00:00+00:00',
+      imageUrl:
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      imageAlt: 'A family happily unpacking groceries in a bright, modern kitchen.',
+      tags: ['Money Saving', 'Family Budgeting', 'Energy Bills', 'UK Finance'],
+    }),
+    []
+  );
+  const heroImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1280,
+      height: 853,
+      srcSetWidths: [480, 768, 1024, 1280],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 75vw, 896px',
+    }),
+    []
+  );
+  const groceriesImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 640px',
+      alt: 'Fresh vegetables and groceries laid out for meal planning',
+    }),
+    []
+  );
+  const thermostatImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 640px',
+      alt: 'Modern smart thermostat on wall showing energy savings',
+    }),
+    []
+  );
+  const { setSeo, resetSeo, defaults } = useSeo();
+
+  const articleJsonLd = useMemo(() => {
+    const baseDescription =
+      defaults?.description ||
+      'Discover practical tips for UK families to save money on groceries, energy bills, and everyday expenses.';
+
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: post.title,
+      description: baseDescription,
+      image: [post.imageUrl],
+      author: {
+        '@type': 'Organization',
+        name: post.author,
+      },
+      datePublished: post.publishedTime,
+      dateModified: post.modifiedTime,
+      articleSection: post.category,
+      keywords: post.tags.join(', '),
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': defaults?.canonical || defaults?.ogUrl || 'https://www.calcmymoney.co.uk/blog-smart-money-saving-tips',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Calculate My Money',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://www.calcmymoney.co.uk/images/logo-high-res.png',
+        },
+      },
+    };
+  }, [defaults?.canonical, defaults?.description, defaults?.ogUrl, post]);
+
+  useEffect(() => {
+    const baseJsonLd = Array.isArray(defaults?.jsonLd) ? defaults.jsonLd : [];
+    const combinedJsonLd = articleJsonLd ? [...baseJsonLd, articleJsonLd] : baseJsonLd;
+
+    setSeo({
+      ogType: 'article',
+      ogImage: post.imageUrl,
+      ogImageAlt: post.imageAlt,
+      twitterImage: post.imageUrl,
+      twitterImageAlt: post.imageAlt,
+      articlePublishedTime: post.publishedTime,
+      articleModifiedTime: post.modifiedTime,
+      articleSection: post.category,
+      articleAuthor: post.author,
+      articleTags: post.tags,
+      jsonLd: combinedJsonLd,
+    });
+
+    return () => {
+      resetSeo();
+    };
+  }, [articleJsonLd, defaults?.jsonLd, post, resetSeo, setSeo]);
 
   return (
     <div className="bg-white dark:bg-gray-900 py-12">
@@ -43,7 +151,7 @@ export default function BlogSmartMoneySavingTips() {
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                <time dateTime={post.date}>{post.date}</time>
+                <time dateTime={post.publishedTime}>{post.displayDate}</time>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
@@ -53,8 +161,14 @@ export default function BlogSmartMoneySavingTips() {
           </header>
 
           <img
-            src={post.imageUrl}
+            src={createUnsplashUrl(heroImage.baseUrl, heroImage.params, heroImage.width)}
+            srcSet={createUnsplashSrcSet(heroImage.baseUrl, heroImage.params, heroImage.srcSetWidths)}
+            sizes={heroImage.sizes}
             alt={post.imageAlt}
+            width={heroImage.width}
+            height={heroImage.height}
+            loading="eager"
+            decoding="async"
             className="w-full h-auto max-h-[400px] object-cover rounded-lg mb-8"
           />
 
@@ -98,8 +212,22 @@ export default function BlogSmartMoneySavingTips() {
 
             <div className="my-8">
               <img
-                src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Fresh vegetables and groceries laid out for meal planning"
+                src={createUnsplashUrl(
+                  groceriesImage.baseUrl,
+                  groceriesImage.params,
+                  groceriesImage.width
+                )}
+                srcSet={createUnsplashSrcSet(
+                  groceriesImage.baseUrl,
+                  groceriesImage.params,
+                  groceriesImage.srcSetWidths
+                )}
+                sizes={groceriesImage.sizes}
+                alt={groceriesImage.alt}
+                width={groceriesImage.width}
+                height={groceriesImage.height}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-64 object-cover rounded-lg"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">
@@ -132,8 +260,22 @@ export default function BlogSmartMoneySavingTips() {
 
             <div className="my-8">
               <img
-                src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Modern smart thermostat on wall showing energy savings"
+                src={createUnsplashUrl(
+                  thermostatImage.baseUrl,
+                  thermostatImage.params,
+                  thermostatImage.width
+                )}
+                srcSet={createUnsplashSrcSet(
+                  thermostatImage.baseUrl,
+                  thermostatImage.params,
+                  thermostatImage.srcSetWidths
+                )}
+                sizes={thermostatImage.sizes}
+                alt={thermostatImage.alt}
+                width={thermostatImage.width}
+                height={thermostatImage.height}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-64 object-cover rounded-lg"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">

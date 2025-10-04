@@ -19,6 +19,11 @@ export default function SeoHead({
   ogImageAlt,
   ogSiteName,
   ogLocale,
+  articlePublishedTime,
+  articleModifiedTime,
+  articleSection,
+  articleAuthor,
+  articleTags,
   twitterCard = DEFAULT_TWITTER_CARD,
   twitterTitle,
   twitterDescription,
@@ -35,6 +40,7 @@ export default function SeoHead({
   const resolvedTwitterImageAlt = twitterImageAlt || ogImageAlt;
 
   const jsonLdArray = Array.isArray(jsonLd) ? jsonLd.filter(Boolean) : [];
+  const articleTagsArray = Array.isArray(articleTags) ? articleTags.filter(Boolean) : [];
 
   return (
     <Helmet>
@@ -43,6 +49,7 @@ export default function SeoHead({
       {canonical && <link rel="canonical" href={canonical} />}
       {robots && <meta name="robots" content={robots} />}
       {themeColor && <meta name="theme-color" content={themeColor} />}
+      {articleAuthor && <meta name="author" content={articleAuthor} />}
 
       {/* Open Graph */}
       {resolvedOgTitle && <meta property="og:title" content={resolvedOgTitle} />}
@@ -55,6 +62,13 @@ export default function SeoHead({
       <meta property="og:image:height" content="630" />
       {ogSiteName && <meta property="og:site_name" content={ogSiteName} />}
       {ogLocale && <meta property="og:locale" content={ogLocale} />}
+      {articlePublishedTime && <meta property="article:published_time" content={articlePublishedTime} />}
+      {articleModifiedTime && <meta property="article:modified_time" content={articleModifiedTime} />}
+      {articleSection && <meta property="article:section" content={articleSection} />}
+      {articleAuthor && <meta property="article:author" content={articleAuthor} />}
+      {articleTagsArray.map((tag, index) => (
+        <meta key={`article-tag-${index}`} property="article:tag" content={tag} />
+      ))}
 
       {/* Twitter */}
       {twitterCard && <meta name="twitter:card" content={twitterCard} />}

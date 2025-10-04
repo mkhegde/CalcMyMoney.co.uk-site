@@ -14,8 +14,15 @@ const blogPosts = [
     category: 'Money Saving',
     readTime: '7 min read',
     url: createPageUrl('BlogSmartMoneySavingTips'),
-    image:
-      'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    image: {
+      baseUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+    },
   },
   {
     title: 'Debt Snowball vs. Debt Avalanche: Which UK Debt Repayment Strategy is Right for You?',
@@ -26,8 +33,15 @@ const blogPosts = [
     category: 'Debt Management',
     readTime: '6 min read',
     url: createPageUrl('BlogDebtRepaymentStrategies'),
-    image:
-      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    image: {
+      baseUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+    },
   },
   {
     title: 'My Relationship with Money: A Guide to Financial Psychology',
@@ -38,8 +52,15 @@ const blogPosts = [
     category: 'Mindset',
     readTime: '8 min read',
     url: createPageUrl('BlogFinancialPsychology'),
-    image:
-      'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    image: {
+      baseUrl: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+    },
   },
 ];
 
@@ -74,8 +95,16 @@ export default function Blog() {
             >
               <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300 bg-white dark:bg-gray-800">
                 <img
-                  src={post.image}
+                  src={`${post.image.baseUrl}?${post.image.params}&w=${post.image.width}`}
+                  srcSet={post.image.srcSetWidths
+                    .map((width) => `${post.image.baseUrl}?${post.image.params}&w=${width} ${width}w`)
+                    .join(', ')}
+                  sizes={post.image.sizes}
                   alt={post.title}
+                  width={post.image.width}
+                  height={post.image.height}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-48 object-cover rounded-t-lg"
                 />
                 <CardHeader>

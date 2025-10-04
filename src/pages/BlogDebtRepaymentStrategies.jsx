@@ -1,21 +1,132 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { ArrowLeft, Calendar, User, Clock, TrendingDown, Target } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useSeo } from '@/components/seo/SeoContext';
+
+const createUnsplashUrl = (baseUrl, params, width) => `${baseUrl}?${params}&w=${width}`;
+
+const createUnsplashSrcSet = (baseUrl, params, widths) =>
+  widths.map((width) => `${createUnsplashUrl(baseUrl, params, width)} ${width}w`).join(', ');
 
 export default function BlogDebtRepaymentStrategies() {
-  const post = {
-    title: 'Debt Snowball vs. Debt Avalanche: Which UK Debt Repayment Strategy is Right for You?',
-    category: 'Debt Management',
-    readTime: '6 min read',
-    author: 'CalcMyMoney Team',
-    date: 'October 24, 2023',
-    imageUrl:
-      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    imageAlt: 'Person organizing financial documents and calculating debt payments',
-  };
+  const post = useMemo(
+    () => ({
+      title: 'Debt Snowball vs. Debt Avalanche: Which UK Debt Repayment Strategy is Right for You?',
+      category: 'Debt Management',
+      readTime: '6 min read',
+      author: 'CalcMyMoney Team',
+      displayDate: 'October 24, 2023',
+      publishedTime: '2023-10-24T08:00:00+00:00',
+      modifiedTime: '2023-10-24T08:00:00+00:00',
+      imageUrl:
+        'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      imageAlt: 'Person organizing financial documents and calculating debt payments',
+      tags: ['Debt Repayment', 'Personal Finance', 'UK Debt Advice', 'Budgeting'],
+    }),
+    []
+  );
+  const heroImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1280,
+      height: 853,
+      srcSetWidths: [480, 768, 1024, 1280],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 75vw, 896px',
+    }),
+    []
+  );
+  const avalancheImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 640px',
+      alt: 'Calculator and financial documents showing debt reduction strategy planning',
+    }),
+    []
+  );
+  const successImage = useMemo(
+    () => ({
+      baseUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 768px) 100vw, (max-width: 1280px) 70vw, 640px',
+      alt: 'Person celebrating financial success with calculator and paperwork',
+    }),
+    []
+  );
+  const { setSeo, resetSeo, defaults } = useSeo();
+
+  const articleJsonLd = useMemo(() => {
+    const baseDescription =
+      defaults?.description ||
+      'Compare the debt snowball and debt avalanche methods to find the best UK debt repayment strategy for your situation.';
+
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: post.title,
+      description: baseDescription,
+      image: [post.imageUrl],
+      author: {
+        '@type': 'Organization',
+        name: post.author,
+      },
+      datePublished: post.publishedTime,
+      dateModified: post.modifiedTime,
+      articleSection: post.category,
+      keywords: post.tags.join(', '),
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id':
+          defaults?.canonical ||
+          defaults?.ogUrl ||
+          'https://www.calcmymoney.co.uk/blog-debt-repayment-strategies',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Calculate My Money',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://www.calcmymoney.co.uk/images/logo-high-res.png',
+        },
+      },
+    };
+  }, [defaults?.canonical, defaults?.description, defaults?.ogUrl, post]);
+
+  useEffect(() => {
+    const baseJsonLd = Array.isArray(defaults?.jsonLd) ? defaults.jsonLd : [];
+    const combinedJsonLd = articleJsonLd ? [...baseJsonLd, articleJsonLd] : baseJsonLd;
+
+    setSeo({
+      ogType: 'article',
+      ogImage: post.imageUrl,
+      ogImageAlt: post.imageAlt,
+      twitterImage: post.imageUrl,
+      twitterImageAlt: post.imageAlt,
+      articlePublishedTime: post.publishedTime,
+      articleModifiedTime: post.modifiedTime,
+      articleSection: post.category,
+      articleAuthor: post.author,
+      articleTags: post.tags,
+      jsonLd: combinedJsonLd,
+    });
+
+    return () => {
+      resetSeo();
+    };
+  }, [articleJsonLd, defaults?.jsonLd, post, resetSeo, setSeo]);
 
   return (
     <div className="bg-white dark:bg-gray-900 py-12">
@@ -43,7 +154,7 @@ export default function BlogDebtRepaymentStrategies() {
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                <time dateTime={post.date}>{post.date}</time>
+                <time dateTime={post.publishedTime}>{post.displayDate}</time>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
@@ -53,8 +164,14 @@ export default function BlogDebtRepaymentStrategies() {
           </header>
 
           <img
-            src={post.imageUrl}
+            src={createUnsplashUrl(heroImage.baseUrl, heroImage.params, heroImage.width)}
+            srcSet={createUnsplashSrcSet(heroImage.baseUrl, heroImage.params, heroImage.srcSetWidths)}
+            sizes={heroImage.sizes}
             alt={post.imageAlt}
+            width={heroImage.width}
+            height={heroImage.height}
+            loading="eager"
+            decoding="async"
             className="w-full h-auto max-h-[400px] object-cover rounded-lg mb-8"
           />
 
@@ -96,8 +213,22 @@ export default function BlogDebtRepaymentStrategies() {
 
             <div className="my-8">
               <img
-                src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Calculator and financial documents showing debt reduction strategy planning"
+                src={createUnsplashUrl(
+                  avalancheImage.baseUrl,
+                  avalancheImage.params,
+                  avalancheImage.width
+                )}
+                srcSet={createUnsplashSrcSet(
+                  avalancheImage.baseUrl,
+                  avalancheImage.params,
+                  avalancheImage.srcSetWidths
+                )}
+                sizes={avalancheImage.sizes}
+                alt={avalancheImage.alt}
+                width={avalancheImage.width}
+                height={avalancheImage.height}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-64 object-cover rounded-lg"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">
@@ -240,8 +371,22 @@ export default function BlogDebtRepaymentStrategies() {
 
             <div className="my-8">
               <img
-                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Person celebrating financial success with calculator and paperwork"
+                src={createUnsplashUrl(
+                  successImage.baseUrl,
+                  successImage.params,
+                  successImage.width
+                )}
+                srcSet={createUnsplashSrcSet(
+                  successImage.baseUrl,
+                  successImage.params,
+                  successImage.srcSetWidths
+                )}
+                sizes={successImage.sizes}
+                alt={successImage.alt}
+                width={successImage.width}
+                height={successImage.height}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-64 object-cover rounded-lg"
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center italic">

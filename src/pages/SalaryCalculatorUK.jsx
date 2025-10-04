@@ -1723,53 +1723,51 @@ export default function SalaryCalculatorUK() {
           </div>
         </div>
 
-        <CalculatorWrapper>
-          <div className="space-y-8">
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-                Calculate Your Take-Home Pay
-              </h2>
-              <p className="text-gray-700 dark:text-gray-300">
-                The UK Salary Calculator is an essential tool for anyone employed in the United
-                Kingdom. It demystifies your payslip by translating your gross annual salary—the
-                headline figure offered in a job contract—into your net take-home pay, which is the
-                actual amount that arrives in your bank account. This calculation involves
-                subtracting all mandatory deductions, including Income Tax, National Insurance, and,
-                if applicable, pension contributions and student loan repayments. Our calculator is
-                kept up-to-date with the latest tax thresholds for England, Scotland, Wales, and
-                Northern Ireland, ensuring you receive an accurate and reliable estimate.
-              </p>
-            </section>
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-                Pro-Rata & Pay Frequency (weekly, monthly)
-              </h2>
-              <p className="text-gray-700 dark:text-gray-300">
-                Our calculator seamlessly handles various pay frequencies. Whether you are paid
-                annually, monthly, weekly, or daily, you can input your gross pay for that period,
-                and the tool will annualize it to provide a complete tax breakdown. For part-time
-                workers, our dedicated{' '}
-                <a
-                  href={createPageUrl('ProRataSalaryCalculator')}
-                  className="text-blue-600 hover:underline"
-                >
-                  Pro Rata Salary Calculator
-                </a>{' '}
-                can help you determine your equivalent earnings.
-              </p>
-            </section>
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-                Student Loan & Pension Options
-              </h2>
-              <p className="text-gray-700 dark:text-gray-300">
-                Use the 'Advanced Options' to tailor the calculation to your specific circumstances.
-                You can select your student loan plan (including Plan 1, 2, 4, 5, and Postgraduate)
-                and specify your workplace pension contributions as either a percentage or a fixed
-                monthly amount. These are factored into your take‑home pay.
-              </p>
-            </section>
-          </div>
+        <CalculatorWrapper className="space-y-8">
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              Calculate Your Take-Home Pay
+            </h2>
+            <p className="text-gray-700 dark:text-gray-300">
+              The UK Salary Calculator is an essential tool for anyone employed in the United
+              Kingdom. It demystifies your payslip by translating your gross annual salary—the
+              headline figure offered in a job contract—into your net take-home pay, which is the
+              actual amount that arrives in your bank account. This calculation involves
+              subtracting all mandatory deductions, including Income Tax, National Insurance, and,
+              if applicable, pension contributions and student loan repayments. Our calculator is
+              kept up-to-date with the latest tax thresholds for England, Scotland, Wales, and
+              Northern Ireland, ensuring you receive an accurate and reliable estimate.
+            </p>
+          </section>
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              Pro-Rata & Pay Frequency (weekly, monthly)
+            </h2>
+            <p className="text-gray-700 dark:text-gray-300">
+              Our calculator seamlessly handles various pay frequencies. Whether you are paid
+              annually, monthly, weekly, or daily, you can input your gross pay for that period,
+              and the tool will annualize it to provide a complete tax breakdown. For part-time
+              workers, our dedicated{' '}
+              <a
+                href={createPageUrl('ProRataSalaryCalculator')}
+                className="text-blue-600 hover:underline"
+              >
+                Pro Rata Salary Calculator
+              </a>{' '}
+              can help you determine your equivalent earnings.
+            </p>
+          </section>
+          <section>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              Student Loan & Pension Options
+            </h2>
+            <p className="text-gray-700 dark:text-gray-300">
+              Use the 'Advanced Options' to tailor the calculation to your specific circumstances.
+              You can select your student loan plan (including Plan 1, 2, 4, 5, and Postgraduate)
+              and specify your workplace pension contributions as either a percentage or a fixed
+              monthly amount. These are factored into your take‑home pay.
+            </p>
+          </section>
         </CalculatorWrapper>
 
         <RelatedCalculators
