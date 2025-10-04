@@ -128,16 +128,16 @@ export default function BlogSmartMoneySavingTips() {
 
   return (
     <div className="bg-background py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link
-          to={createPageUrl('Blog')}
-          className="mb-8 inline-flex items-center text-primary hover:underline"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to all articles
-        </Link>
+      <article>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Link
+            to={createPageUrl('Blog')}
+            className="mb-8 inline-flex items-center text-primary hover:underline"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to all articles
+          </Link>
 
-        <article>
           <header className="mb-8">
             <span className="bg-pill text-pill-foreground px-3 py-1 rounded-full text-sm font-medium">
               {post.category}
@@ -331,8 +331,8 @@ export default function BlogSmartMoneySavingTips() {
               </CardContent>
             </Card>
           </div>
-        </article>
-      </div>
+        </div>
+      </article>
     </div>
   );
 }
