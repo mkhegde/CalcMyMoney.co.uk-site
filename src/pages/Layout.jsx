@@ -489,7 +489,7 @@ export default function Layout({ children, currentPageName }) {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <img
-                        src="https://www.calcmymoney.co.uk/images/logo-high-res.png"
+                        src="/logo-high-res.png"
                         alt="Calculate My Money Logo"
                         className="h-8 w-8"
                       />
@@ -596,11 +596,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="grid md:grid-cols-5 gap-8">
               <div className="md:col-span-1">
                 <Link to={createPageUrl('Home')} className="flex items-center space-x-2 mb-4">
-                  <img
-                    src="https://www.calcmymoney.co.uk/logo-high-res.png"
-                    alt="Calculate My Money Logo"
-                    className="h-8 w-8"
-                  />
+                  <img src="/logo-high-res.png" alt="Calculate My Money Logo" className="h-8 w-8" />
                   <span className="text-xl font-bold text-foreground">Calculate My Money</span>
                 </Link>
                 <p className="text-sm text-muted-foreground">
