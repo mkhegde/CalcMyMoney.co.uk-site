@@ -1,4 +1,5 @@
 import React from 'react';
+import Heading from '@/components/common/Heading';
 
 // Optimized SVG representation of the Pound icon to replace the 194 KiB PNG.
 // This is embedded directly in the HTML snippet, eliminating the network request.
@@ -29,7 +30,7 @@ export default function LinkToUs() {
       <div className="bg-gray-50 border-b border-gray-200">
                {' '}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Link to Us</h1>   
+                    <Heading as="h1" size="h1" weight="bold" className="text-gray-900">Link to Us</Heading>   
                {' '}
           <p className="text-lg text-gray-600 mt-2">
                         Support our free UK calculators by adding a badge to your site.        

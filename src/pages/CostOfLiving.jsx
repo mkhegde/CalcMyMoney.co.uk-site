@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ukCities, createSlug } from '../components/data/seo-data';
 import { MapPin, Users, TrendingUp } from 'lucide-react';
+import Heading from '@/components/common/Heading';
 
 export default function CostOfLiving() {
   const regions = [...new Set(ukCities.map((city) => city.region))];
@@ -14,9 +15,9 @@ export default function CostOfLiving() {
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               UK Cost of Living Explorer
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Compare rental costs, population, and other key stats for major cities across the
               United Kingdom.

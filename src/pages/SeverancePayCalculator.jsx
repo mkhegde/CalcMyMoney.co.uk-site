@@ -11,6 +11,7 @@ import FAQSection from '../components/calculators/FAQSection';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
 import AnimatedNumber from '../components/general/AnimatedNumber';
 import { createPageUrl } from '@/utils';
+import Heading from '@/components/common/Heading';
 
 const MAX_WEEKLY_PAY = 700; // Statutory cap 2024/25 (England, Scotland, Wales)
 const MAX_SERVICE_YEARS = 20;
@@ -194,9 +195,9 @@ export default function SeverancePayCalculator() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Breadcrumbs path={breadcrumbPath} />
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               UK Severance Pay Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Model your potential payout when leaving a job. Combine statutory redundancy,
               contractual enhancements, pay in lieu of notice and unused holiday pay.

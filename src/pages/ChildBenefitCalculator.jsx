@@ -11,6 +11,7 @@ import FAQSection from '../components/calculators/FAQSection';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
 import AnimatedNumber from '../components/general/AnimatedNumber';
 import { createPageUrl } from '@/utils';
+import Heading from '@/components/common/Heading';
 
 const FIRST_CHILD_WEEKLY = 25.6;
 const ADDITIONAL_CHILD_WEEKLY = 16.95;
@@ -162,9 +163,9 @@ export default function ChildBenefitCalculator() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Breadcrumbs path={breadcrumbPath} />
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-blue-900 dark:text-blue-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-blue-900 dark:text-blue-100 mb-4">
               UK Child Benefit Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-blue-800/80 dark:text-blue-100/80 max-w-3xl mx-auto">
               Enter your family size and household incomes to see how much Child Benefit you can
               claim and whether the High Income Charge will claw it back.

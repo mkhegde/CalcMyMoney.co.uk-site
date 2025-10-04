@@ -5,6 +5,7 @@ import { useSeo } from '@/components/seo/SeoContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { jobTitles, createSlug } from '../components/data/seo-data';
+import Heading from '@/components/common/Heading';
 
 export default function JobSalaryPage() {
   const { slug } = useParams();
@@ -147,9 +148,9 @@ export default function JobSalaryPage() {
                 Updated for the latest UK market data
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-3">
               {roleTitle} salary (UK)
-            </h1>
+            </Heading>
             {selectedRole.description && (
               <p className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl">
                 {selectedRole.description}

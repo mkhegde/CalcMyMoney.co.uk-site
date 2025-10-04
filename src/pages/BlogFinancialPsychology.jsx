@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, User, Clock, Brain, Target } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useSeo } from '@/components/seo/SeoContext';
+import Heading from '@/components/common/Heading';
 
 const createUnsplashUrl = (baseUrl, params, width) => `${baseUrl}?${params}&w=${width}`;
 
@@ -157,9 +158,9 @@ export default function BlogFinancialPsychology() {
             <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium dark:bg-purple-900/50 dark:text-purple-300">
               {post.category}
             </span>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mt-4 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mt-4 mb-4">
               {post.title}
-            </h1>
+            </Heading>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { PoundSterling, Shield } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
+import Heading from '@/components/common/Heading';
 
 const iFAQs = [
   {
@@ -59,7 +60,7 @@ export default function InheritanceTaxCalculator() {
     <div className="bg-white">
       <div className="bg-gray-50 border-b">
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold text-center">Inheritance Tax Calculator</h1>
+          <Heading as="h1" size="h1" weight="bold" className="text-center">Inheritance Tax Calculator</Heading>
         </div>
       </div>
       <div className="max-w-4xl mx-auto p-4 py-8">

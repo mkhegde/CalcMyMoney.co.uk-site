@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import Heading from '@/components/common/Heading';
 
 export default function SelfAssessmentGuide() {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -52,7 +53,7 @@ export default function SelfAssessmentGuide() {
 
       <div className="bg-white">
         <div className="bg-gray-50 border-b border-gray-200 text-center py-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">UK Self Assessment Guide</h1>
+          <Heading as="h1" size="h1" weight="bold" className="text-gray-900">UK Self Assessment Guide</Heading>
           <p className="text-gray-600 mt-2">Deadlines, rates, allowances and tips for 2025/26.</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Link

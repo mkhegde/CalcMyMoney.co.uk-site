@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
+import Heading from '@/components/common/Heading';
 
 export default function Disclaimer() {
   return (
@@ -8,7 +9,7 @@ export default function Disclaimer() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <AlertTriangle className="w-12 h-12 mx-auto text-amber-500" />
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-4">Disclaimer</h1>
+          <Heading as="h1" size="h1" weight="bold" className="text-gray-900 mt-4">Disclaimer</Heading>
           <p className="text-lg text-gray-600 mt-2">Last updated: 27/08/2025</p>
         </div>
 

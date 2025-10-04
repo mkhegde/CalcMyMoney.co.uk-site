@@ -10,6 +10,7 @@ import CalculatorWrapper from '../components/calculators/CalculatorWrapper';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
 import Breadcrumbs from '../components/general/Breadcrumbs'; // Added import for Breadcrumbs
 import { createPageUrl } from '@/utils';
+import Heading from '@/components/common/Heading';
 
 // Site-wide SEO (JSON-LD) definition for the page
 const incomeTaxJsonLd = {
@@ -231,9 +232,9 @@ export default function IncomeTaxCalculator() {
             {/* Breadcrumbs added here */}
             <Breadcrumbs path={breadcrumbPath} />
             <div className="text-center">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
                 UK Income Tax Calculator 2025/26
-              </h1>
+              </Heading>
               <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
                 Demystify your tax bill. See exactly how your income is taxed across the different
                 UK tax bands for the 2025/26 financial year.

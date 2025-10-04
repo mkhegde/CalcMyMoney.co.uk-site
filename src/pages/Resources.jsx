@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link2, Book, Landmark, Banknote } from 'lucide-react';
+import Heading from '@/components/common/Heading';
 
 const governmentResources = [
   {
@@ -54,7 +55,7 @@ export default function Resources() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <Book className="w-12 h-12 mx-auto text-blue-600" />
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-4">Financial Resources</h1>
+          <Heading as="h1" size="h1" weight="bold" className="text-gray-900 mt-4">Financial Resources</Heading>
           <p className="text-lg text-gray-600 mt-2 max-w-3xl mx-auto">
             Knowledge is power. Here are some trusted resources and recommended reading to help you
             on your financial journey.

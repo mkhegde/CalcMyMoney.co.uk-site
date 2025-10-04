@@ -8,6 +8,7 @@ import { PoundSterling, Calculator, Percent, Calendar, FileSpreadsheet } from 'l
 import ExportActions from '../components/calculators/ExportActions';
 import FAQSection from '../components/calculators/FAQSection';
 import {
+import Heading from '@/components/common/Heading';
   AreaChart,
   Area,
   XAxis,
@@ -121,9 +122,9 @@ export default function AmortizationCalculator() {
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               Loan Amortization Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Generate a complete payment schedule for your mortgage or loan. See how much of each
               payment goes to principal vs. interest.

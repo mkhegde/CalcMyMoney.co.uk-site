@@ -20,6 +20,7 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import ExportActions from '../components/calculators/ExportActions';
+import Heading from '@/components/common/Heading';
 
 const dreamItems = {
   property: {
@@ -286,9 +287,9 @@ export default function DreamLifestyleCalculator() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <Sparkles className="w-12 h-12 mx-auto text-purple-600 mb-4" />
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 mb-4">
               Dream Lifestyle Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Go on, live a little in your imagination! Build your fantasy empire and see just how
               wealthy your dreams really are.

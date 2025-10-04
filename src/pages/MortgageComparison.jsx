@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
+import Heading from '@/components/common/Heading';
 
 export default function MortgageComparison() {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -47,9 +48,9 @@ export default function MortgageComparison() {
 
       <div className="bg-white">
         <div className="bg-gray-50 border-b border-gray-200 text-center py-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+          <Heading as="h1" size="h1" weight="bold" className="text-gray-900">
             Mortgage Comparison Calculator
-          </h1>
+          </Heading>
           <p className="text-gray-600 mt-2">Compare two mortgage deals and see the total cost.</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Link

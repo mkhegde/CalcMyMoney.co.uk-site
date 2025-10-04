@@ -15,6 +15,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import FAQSection from '../components/calculators/FAQSection';
+import Heading from '@/components/common/Heading';
 
 const investmentFAQs = [
   {
@@ -109,9 +110,9 @@ export default function InvestmentCalculator() {
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
               Investment &amp; Savings Growth Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Visualise the power of compound growth. Project the future value of your investments
               with regular contributions.

@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ExportActions from '../components/calculators/ExportActions';
+import Heading from '@/components/common/Heading';
 
 const STATUTORY_WEEKS = 5.6;
 
@@ -80,9 +81,9 @@ export default function HolidayPayCalculator() {
       <div className="bg-gray-50 border-b border-gray-200 non-printable">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 mb-4">
               Holiday Pay & Entitlement Calculator
-            </h1>
+            </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Everyone needs a break. Make sure you're getting the paid time off you're entitled to.
             </p>

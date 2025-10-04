@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
+import Heading from '@/components/common/Heading';
 
 export default function TermsOfService() {
   return (
@@ -8,9 +9,9 @@ export default function TermsOfService() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <FileText className="w-12 h-12 mx-auto text-blue-600" />
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mt-4">
+          <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mt-4">
             Terms of Service
-          </h1>
+          </Heading>
           <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">Last updated: 27/08/2025</p>
         </div>
 

@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Send, Loader2, CheckCircle } from 'lucide-react';
 import FAQSection from '../components/calculators/FAQSection';
+import Heading from '@/components/common/Heading';
 
 // We are removing the base44 SendEmail integration as it won't work on a static site.
 // import { SendEmail } from "@/api/integrations";
@@ -73,9 +74,9 @@ export default function Contact() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <Send className="w-12 h-12 mx-auto text-blue-600" />
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mt-4">
+          <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mt-4">
             Contact Us
-          </h1>
+          </Heading>
           <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
             Have a question, feedback, or a suggestion? We'd love to hear from you.
           </p>
