@@ -319,6 +319,17 @@ function PagesContent() {
           <Route path="/debt-calculator" element={<LazyDebtCalculator />} />
           <Route path="/mortgage-calculator" element={<LazyMortgageCalculator />} />
           <Route
+            path="/mortgage-affordability-calculator"
+            element={<LazyMortgageAffordabilityCalculator />}
+          />
+          <Route path="/mortgage-calculator-uk" element={<LazyMortgageCalculatorUK />} />
+          <Route path="/mortgage-loan-repayment" element={<LazyMortgageLoanRepayment />} />
+          <Route
+            path="/home-loan-mortgage-calculator"
+            element={<LazyHomeLoanMortgageCalculator />}
+          />
+          <Route path="/mortgage-comparison" element={<LazyMortgageComparison />} />
+          <Route
             path="/compound-interest-calculator"
             element={<LazyCompoundInterestCalculator />}
           />
@@ -337,6 +348,16 @@ function PagesContent() {
           <Route path="/energy-bill-calculator" element={<LazyEnergyBillCalculator />} />
           <Route path="/rental-income-calculator" element={<LazyRentalIncomeCalculator />} />
           <Route path="/brrrr-calculator" element={<LazyBRRRRCalculator />} />
+          <Route path="/contractor-calculator" element={<LazyContractorCalculator />} />
+          <Route
+            path="/salary-calculator-take-home-pay"
+            element={<LazySalaryCalculatorTakeHomePay />}
+          />
+          <Route
+            path="/salary-calculator-paycheck"
+            element={<LazySalaryCalculatorPaycheck />}
+          />
+          <Route path="/gross-to-net-calculator" element={<LazyGrossToNetCalculator />} />
           <Route path="/pro-rata-salary-calculator" element={<LazyProRataSalaryCalculator />} />
           <Route path="/loan-repayment-calculator" element={<LazyLoanRepaymentCalculator />} />
           <Route
@@ -414,6 +435,10 @@ function PagesContent() {
             path="/national-insurance-calculator"
             element={<LazyNationalInsuranceCalculator />}
           />
+          <Route path="/tax-calculators-uk" element={<LazyTaxCalculatorsUK />} />
+          <Route path="/tax-after-tax-calculator" element={<LazyTaxAfterTaxCalculator />} />
+          <Route path="/tax-and-ni-calculator" element={<LazyTaxAndNICalculator />} />
+          <Route path="/net-income-uk-calculator" element={<LazyNetIncomeUKCalculator />} />
           <Route path="/student-loan-calculator" element={<LazyStudentLoanCalculator />} />
           <Route path="/maternity-pay-calculator" element={<LazyMaternityPayCalculator />} />
           <Route
