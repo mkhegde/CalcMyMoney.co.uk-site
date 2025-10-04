@@ -55,6 +55,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showAllCalculators, setShowAllCalculators] = useState(false);
+  const [pendingScrollSlug, setPendingScrollSlug] = useState(null);
   const { setSeo, resetSeo } = useSeo();
 
   const stats = getCalculatorStats();
@@ -142,10 +143,26 @@ export default function Home() {
     };
   }, [hasQuery, setSeo, resetSeo]);
 
+  useEffect(() => {
+    if (!showAllCalculators || !pendingScrollSlug) {
+      return;
+    }
+
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const target = document.getElementById(pendingScrollSlug);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setPendingScrollSlug(null);
+  }, [showAllCalculators, pendingScrollSlug]);
+
   return (
     <div className="bg-background text-foreground">
       {/* Hero Section */}
-      <div className="border-b border-border/70 bg-hero bg-hero-pattern">
+      <div className="relative border-b border-border/70 bg-hero-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="text-center max-w-4xl mx-auto text-hero-foreground">
             <Heading as="h1" size="h1" weight="bold" className="text-hero-foreground mb-4">
@@ -158,60 +175,60 @@ export default function Home() {
             </p>
 
             {/* Search Bar */}
-            <div className="max-w-2xl mx-auto mb-8">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/70" />
-                <Input
-                  type="text"
-                  placeholder="Search calculators... (e.g. salary, mortgage, tax)"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="pl-12 pr-4 py-4 text-lg border-2 border-input bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 rounded-xl"
-                />
-              </div>
-
-              {/* Search Results Dropdown */}
-              {searchResults.length > 0 && (
-                <div className="absolute z-50 w-full max-w-2xl mx-auto mt-2 rounded-lg border border-border bg-card shadow-lg">
-                  <div className="p-2 max-h-64 overflow-y-auto text-left">
-                    {searchResults.slice(0, 8).map((calc, index) => (
-                      <Link
-                        key={index}
-                        to={calc.url}
-                        className="block rounded-lg p-3 transition-colors hover:bg-muted"
-                        onClick={() => {
-                          setSearchQuery('');
-                          setSearchResults([]);
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-foreground">{calc.name}</p>
-                            <p className="text-sm text-muted-foreground">{calc.description}</p>
-                            {(calc.category || calc.subCategory) && (
-                              <p className="text-xs text-neutral-soft-foreground">
-                                {calc.category || 'Calculator'}{' '}
-                                {calc.subCategory ? `→ ${calc.subCategory}` : ''}
-                              </p>
-                            )}
-                          </div>
-                          {calc.status === 'planned' ? (
-                            <Badge variant="secondary" className="text-xs">
-                              Coming Soon
-                            </Badge>
-                          ) : (
-                            <ExternalLink className="h-4 w-4 text-muted-foreground/60" />
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+            <div className="max-w-3xl mx-auto mb-10">
+              <div className="flex justify-center">
+                <div className="relative w-full sm:max-w-xl">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/70" />
+                  <Input
+                    type="text"
+                    placeholder="Search calculators... (e.g. salary, mortgage, tax)"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="pl-12 pr-4 py-4 text-lg border-2 border-input bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15 rounded-xl"
+                  />
+                  {searchResults.length > 0 && (
+                    <div className="absolute z-50 w-full mt-2 rounded-lg border border-border bg-card shadow-lg">
+                      <div className="p-2 max-h-64 overflow-y-auto text-left">
+                        {searchResults.slice(0, 8).map((calc, index) => (
+                          <Link
+                            key={index}
+                            to={calc.url}
+                            className="block rounded-lg p-3 transition-colors hover:bg-muted"
+                            onClick={() => {
+                              setSearchQuery('');
+                              setSearchResults([]);
+                            }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium text-foreground">{calc.name}</p>
+                                <p className="text-sm text-muted-foreground">{calc.description}</p>
+                                {(calc.category || calc.subCategory) && (
+                                  <p className="text-xs text-neutral-soft-foreground">
+                                    {calc.category || 'Calculator'}{' '}
+                                    {calc.subCategory ? `→ ${calc.subCategory}` : ''}
+                                  </p>
+                                )}
+                              </div>
+                              {calc.status === 'planned' ? (
+                                <Badge variant="secondary" className="text-xs">
+                                  Coming Soon
+                                </Badge>
+                              ) : (
+                                <ExternalLink className="h-4 w-4 text-muted-foreground/60" />
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Quick Stats */}
-            <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground sm:gap-8">
               <div className="flex items-center gap-2">
                 <Calculator className="h-4 w-4 text-primary" />
                 <span>{stats.total} Calculators</span>
@@ -233,10 +250,16 @@ export default function Home() {
       <div className="relative z-10 -mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {hubCards.map((card, index) => (
-            <a
+            <button
               key={index}
-              href={card.link}
-              className="group block transform rounded-lg border border-card-muted bg-card p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl"
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                const slug = card.link.startsWith('#') ? card.link.slice(1) : card.link;
+                setPendingScrollSlug(slug);
+                setShowAllCalculators(true);
+              }}
+              className="group block w-full transform rounded-lg border border-card-muted bg-card p-6 text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
               <div className="flex items-center gap-4 mb-2">
                 <div className="rounded-full bg-pill p-3 text-pill-foreground">
@@ -251,7 +274,7 @@ export default function Home() {
                 </Heading>
               </div>
               <p className="text-sm text-muted-foreground">{card.description}</p>
-            </a>
+            </button>
           ))}
         </div>
       </div>
@@ -310,7 +333,7 @@ export default function Home() {
       </div>
 
       {/* Complete Calculator Directory */}
-      <div className="bg-neutral-soft py-16">
+      <div className="bg-neutral-soft py-16" id="calculator-directory">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <Heading as="h2" size="h2" weight="bold" underline className="text-foreground mb-4">

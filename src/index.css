@@ -11,14 +11,14 @@
 
     /* Brand palette */
     --brand-blue: 226 100% 20%; /* Deep royal blue */
-    --brand-teal: 193 100% 50%; /* Teal */
-    --brand-aqua: 164 100% 50%; /* Aqua */
+    --brand-teal: 193 90% 56%; /* Teal */
+    --brand-aqua: 164 88% 58%; /* Aqua */
 
     /* Marketing surfaces */
     --hero: 212 100% 97%;
     --hero-foreground: 226 100% 18%;
-    --hero-accent: 193 95% 40%;
-    --hero-ring: 193 95% 46%;
+    --hero-accent: 193 88% 48%;
+    --hero-ring: 193 90% 52%;
     --hero-gradient: radial-gradient(120% 120% at 50% -20%, hsl(var(--hero)) 0%, hsl(var(--background)) 70%);
 
     --card-muted: 214 30% 96%;
@@ -224,5 +224,25 @@
     height: 0.25rem;
     border-radius: 9999px;
     background: linear-gradient(90deg, hsl(var(--brand-teal)) 0%, hsl(var(--brand-aqua)) 100%);
+  }
+}
+
+@layer utilities {
+  .bg-hero-surface {
+    background-color: hsl(var(--hero));
+    background-image:
+      radial-gradient(120% 120% at 15% -15%, hsl(var(--brand-aqua) / 0.3) 0%, transparent 70%),
+      radial-gradient(120% 140% at 85% -20%, hsl(var(--brand-teal) / 0.25) 0%, transparent 75%),
+      linear-gradient(160deg, hsl(var(--hero)) 0%, hsl(var(--background)) 70%);
+    background-repeat: no-repeat;
+    background-size: 140% 140%, 110% 130%, cover;
+    background-position: top left, top right, center;
+  }
+
+  @media (max-width: 640px) {
+    .bg-hero-surface {
+      background-size: 220% 160%, 180% 160%, cover;
+      background-position: 35% -10%, 80% -20%, center;
+    }
   }
 }

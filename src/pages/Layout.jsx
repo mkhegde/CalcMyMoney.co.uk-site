@@ -1,11 +1,20 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Menu, ChevronDown, ChevronRight } from 'lucide-react';
+import { Menu, ChevronDown, ChevronRight, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuTrigger,
+  NavigationMenuContent,
+  NavigationMenuLink,
+  NavigationMenuIndicator,
+} from '@/components/ui/navigation-menu';
 import ScrollToTop from '../components/general/ScrollToTop';
 import CookieConsentBanner from '../components/general/CookieConsentBanner';
 import { calculatorCategories } from '../components/data/calculatorConfig';
@@ -369,6 +378,20 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Resources', url: createPageUrl('resources') },
   ];
 
+  const isActiveLink = useCallback(
+    (url) => {
+      if (!url) return false;
+      if (url === '/') {
+        return location.pathname === '/' || location.pathname === '';
+      }
+      return location.pathname === url || location.pathname.startsWith(`${url}/`);
+    },
+    [location.pathname]
+  );
+
+  const navLinkBaseClass =
+    'relative inline-flex items-center px-1 py-2 text-sm font-semibold text-muted-foreground transition-all duration-200 after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 hover:text-foreground hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+
   return (
     <SeoProvider value={seoContextValue}>
       <div className="min-h-screen bg-background text-foreground">
@@ -426,18 +449,29 @@ export default function Layout({ children, currentPageName }) {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Simple Links */}
-          <div className="hidden items-center space-x-6 md:flex">
-            {mainNavLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.url}
-                className="font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
+          {/* Desktop Navigation */}
+          <NavigationMenu className="ml-6 hidden md:flex items-center">
+            <NavigationMenuList className="flex items-center gap-1">
+              {mainNavLinks.map((link) => {
+                const active = isActiveLink(link.url);
+                return (
+                  <NavigationMenuItem key={link.name}>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to={link.url}
+                        className={`${navLinkBaseClass} ${active ? 'text-foreground after:scale-x-100' : ''}`}
+                        aria-current={active ? 'page' : undefined}
+                      >
+                        {link.name}
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                );
+              })}
+
+            </NavigationMenuList>
+            <NavigationMenuIndicator className="hidden md:flex" />
+          </NavigationMenu>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center md:hidden">
