@@ -55,6 +55,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showAllCalculators, setShowAllCalculators] = useState(false);
+  const [pendingScrollSlug, setPendingScrollSlug] = useState(null);
   const { setSeo, resetSeo } = useSeo();
 
   const stats = getCalculatorStats();
@@ -141,6 +142,22 @@ export default function Home() {
       resetSeo();
     };
   }, [hasQuery, setSeo, resetSeo]);
+
+  useEffect(() => {
+    if (!showAllCalculators || !pendingScrollSlug) {
+      return;
+    }
+
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const target = document.getElementById(pendingScrollSlug);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setPendingScrollSlug(null);
+  }, [showAllCalculators, pendingScrollSlug]);
 
   return (
     <div className="bg-background text-foreground">
@@ -233,10 +250,16 @@ export default function Home() {
       <div className="relative z-10 -mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {hubCards.map((card, index) => (
-            <a
+            <button
               key={index}
-              href={card.link}
-              className="group block transform rounded-lg border border-card-muted bg-card p-6 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl"
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                const slug = card.link.startsWith('#') ? card.link.slice(1) : card.link;
+                setPendingScrollSlug(slug);
+                setShowAllCalculators(true);
+              }}
+              className="group block w-full transform rounded-lg border border-card-muted bg-card p-6 text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
               <div className="flex items-center gap-4 mb-2">
                 <div className="rounded-full bg-pill p-3 text-pill-foreground">
@@ -251,7 +274,7 @@ export default function Home() {
                 </Heading>
               </div>
               <p className="text-sm text-muted-foreground">{card.description}</p>
-            </a>
+            </button>
           ))}
         </div>
       </div>
