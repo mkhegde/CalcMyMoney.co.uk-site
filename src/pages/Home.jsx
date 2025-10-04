@@ -104,7 +104,7 @@ export default function Home() {
       description: 'Calculate take-home pay, tax, and more.',
     },
     {
-      title: 'Tax Tools',
+      title: 'Tax Calculators',
       icon: PoundSterling,
       link: '#tax-calculators',
       description: 'Tools for income tax, NI, VAT, and CGT.',
