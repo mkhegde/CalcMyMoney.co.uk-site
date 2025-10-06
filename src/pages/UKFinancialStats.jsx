@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Percent, Home, Landmark, Zap, ExternalLink } from 'lucide-react';
 import Heading from '@/components/common/Heading';
 
+/* ---------------------------
+   Formatters
+---------------------------- */
 const percentFormatter = new Intl.NumberFormat('en-GB', {
   style: 'decimal',
   minimumFractionDigits: 1,
@@ -18,6 +21,9 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
 
 const monthFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
 
+/* ---------------------------
+   Config for cards
+---------------------------- */
 const STAT_CONFIG = [
   {
     id: 'bankRate',
@@ -87,40 +93,124 @@ const STAT_CONFIG = [
   },
 ];
 
+/* ---------------------------
+   Helpers
+---------------------------- */
 function formatValue(stat) {
   if (!stat) return null;
   const { value, unit } = stat;
   if (typeof value !== 'number' || Number.isNaN(value)) return null;
-  if (unit === 'percent') {
-    return `${percentFormatter.format(value)}%`;
-  }
-  if (unit === 'gbp') {
-    return currencyFormatter.format(value);
-  }
+  if (unit === 'percent') return `${percentFormatter.format(value)}%`;
+  if (unit === 'gbp') return currencyFormatter.format(value);
   return percentFormatter.format(value);
 }
 
 function formatChange(change) {
   if (!change || typeof change.value !== 'number' || Number.isNaN(change.value)) return null;
   const { unit } = change;
-  if (unit === 'percent') {
-    return `${percentFormatter.format(change.value)}%`;
-  }
-  if (unit === 'percentagePoints') {
-    return `${percentFormatter.format(change.value)} pp`;
-  }
-  if (unit === 'gbp' || unit === 'currency') {
-    return currencyFormatter.format(change.value);
-  }
+  if (unit === 'percent') return `${percentFormatter.format(change.value)}%`;
+  if (unit === 'percentagePoints') return `${percentFormatter.format(change.value)} pp`;
+  if (unit === 'gbp' || unit === 'currency') return currencyFormatter.format(change.value);
   return percentFormatter.format(change.value);
 }
 
+/* ---------------------------
+   Bank Rate (dedicated hook)
+---------------------------- */
+const BANKRATE_CACHE_KEY = 'boe:bankrate:v1';
+const BANKRATE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
+function useBankRate() {
+  const [stat, setStat] = useState(null);
+  const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error' | 'empty'
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fromCache = () => {
+      try {
+        const raw = localStorage.getItem(BANKRATE_CACHE_KEY);
+        if (!raw) return null;
+        const { ts, data } = JSON.parse(raw);
+        if (!ts || !data) return null;
+        if (Date.now() - ts > BANKRATE_TTL_MS) return null;
+        if (typeof data?.rate !== 'number') return null;
+
+        return {
+          value: data.rate,
+          unit: 'percent',
+          period: { start: data.fetchedAt || new Date().toISOString() },
+          change: null,
+        };
+      } catch {
+        return null;
+      }
+    };
+
+    const cached = fromCache();
+    if (cached) {
+      setStat(cached);
+      setStatus('ready');
+      return;
+    }
+
+    const load = async () => {
+      setStatus('loading');
+      setError(null);
+      try {
+        const resp = await fetch('/api/boe/bank-rate', { headers: { accept: 'application/json' } });
+        const json = await resp.json();
+
+        if (!resp.ok || typeof json?.rate !== 'number') {
+          throw new Error(json?.error || `HTTP ${resp.status}`);
+        }
+
+        const mapped = {
+          value: json.rate,
+          unit: 'percent',
+          period: { start: json.fetchedAt || new Date().toISOString() },
+          change: null,
+        };
+
+        if (!cancelled) {
+          setStat(mapped);
+          setStatus('ready');
+          try {
+            localStorage.setItem(
+              BANKRATE_CACHE_KEY,
+              JSON.stringify({ ts: Date.now(), data: json })
+            );
+          } catch {}
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError('Bank Rate not available');
+          setStatus('error');
+          setStat(null);
+        }
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { stat, status, error };
+}
+
+/* ---------------------------
+   Card component
+---------------------------- */
 const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
   const formattedValue = status === 'ready' ? formatValue(stat) : null;
   const formattedChange = status === 'ready' ? formatChange(stat?.change) : null;
   const trend = stat?.change?.direction;
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : null;
-  const trendColor = trend === 'up' ? 'text-red-600' : trend === 'down' ? 'text-green-600' : 'text-gray-600';
+  const trendColor =
+    trend === 'up' ? 'text-red-600' : trend === 'down' ? 'text-green-600' : 'text-gray-600';
 
   let description = '';
   if (status === 'ready') {
@@ -171,10 +261,16 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
   );
 };
 
+/* ---------------------------
+   Page
+---------------------------- */
 export default function UKFinancialStats() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Dedicated Bank Rate hook (independent of the aggregate API)
+  const { stat: bankRateStat, status: bankRateStatus, error: bankRateError } = useBankRate();
 
   useEffect(() => {
     let cancelled = false;
@@ -185,13 +281,9 @@ export default function UKFinancialStats() {
         const response = await fetch('/api/uk-financial-stats', {
           headers: { accept: 'application/json' },
         });
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
         const data = await response.json();
-        if (!cancelled) {
-          setStats(data?.stats ?? null);
-        }
+        if (!cancelled) setStats(data?.stats ?? null);
         if (data?.errors && Object.keys(data.errors).length && !cancelled) {
           setError('Some data sources are temporarily unavailable.');
         }
@@ -201,46 +293,63 @@ export default function UKFinancialStats() {
           setStats(null);
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
-
     load();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const cards = useMemo(
-    () =>
-      STAT_CONFIG.map((config) => {
-        const stat = stats?.[config.id];
-        let status = 'empty';
-        if (loading) status = 'loading';
-        else if (error && !stat) status = 'error';
-        else if (stat) status = 'ready';
-        return {
-          ...config,
-          stat: stat
-            ? {
-                ...stat,
-                description: config.buildDescription(stat),
-              }
-            : null,
-          status,
-        };
-      }),
-    [error, loading, stats],
-  );
+  const cards = useMemo(() => {
+    return STAT_CONFIG.map((config) => {
+      // Use the dedicated Bank Rate feed if this card is bankRate
+      const isBankRate = config.id === 'bankRate';
+
+      // Pull stat from aggregate API for others
+      const aggregateStat = stats?.[config.id] || null;
+
+      // Decide the stat/status for this card
+      let statForCard = aggregateStat;
+      let statusForCard = 'empty';
+      let errorForCard = error;
+
+      if (isBankRate) {
+        statForCard = bankRateStat;
+        statusForCard = bankRateStatus; // 'loading' | 'ready' | 'error' | 'empty'
+        errorForCard = bankRateError || error;
+      } else {
+        if (loading) statusForCard = 'loading';
+        else if (error && !aggregateStat) statusForCard = 'error';
+        else if (aggregateStat) statusForCard = 'ready';
+      }
+
+      return {
+        ...config,
+        stat: statForCard
+          ? {
+              ...statForCard,
+              description: config.buildDescription(statForCard),
+            }
+          : null,
+        status: statusForCard,
+        error: errorForCard,
+      };
+    });
+  }, [stats, loading, error, bankRateStat, bankRateStatus, bankRateError]);
 
   return (
     <div className="bg-white dark:bg-gray-900">
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
+            <Heading
+              as="h1"
+              size="h1"
+              weight="bold"
+              className="text-gray-900 dark:text-gray-100 mb-4"
+            >
               UK Financial Statistics Dashboard
             </Heading>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
@@ -257,6 +366,7 @@ export default function UKFinancialStats() {
             {error}
           </div>
         )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {cards.map((card) => (
             <StatCard
@@ -266,10 +376,11 @@ export default function UKFinancialStats() {
               link={card.link}
               status={card.status}
               stat={card.stat}
-              error={error}
+              error={card.error}
             />
           ))}
         </div>
+
         <div className="mt-12 text-center text-sm text-gray-500">
           <p>
             Disclaimer: Data shown here is for informational purposes only. Please consult the
