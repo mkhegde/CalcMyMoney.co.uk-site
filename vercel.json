@@ -12,9 +12,12 @@
     { "source": "/salarycalculator", "destination": "/salary-calculator-uk", "permanent": true },
     { "source": "/salarycalculatoruk", "destination": "/salary-calculator-uk", "permanent": true },
     { "source": "/SalaryCalculatorUK", "destination": "/salary-calculator-uk", "permanent": true },
-    { "source": "/calculators/-:slug*", "destination": "/:slug", "permanent": true },
+
+    { "source": "/calculators/-:slug", "destination": "/:slug", "permanent": true },
+
     { "source": "/jobsalarypage", "destination": "/job-salaries", "permanent": true },
     { "source": "/AnnuityCalculator", "destination": "/annuity-calculator", "permanent": true },
+
     {
       "source": "/salary-calculator-u-k",
       "destination": "/salary-calculator-uk",

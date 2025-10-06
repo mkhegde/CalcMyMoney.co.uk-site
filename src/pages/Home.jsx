@@ -12,7 +12,7 @@ import {
   getCalculatorStats,
   searchCalculators,
 } from '../components/data/calculatorConfig';
-
+console.log('[Home] mounted');
 import { prefetchPage } from '@/utils/prefetchPage';
 import FAQSection from '../components/calculators/FAQSection';
 import { HandCoins, PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
@@ -187,7 +187,12 @@ export default function Home() {
       <div className="relative border-b border-border/70 bg-hero-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="text-center max-w-4xl mx-auto text-hero-foreground">
-            <Heading as="h1" size="h1" weight="bold" className="title-hero text-hero-foreground mb-4">
+            <Heading
+              as="h1"
+              size="h1"
+              weight="bold"
+              className="title-hero text-hero-foreground mb-4"
+            >
               Free UK Salary, Tax & Mortgage Calculators
             </Heading>
             <p className="lead text-muted-foreground mb-8">
@@ -347,7 +352,13 @@ export default function Home() {
       {/* Homepage FAQ Section */}
       <div className="bg-background py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Heading as="h2" size="h2" weight="bold" underline className="text-foreground text-center mb-10">
+          <Heading
+            as="h2"
+            size="h2"
+            weight="bold"
+            underline
+            className="text-foreground text-center mb-10"
+          >
             Common Questions
           </Heading>
           <FAQSection faqs={homepageFaqs} />
@@ -414,7 +425,9 @@ export default function Home() {
                                     {calc.name}
                                   </Link>
                                 ) : (
-                                  <span className="flex-1 body text-muted-foreground/60">{calc.name}</span>
+                                  <span className="flex-1 body text-muted-foreground/60">
+                                    {calc.name}
+                                  </span>
                                 )}
                                 {(calc.status === 'planned' || calc.status === 'pending') && (
                                   <Badge variant="outline" className="ml-2 caption text-primary">
@@ -435,7 +448,6 @@ export default function Home() {
               Expand the directory to explore every calculator we offer.
             </div>
           )}
-
         </div>
       </div>
     </div>
