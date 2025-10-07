@@ -1,10 +1,9 @@
-// src/pages/UKFinancialStats.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Percent, Home, Landmark, Zap, ExternalLink } from 'lucide-react';
 import Heading from '@/components/common/Heading';
 
-// Formatters
+/* --------------------------- formatters --------------------------- */
 const percentFormatter = new Intl.NumberFormat('en-GB', {
   style: 'decimal',
   minimumFractionDigits: 1,
@@ -18,24 +17,7 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
 });
 const monthFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
 
-function fmtValue(stat) {
-  if (!stat) return null;
-  const { value, unit } = stat;
-  if (typeof value !== 'number' || Number.isNaN(value)) return null;
-  if (unit === 'percent') return `${percentFormatter.format(value)}%`;
-  if (unit === 'gbp') return currencyFormatter.format(value);
-  return percentFormatter.format(value);
-}
-function fmtChange(change) {
-  if (!change || typeof change.value !== 'number' || Number.isNaN(change.value)) return null;
-  const { unit } = change;
-  if (unit === 'percent') return `${percentFormatter.format(change.value)}%`;
-  if (unit === 'percentagePoints') return `${percentFormatter.format(change.value)} pp`;
-  if (unit === 'gbp' || unit === 'currency') return currencyFormatter.format(change.value);
-  return percentFormatter.format(change.value);
-}
-
-// Cards config (link + description builder)
+/* --------------------------- config --------------------------- */
 const STAT_CONFIG = [
   {
     id: 'bankRate',
@@ -44,7 +26,7 @@ const STAT_CONFIG = [
     link: 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp',
     buildDescription: (stat) => {
       const d = stat?.period?.start ? new Date(stat.period.start) : null;
-      return d && !Number.isNaN(d)
+      return d && !Number.isNaN(d.getTime())
         ? `Official Bank Rate as at ${monthFormatter.format(d)}.`
         : 'Official rate set by the Bank of England.';
     },
@@ -56,7 +38,7 @@ const STAT_CONFIG = [
     link: 'https://www.ons.gov.uk/economy/inflationandpriceindices',
     buildDescription: (stat) => {
       const d = stat?.period?.start ? new Date(stat.period.start) : null;
-      return d && !Number.isNaN(d)
+      return d && !Number.isNaN(d.getTime())
         ? `12-month CPIH rate for ${monthFormatter.format(d)}.`
         : '12-month growth rate published by the ONS.';
     },
@@ -68,7 +50,7 @@ const STAT_CONFIG = [
     link: 'https://landregistry.data.gov.uk/app/hpi/',
     buildDescription: (stat) => {
       const d = stat?.period?.start ? new Date(stat.period.start) : null;
-      return d && !Number.isNaN(d)
+      return d && !Number.isNaN(d.getTime())
         ? `UK HPI average for ${monthFormatter.format(d)}.`
         : 'UK House Price Index nationwide average.';
     },
@@ -79,57 +61,121 @@ const STAT_CONFIG = [
     icon: Zap,
     link: 'https://www.ofgem.gov.uk/energy-price-cap',
     buildDescription: (stat) => {
-      const s = stat?.period?.label;
-      return s ? `Cap for ${s}.` : 'Typical household annualised cap published quarterly by Ofgem.';
+      const s = stat?.period?.start ? new Date(stat.period.start) : null;
+      const e = stat?.period?.end ? new Date(stat.period.end) : null;
+      if (s && !Number.isNaN(s.getTime())) {
+        const sL = monthFormatter.format(s);
+        if (e && !Number.isNaN(e.getTime())) return `Cap for ${sL} – ${monthFormatter.format(e)}.`;
+        return `Cap effective from ${sL}.`;
+      }
+      return 'Typical household annualised cap published quarterly by Ofgem.';
     },
   },
 ];
 
-// Small fetchers for each stat
-async function getBankRate() {
-  const r = await fetch('/api/boe/bank-rate');
-  if (!r.ok) throw new Error(`BoE ${r.status}`);
-  const { stat } = await r.json();
-  return stat;
-}
-async function getCpih() {
-  const r = await fetch('/api/ons/cpih');
-  if (!r.ok) throw new Error(`ONS CPIH ${r.status}`);
-  const { stat } = await r.json();
-  return stat;
-}
-async function getUkHpi() {
-  const r = await fetch('/api/ukhpi/average-price');
-  if (!r.ok) throw new Error(`UKHPI ${r.status}`);
-  const { stat } = await r.json();
-  return stat;
-}
-async function getOfgemCap() {
-  const r = await fetch('/api/ofgem/price-cap');
-  if (!r.ok) throw new Error(`Ofgem ${r.status}`);
-  const { stat } = await r.json();
-  return stat;
+/* --------------------------- helpers --------------------------- */
+const isNum = (n) => typeof n === 'number' && Number.isFinite(n);
+
+function coerceNumber(val) {
+  if (typeof val === 'number') return Number.isFinite(val) ? val : NaN;
+  if (typeof val === 'string') {
+    const num = parseFloat(val.replace(/[,%\s£]/g, ''));
+    return Number.isFinite(num) ? num : NaN;
+  }
+  return NaN;
 }
 
-// Presentational card
+function normalizeUnit(u) {
+  if (!u) return undefined;
+  const s = String(u).toLowerCase();
+  if (s === 'percent' || s === 'percentage' || s === '%') return 'percent';
+  if (s === 'percentagepoints' || s === 'percentage_points' || s === 'pp')
+    return 'percentagePoints';
+  if (s.includes('gbp') || s === 'currency' || s === '£') return 'gbp';
+  return s;
+}
+
+// Normalise shapes coming from any of our endpoints.
+function normalizeStat(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+
+  let value =
+    raw.value ??
+    raw.amount ??
+    raw.cap ??
+    (raw.data && raw.data.value) ??
+    (raw.metrics && raw.metrics.value);
+
+  const numericValue = coerceNumber(value);
+  if (!Number.isFinite(numericValue)) return null;
+
+  let unit =
+    raw.unit ??
+    raw.units ??
+    (raw.currency ? 'gbp' : undefined) ??
+    (raw.percentage ? 'percent' : undefined);
+
+  unit = normalizeUnit(unit);
+
+  const period = raw.period ?? raw.dateRange ?? raw.dates ?? null;
+
+  let change = raw.change ?? raw.delta ?? null;
+  if (change && typeof change === 'object') {
+    const cv = coerceNumber(change.value);
+    change = Number.isFinite(cv)
+      ? { ...change, value: cv, unit: normalizeUnit(change.unit) }
+      : null;
+  }
+
+  const source = raw.source ?? null;
+  return {
+    value: numericValue,
+    unit,
+    period,
+    change,
+    source,
+    label: raw.label ?? raw?.period?.label,
+  };
+}
+
+function formatValue(stat) {
+  if (!stat) return null;
+  const { value, unit } = stat;
+  if (!isNum(value)) return null;
+  if (unit === 'percent') return `${percentFormatter.format(value)}%`;
+  if (unit === 'gbp') return currencyFormatter.format(value);
+  return percentFormatter.format(value);
+}
+function formatChange(change) {
+  if (!change || !isNum(change.value)) return null;
+  const u = change.unit;
+  if (u === 'percent') return `${percentFormatter.format(change.value)}%`;
+  if (u === 'percentagePoints') return `${percentFormatter.format(change.value)} pp`;
+  if (u === 'gbp') return currencyFormatter.format(change.value);
+  return percentFormatter.format(change.value);
+}
+
+async function fetchJSON(url) {
+  const res = await fetch(url, { headers: { accept: 'application/json' }, cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+/* --------------------------- card --------------------------- */
 const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
-  const formattedValue = status === 'ready' ? fmtValue(stat) : null;
-  const formattedChange = status === 'ready' ? fmtChange(stat?.change) : null;
+  const formattedValue = status === 'ready' ? formatValue(stat) : null;
+  const formattedChange = status === 'ready' ? formatChange(stat?.change) : null;
   const trend = stat?.change?.direction;
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : null;
   const trendColor =
     trend === 'up' ? 'text-red-600' : trend === 'down' ? 'text-green-600' : 'text-gray-600';
 
   let description = '';
-  if (status === 'ready') {
-    description = stat?.description ?? stat?.period?.label ?? '';
-  } else if (status === 'loading') {
-    description = 'Fetching latest figures…';
-  } else if (status === 'error') {
-    description = error ?? 'Unable to load data right now.';
-  } else {
-    description = 'No data available right now.';
-  }
+  if (status === 'ready')
+    description = stat?.description ?? stat?.label ?? stat?.period?.label ?? '';
+  else if (status === 'loading') description = 'Fetching latest figures…';
+  else if (status === 'error') description = error ?? 'Unable to load data right now.';
+  else description = 'No data available right now.';
 
   return (
     <Card className="h-full flex flex-col">
@@ -140,9 +186,7 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
       <CardContent className="flex-grow flex flex-col justify-center">
         <div className="text-3xl font-bold">
           {status === 'ready' && formattedValue}
-          {status === 'loading' && <span className="text-gray-400">Loading…</span>}
-          {status === 'error' && <span className="text-gray-400">—</span>}
-          {status === 'empty' && <span className="text-gray-400">—</span>}
+          {status !== 'ready' && <span className="text-gray-400">—</span>}
         </div>
         {status === 'ready' && formattedChange && (
           <div className="text-sm text-gray-600 flex items-center gap-1">
@@ -169,73 +213,90 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
   );
 };
 
+/* --------------------------- page --------------------------- */
 export default function UKFinancialStats() {
-  const [state, setState] = useState({
-    bankRate: { status: 'loading', stat: null, error: null },
-    cpih: { status: 'loading', stat: null, error: null },
-    housePrice: { status: 'loading', stat: null, error: null },
-    ofgemCap: { status: 'loading', stat: null, error: null },
-  });
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorBanner, setErrorBanner] = useState(null);
+  const [debug, setDebug] = useState(false);
+
+  useEffect(() => {
+    setDebug(new URLSearchParams(window.location.search).get('debug') === '1');
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function run() {
-      // Kick off in parallel
-      const tasks = {
-        bankRate: getBankRate(),
-        cpih: getCpih(),
-        housePrice: getUkHpi(),
-        ofgemCap: getOfgemCap(),
+    async function load() {
+      setLoading(true);
+      setErrorBanner(null);
+
+      const endpoints = {
+        bankRate: '/api/boe/bank-rate',
+        cpih: '/api/ons/cpih',
+        housePrice: '/api/ukhpi/average-price',
+        ofgemCap: '/api/ofgem/price-cap',
       };
 
-      for (const key of Object.keys(tasks)) {
-        tasks[key]
-          .then((stat) => {
-            if (cancelled) return;
-            setState((s) => ({
-              ...s,
-              [key]: {
-                status: 'ready',
-                stat: stat
-                  ? {
-                      ...stat,
-                      description:
-                        STAT_CONFIG.find((c) => c.id === key)?.buildDescription(stat) ||
-                        stat?.period?.label,
-                    }
-                  : null,
-                error: null,
-              },
-            }));
-          })
-          .catch((err) => {
-            if (cancelled) return;
-            setState((s) => ({
-              ...s,
-              [key]: { status: 'error', stat: null, error: err?.message || 'Fetch error' },
-            }));
-          });
+      const results = {};
+      const errors = {};
+
+      await Promise.all(
+        Object.entries(endpoints).map(async ([key, url]) => {
+          try {
+            const raw = await fetchJSON(url);
+            const norm = normalizeStat(raw);
+            if (norm) results[key] = norm;
+            else errors[key] = 'Invalid data shape';
+          } catch (e) {
+            errors[key] = e.message || 'Fetch failed';
+          }
+        })
+      );
+
+      if (!cancelled) {
+        setStats(results);
+        setErrorBanner(
+          Object.values(errors).some(Boolean)
+            ? 'One or more sources are temporarily unavailable. Showing what we could fetch.'
+            : null
+        );
+        // expose for quick inspection
+        if (debug) {
+          // eslint-disable-next-line no-console
+          console.table(
+            Object.entries(results).map(([k, v]) => ({
+              id: k,
+              value: v?.value,
+              unit: v?.unit,
+              period: v?.period?.label || v?.period?.start || '',
+            }))
+          );
+          // @ts-ignore
+          window.__ukStats = { results, errors };
+        }
+        setLoading(false);
       }
     }
 
-    run();
+    load();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [debug]);
 
-  // Derived banner: show warning if any stat is an error
-  const anyError = useMemo(() => Object.values(state).some((x) => x.status === 'error'), [state]);
-
-  const cards = useMemo(
-    () =>
-      STAT_CONFIG.map((cfg) => ({
+  const cards = useMemo(() => {
+    return STAT_CONFIG.map((cfg) => {
+      const stat = stats?.[cfg.id];
+      const ready = !!(stat && isNum(stat.value));
+      const status = loading ? 'loading' : ready ? 'ready' : stats ? 'empty' : 'loading';
+      return {
         ...cfg,
-        ...state[cfg.id],
-      })),
-    [state]
-  );
+        stat: stat ? { ...stat, description: cfg.buildDescription(stat) } : null,
+        status,
+      };
+    });
+  }, [stats, loading]);
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -259,22 +320,28 @@ export default function UKFinancialStats() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {anyError && (
+        {!loading && errorBanner && (
           <div className="mb-6 text-sm text-amber-700 bg-amber-100 border border-amber-200 rounded-md p-3">
-            One or more sources are temporarily unavailable. Showing what we could fetch.
+            {errorBanner}
+          </div>
+        )}
+
+        {debug && (
+          <div className="mb-6 text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md p-3">
+            Debug on. Open console for table. `window.__ukStats` has raw data.
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cards.map((card) => (
+          {cards.map((c) => (
             <StatCard
-              key={card.id}
-              title={card.title}
-              icon={card.icon}
-              link={card.link}
-              status={card.status}
-              stat={card.stat}
-              error={card.error}
+              key={c.id}
+              title={c.title}
+              icon={c.icon}
+              link={c.link}
+              status={c.status}
+              stat={c.stat}
+              error={errorBanner}
             />
           ))}
         </div>
