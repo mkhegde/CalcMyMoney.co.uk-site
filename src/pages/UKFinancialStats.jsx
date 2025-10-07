@@ -1,102 +1,24 @@
+// src/pages/UKFinancialStats.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Percent, Home, Landmark, Zap, ExternalLink } from 'lucide-react';
 import Heading from '@/components/common/Heading';
 
-/* ---------------------------
-   Formatters
----------------------------- */
+// Formatters
 const percentFormatter = new Intl.NumberFormat('en-GB', {
   style: 'decimal',
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 });
-
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
-
 const monthFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
 
-/* ---------------------------
-   Config for cards
----------------------------- */
-const STAT_CONFIG = [
-  {
-    id: 'bankRate',
-    title: 'BoE Bank Rate',
-    icon: Landmark,
-    link: 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp',
-    buildDescription: (stat) => {
-      if (stat?.period?.start) {
-        const date = new Date(stat.period.start);
-        if (!Number.isNaN(date.getTime())) {
-          return `Official Bank Rate as at ${monthFormatter.format(date)}.`;
-        }
-      }
-      return 'Official rate set by the Bank of England.';
-    },
-  },
-  {
-    id: 'cpih',
-    title: 'Inflation (CPIH)',
-    icon: Percent,
-    link: 'https://www.ons.gov.uk/economy/inflationandpriceindices',
-    buildDescription: (stat) => {
-      if (stat?.period?.start) {
-        const date = new Date(stat.period.start);
-        if (!Number.isNaN(date.getTime())) {
-          return `12-month CPIH rate for ${monthFormatter.format(date)}.`;
-        }
-      }
-      return '12-month growth rate published by the ONS.';
-    },
-  },
-  {
-    id: 'housePrice',
-    title: 'Average UK House Price',
-    icon: Home,
-    link: 'https://landregistry.data.gov.uk/app/hpi/',
-    buildDescription: (stat) => {
-      if (stat?.period?.start) {
-        const date = new Date(stat.period.start);
-        if (!Number.isNaN(date.getTime())) {
-          return `UK HPI average for ${monthFormatter.format(date)}.`;
-        }
-      }
-      return 'UK House Price Index nationwide average.';
-    },
-  },
-  {
-    id: 'ofgemCap',
-    title: 'Ofgem Energy Price Cap',
-    icon: Zap,
-    link: 'https://www.ofgem.gov.uk/energy-price-cap',
-    buildDescription: (stat) => {
-      if (stat?.period?.start) {
-        const start = new Date(stat.period.start);
-        const end = stat?.period?.end ? new Date(stat.period.end) : null;
-        if (!Number.isNaN(start.getTime())) {
-          const startLabel = monthFormatter.format(start);
-          if (end && !Number.isNaN(end.getTime())) {
-            const endLabel = monthFormatter.format(end);
-            return `Cap for ${startLabel} – ${endLabel}.`;
-          }
-          return `Cap effective from ${startLabel}.`;
-        }
-      }
-      return 'Typical household annualised cap published quarterly by Ofgem.';
-    },
-  },
-];
-
-/* ---------------------------
-   Helpers
----------------------------- */
-function formatValue(stat) {
+function fmtValue(stat) {
   if (!stat) return null;
   const { value, unit } = stat;
   if (typeof value !== 'number' || Number.isNaN(value)) return null;
@@ -104,8 +26,7 @@ function formatValue(stat) {
   if (unit === 'gbp') return currencyFormatter.format(value);
   return percentFormatter.format(value);
 }
-
-function formatChange(change) {
+function fmtChange(change) {
   if (!change || typeof change.value !== 'number' || Number.isNaN(change.value)) return null;
   const { unit } = change;
   if (unit === 'percent') return `${percentFormatter.format(change.value)}%`;
@@ -114,99 +35,86 @@ function formatChange(change) {
   return percentFormatter.format(change.value);
 }
 
-/* ---------------------------
-   Bank Rate (dedicated hook)
----------------------------- */
-const BANKRATE_CACHE_KEY = 'boe:bankrate:v1';
-const BANKRATE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+// Cards config (link + description builder)
+const STAT_CONFIG = [
+  {
+    id: 'bankRate',
+    title: 'BoE Bank Rate',
+    icon: Landmark,
+    link: 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp',
+    buildDescription: (stat) => {
+      const d = stat?.period?.start ? new Date(stat.period.start) : null;
+      return d && !Number.isNaN(d)
+        ? `Official Bank Rate as at ${monthFormatter.format(d)}.`
+        : 'Official rate set by the Bank of England.';
+    },
+  },
+  {
+    id: 'cpih',
+    title: 'Inflation (CPIH)',
+    icon: Percent,
+    link: 'https://www.ons.gov.uk/economy/inflationandpriceindices',
+    buildDescription: (stat) => {
+      const d = stat?.period?.start ? new Date(stat.period.start) : null;
+      return d && !Number.isNaN(d)
+        ? `12-month CPIH rate for ${monthFormatter.format(d)}.`
+        : '12-month growth rate published by the ONS.';
+    },
+  },
+  {
+    id: 'housePrice',
+    title: 'Average UK House Price',
+    icon: Home,
+    link: 'https://landregistry.data.gov.uk/app/hpi/',
+    buildDescription: (stat) => {
+      const d = stat?.period?.start ? new Date(stat.period.start) : null;
+      return d && !Number.isNaN(d)
+        ? `UK HPI average for ${monthFormatter.format(d)}.`
+        : 'UK House Price Index nationwide average.';
+    },
+  },
+  {
+    id: 'ofgemCap',
+    title: 'Ofgem Energy Price Cap',
+    icon: Zap,
+    link: 'https://www.ofgem.gov.uk/energy-price-cap',
+    buildDescription: (stat) => {
+      const s = stat?.period?.label;
+      return s ? `Cap for ${s}.` : 'Typical household annualised cap published quarterly by Ofgem.';
+    },
+  },
+];
 
-function useBankRate() {
-  const [stat, setStat] = useState(null);
-  const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error' | 'empty'
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fromCache = () => {
-      try {
-        const raw = localStorage.getItem(BANKRATE_CACHE_KEY);
-        if (!raw) return null;
-        const { ts, data } = JSON.parse(raw);
-        if (!ts || !data) return null;
-        if (Date.now() - ts > BANKRATE_TTL_MS) return null;
-        if (typeof data?.rate !== 'number') return null;
-
-        return {
-          value: data.rate,
-          unit: 'percent',
-          period: { start: data.fetchedAt || new Date().toISOString() },
-          change: null,
-        };
-      } catch {
-        return null;
-      }
-    };
-
-    const cached = fromCache();
-    if (cached) {
-      setStat(cached);
-      setStatus('ready');
-      return;
-    }
-
-    const load = async () => {
-      setStatus('loading');
-      setError(null);
-      try {
-        const resp = await fetch('/api/boe/bank-rate', { headers: { accept: 'application/json' } });
-        const json = await resp.json();
-
-        if (!resp.ok || typeof json?.rate !== 'number') {
-          throw new Error(json?.error || `HTTP ${resp.status}`);
-        }
-
-        const mapped = {
-          value: json.rate,
-          unit: 'percent',
-          period: { start: json.fetchedAt || new Date().toISOString() },
-          change: null,
-        };
-
-        if (!cancelled) {
-          setStat(mapped);
-          setStatus('ready');
-          try {
-            localStorage.setItem(
-              BANKRATE_CACHE_KEY,
-              JSON.stringify({ ts: Date.now(), data: json })
-            );
-          } catch {}
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError('Bank Rate not available');
-          setStatus('error');
-          setStat(null);
-        }
-      }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return { stat, status, error };
+// Small fetchers for each stat
+async function getBankRate() {
+  const r = await fetch('/api/boe/bank-rate');
+  if (!r.ok) throw new Error(`BoE ${r.status}`);
+  const { stat } = await r.json();
+  return stat;
+}
+async function getCpih() {
+  const r = await fetch('/api/ons/cpih');
+  if (!r.ok) throw new Error(`ONS CPIH ${r.status}`);
+  const { stat } = await r.json();
+  return stat;
+}
+async function getUkHpi() {
+  const r = await fetch('/api/ukhpi/average-price');
+  if (!r.ok) throw new Error(`UKHPI ${r.status}`);
+  const { stat } = await r.json();
+  return stat;
+}
+async function getOfgemCap() {
+  const r = await fetch('/api/ofgem/price-cap');
+  if (!r.ok) throw new Error(`Ofgem ${r.status}`);
+  const { stat } = await r.json();
+  return stat;
 }
 
-/* ---------------------------
-   Card component
----------------------------- */
+// Presentational card
 const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
-  const formattedValue = status === 'ready' ? formatValue(stat) : null;
-  const formattedChange = status === 'ready' ? formatChange(stat?.change) : null;
+  const formattedValue = status === 'ready' ? fmtValue(stat) : null;
+  const formattedChange = status === 'ready' ? fmtChange(stat?.change) : null;
   const trend = stat?.change?.direction;
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : null;
   const trendColor =
@@ -261,83 +169,73 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
   );
 };
 
-/* ---------------------------
-   Page
----------------------------- */
 export default function UKFinancialStats() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Dedicated Bank Rate hook (independent of the aggregate API)
-  const { stat: bankRateStat, status: bankRateStatus, error: bankRateError } = useBankRate();
+  const [state, setState] = useState({
+    bankRate: { status: 'loading', stat: null, error: null },
+    cpih: { status: 'loading', stat: null, error: null },
+    housePrice: { status: 'loading', stat: null, error: null },
+    ofgemCap: { status: 'loading', stat: null, error: null },
+  });
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch('/api/uk-financial-stats', {
-          headers: { accept: 'application/json' },
-        });
-        if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
-        const data = await response.json();
-        if (!cancelled) setStats(data?.stats ?? null);
-        if (data?.errors && Object.keys(data.errors).length && !cancelled) {
-          setError('Some data sources are temporarily unavailable.');
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError('Unable to fetch the latest data.');
-          setStats(null);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+
+    async function run() {
+      // Kick off in parallel
+      const tasks = {
+        bankRate: getBankRate(),
+        cpih: getCpih(),
+        housePrice: getUkHpi(),
+        ofgemCap: getOfgemCap(),
+      };
+
+      for (const key of Object.keys(tasks)) {
+        tasks[key]
+          .then((stat) => {
+            if (cancelled) return;
+            setState((s) => ({
+              ...s,
+              [key]: {
+                status: 'ready',
+                stat: stat
+                  ? {
+                      ...stat,
+                      description:
+                        STAT_CONFIG.find((c) => c.id === key)?.buildDescription(stat) ||
+                        stat?.period?.label,
+                    }
+                  : null,
+                error: null,
+              },
+            }));
+          })
+          .catch((err) => {
+            if (cancelled) return;
+            setState((s) => ({
+              ...s,
+              [key]: { status: 'error', stat: null, error: err?.message || 'Fetch error' },
+            }));
+          });
       }
     }
-    load();
+
+    run();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const cards = useMemo(() => {
-    return STAT_CONFIG.map((config) => {
-      // Use the dedicated Bank Rate feed if this card is bankRate
-      const isBankRate = config.id === 'bankRate';
+  // Derived banner: show warning if any stat is an error
+  const anyError = useMemo(() => Object.values(state).some((x) => x.status === 'error'), [state]);
 
-      // Pull stat from aggregate API for others
-      const aggregateStat = stats?.[config.id] || null;
-
-      // Decide the stat/status for this card
-      let statForCard = aggregateStat;
-      let statusForCard = 'empty';
-      let errorForCard = error;
-
-      if (isBankRate) {
-        statForCard = bankRateStat;
-        statusForCard = bankRateStatus; // 'loading' | 'ready' | 'error' | 'empty'
-        errorForCard = bankRateError || error;
-      } else {
-        if (loading) statusForCard = 'loading';
-        else if (error && !aggregateStat) statusForCard = 'error';
-        else if (aggregateStat) statusForCard = 'ready';
-      }
-
-      return {
-        ...config,
-        stat: statForCard
-          ? {
-              ...statForCard,
-              description: config.buildDescription(statForCard),
-            }
-          : null,
-        status: statusForCard,
-        error: errorForCard,
-      };
-    });
-  }, [stats, loading, error, bankRateStat, bankRateStatus, bankRateError]);
+  const cards = useMemo(
+    () =>
+      STAT_CONFIG.map((cfg) => ({
+        ...cfg,
+        ...state[cfg.id],
+      })),
+    [state]
+  );
 
   return (
     <div className="bg-white dark:bg-gray-900">
@@ -361,9 +259,9 @@ export default function UKFinancialStats() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {!loading && error && (
+        {anyError && (
           <div className="mb-6 text-sm text-amber-700 bg-amber-100 border border-amber-200 rounded-md p-3">
-            {error}
+            One or more sources are temporarily unavailable. Showing what we could fetch.
           </div>
         )}
 
