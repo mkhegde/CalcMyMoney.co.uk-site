@@ -1,59 +1,53 @@
+/* eslint-env node */
 // /api/boe/bank-rate.js
-export const config = { runtime: 'edge' };
+// Fetch the latest BoE Bank Rate from the public page.
 
-const SOURCE = 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp';
+export const config = { runtime: 'nodejs20.x' };
 
-/**
- * Returns JSON like: { rate: 5.25, unit: "%", source, fetchedAt }
- * Caches at the CDN for 12h, with 24h stale-while-revalidate.
- */
-export default async function handler() {
+const BOE_URL = 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp';
+
+export default async function handler(req, res) {
   try {
-    const resp = await fetch(SOURCE, {
+    const r = await fetch(BOE_URL, {
       headers: {
-        // A polite UA helps avoid certain anti-bot heuristics
-        'user-agent': 'CalcMyMoney/1.0 (+https://www.calcmymoney.co.uk)',
+        // Some publishers are picky about UA/accept
+        'user-agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        accept: 'text/html,application/xhtml+xml',
       },
     });
+    if (!r.ok) throw new Error(`BoE page ${r.status}`);
+    const html = await r.text();
 
-    if (!resp.ok) {
-      return new Response(JSON.stringify({ error: 'upstream_error', status: resp.status }), {
-        status: 502,
-        headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
-      });
-    }
+    // Try to find a percentage near the words "Bank Rate"
+    let value;
+    let m = html.match(/Bank Rate[^%<]{0,160}?(\d+(?:\.\d+)?)\s?%/i);
+    if (!m) m = html.match(/(\d+(?:\.\d+)?)\s?%/); // very last resort
+    if (m) value = Number(m[1]);
+    if (!Number.isFinite(value)) throw new Error('No percent value found');
 
-    const html = await resp.text();
+    // Best-effort: derive a month context if present
+    const mm = html.match(/(?:as at|as of|effective|from)\s+([A-Z][a-z]+)\s+(\d{4})/i);
+    const period =
+      mm && mm[1] && mm[2]
+        ? {
+            label: `${mm[1]} ${mm[2]}`,
+            start: new Date(`${mm[1]} 01, ${mm[2]}`).toISOString(),
+          }
+        : { label: 'latest', start: null };
 
-    // 1) Current headline (very stable on the official page)
-    // e.g.: "Current official Bank Rate 5.25%"
-    const m = html.match(/Current\s+official\s+Bank\s+Rate[^0-9]*([\d.]+)\s*%/i);
-    const rate = m ? parseFloat(m[1]) : null;
-
-    // Optional: best-effort grab the first date in the change table (may not always match)
-    // const dm = html.match(/(\d{1,2}\s+[A-Za-z]{3,}\s+\d{4})/); // e.g. "1 Aug 2024"
-    // const lastChanged = dm ? dm[1] : null;
-
-    const data = {
-      rate,
-      unit: '%',
-      source: SOURCE,
-      fetchedAt: new Date().toISOString(),
-      // lastChanged
+    const stat = {
+      id: 'bankRate',
+      title: 'BoE Bank Rate',
+      unit: 'percent',
+      value,
+      period,
+      change: null,
     };
 
-    return new Response(JSON.stringify(data), {
-      headers: {
-        'content-type': 'application/json',
-        'access-control-allow-origin': '*',
-        // CDN cache for 12h, allow 24h stale while it revalidates
-        'cache-control': 's-maxage=43200, stale-while-revalidate=86400',
-      },
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: 'fetch_failed', detail: String(err) }), {
-      status: 500,
-      headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
-    });
+    res.setHeader('Cache-Control', 's-maxage=14400, stale-while-revalidate=86400'); // 4h
+    return res.status(200).json({ stat });
+  } catch (e) {
+    return res.status(502).json({ error: `Bank Rate fetch failed: ${e.message}` });
   }
 }

@@ -1,51 +1,50 @@
+/* eslint-env node */
 // /api/ukhpi/average-price.js
-// Source: ONS “UK House Price Index” latest bulletin page (robust text scrape).
-// We look for the sentence “average UK house price was £xxx”.
+// UK average house price (best-effort scrape of Land Registry UK HPI app page)
 
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs20.x' };
 
-const HPI_LATEST_BULLETIN =
-  'https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/ukhousepriceindex/latest';
+const HPI_URL = 'https://landregistry.data.gov.uk/app/hpi/';
 
-export default async function handler() {
+export default async function handler(req, res) {
   try {
-    const r = await fetch(HPI_LATEST_BULLETIN, { headers: { 'user-agent': 'Mozilla/5.0' } });
-    if (!r.ok) throw new Error(`ONS HPI bulletin ${r.status}`);
+    const r = await fetch(HPI_URL, {
+      headers: {
+        'user-agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        accept: 'text/html,application/xhtml+xml',
+      },
+    });
+    if (!r.ok) throw new Error(`HPI page ${r.status}`);
     const html = await r.text();
 
-    // Find month context e.g., "in August 2025" (best effort).
-    const monthMatch = html.match(
-      /(?:in|for)\s+([A-Z][a-z]+)\s+(\d{4})/,
-    );
-    const monthLabel = monthMatch ? `${monthMatch[1]} ${monthMatch[2]}` : 'latest';
-    const periodStart = monthMatch ? new Date(`${monthMatch[1]} 01, ${monthMatch[2]}`) : null;
+    // Try "Average price £xxx,xxx"
+    const m = html.match(/Average\s+price[^£]*£([\d,]+)/i);
+    const value = m ? Number(m[1].replace(/,/g, '')) : NaN;
+    if (!Number.isFinite(value)) throw new Error('No average price value found');
 
-    // Find “average UK house price was £abc,def”
-    const priceMatch = html.match(/average UK house price (?:was|is)\s+£([\d,]+)/i);
-    if (!priceMatch) throw new Error('Could not parse average price from bulletin');
-
-    const value = Number(priceMatch[1].replace(/,/g, ''));
-    if (!Number.isFinite(value)) throw new Error('Average price not numeric');
+    // Heuristic month context (often visible as "for <Month> <Year>")
+    const mm = html.match(/for\s+([A-Z][a-z]+)\s+(\d{4})/i);
+    const period =
+      mm && mm[1] && mm[2]
+        ? {
+            label: `${mm[1]} ${mm[2]}`,
+            start: new Date(`${mm[1]} 01, ${mm[2]}`).toISOString(),
+          }
+        : { label: 'latest', start: null };
 
     const stat = {
       id: 'housePrice',
       title: 'Average UK House Price',
       unit: 'gbp',
       value,
-      period: {
-        label: monthLabel,
-        start: periodStart ? periodStart.toISOString() : null,
-      },
+      period,
       change: null,
     };
 
-    return new Response(JSON.stringify({ stat }), {
-      headers: { 'content-type': 'application/json', 'cache-control': 's-maxage=43200, stale-while-revalidate=86400' }, // 12h
-    });
+    res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate=86400'); // 6h
+    return res.status(200).json({ stat });
   } catch (e) {
-    return new Response(JSON.stringify({ error: `UK HPI fetch failed: ${e.message}` }), {
-      status: 502,
-      headers: { 'content-type': 'application/json' },
-    });
+    return res.status(502).json({ error: `UKHPI fetch failed: ${e.message}` });
   }
 }
