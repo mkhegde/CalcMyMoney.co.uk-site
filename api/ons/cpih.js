@@ -1,19 +1,12 @@
 /* eslint-env node */
-// /api/ons/cpih.js
-// Latest CPIH 12-month rate (ONS). No API key required.
+export const config = { runtime: 'nodejs' }; // <-- fixed
 
-export const config = { runtime: 'nodejs20.x' };
-
-// Candidate endpoints. We’ll try these in order.
 const CANDIDATES = [
-  // ONS Timeseries API (preferred)
   'https://api.ons.gov.uk/timeseries/L55O/dataset/cpih01/editions/time-series/observations?time=latest',
-  // Legacy JSON on the public page (often works too)
   'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/L55O/mm23/data',
 ];
 
 function parseOnsJson(json) {
-  // Shape 1: { observations: [{ observation: "3.2", dimensions: { time: { id, label }}}] }
   if (json && Array.isArray(json.observations) && json.observations.length) {
     const ob = json.observations[0];
     const val = Number(ob?.observation);
@@ -22,7 +15,6 @@ function parseOnsJson(json) {
       label && /\b([A-Z]{3,}|[A-Za-z]+)\s+\d{4}\b/.test(label)
         ? new Date(`${label} 01`).toISOString()
         : null;
-
     if (Number.isFinite(val)) {
       return {
         id: 'cpih',
@@ -34,9 +26,6 @@ function parseOnsJson(json) {
       };
     }
   }
-
-  // Shape 2 (legacy page JSON): look for deepest array with last value
-  // e.g., { months: [{ date: "2025 AUG", value: "2.2" }, ...] }
   const arr =
     json?.months || json?.years || json?.quarters || json?.observations || json?.data || null;
   if (Array.isArray(arr) && arr.length) {
@@ -48,7 +37,6 @@ function parseOnsJson(json) {
       label && /\b([A-Z]{3,}|[A-Za-z]+)\s+\d{4}\b/.test(label)
         ? new Date(`${label} 01`).toISOString()
         : null;
-
     if (Number.isFinite(val)) {
       return {
         id: 'cpih',
@@ -60,7 +48,6 @@ function parseOnsJson(json) {
       };
     }
   }
-
   return null;
 }
 
@@ -71,7 +58,7 @@ export default async function handler(req, res) {
       const r = await fetch(url, {
         headers: {
           'user-agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36',
           accept: 'application/json, text/json, */*',
         },
       });
@@ -81,7 +68,6 @@ export default async function handler(req, res) {
       parsed = parseOnsJson(json);
       if (parsed) break;
     }
-
     if (!parsed) throw new Error('Could not parse CPIH from ONS');
 
     res.setHeader('Cache-Control', 's-maxage=14400, stale-while-revalidate=86400');
