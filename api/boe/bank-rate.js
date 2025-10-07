@@ -1,77 +1,76 @@
 export const config = { runtime: 'nodejs' };
 
+// Official landing page (no API key). We’ll mine embedded JSON or text.
 const SRC = 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp';
-
 const UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36';
 
-function pickPercentFrom(html) {
-  // Collect all numeric tokens (e.g. 4, 4.0, 400)
+// Try to pull the latest point from embedded chart-style JSON:  ..."Date":"YYYY-MM-DD","Value":4.00 ...
+function pickLastValueFromEmbeddedSeries(html) {
+  const matches = [
+    ...html.matchAll(/"Date"\s*:\s*"(\d{4}-\d{2}-\d{2})"[^}]*?"Value"\s*:\s*([0-9.]+)/g),
+  ];
+  if (matches.length === 0) return null;
+
+  const [, date, rawVal] = matches[matches.length - 1];
+  const v = parseFloat(rawVal);
+  if (!Number.isFinite(v)) return null;
+  if (v < 0 || v > 20) return null; // sanity clamp to 0–20%
+  return { value: v, date };
+}
+
+// Generic finder: first plausible percent (0–20) or basis points (25–2000 → ÷100).
+function pickPlausiblePercent(html) {
+  // e.g., “… Bank Rate is 4.0% …”
+  const nearLabel = html.match(/Bank\s*Rate[^%]{0,80}?(\d{1,3}(?:\.\d+)?)\s?%/i);
+  if (nearLabel) {
+    const v = parseFloat(nearLabel[1]);
+    if (Number.isFinite(v) && v >= 0 && v <= 20) return v;
+  }
+
+  // Fallback: scan all numbers
   const nums = [...html.matchAll(/(\d{1,4}(?:\.\d+)?)/g)]
     .map((m) => parseFloat(m[1]))
     .filter((n) => Number.isFinite(n));
 
-  if (!nums.length) return null;
-
-  // Prefer a value that already looks like a percent (0–20)
+  // Prefer a percent-looking value
   const pct = nums.find((n) => n >= 0 && n <= 20);
   if (typeof pct === 'number') return pct;
 
-  // Otherwise, if something looks like basis points (25–2000), convert
+  // Or basis points (bps)
   const bps = nums.find((n) => n > 20 && n <= 2000);
   if (typeof bps === 'number') return bps / 100;
 
-  // Nothing usable
   return null;
-}
-
-function pickPreviousFrom(html) {
-  // Try to find a "previous" number near relevant labels
-  const m =
-    html.match(/Previous[^0-9]{0,40}(\d{1,4}(?:\.\d+)?)/i) ||
-    html.match(/Change[^0-9]{0,40}(\d{1,4}(?:\.\d+)?)/i);
-  if (!m) return null;
-  let n = parseFloat(m[1]);
-  if (!Number.isFinite(n)) return null;
-  if (n > 20 && n <= 2000) n = n / 100; // basis points → percent
-  return n;
 }
 
 export default async function handler(req, res) {
   try {
-    const resp = await fetch(SRC, {
-      headers: { 'user-agent': UA, accept: 'text/html' },
-    });
+    const resp = await fetch(SRC, { headers: { 'user-agent': UA, accept: 'text/html' } });
     if (!resp.ok) throw new Error(`BoE fetch ${resp.status}`);
     const html = await resp.text();
 
-    const rate = pickPercentFrom(html);
-    if (rate == null) throw new Error('Could not find a plausible Bank Rate');
+    // 1) Best-case: embedded JSON series (most reliable)
+    const series = pickLastValueFromEmbeddedSeries(html);
 
-    const prev = pickPreviousFrom(html);
-    const change = typeof prev === 'number' ? Number((rate - prev).toFixed(2)) : null;
+    // 2) Fallback: heuristic scan of visible text
+    const value = series?.value ?? pickPlausiblePercent(html);
 
-    // Build response your dashboard expects
+    if (value == null) throw new Error('Could not find a plausible Bank Rate');
+
+    const periodStart = series?.date
+      ? new Date(series.date).toISOString()
+      : new Date().toISOString();
+
     res.status(200).json({
-      value: Number(rate.toFixed(2)),
+      value: Number(value.toFixed(2)),
       unit: 'percent',
-      period: {
-        start: new Date().toISOString(), // we don't get an exact effective date here
-        label: null,
-      },
-      change:
-        change == null
-          ? null
-          : {
-              value: change,
-              unit: 'percentagePoints',
-              direction: change > 0 ? 'up' : change < 0 ? 'down' : 'flat',
-              label: 'vs previous setting',
-            },
+      period: { start: periodStart, label: null },
+      change: null, // could be computed if you also extract the penultimate data point
       source: { name: 'Bank of England', url: SRC },
     });
   } catch (err) {
-    // Return 200 with an empty payload so the aggregator can keep other cards alive
+    // Return a soft error so the dashboard can still render other cards
     res.status(200).json({
       value: null,
       unit: 'percent',
