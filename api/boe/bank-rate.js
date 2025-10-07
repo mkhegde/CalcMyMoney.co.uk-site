@@ -1,76 +1,119 @@
+// /api/boe/bank-rate.js
 export const config = { runtime: 'nodejs' };
 
-// Official landing page (no API key). We’ll mine embedded JSON or text.
 const SRC = 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp';
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36';
 
-// Try to pull the latest point from embedded chart-style JSON:  ..."Date":"YYYY-MM-DD","Value":4.00 ...
-function pickLastValueFromEmbeddedSeries(html) {
-  const matches = [
-    ...html.matchAll(/"Date"\s*:\s*"(\d{4}-\d{2}-\d{2})"[^}]*?"Value"\s*:\s*([0-9.]+)/g),
-  ];
-  if (matches.length === 0) return null;
+const clamp = (n, lo, hi) => Math.min(Math.max(n, lo), hi);
 
-  const [, date, rawVal] = matches[matches.length - 1];
-  const v = parseFloat(rawVal);
-  if (!Number.isFinite(v)) return null;
-  if (v < 0 || v > 20) return null; // sanity clamp to 0–20%
+// 1) Embedded chart-style series: ..."Date":"YYYY-MM-DD","Value":4.00
+function pickFromEmbeddedSeries(html) {
+  const m = [...html.matchAll(/"Date"\s*:\s*"(\d{4}-\d{2}-\d{2})"[^}]*?"Value"\s*:\s*([0-9.]+)/g)];
+  if (!m.length) return null;
+  const [, date, raw] = m[m.length - 1];
+  const v = parseFloat(raw);
+  if (!Number.isFinite(v) || v < 0 || v > 20) return null;
   return { value: v, date };
 }
 
-// Generic finder: first plausible percent (0–20) or basis points (25–2000 → ÷100).
-function pickPlausiblePercent(html) {
-  // e.g., “… Bank Rate is 4.0% …”
-  const nearLabel = html.match(/Bank\s*Rate[^%]{0,80}?(\d{1,3}(?:\.\d+)?)\s?%/i);
-  if (nearLabel) {
-    const v = parseFloat(nearLabel[1]);
+// 2) If the page links to a CSV, fetch and take the last numeric row
+function extractCsvHref(html) {
+  // any href ending .csv on the Bank Rate page
+  const m = html.match(/href="([^"]+\.csv[^"]*)"/i);
+  return m ? new URL(m[1], SRC).toString() : null;
+}
+async function pickFromCsv(csvUrl) {
+  const r = await fetch(csvUrl, {
+    headers: { 'user-agent': UA, 'accept-language': 'en-GB,en;q=0.9' },
+    cache: 'no-store',
+  });
+  if (!r.ok) throw new Error(`CSV fetch ${r.status}`);
+  const text = await r.text();
+  const rows = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  // try last 10 lines to find a numeric value
+  for (let i = rows.length - 1; i >= Math.max(0, rows.length - 10); i--) {
+    const parts = rows[i].split(',').map((s) => s.trim());
+    const last = parts[parts.length - 1];
+    const v = parseFloat(last);
+    if (Number.isFinite(v) && v >= 0 && v <= 20) {
+      // try to pull a date from the line too
+      const dateStr =
+        parts.find((p) => /^\d{4}-\d{2}-\d{2}$/.test(p)) ||
+        parts.find((p) => /^\d{1,2}\/[A-Za-z]{3}\/\d{4}$/.test(p)) ||
+        null;
+      const iso = dateStr ? new Date(dateStr).toISOString() : new Date().toISOString();
+      return { value: v, date: iso };
+    }
+  }
+  return null;
+}
+
+// 3) Heuristic text scan (percent or basis points near “Bank Rate”)
+function pickHeuristic(html) {
+  const near = html.match(/Bank\s*Rate[^%]{0,120}?(\d{1,3}(?:\.\d+)?)\s?%/i);
+  if (near) {
+    const v = parseFloat(near[1]);
     if (Number.isFinite(v) && v >= 0 && v <= 20) return v;
   }
 
-  // Fallback: scan all numbers
+  // scan all numbers; prefer 0–20; fallback 25–2000 bps ⇒ ÷100
   const nums = [...html.matchAll(/(\d{1,4}(?:\.\d+)?)/g)]
     .map((m) => parseFloat(m[1]))
     .filter((n) => Number.isFinite(n));
-
-  // Prefer a percent-looking value
   const pct = nums.find((n) => n >= 0 && n <= 20);
   if (typeof pct === 'number') return pct;
-
-  // Or basis points (bps)
   const bps = nums.find((n) => n > 20 && n <= 2000);
   if (typeof bps === 'number') return bps / 100;
-
   return null;
 }
 
 export default async function handler(req, res) {
   try {
-    const resp = await fetch(SRC, { headers: { 'user-agent': UA, accept: 'text/html' } });
+    const resp = await fetch(SRC, {
+      headers: {
+        'user-agent': UA,
+        accept: 'text/html',
+        'accept-language': 'en-GB,en;q=0.9',
+      },
+      cache: 'no-store',
+    });
     if (!resp.ok) throw new Error(`BoE fetch ${resp.status}`);
     const html = await resp.text();
 
-    // 1) Best-case: embedded JSON series (most reliable)
-    const series = pickLastValueFromEmbeddedSeries(html);
+    // 1) embedded JSON
+    let series = pickFromEmbeddedSeries(html);
 
-    // 2) Fallback: heuristic scan of visible text
-    const value = series?.value ?? pickPlausiblePercent(html);
+    // 2) CSV link fallback
+    if (!series) {
+      const csv = extractCsvHref(html);
+      if (csv) {
+        try {
+          series = await pickFromCsv(csv);
+        } catch {
+          // ignore and try heuristic
+        }
+      }
+    }
 
-    if (value == null) throw new Error('Could not find a plausible Bank Rate');
+    // 3) heuristic
+    let value = series?.value ?? pickHeuristic(html);
+    if (value == null) throw new Error('Could not detect Bank Rate');
 
-    const periodStart = series?.date
-      ? new Date(series.date).toISOString()
-      : new Date().toISOString();
+    value = clamp(value, 0, 20);
 
     res.status(200).json({
       value: Number(value.toFixed(2)),
       unit: 'percent',
-      period: { start: periodStart, label: null },
-      change: null, // could be computed if you also extract the penultimate data point
+      period: { start: series?.date || new Date().toISOString(), label: null },
+      change: null,
       source: { name: 'Bank of England', url: SRC },
     });
   } catch (err) {
-    // Return a soft error so the dashboard can still render other cards
     res.status(200).json({
       value: null,
       unit: 'percent',
