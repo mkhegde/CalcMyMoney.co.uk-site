@@ -2,11 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Percent, Home, Landmark, Zap, ExternalLink } from 'lucide-react';
 import Heading from '@/components/common/Heading';
-import FAQSection from '../components/calculators/FAQSection';
+import FAQSection from '@/components/calculators/FAQSection';
 import { JsonLd } from '@/components/seo/JsonLd';
 import buildFaqJsonLd from '@/components/seo/buildFaqJsonLd';
-import RelatedCalculators from '../components/calculators/RelatedCalculators';
-import { createPageUrl } from '@/utils/createPageUrl';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import SeoHead from '@/components/seo/SeoHead';
 import buildDatasetsJsonLd from '@/components/seo/buildDatasetsJsonLd';
 
@@ -23,6 +22,30 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   maximumFractionDigits: 0,
 });
 const monthFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
+
+// Pound-safe helpers used for parsing and unit detection
+function normalisePoundsSafe(s) {
+  return String(s).replace(/&pound;|&#163;/gi, '£');
+}
+
+function sanitizeNumber(val) {
+  if (typeof val === 'number') return Number.isFinite(val) ? val : NaN;
+  if (typeof val === 'string') {
+    const s = normalisePoundsSafe(val);
+    const num = parseFloat(s.replace(/[£,%\s,]/g, ''));
+    return Number.isFinite(num) ? num : NaN;
+  }
+  return NaN;
+}
+
+function normalizeUnitSafe(u) {
+  if (!u) return undefined;
+  const s = String(u).toLowerCase();
+  if (s === 'percent' || s === 'percentage' || s === '%') return 'percent';
+  if (s === 'percentagepoints' || s === 'percentage_points' || s === 'pp') return 'percentagePoints';
+  if (s.includes('gbp') || s === 'currency' || s.includes('£')) return 'gbp';
+  return s;
+}
 
 // Format an ISO date as Month YYYY (en-GB)
 function formatMonthYearISO(iso) {
@@ -88,27 +111,37 @@ const STAT_CONFIG = [
   },
 ];
 
-// FAQs for this page
-const STATS_FAQS = [
+// FAQs for this page (concise)
+const statsFaqs = [
   {
-    question: 'How often are these statistics updated?',
+    question: 'How often are these figures updated?',
     answer:
-      'Bank Rate updates on MPC decision days; CPIH monthly (ONS); the UK House Price Index monthly (with a lag); and Ofgem’s cap quarterly. We cache results for a few hours to stay fast while remaining fresh.',
-  },
-  {
-    question: 'Why can the price cap differ from my actual bill?',
-    answer:
-      'The Ofgem “typical use” cap is an annualised estimate for an average household. Your bill depends on your region, tariff, standing charges, and actual consumption.',
+      "We check sources daily and cache results for a few hours. Bank Rate is updated after MPC decisions; CPIH is monthly; UK HPI is monthly; Ofgem price cap is typically quarterly. Exact refresh depends on each publisher’s release schedule.",
   },
   {
     question: 'What is CPIH and how is it different from CPI?',
     answer:
-      'CPIH is the UK’s headline inflation measure including owner occupiers’ housing costs (OOH). CPI excludes those housing services. CPIH is typically preferred for UK policy analysis.',
+      "CPIH is CPI including owner occupiers’ housing costs (OOH). It’s ONS’s preferred headline measure for consumer price inflation in the UK.",
   },
   {
-    question: 'Where do these figures come from?',
+    question: 'Does the Ofgem price cap limit my total bill?',
     answer:
-      'Bank Rate: Bank of England. CPIH and HPI: Office for National Statistics / Land Registry. Energy Price Cap: Ofgem. Each card includes a “Source” link.',
+      'No. The cap limits unit rates and standing charges for a “typical” dual-fuel household. Your bill depends on actual usage and tariff type.',
+  },
+  {
+    question: 'Why might my mortgage costs track Bank Rate?',
+    answer:
+      "Tracker and variable-rate mortgages often move with Bank Rate; fixes do not change until the fixed term ends. Always check your product’s terms.",
+  },
+  {
+    question: 'Where do these numbers come from?',
+    answer:
+      'Bank of England (Bank Rate), Office for National Statistics (CPIH), UK HPI (HM Land Registry & ONS), and Ofgem (energy price cap). We fetch directly from official pages or APIs.',
+  },
+  {
+    question: 'Can I access the raw JSON used on this page?',
+    answer:
+      'Yes: /api/boe/bank-rate, /api/ons/cpih, /api/ukhpi/average-price, and /api/ofgem/price-cap. Endpoints return a simple, consistent shape for reuse.',
   },
 ];
 
@@ -151,7 +184,7 @@ function normalizeStat(raw) {
     (raw.data && raw.data.value) ??
     (raw.metrics && raw.metrics.value);
 
-  const numericValue = coerceNumber(value);
+  const numericValue = sanitizeNumber(value);
   if (!Number.isFinite(numericValue)) return null;
 
   let unit =
@@ -160,13 +193,13 @@ function normalizeStat(raw) {
     (raw.currency ? 'gbp' : undefined) ??
     (raw.percentage ? 'percent' : undefined);
 
-  unit = normalizeUnit(unit);
+  unit = normalizeUnitSafe(unit);
 
   const period = raw.period ?? raw.dateRange ?? raw.dates ?? null;
 
   let change = raw.change ?? raw.delta ?? null;
   if (change && typeof change === 'object') {
-    const cv = coerceNumber(change.value);
+    const cv = sanitizeNumber(change.value);
     change = Number.isFinite(cv)
       ? { ...change, value: cv, unit: normalizeUnit(change.unit) }
       : null;
@@ -290,7 +323,7 @@ export default function UKFinancialStats() {
   const [debug, setDebug] = useState(false);
 
   // Build FAQ JSON-LD for SEO
-  const faqJsonLd = buildFaqJsonLd(STATS_FAQS);
+  const faqJsonLd = useMemo(() => buildFaqJsonLd(statsFaqs), []);
 
   // Dataset JSON-LD context
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
@@ -385,6 +418,7 @@ export default function UKFinancialStats() {
         canonical={canonical}
       />
       {datasetsJsonLd && datasetsJsonLd.length > 0 && <JsonLd data={datasetsJsonLd} />}
+      <JsonLd data={faqJsonLd} />
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
@@ -431,31 +465,48 @@ export default function UKFinancialStats() {
           ))}
         </div>
 
-        {/* SEO: FAQ JSON-LD */}
-        <JsonLd data={faqJsonLd} />
-
-        {/* Visible FAQs */}
-        <div className="mt-12">
-          <FAQSection faqs={STATS_FAQS} />
-        </div>
-
-        {/* Related tools: internal links for SEO + UX */}
-        <div className="mt-10">
+        {/* Related calculators to act on these stats */}
+        <div className="mt-16">
           <RelatedCalculators
             calculators={[
               {
                 name: 'Mortgage Calculator',
-                url: createPageUrl('MortgageCalculatorUK'),
-                description: 'Estimate repayments and see the impact of today’s rates.',
+                url: '/mortgage-calculator-uk',
+                description: 'Estimate repayments and see how Bank Rate scenarios change costs.',
               },
               {
-                name: 'Budget Planner',
-                url: createPageUrl('BudgetCalculator'),
-                description: 'Plan monthly spending with inflation and energy costs in mind.',
+                name: 'Mortgage Affordability Calculator',
+                url: '/mortgage-affordability-calculator',
+                description: 'Model income, rates, and term to estimate what you can borrow.',
+              },
+              {
+                name: 'Budget / Expense Calculator',
+                url: '/budget-calculator',
+                description: 'Plan monthly spending and stress-test energy/price inflation.',
+              },
+              {
+                name: 'Inflation Calculator',
+                url: '/inflation-calculator',
+                description: 'See how purchasing power changes over time at different CPIH rates.',
+              },
+              {
+                name: 'Energy Bill Calculator',
+                url: '/energy-bill-calculator',
+                description: 'Estimate bills from unit rates and standing charges.',
               },
             ]}
           />
         </div>
+
+        {/* FAQ Section */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Financial stats: FAQs
+          </h2>
+          <FAQSection faqs={statsFaqs} />
+        </div>
+
+        
 
         <div className="mt-12 text-center text-sm text-gray-500">
           <p>
