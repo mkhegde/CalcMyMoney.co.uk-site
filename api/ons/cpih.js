@@ -71,7 +71,8 @@ export default async function handler(req, res) {
     if (!parsed) throw new Error('Could not parse CPIH from ONS');
 
     res.setHeader('Cache-Control', 's-maxage=14400, stale-while-revalidate=86400');
-    return res.status(200).json({ stat: parsed });
+    // REMOVED THE WRAPPING 'stat' KEY
+    return res.status(200).json(parsed);
   } catch (e) {
     return res.status(502).json({ error: `CPIH fetch failed: ${e.message}` });
   }
