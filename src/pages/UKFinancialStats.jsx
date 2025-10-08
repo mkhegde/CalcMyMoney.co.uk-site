@@ -2,6 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Percent, Home, Landmark, Zap, ExternalLink } from 'lucide-react';
 import Heading from '@/components/common/Heading';
+import FAQSection from '../components/calculators/FAQSection';
+import { JsonLd } from '@/components/seo/JsonLd';
+import buildFaqJsonLd from '@/components/seo/buildFaqJsonLd';
+import RelatedCalculators from '../components/calculators/RelatedCalculators';
+import { createPageUrl } from '@/utils/createPageUrl';
 
 /* --------------------------- formatters --------------------------- */
 const percentFormatter = new Intl.NumberFormat('en-GB', {
@@ -70,6 +75,30 @@ const STAT_CONFIG = [
       }
       return 'Typical household annualised cap published quarterly by Ofgem.';
     },
+  },
+];
+
+// FAQs for this page
+const STATS_FAQS = [
+  {
+    question: 'How often are these statistics updated?',
+    answer:
+      'Bank Rate updates on MPC decision days; CPIH monthly (ONS); the UK House Price Index monthly (with a lag); and Ofgem’s cap quarterly. We cache results for a few hours to stay fast while remaining fresh.',
+  },
+  {
+    question: 'Why can the price cap differ from my actual bill?',
+    answer:
+      'The Ofgem “typical use” cap is an annualised estimate for an average household. Your bill depends on your region, tariff, standing charges, and actual consumption.',
+  },
+  {
+    question: 'What is CPIH and how is it different from CPI?',
+    answer:
+      'CPIH is the UK’s headline inflation measure including owner occupiers’ housing costs (OOH). CPI excludes those housing services. CPIH is typically preferred for UK policy analysis.',
+  },
+  {
+    question: 'Where do these figures come from?',
+    answer:
+      'Bank Rate: Bank of England. CPIH and HPI: Office for National Statistics / Land Registry. Energy Price Cap: Ofgem. Each card includes a “Source” link.',
   },
 ];
 
@@ -226,6 +255,9 @@ export default function UKFinancialStats() {
   const [errorBanner, setErrorBanner] = useState(null);
   const [debug, setDebug] = useState(false);
 
+  // Build FAQ JSON-LD for SEO
+  const faqJsonLd = buildFaqJsonLd(STATS_FAQS);
+
   useEffect(() => {
     setDebug(new URLSearchParams(window.location.search).get('debug') === '1');
   }, []);
@@ -352,6 +384,32 @@ export default function UKFinancialStats() {
           ))}
         </div>
 
+        {/* SEO: FAQ JSON-LD */}
+        <JsonLd data={faqJsonLd} />
+
+        {/* Visible FAQs */}
+        <div className="mt-12">
+          <FAQSection faqs={STATS_FAQS} />
+        </div>
+
+        {/* Related tools: internal links for SEO + UX */}
+        <div className="mt-10">
+          <RelatedCalculators
+            calculators={[
+              {
+                name: 'Mortgage Calculator',
+                url: createPageUrl('MortgageCalculatorUK'),
+                description: 'Estimate repayments and see the impact of today’s rates.',
+              },
+              {
+                name: 'Budget Planner',
+                url: createPageUrl('BudgetCalculator'),
+                description: 'Plan monthly spending with inflation and energy costs in mind.',
+              },
+            ]}
+          />
+        </div>
+
         <div className="mt-12 text-center text-sm text-gray-500">
           <p>
             Disclaimer: Data shown here is for informational purposes only. Please consult the
@@ -363,4 +421,3 @@ export default function UKFinancialStats() {
     </div>
   );
 }
-
