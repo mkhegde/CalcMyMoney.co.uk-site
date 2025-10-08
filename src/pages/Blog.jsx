@@ -7,6 +7,30 @@ import Heading from '@/components/common/Heading';
 
 const blogPosts = [
   {
+    title:
+      'The Math Behind a Good Life: Why Small Money Calculations Change Big Outcomes',
+    excerpt:
+      'Why tiny calculations—salary, tax, mortgage, budgeting—create calmer, more confident decisions. A practical blueprint for UK households.',
+    date: new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }),
+    author: 'CalcMyMoney Team',
+    category: 'Mindset',
+    readTime: '7 min read',
+    url: '/blog/why-small-calculations-matter',
+    image: {
+      baseUrl: 'https://images.unsplash.com/photo-1554224154-22dec7ec8818',
+      params:
+        'q=80&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      width: 1200,
+      height: 800,
+      srcSetWidths: [480, 768, 1024, 1200],
+      sizes: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+    },
+  },
+  {
     title: 'Smart Money-Saving Tips for UK Families: Tackling Groceries & Energy Bills',
     excerpt:
       'A guide to cutting costs on two of the biggest drains on family finances – groceries and energy bills.',

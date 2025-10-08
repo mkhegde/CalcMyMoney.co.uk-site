@@ -39,6 +39,7 @@ const blogPosts = [
     title: 'Effective Debt Repayment Strategies',
   },
   { url: createPageUrl('BlogFinancialPsychology'), title: 'The Psychology of Money' },
+  { url: '/blog/why-small-calculations-matter', title: 'Why Small Money Calculations Matter' },
 ];
 
 const SitemapSection = ({ title, links, columns = 1 }) => (
