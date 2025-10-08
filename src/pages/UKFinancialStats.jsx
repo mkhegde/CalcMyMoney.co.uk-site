@@ -8,6 +8,13 @@ import buildFaqJsonLd from '@/components/seo/buildFaqJsonLd';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import SeoHead from '@/components/seo/SeoHead';
 import buildDatasetsJsonLd from '@/components/seo/buildDatasetsJsonLd';
+import { Badge } from '@/components/ui/badge';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion';
 
 /* --------------------------- formatters --------------------------- */
 const percentFormatter = new Intl.NumberFormat('en-GB', {
@@ -410,15 +417,50 @@ export default function UKFinancialStats() {
     });
   }, [stats, loading]);
 
+  const lastUpdated = useMemo(() => {
+    if (!stats) return null;
+    const pick = (s) => s?.period?.end || s?.period?.start || null;
+    const toDate = (v) => {
+      if (!v) return null;
+      const d = new Date(v);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+    const times = Object.values(stats)
+      .map(pick)
+      .map(toDate)
+      .filter(Boolean)
+      .map((d) => d.getTime());
+    if (!times.length) return null;
+    return new Date(Math.max(...times));
+  }, [stats]);
+
   return (
     <div className="bg-white dark:bg-gray-900">
       <SeoHead
         title="UK Financial Statistics (Live) | CalcMyMoney"
-        desc="Live UK Bank Rate, CPIH inflation, UK average house price and Ofgem energy price cap—pulled directly from official sources."
+        desc="Live UK Bank Rate, CPIH inflation, UK average house price and Ofgem energy price cap-pulled directly from official sources."
         canonical={canonical}
       />
       {datasetsJsonLd && datasetsJsonLd.length > 0 && <JsonLd data={datasetsJsonLd} />}
       <JsonLd data={faqJsonLd} />
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'CreativeWork',
+          name: 'UK Financial Statistics — Methodology',
+          description:
+            'How CalcMyMoney fetches, normalises, and caches official UK statistics (Bank Rate, CPIH, UK HPI, Ofgem).',
+          url: `${canonical}#methodology`,
+          dateModified: lastUpdated ? lastUpdated.toISOString() : undefined,
+          publisher: { '@type': 'Organization', name: 'CalcMyMoney' },
+          about: [
+            { '@type': 'DefinedTerm', name: 'Bank Rate', url: 'https://www.bankofengland.co.uk/' },
+            { '@type': 'DefinedTerm', name: 'CPIH', url: 'https://www.ons.gov.uk/' },
+            { '@type': 'DefinedTerm', name: 'UK HPI', url: 'https://landregistry.data.gov.uk/app/hpi/' },
+            { '@type': 'DefinedTerm', name: 'Ofgem price cap', url: 'https://www.ofgem.gov.uk/energy-price-cap' },
+          ],
+        }}
+      />
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
@@ -430,6 +472,13 @@ export default function UKFinancialStats() {
             >
               UK Financial Statistics Dashboard
             </Heading>
+            {lastUpdated && (
+              <div className="flex justify-center">
+                <Badge variant="secondary" className="text-xs">
+                  Last updated: {lastUpdated.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+                </Badge>
+              </div>
+            )}
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Track key UK economic indicators. Data is sourced directly from official channels like
               the Bank of England and the Office for National Statistics.
@@ -504,6 +553,48 @@ export default function UKFinancialStats() {
             Financial stats: FAQs
           </h2>
           <FAQSection faqs={statsFaqs} />
+        </div>
+
+        {/* Methodology */}
+        <div id="methodology" className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            How we fetch & cache these stats
+          </h2>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="sources">
+              <AccordionTrigger>Official sources & parsing</AccordionTrigger>
+              <AccordionContent className="text-sm leading-6 text-gray-700 dark:text-gray-300">
+                We fetch directly from official sources:
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li><strong>Bank Rate</strong>: Bank of England JSON/CSV fallbacks.</li>
+                  <li><strong>CPIH</strong>: ONS time series endpoints with tolerant parsing.</li>
+                  <li><strong>UK HPI</strong>: HM Land Registry/ONS UK House Price Index.</li>
+                  <li><strong>Ofgem cap</strong>: Ofgem cap page (typical-use, unit rates).</li>
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="normalization">
+              <AccordionTrigger>Normalization & units</AccordionTrigger>
+              <AccordionContent className="text-sm leading-6 text-gray-700 dark:text-gray-300">
+                Each endpoint is normalized to a simple shape: <code>{'{ id, title, unit, value, period, change }'}</code>.
+                We sanity-check units (percent vs percentage points vs GBP) and coerce dates to ISO at the start of a period.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="caching">
+              <AccordionTrigger>Caching & freshness</AccordionTrigger>
+              <AccordionContent className="text-sm leading-6 text-gray-700 dark:text-gray-300">
+                We set <code>Cache-Control</code> headers (e.g., <code>s-maxage</code>, <code>stale-while-revalidate</code>)
+                on API responses. The badge at the top shows the most recent period across all sources.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="limitations">
+              <AccordionTrigger>Limitations</AccordionTrigger>
+              <AccordionContent className="text-sm leading-6 text-gray-700 dark:text-gray-300">
+                Publishers may change page structures, release times, or data definitions. If a source is temporarily unavailable,
+                we show partial results and a notice until the next refresh succeeds.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
         
