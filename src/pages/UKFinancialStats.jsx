@@ -22,6 +22,14 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
 });
 const monthFormatter = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
 
+// Format an ISO date as Month YYYY (en-GB)
+function formatMonthYearISO(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' }).format(d);
+}
+
 /* --------------------------- config --------------------------- */
 const STAT_CONFIG = [
   {
@@ -205,23 +213,33 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
   const trendColor =
     trend === 'up' ? 'text-red-600' : trend === 'down' ? 'text-green-600' : 'text-gray-600';
 
+  const updatedISO = stat?.period?.start || null;
+  const updatedLabel = updatedISO ? formatMonthYearISO(updatedISO) : (stat?.period?.label || null);
+
   let description = '';
-  if (status === 'ready')
-    description = stat?.description ?? stat?.label ?? stat?.period?.label ?? '';
-  else if (status === 'loading') description = 'Fetching latest figures.';
-  else if (status === 'error') description = error ?? 'Unable to load data right now.';
-  else description = 'No data available right now.';
+  if (status === 'ready') {
+    description = stat?.description ?? stat?.period?.label ?? '';
+  } else if (status === 'loading') {
+    description = 'Fetching latest figures…';
+  } else if (status === 'error') {
+    description = error ?? 'Unable to load data right now.';
+  } else {
+    description = 'No data available right now.';
+  }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col" aria-busy={status === 'loading'}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-medium">{title}</CardTitle>
         <Icon className="w-5 h-5 text-gray-500" />
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col justify-center">
+      <CardContent className="flex-grow flex flex-col justify-center min-h-[132px]">
         <div className="text-3xl font-bold">
           {status === 'ready' && formattedValue}
-          {status !== 'ready' && <span className="text-gray-400">-</span>}
+          {status === 'loading' && (
+            <span className="inline-block h-7 w-28 rounded bg-gray-200 animate-pulse" />
+          )}
+          {(status === 'error' || status === 'empty') && <span className="text-gray-400">—</span>}
         </div>
         {status === 'ready' && formattedChange && (
           <div className="text-sm text-gray-600 flex items-center gap-1">
@@ -231,6 +249,20 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
           </div>
         )}
         <p className="text-xs text-gray-500 mt-2">{description}</p>
+
+        {/* Last updated line */}
+        {status === 'ready' && (updatedISO || updatedLabel) && (
+          <p className="text-[11px] text-gray-400 mt-2">
+            Last updated:{' '}
+            {updatedISO ? (
+              <time dateTime={updatedISO}>
+                {updatedLabel || formatMonthYearISO(updatedISO) || updatedISO}
+              </time>
+            ) : (
+              updatedLabel
+            )}
+          </p>
+        )}
       </CardContent>
       {link && (
         <div className="p-4 pt-0 text-xs">
