@@ -69,6 +69,7 @@ const STAT_CONFIG = [
     title: 'BoE Bank Rate',
     icon: Landmark,
     link: 'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp',
+    endpoint: '/api/boe/bank-rate',
     buildDescription: (stat) => {
       const d = stat?.period?.start ? new Date(stat.period.start) : null;
       return d && !Number.isNaN(d.getTime())
@@ -81,6 +82,7 @@ const STAT_CONFIG = [
     title: 'Inflation (CPIH)',
     icon: Percent,
     link: 'https://www.ons.gov.uk/economy/inflationandpriceindices',
+    endpoint: '/api/ons/cpih',
     buildDescription: (stat) => {
       const d = stat?.period?.start ? new Date(stat.period.start) : null;
       return d && !Number.isNaN(d.getTime())
@@ -93,6 +95,7 @@ const STAT_CONFIG = [
     title: 'Average UK House Price',
     icon: Home,
     link: 'https://landregistry.data.gov.uk/app/hpi/',
+    endpoint: '/api/ukhpi/average-price',
     buildDescription: (stat) => {
       const d = stat?.period?.start ? new Date(stat.period.start) : null;
       return d && !Number.isNaN(d.getTime())
@@ -105,6 +108,7 @@ const STAT_CONFIG = [
     title: 'Ofgem Energy Price Cap',
     icon: Zap,
     link: 'https://www.ofgem.gov.uk/energy-price-cap',
+    endpoint: '/api/ofgem/price-cap',
     buildDescription: (stat) => {
       const s = stat?.period?.start ? new Date(stat.period.start) : null;
       const e = stat?.period?.end ? new Date(stat.period.end) : null;
@@ -247,7 +251,7 @@ async function fetchJSON(url) {
 }
 
 /* --------------------------- card --------------------------- */
-const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
+const StatCard = ({ title, icon: Icon, link, dataEndpoint, status, stat, error }) => {
   const formattedValue = status === 'ready' ? formatValue(stat) : null;
   const formattedChange = status === 'ready' ? formatChange(stat?.change) : null;
   const trend = stat?.change?.direction;
@@ -273,15 +277,15 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
     <Card className="h-full flex flex-col" aria-busy={status === 'loading'}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-medium">{title}</CardTitle>
-        <Icon className="w-5 h-5 text-gray-500" />
+        <Icon className="w-5 h-5 text-gray-500" role="img" aria-label={title} />
       </CardHeader>
       <CardContent className="flex-grow flex flex-col justify-center min-h-[132px]">
-        <div className="text-3xl font-bold">
+        <div className="text-3xl font-bold" aria-live="polite">
           {status === 'ready' && formattedValue}
           {status === 'loading' && (
-            <span className="inline-block h-7 w-28 rounded bg-gray-200 animate-pulse" />
+            <span className="inline-block h-7 w-24 rounded bg-gray-100 animate-pulse" />
           )}
-          {(status === 'error' || status === 'empty') && <span className="text-gray-400">—</span>}
+          {(status === 'error' || status === 'empty') && <span className="text-gray-400">-</span>}
         </div>
         {status === 'ready' && formattedChange && (
           <div className="text-sm text-gray-600 flex items-center gap-1">
@@ -316,6 +320,17 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
           >
             Source <ExternalLink className="w-3 h-3" />
           </a>
+          {dataEndpoint && (
+            <div className="mt-1 text-xs">
+              <a
+                href={dataEndpoint}
+                className="text-gray-500 hover:underline"
+                aria-label={`Download ${title} as JSON`}
+              >
+                JSON
+              </a>
+            </div>
+          )}
         </div>
       )}
     </Card>
@@ -507,12 +522,73 @@ export default function UKFinancialStats() {
               title={c.title}
               icon={c.icon}
               link={c.link}
+              dataEndpoint={c.endpoint}
               status={c.status}
               stat={c.stat}
               error={errorBanner}
             />
           ))}
         </div>
+
+        <section aria-labelledby="sources" className="mt-10">
+          <h2 id="sources" className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            Sources & downloads
+          </h2>
+          <ol className="list-decimal pl-5 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+            <li>
+              BoE Bank Rate —
+              <a
+                href="https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp"
+                target="_blank"
+                rel="noopener"
+                className="text-blue-600 hover:underline"
+              >
+                official page
+              </a>{' '}
+              ·{' '}
+              <a href="/api/boe/bank-rate" className="text-gray-600 hover:underline">JSON</a>
+            </li>
+            <li>
+              CPIH (ONS) —
+              <a
+                href="https://www.ons.gov.uk/economy/inflationandpriceindices"
+                target="_blank"
+                rel="noopener"
+                className="text-blue-600 hover:underline"
+              >
+                official page
+              </a>{' '}
+              ·{' '}
+              <a href="/api/ons/cpih" className="text-gray-600 hover:underline">JSON</a>
+            </li>
+            <li>
+              UK House Price (UKHPI) —
+              <a
+                href="https://landregistry.data.gov.uk/app/hpi/"
+                target="_blank"
+                rel="noopener"
+                className="text-blue-600 hover:underline"
+              >
+                official page
+              </a>{' '}
+              ·{' '}
+              <a href="/api/ukhpi/average-price" className="text-gray-600 hover:underline">JSON</a>
+            </li>
+            <li>
+              Ofgem Price Cap —
+              <a
+                href="https://www.ofgem.gov.uk/energy-price-cap"
+                target="_blank"
+                rel="noopener"
+                className="text-blue-600 hover:underline"
+              >
+                official page
+              </a>{' '}
+              ·{' '}
+              <a href="/api/ofgem/price-cap" className="text-gray-600 hover:underline">JSON</a>
+            </li>
+          </ol>
+        </section>
 
         {/* Related calculators to act on these stats */}
         <div className="mt-16">
