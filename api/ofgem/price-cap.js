@@ -1,53 +1,67 @@
-// /api/ofgem/price-cap.js
-// Source: Ofgem “Energy price cap” page; extract typical annual bill.
-// Ofgem updates quarterly (Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec).
+/* eslint-env node */
+export const config = { runtime: 'nodejs' };
 
-export const config = { runtime: 'edge' };
+const SOURCE = 'https://www.ofgem.gov.uk/energy-price-cap';
 
-const OFGEM_CAP = 'https://www.ofgem.gov.uk/energy-price-cap';
+const POUND = '(?:£|&pound;|&#163;)';
+const PRICE_RE = new RegExp(`${POUND}\\s*([\\d,]+)`, 'i');
+const WINDOW_RE = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\s*[–-]\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/i;
 
-export default async function handler() {
+const MONTHS = {
+  january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
+  july: 6, august: 7, september: 8, october: 9, november: 10, december: 11,
+};
+
+function monthStartIso(label) {
+  const m = label.match(/([A-Za-z]+)\s+(\d{4})/);
+  if (!m) return null;
+  const month = MONTHS[m[1].toLowerCase()];
+  const year = Number(m[2]);
+  if (month == null || !Number.isFinite(year)) return null;
+  return new Date(Date.UTC(year, month, 1, 0, 0, 0)).toISOString();
+}
+
+export default async function handler(req, res) {
   try {
-    const r = await fetch(OFGEM_CAP, { headers: { 'user-agent': 'Mozilla/5.0' } });
+    const r = await fetch(SOURCE, {
+      headers: {
+        'user-agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36',
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+    });
     if (!r.ok) throw new Error(`Ofgem page ${r.status}`);
-    const html = await r.text(); // Pull the first £n,nnn figure near "per year" or “typical household”
+    const html = await r.text();
 
-    const moneyNear = html
-      .replace(/\s+/g, ' ')
-      .match(/£\s?([\d,]{3,})\s*(?:per\s*year|a\s*year|typical)/i);
-    if (!moneyNear) throw new Error('Could not find cap annual amount');
+    const priceMatch = PRICE_RE.exec(html);
+    if (!priceMatch) throw new Error('Price not found');
 
-    const value = Number(moneyNear[1].replace(/,/g, ''));
-    if (!Number.isFinite(value)) throw new Error('Cap value not numeric'); // Try to infer quarter window like “1 October to 31 December 2025”
+    const value = Number(String(priceMatch[1]).replace(/,/g, ''));
 
-    let periodLabel = 'current cap';
-    const qMatch = html.match(/(\d{1,2}\s+[A-Z][a-z]+)\s+to\s+(\d{1,2}\s+[A-Z][a-z]+)\s+(\d{4})/);
-    if (qMatch) {
-      periodLabel = `${qMatch[1]} – ${qMatch[2]} ${qMatch[3]}`;
+    let label = null;
+    let start = null;
+    let end = null;
+    const windowMatch = WINDOW_RE.exec(html);
+    if (windowMatch) {
+      const l1 = `${windowMatch[1]} ${new Date().getUTCFullYear()}`;
+      const l2 = `${windowMatch[2]} ${new Date().getUTCFullYear()}`;
+      start = monthStartIso(l1);
+      end = monthStartIso(l2);
+      label = `${windowMatch[1]} – ${windowMatch[2]}`;
     }
 
-    const stat = {
+    res.setHeader('Cache-Control', 's-maxage=14400, stale-while-revalidate=86400');
+    return res.status(200).json({
       id: 'ofgemCap',
       title: 'Ofgem Energy Price Cap',
       unit: 'gbp',
       value,
-      period: { label: periodLabel, start: null, end: null },
+      period: { label, start, end },
       change: null,
-    };
-
-    // ------------------------------------------------------------------
-    // FIX: Changed JSON.stringify({ stat }) to JSON.stringify(stat)
-    // ------------------------------------------------------------------
-    return new Response(JSON.stringify(stat), {
-      headers: {
-        'content-type': 'application/json',
-        'cache-control': 's-maxage=21600, stale-while-revalidate=86400',
-      }, // 6h
+      source: { name: 'Ofgem', url: SOURCE },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: `Ofgem cap fetch failed: ${e.message}` }), {
-      status: 502,
-      headers: { 'content-type': 'application/json' },
-    });
+    return res.status(502).json({ error: `Ofgem fetch failed: ${e.message}` });
   }
 }
+

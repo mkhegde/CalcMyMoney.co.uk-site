@@ -1,69 +1,59 @@
-// /api/ukhpi/average-price.js
+/* eslint-env node */
 export const config = { runtime: 'nodejs' };
 
-const SRC =
-  'https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/housepriceindex/latest';
-const UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36';
+const SOURCE = 'https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/housepriceindex/latest';
 
-// Match variants like:
-// "average UK house price was £288,000" or
-// "UK average house price was £288,000" or
-// "the average house price in the UK was £288,000"
-const PRICE_PATTERNS = [
-  /average\s+UK\s+house\s+price\s+was\s+£\s*([\d,]+)/i,
-  /UK\s+average\s+house\s+price\s+was\s+£\s*([\d,]+)/i,
-  /average\s+house\s+price\s+in\s+the\s+UK\s+was\s+£\s*([\d,]+)/i,
-  /average\s+house\s+price[^£]{0,50}£\s*([\d,]+)/i,
-];
+const POUND = '(?:£|&pound;|&#163;)';
+const PRICE_RE = new RegExp(`${POUND}\s*([\d,]+)`, 'i'); // £ 285,000
+const MONTH_LABEL_RE = /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b/i;
 
-function extractPrice(html) {
-  for (const re of PRICE_PATTERNS) {
-    const m = html.match(re);
-    if (m) {
-      const n = parseInt(m[1].replace(/,/g, ''), 10);
-      if (Number.isFinite(n) && n > 20000 && n < 2000000) return n;
-    }
-  }
-  return null;
-}
+const MONTHS = {
+  january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
+  july: 6, august: 7, september: 8, october: 9, november: 10, december: 11,
+};
 
-function extractMonth(html) {
-  const m = html.match(
-    /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b/
-  );
-  return m ? m[0] : null;
+function labelToStartIso(label) {
+  const m = label.match(/([A-Za-z]+)\s+(\d{4})/);
+  if (!m) return null;
+  const month = MONTHS[m[1].toLowerCase()];
+  const year = Number(m[2]);
+  if (month == null || !Number.isFinite(year)) return null;
+  return new Date(Date.UTC(year, month, 1, 0, 0, 0)).toISOString();
 }
 
 export default async function handler(req, res) {
   try {
-    const r = await fetch(SRC, {
-      headers: { 'user-agent': UA, accept: 'text/html', 'accept-language': 'en-GB,en;q=0.9' },
-      cache: 'no-store',
+    const r = await fetch(SOURCE, {
+      headers: {
+        'user-agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36',
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
     });
-    if (!r.ok) throw new Error(`ONS fetch ${r.status}`);
+    if (!r.ok) throw new Error(`ONS HPI page ${r.status}`);
     const html = await r.text();
 
-    const price = extractPrice(html);
-    if (price == null) throw new Error('Could not find UK average house price');
+    const priceMatch = PRICE_RE.exec(html);
+    const labelMatch = MONTH_LABEL_RE.exec(html);
 
-    const label = extractMonth(html);
+    if (!priceMatch) throw new Error('Price not found in ONS HPI page');
 
-    res.status(200).json({
-      value: price,
+    const value = Number(String(priceMatch[1]).replace(/,/g, ''));
+    const label = labelMatch ? labelMatch[0] : 'latest';
+    const start = labelToStartIso(label) || null;
+
+    res.setHeader('Cache-Control', 's-maxage=14400, stale-while-revalidate=86400');
+    return res.status(200).json({
+      id: 'housePrice',
+      title: 'Average UK House Price',
       unit: 'gbp',
-      period: { start: new Date().toISOString(), label },
+      value,
+      period: { label, start },
       change: null,
-      source: { name: 'ONS HPI (latest bulletin)', url: SRC },
+      source: { name: 'ONS HPI (latest bulletin)', url: SOURCE },
     });
-  } catch (err) {
-    res.status(200).json({
-      value: null,
-      unit: 'gbp',
-      period: null,
-      change: null,
-      error: String(err?.message || err),
-      source: { name: 'ONS HPI (latest bulletin)', url: SRC },
-    });
+  } catch (e) {
+    return res.status(502).json({ error: `UKHPI fetch failed: ${e.message}` });
   }
 }
+

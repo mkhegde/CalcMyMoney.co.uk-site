@@ -1,54 +1,48 @@
-// /api/uk-financial-stats.js
+/* eslint-env node */
 export const config = { runtime: 'nodejs' };
 
-const UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36';
+function buildOrigin(req) {
+  const proto =
+    req.headers['x-forwarded-proto'] ||
+    (process.env.VERCEL ? 'https' : 'http');
+  const host = req.headers.host;
+  return `${proto}://${host}`;
+}
 
-async function get(path) {
-  const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), 9000);
-  try {
-    const r = await fetch(path, {
-      headers: { accept: 'application/json', 'user-agent': UA },
-      signal: ctl.signal,
-      cache: 'no-store',
-    });
-    if (!r.ok) throw new Error(`${path} → ${r.status}`);
-    return await r.json();
-  } finally {
-    clearTimeout(t);
-  }
+async function fetchJson(url) {
+  const r = await fetch(url, { headers: { accept: 'application/json' } });
+  if (!r.ok) throw new Error(`Fetch failed ${r.status} ${url}`);
+  return r.json();
 }
 
 export default async function handler(req, res) {
-  const out = { stats: {}, errors: {} };
+  const origin = buildOrigin(req);
 
-  await Promise.all([
-    get(
-      `${req.headers['x-forwarded-proto'] ? `${req.headers['x-forwarded-proto']}://` : ''}${req.headers.host}/api/boe/bank-rate`
-    ).then(
-      (j) => (out.stats.bankRate = j),
-      (e) => (out.errors.bankRate = String(e))
-    ),
-    get(
-      `${req.headers['x-forwarded-proto'] ? `${req.headers['x-forwarded-proto']}://` : ''}${req.headers.host}/api/ons/cpih`
-    ).then(
-      (j) => (out.stats.cpih = j),
-      (e) => (out.errors.cpih = String(e))
-    ),
-    get(
-      `${req.headers['x-forwarded-proto'] ? `${req.headers['x-forwarded-proto']}://` : ''}${req.headers.host}/api/ukhpi/average-price`
-    ).then(
-      (j) => (out.stats.housePrice = j),
-      (e) => (out.errors.housePrice = String(e))
-    ),
-    get(
-      `${req.headers['x-forwarded-proto'] ? `${req.headers['x-forwarded-proto']}://` : ''}${req.headers.host}/api/ofgem/price-cap`
-    ).then(
-      (j) => (out.stats.ofgemCap = j),
-      (e) => (out.errors.ofgemCap = String(e))
-    ),
-  ]);
+  const endpoints = {
+    bankRate: new URL('/api/boe/bank-rate', origin).toString(),
+    cpih: new URL('/api/ons/cpih', origin).toString(),
+    housePrice: new URL('/api/ukhpi/average-price', origin).toString(),
+    ofgemCap: new URL('/api/ofgem/price-cap', origin).toString(),
+  };
 
-  res.status(200).json(out);
+  const stats = {};
+  const errors = {};
+
+  await Promise.all(
+    Object.entries(endpoints).map(async ([key, url]) => {
+      try {
+        const data = await fetchJson(url);
+        // Standardize: consider it an error if value is null/undefined/NaN
+        const v = Number(data?.value);
+        if (!Number.isFinite(v)) throw new Error('Empty or invalid value');
+        stats[key] = data;
+      } catch (e) {
+        errors[key] = e.message || 'fetch failed';
+      }
+    })
+  );
+
+  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
+  return res.status(Object.keys(errors).length ? 206 : 200).json({ stats, errors });
 }
+

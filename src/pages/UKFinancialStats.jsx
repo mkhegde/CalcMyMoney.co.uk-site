@@ -65,7 +65,7 @@ const STAT_CONFIG = [
       const e = stat?.period?.end ? new Date(stat.period.end) : null;
       if (s && !Number.isNaN(s.getTime())) {
         const sL = monthFormatter.format(s);
-        if (e && !Number.isNaN(e.getTime())) return `Cap for ${sL} – ${monthFormatter.format(e)}.`;
+        if (e && !Number.isNaN(e.getTime())) return `Cap for ${sL} - ${monthFormatter.format(e)}.`;
         return `Cap effective from ${sL}.`;
       }
       return 'Typical household annualised cap published quarterly by Ofgem.';
@@ -76,10 +76,16 @@ const STAT_CONFIG = [
 /* --------------------------- helpers --------------------------- */
 const isNum = (n) => typeof n === 'number' && Number.isFinite(n);
 
+// Replace any HTML-encoded pound with a literal £ before parsing
+function normalisePounds(s) {
+  return String(s).replace(/&pound;|&#163;/gi, '£');
+}
+
 function coerceNumber(val) {
   if (typeof val === 'number') return Number.isFinite(val) ? val : NaN;
   if (typeof val === 'string') {
-    const num = parseFloat(val.replace(/[,%\s£]/g, ''));
+    const s = normalisePounds(val);
+    const num = parseFloat(s.replace(/[£,%\s,]/g, ''));
     return Number.isFinite(num) ? num : NaN;
   }
   return NaN;
@@ -91,7 +97,7 @@ function normalizeUnit(u) {
   if (s === 'percent' || s === 'percentage' || s === '%') return 'percent';
   if (s === 'percentagepoints' || s === 'percentage_points' || s === 'pp')
     return 'percentagePoints';
-  if (s.includes('gbp') || s === 'currency' || s === '£') return 'gbp';
+  if (s.includes('gbp') || s === 'currency' || s.includes('£')) return 'gbp';
   return s;
 }
 
@@ -173,7 +179,7 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
   let description = '';
   if (status === 'ready')
     description = stat?.description ?? stat?.label ?? stat?.period?.label ?? '';
-  else if (status === 'loading') description = 'Fetching latest figures…';
+  else if (status === 'loading') description = 'Fetching latest figures.';
   else if (status === 'error') description = error ?? 'Unable to load data right now.';
   else description = 'No data available right now.';
 
@@ -186,7 +192,7 @@ const StatCard = ({ title, icon: Icon, link, status, stat, error }) => {
       <CardContent className="flex-grow flex flex-col justify-center">
         <div className="text-3xl font-bold">
           {status === 'ready' && formattedValue}
-          {status !== 'ready' && <span className="text-gray-400">—</span>}
+          {status !== 'ready' && <span className="text-gray-400">-</span>}
         </div>
         {status === 'ready' && formattedChange && (
           <div className="text-sm text-gray-600 flex items-center gap-1">
@@ -357,3 +363,4 @@ export default function UKFinancialStats() {
     </div>
   );
 }
+
