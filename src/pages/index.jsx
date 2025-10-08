@@ -21,6 +21,7 @@ import Disclaimer from './Disclaimer';
 import BlogSmartMoneySavingTips from './BlogSmartMoneySavingTips';
 import BlogDebtRepaymentStrategies from './BlogDebtRepaymentStrategies';
 import BlogFinancialPsychology from './BlogFinancialPsychology';
+import BlogWhyCalculationsMatter from './BlogWhyCalculationsMatter.jsx';
 import JobSalaryPage from './JobSalaryPage';
 import CostOfLivingPage from './CostOfLivingPage';
 import UKFinancialStats from './UKFinancialStats';
@@ -486,6 +487,7 @@ function PagesContent() {
           <Route path="/blog-smart-money-saving-tips" element={<BlogSmartMoneySavingTips />} />
           <Route path="/blog-debt-repayment-strategies" element={<BlogDebtRepaymentStrategies />} />
           <Route path="/blog-financial-psychology" element={<BlogFinancialPsychology />} />
+          <Route path="/blog/why-small-calculations-matter" element={<BlogWhyCalculationsMatter />} />
           <Route path="/job-salary-page" element={<JobSalaryPage />} />
           <Route path="/jobsalarypage" element={<JobSalaryPage />} />
           <Route path="/cost-of-living-page" element={<LegacyCostOfLivingRedirect />} />
