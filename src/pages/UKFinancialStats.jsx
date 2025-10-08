@@ -7,6 +7,8 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import buildFaqJsonLd from '@/components/seo/buildFaqJsonLd';
 import RelatedCalculators from '../components/calculators/RelatedCalculators';
 import { createPageUrl } from '@/utils/createPageUrl';
+import SeoHead from '@/components/seo/SeoHead';
+import buildDatasetsJsonLd from '@/components/seo/buildDatasetsJsonLd';
 
 /* --------------------------- formatters --------------------------- */
 const percentFormatter = new Intl.NumberFormat('en-GB', {
@@ -290,6 +292,13 @@ export default function UKFinancialStats() {
   // Build FAQ JSON-LD for SEO
   const faqJsonLd = buildFaqJsonLd(STATS_FAQS);
 
+  // Dataset JSON-LD context
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.calcmymoney.co.uk';
+  const canonical = `${origin}/uk-financial-stats`;
+  const datasetsJsonLd = useMemo(() => {
+    return buildDatasetsJsonLd({ origin, canonical, stats });
+  }, [origin, canonical, stats]);
+
   useEffect(() => {
     setDebug(new URLSearchParams(window.location.search).get('debug') === '1');
   }, []);
@@ -370,6 +379,12 @@ export default function UKFinancialStats() {
 
   return (
     <div className="bg-white dark:bg-gray-900">
+      <SeoHead
+        title="UK Financial Statistics (Live) | CalcMyMoney"
+        desc="Live UK Bank Rate, CPIH inflation, UK average house price and Ofgem energy price cap—pulled directly from official sources."
+        canonical={canonical}
+      />
+      {datasetsJsonLd && datasetsJsonLd.length > 0 && <JsonLd data={datasetsJsonLd} />}
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
