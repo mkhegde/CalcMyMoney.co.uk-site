@@ -20,6 +20,7 @@ import CookieConsentBanner from '../components/general/CookieConsentBanner';
 import { calculatorCategories } from '../components/data/calculatorConfig';
 import { pageSeo, defaultOgImage, defaultOgAlt } from '../components/data/pageSeo';
 import CalculatorIndex from '../components/general/CalculatorIndex';
+import RelatedAuto from '@/components/calculators/RelatedAuto';
 import SeoHead from '@/components/seo/SeoHead';
 import { SeoProvider } from '@/components/seo/SeoContext';
 
@@ -585,6 +586,10 @@ export default function Layout({ children, currentPageName }) {
             </div>
           )}
           {children}
+          {/* Auto-related calculators for calculator pages */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+            <RelatedAuto />
+          </div>
         </main>
 
         {/* NEW: Global collapsed calculator index to add strong internal linking */}
