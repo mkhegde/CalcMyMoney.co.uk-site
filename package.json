@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "gen:images": "sharp ./logo-high-res.png --width 32 --output public/logo-32.webp --format webp && sharp ./logo-high-res.png --width 64 --output public/logo-64.webp --format webp && sharp ./logo-high-res.png --width 128 --output public/logo-128.webp --format webp && sharp ./logo-high-res.png --width 64 --output public/logo-64.avif --format avif && sharp ./logo-high-res.png --width 16 --output public/favicon-16x16.png --format png && sharp ./logo-high-res.png --width 32 --output public/favicon-32x32.png --format png && sharp ./logo-high-res.png --width 180 --output public/apple-touch-icon.png --format png && sharp ./logo-high-res.png --width 192 --output public/icon-192.png --format png && sharp ./logo-high-res.png --width 512 --output public/icon-512.png --format png"
   },
   "dependencies": {
     "@base44/sdk": "^0.1.2",
@@ -69,6 +70,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "sharp-cli": "^4.2.0",
     "@babel/eslint-parser": "^7.28.4",
     "@babel/preset-react": "^7.27.1",
     "@eslint/js": "^9.36.0",
