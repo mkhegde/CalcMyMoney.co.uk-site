@@ -4,6 +4,12 @@ export default function Logo({ size = 32, className = '', alt = 'Calculate My Mo
   const px = Number(size) || 32;
   // Choose closest fallback PNG
   const fallback = px >= 64 ? '/favicon-32x32.png' : '/favicon-16x16.png';
+  const inlineSvg = `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${px}' height='${px}' viewBox='0 0 32 32'>
+      <rect width='32' height='32' rx='6' fill='#0f172a'/>
+      <text x='16' y='21' text-anchor='middle' font-family='system-ui,Segoe UI,Roboto,Helvetica,Arial' font-size='16' fill='#fff'>£</text>
+    </svg>`
+  )}`;
   return (
     <picture>
       <source
@@ -23,9 +29,11 @@ export default function Logo({ size = 32, className = '', alt = 'Calculate My Mo
         alt={alt}
         decoding="async"
         fetchPriority="high"
+        onError={(e) => {
+          if (e?.currentTarget) e.currentTarget.src = inlineSvg;
+        }}
         className={className}
       />
     </picture>
   );
 }
-
