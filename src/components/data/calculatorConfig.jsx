@@ -77,6 +77,7 @@ export const calculatorCategories = [
             icon: Calculator,
             status: 'active',
             description: 'Convert hourly rates to annual salary',
+            tags: ['salary', 'payroll', 'converter'],
           },
           {
             name: 'Minimum Wage Calculator',

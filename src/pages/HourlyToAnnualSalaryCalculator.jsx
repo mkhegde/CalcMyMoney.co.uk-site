@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,7 +7,10 @@ import { Button } from '@/components/ui/button';
 import { PoundSterling, Calculator, ArrowRightLeft, Calendar, Clock } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import RelatedCalculators from '../components/calculators/RelatedCalculators';
 export default function HourlyToAnnualSalaryCalculator() {
+  const { pathname } = useLocation();
   const [hourlyRate, setHourlyRate] = useState('');
   const [hoursPerWeek, setHoursPerWeek] = useState('37.5');
   const [results, setResults] = useState(null);
@@ -132,6 +136,14 @@ export default function HourlyToAnnualSalaryCalculator() {
             )}
           </div>
         </div>
+
+        {/* Related calculators (graceful fallback if algorithm yields none) */}
+        {(() => {
+          const related = getRelatedCalculators(pathname, { max: 3 });
+          return Array.isArray(related) && related.length > 0 ? (
+            <RelatedCalculators calculators={related} />
+          ) : null;
+        })()}
       </div>
     </div>
   );
