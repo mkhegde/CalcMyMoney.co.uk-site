@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useLayoutEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { calculatorCategories } from '@/components/data/calculatorConfig';
@@ -29,6 +29,14 @@ export default function RelatedAuto() {
 
   const calculators = useMemo(() => flattenCalculators(), []);
 
+  const [showAuto, setShowAuto] = useState(false);
+  // Decide visibility before paint to avoid flicker
+  useLayoutEffect(() => {
+    if (typeof document === 'undefined') return;
+    const existing = document.querySelector('[data-related-calculators]');
+    setShowAuto(!existing);
+  }, [pathname]);
+
   // Find current calculator by URL (exact match)
   const current = useMemo(
     () => calculators.find((c) => typeof c?.url === 'string' && c.url === pathname) || null,
@@ -36,7 +44,7 @@ export default function RelatedAuto() {
   );
 
   // If we're not on a calculator URL, render nothing
-  if (!current) return null;
+  if (!current || !showAuto) return null;
 
   const pool = calculators.filter(
     (c) => c && c.status === 'active' && c.url && c.url !== current.url
