@@ -845,6 +845,70 @@ export const calculatorCategories = [
   },
 ];
 
+// --- derive tags for calculators if missing ---
+function toKebab(str = '') {
+  return String(str)
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function addGenericTags(nameBlob) {
+  const s = nameBlob.toLowerCase();
+  const out = new Set();
+  const add = (...items) => items.forEach((t) => t && out.add(t));
+
+  if (/(salary|wage|paye|payroll)/.test(s)) add('salary', 'tax', 'payroll');
+  if (/(tax|vat|cgt|nic|income tax)/.test(s)) add('tax');
+  if (/(mortgage|remortgage|property|stamp duty|home|rent vs buy|buy to let)/.test(s))
+    add('mortgage', 'property', 'housing');
+  if (/(savings|interest|investment|isa|compound|future value|retirement)/.test(s))
+    add('savings', 'investing', 'interest');
+  if (/(loan|debt|credit card|repayment)/.test(s)) add('loans', 'debt', 'repayments');
+  if (/(budget|expense|spend|wedding|travel)/.test(s)) add('budget', 'expenses', 'planning');
+  if (/(energy|utility|bill)/.test(s)) add('energy', 'utilities', 'bills');
+  if (/(car|transport|commute|mileage)/.test(s)) add('car', 'transport', 'travel');
+  if (/(pension)/.test(s)) add('pension', 'savings');
+  if (/(statutory|maternity|sick|benefit|child)/.test(s)) add('benefits', 'statutory', 'pay');
+  return Array.from(out);
+}
+
+// Ensure every calculator has a tags array populated with at least 2 items.
+calculatorCategories.forEach((cat) => {
+  const catTag = toKebab(cat?.name || '');
+  (cat?.subCategories || []).forEach((sub) => {
+    const subTag = toKebab(sub?.name || '');
+    (sub?.calculators || []).forEach((calc) => {
+      if (!calc) return;
+      let tags = Array.isArray(calc.tags) ? calc.tags.filter(Boolean) : [];
+      // Derive from category/subcategory
+      if (catTag) tags.push(catTag);
+      if (subTag) tags.push(subTag);
+      // Add a few generic topic tags based on names
+      const blob = `${cat?.name || ''} ${sub?.name || ''} ${calc?.name || ''}`;
+      tags.push(...addGenericTags(blob));
+      // Normalise, de-dup and keep kebab-case strings
+      const uniq = Array.from(
+        new Set(
+          tags
+            .map((t) => (typeof t === 'string' ? t : ''))
+            .filter(Boolean)
+            .map((t) => toKebab(t))
+            .filter(Boolean)
+        )
+      );
+      // Ensure at least two tags
+      while (uniq.length < 2) {
+        if (!uniq.includes(catTag) && catTag) uniq.push(catTag);
+        else if (!uniq.includes(subTag) && subTag) uniq.push(subTag);
+        else break;
+      }
+      calc.tags = uniq;
+    });
+  });
+});
+
 // --- HELPER FUNCTIONS FOR EXPORT ---
 
 /**
