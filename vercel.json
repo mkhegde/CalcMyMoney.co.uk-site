@@ -38,8 +38,14 @@
       "permanent": true
     },
 
-    { "source": "/calculators/-:slug", "destination": "/:slug", "permanent": true },
-    { "source": "/calculators/:slug", "destination": "/:slug", "permanent": true }
+    { "source": "/calculators/-:slug+", "destination": "/:slug", "permanent": true },
+    { "source": "/calculators/:slug", "destination": "/:slug", "permanent": true },
+    {
+      "source": "/",
+      "has": [{ "type": "query", "key": "q" }],
+      "destination": "/",
+      "permanent": true
+    }
   ],
 
   "rewrites": [

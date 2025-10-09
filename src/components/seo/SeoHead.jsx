@@ -31,9 +31,21 @@ export default function SeoHead({
   twitterImageAlt,
   jsonLd,
 }) {
+  // Compute a clean canonical (no query/hash) when not explicitly provided
+  let computedCanonical = undefined;
+  if (!canonical && typeof window !== 'undefined' && window.location) {
+    try {
+      const url = new URL(window.location.pathname || '/', window.location.origin || '');
+      computedCanonical = url.toString();
+    } catch {
+      computedCanonical = undefined;
+    }
+  }
+  const canonicalHref = canonical || computedCanonical;
+
   const resolvedOgTitle = ogTitle || title;
   const resolvedOgDescription = ogDescription || description;
-  const resolvedOgUrl = ogUrl || canonical;
+  const resolvedOgUrl = ogUrl || canonicalHref;
   const resolvedTwitterTitle = twitterTitle || resolvedOgTitle || title;
   const resolvedTwitterDescription = twitterDescription || resolvedOgDescription || description;
   const resolvedTwitterImage = twitterImage || ogImage;
@@ -46,7 +58,7 @@ export default function SeoHead({
     <Helmet>
       {title && <title>{title}</title>}
       {description && <meta name="description" content={description} />}
-      {canonical && <link rel="canonical" href={canonical} />}
+      {canonicalHref && <link rel="canonical" href={canonicalHref} />}
       {robots && <meta name="robots" content={robots} />}
       {themeColor && <meta name="theme-color" content={themeColor} />}
       {articleAuthor && <meta name="author" content={articleAuthor} />}

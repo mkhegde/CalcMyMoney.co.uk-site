@@ -107,6 +107,8 @@ try {
   const entries = new Map();
 
   async function addEntry(path, { pageName, fallbackFiles = [] } = {}) {
+    // Skip any URLs with params or fragments
+    if (/[?#]/.test(String(path || ''))) return;
     const normalised = normalisePath(path);
     if (!normalised) return;
 
@@ -160,6 +162,10 @@ try {
       fallbackFiles: ['src/components/data/seo-data.jsx'],
     });
   }
+
+  // Ensure key hubs are present
+  await addEntry('/uk-financial-stats', { pageName: pagePathMap.get('/uk-financial-stats') || 'UKFinancialStats' });
+  await addEntry('/link-to-us', { pageName: pagePathMap.get('/link-to-us') || 'LinkToUs' });
 
   const sortedEntries = Array.from(entries.values()).sort((a, b) => a.loc.localeCompare(b.loc));
   const xmlLines = [
