@@ -10,18 +10,23 @@ export default function Logo({ size = 32, className = '', alt = 'Calculate My Mo
       <text x='16' y='21' text-anchor='middle' font-family='system-ui,Segoe UI,Roboto,Helvetica,Arial' font-size='16' fill='#fff'>£</text>
     </svg>`
   )}`;
+  const hasOptimized = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD;
   return (
     <picture>
-      <source
-        type="image/avif"
-        srcSet={`/logo-32.avif 32w, /logo-64.avif 64w`}
-        sizes={`${px}px`}
-      />
-      <source
-        type="image/webp"
-        srcSet={`/logo-32.webp 32w, /logo-64.webp 64w, /logo-128.webp 128w`}
-        sizes={`${px}px`}
-      />
+      {hasOptimized && (
+        <>
+          <source
+            type="image/avif"
+            srcSet={`/logo-32.avif 32w, /logo-64.avif 64w`}
+            sizes={`${px}px`}
+          />
+          <source
+            type="image/webp"
+            srcSet={`/logo-32.webp 32w, /logo-64.webp 64w, /logo-128.webp 128w`}
+            sizes={`${px}px`}
+          />
+        </>
+      )}
       <img
         src={fallback}
         width={px}
