@@ -97,7 +97,7 @@ export default function Layout({ children, currentPageName }) {
         '@type': 'Organization',
         name: 'Calculate My Money',
         url: `${normalizedOrigin}/`,
-        logo: 'https://www.calcmymoney.co.uk/logo-high-res.png',
+        logo: 'https://www.calcmymoney.co.uk/logo-high-res.webp',
         sameAs: [],
       },
       {
@@ -446,7 +446,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="flex-shrink-0">
               <Link to={createPageUrl('Home')} className="flex items-center space-x-2">
                                {' '}
-                <img src="/logo-high-res.png" alt="Calculate My Money Logo" className="h-8 w-8" />
+                <img src="/logo-high-res.webp" alt="Calculate My Money Logo" className="h-8 w-8" />
                 <span className="text-xl font-bold text-foreground">Calculate My Money</span>   
                  {' '}
               </Link>
@@ -490,7 +490,7 @@ export default function Layout({ children, currentPageName }) {
                       className="flex items-center space-x-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <img src="/logo-high-res.png" alt="Calculate My Money Logo" className="h-8 w-8" />
+                      <img src="/logo-high-res.webp" alt="Calculate My Money Logo" className="h-8 w-8" />
                       <span className="text-xl font-bold text-foreground">Calculate My Money</span>
                     </Link>
                   </SheetHeader>
@@ -598,7 +598,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="grid md:grid-cols-5 gap-8">
               <div className="md:col-span-1">
                 <Link to={createPageUrl('Home')} className="flex items-center space-x-2 mb-4">
-                  <img src="/logo-high-res.png" alt="Calculate My Money Logo" className="h-8 w-8" />
+                  <img src="/logo-high-res.webp" alt="Calculate My Money Logo" className="h-8 w-8" />
                   <span className="text-xl font-bold text-foreground">Calculate My Money</span>
                 </Link>
                 <p className="text-sm text-muted-foreground">

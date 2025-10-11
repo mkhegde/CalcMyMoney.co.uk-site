@@ -100,7 +100,7 @@ export default function BlogDebtRepaymentStrategies() {
         name: 'Calculate My Money',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://www.calcmymoney.co.uk/images/logo-high-res.png',
+          url: 'https://www.calcmymoney.co.uk/images/logo-high-res.webp',
         },
       },
     };
@@ -145,7 +145,12 @@ export default function BlogDebtRepaymentStrategies() {
             <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium dark:bg-red-900/50 dark:text-red-300">
               {post.category}
             </span>
-            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mt-4 mb-4">
+            <Heading
+              as="h1"
+              size="h1"
+              weight="bold"
+              className="text-gray-900 dark:text-gray-100 mt-4 mb-4"
+            >
               {post.title}
             </Heading>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
@@ -166,7 +171,11 @@ export default function BlogDebtRepaymentStrategies() {
 
           <img
             src={createUnsplashUrl(heroImage.baseUrl, heroImage.params, heroImage.width)}
-            srcSet={createUnsplashSrcSet(heroImage.baseUrl, heroImage.params, heroImage.srcSetWidths)}
+            srcSet={createUnsplashSrcSet(
+              heroImage.baseUrl,
+              heroImage.params,
+              heroImage.srcSetWidths
+            )}
             sizes={heroImage.sizes}
             alt={post.imageAlt}
             width={heroImage.width}
@@ -185,7 +194,9 @@ export default function BlogDebtRepaymentStrategies() {
 
             <Separator className="my-8" />
 
-            <Heading as="h2" size="h2">Understanding the Debt Avalanche Method</Heading>
+            <Heading as="h2" size="h2">
+              Understanding the Debt Avalanche Method
+            </Heading>
             <div className="flex items-center gap-3 mb-4">
               <TrendingDown className="w-6 h-6 text-red-600" />
               <p className="text-lg font-semibold text-red-800 dark:text-red-300 mb-0">
@@ -237,7 +248,9 @@ export default function BlogDebtRepaymentStrategies() {
               </p>
             </div>
 
-            <Heading as="h2" size="h2">Understanding the Debt Snowball Method</Heading>
+            <Heading as="h2" size="h2">
+              Understanding the Debt Snowball Method
+            </Heading>
             <div className="flex items-center gap-3 mb-4">
               <Target className="w-6 h-6 text-blue-600" />
               <p className="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-0">
@@ -264,7 +277,9 @@ export default function BlogDebtRepaymentStrategies() {
               </ol>
             </div>
 
-            <Heading as="h2" size="h2">Real UK Example: Sarah's Debt Journey</Heading>
+            <Heading as="h2" size="h2">
+              Real UK Example: Sarah's Debt Journey
+            </Heading>
             <p>Let's look at Sarah, a teacher from Birmingham, with typical UK debts:</p>
 
             <div className="grid md:grid-cols-2 gap-6 my-8">
@@ -315,7 +330,9 @@ export default function BlogDebtRepaymentStrategies() {
               </Card>
             </div>
 
-            <Heading as="h2" size="h2">Which Method Should You Choose?</Heading>
+            <Heading as="h2" size="h2">
+              Which Method Should You Choose?
+            </Heading>
 
             <div className="grid md:grid-cols-2 gap-6 my-8">
               <Card className="bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700">
@@ -349,7 +366,9 @@ export default function BlogDebtRepaymentStrategies() {
               </Card>
             </div>
 
-            <Heading as="h2" size="h2">UK-Specific Considerations</Heading>
+            <Heading as="h2" size="h2">
+              UK-Specific Considerations
+            </Heading>
             <p>When choosing your debt repayment strategy in the UK, keep these factors in mind:</p>
             <ul>
               <li>
@@ -397,7 +416,9 @@ export default function BlogDebtRepaymentStrategies() {
 
             <Separator className="my-8" />
 
-            <Heading as="h2" size="h2">The Bottom Line</Heading>
+            <Heading as="h2" size="h2">
+              The Bottom Line
+            </Heading>
             <p>
               The "perfect" debt repayment strategy is the one you'll actually stick to. While the
               debt avalanche saves more money mathematically, the debt snowball's psychological
