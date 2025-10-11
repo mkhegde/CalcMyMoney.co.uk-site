@@ -52,6 +52,32 @@ export default function CookieConsentBanner() {
     }
   }, []);
 
+  const broadcastPreferences = (preferences) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.dispatchEvent(
+        new CustomEvent('cookie-preferences-changed', {
+          detail: preferences,
+        })
+      );
+    } catch (error) {
+      if (import.meta?.env?.DEV) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to dispatch cookie preferences change', error);
+      }
+    }
+  };
+
+  const persistConsent = (status, preferences) => {
+    localStorage.setItem('cookieConsent', status);
+    localStorage.setItem('cookiePreferences', JSON.stringify(preferences));
+    setCookiePreferences(preferences);
+    setShowBanner(false);
+    setShowManageDialog(false);
+    setShowFloatingManage(true);
+    broadcastPreferences(preferences);
+  };
+
   const handleAcceptAll = () => {
     const allAccepted = {
       essential: true,
@@ -59,12 +85,7 @@ export default function CookieConsentBanner() {
       marketing: true,
       preferences: true,
     };
-    localStorage.setItem('cookieConsent', 'accepted');
-    localStorage.setItem('cookiePreferences', JSON.stringify(allAccepted));
-    setCookiePreferences(allAccepted);
-    setShowBanner(false);
-    setShowManageDialog(false);
-    setShowFloatingManage(true);
+    persistConsent('accepted', allAccepted);
   };
 
   const handleDeclineAll = () => {
@@ -74,20 +95,11 @@ export default function CookieConsentBanner() {
       marketing: false,
       preferences: false,
     };
-    localStorage.setItem('cookieConsent', 'declined');
-    localStorage.setItem('cookiePreferences', JSON.stringify(essentialOnly));
-    setCookiePreferences(essentialOnly);
-    setShowBanner(false);
-    setShowManageDialog(false);
-    setShowFloatingManage(true);
+    persistConsent('declined', essentialOnly);
   };
 
   const handleSavePreferences = () => {
-    localStorage.setItem('cookieConsent', 'customized');
-    localStorage.setItem('cookiePreferences', JSON.stringify(cookiePreferences));
-    setShowBanner(false);
-    setShowManageDialog(false);
-    setShowFloatingManage(true);
+    persistConsent('customized', { ...cookiePreferences, essential: true });
   };
 
   const updatePreference = (type, value) => {

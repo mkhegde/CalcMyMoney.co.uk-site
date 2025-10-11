@@ -333,22 +333,50 @@ export default function Layout({ children, currentPageName }) {
     const gaMeasurementId = 'G-ESNP2YRGWB';
     if (!gaMeasurementId.startsWith('G-')) return undefined;
 
+    const getAnalyticsAllowed = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('cookiePreferences') || '{}');
+        return !!stored.analytics;
+      } catch {
+        return false;
+      }
+    };
+
     let loaded = false;
+    let listenersAttached = false;
     let idleHandle = null;
     const cleanupFns = [];
+    const preconnectLinks = [];
+    const events = ['pointerdown', 'keydown', 'scroll'];
+
+    const cancelIdle = () => {
+      if (idleHandle === null) return;
+      if (typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(idleHandle);
+      } else {
+        clearTimeout(idleHandle);
+      }
+      idleHandle = null;
+    };
+
+    function removeEventListeners() {
+      if (!listenersAttached) return;
+      events.forEach((eventName) => window.removeEventListener(eventName, triggerLoad));
+      listenersAttached = false;
+    }
 
     const loadGtm = () => {
       if (loaded) return;
       loaded = true;
 
-      const preconnectHosts = ['https://www.googletagmanager.com', 'https://www.google-analytics.com'];
-      const preconnectLinks = preconnectHosts.map((href) => {
+      const hosts = ['https://www.googletagmanager.com', 'https://www.google-analytics.com'];
+      hosts.forEach((href) => {
         const link = document.createElement('link');
         link.rel = 'preconnect';
         link.href = href;
         link.crossOrigin = 'anonymous';
         document.head.appendChild(link);
-        return link;
+        preconnectLinks.push(link);
       });
 
       const script = document.createElement('script');
@@ -380,35 +408,49 @@ export default function Layout({ children, currentPageName }) {
       });
     };
 
-    const cancelIdle = () => {
-      if (idleHandle === null) return;
-      if (typeof window.cancelIdleCallback === 'function') {
-        window.cancelIdleCallback(idleHandle);
-      } else {
-        clearTimeout(idleHandle);
-      }
-      idleHandle = null;
-    };
-
-    const triggerLoad = () => {
+    function triggerLoad() {
       cancelIdle();
+      removeEventListeners();
       loadGtm();
+    }
+
+    const startDeferredLoad = () => {
+      if (loaded) return;
+      if (!listenersAttached) {
+        events.forEach((eventName) =>
+          window.addEventListener(eventName, triggerLoad, { passive: true })
+        );
+        listenersAttached = true;
+      }
+      if (idleHandle === null) {
+        if (typeof window.requestIdleCallback === 'function') {
+          idleHandle = window.requestIdleCallback(triggerLoad, { timeout: 5000 });
+        } else {
+          idleHandle = window.setTimeout(triggerLoad, 5000);
+        }
+      }
     };
 
-    const events = ['pointerdown', 'keydown', 'scroll'];
-    events.forEach((eventName) =>
-      window.addEventListener(eventName, triggerLoad, { once: true, passive: true })
-    );
+    const onPreferencesChanged = (event) => {
+      const prefs = event?.detail;
+      if (prefs?.analytics || (!prefs && getAnalyticsAllowed())) {
+        startDeferredLoad();
+        window.removeEventListener('cookie-preferences-changed', onPreferencesChanged);
+      }
+    };
 
-    if (typeof window.requestIdleCallback === 'function') {
-      idleHandle = window.requestIdleCallback(triggerLoad, { timeout: 5000 });
+    if (getAnalyticsAllowed()) {
+      startDeferredLoad();
     } else {
-      idleHandle = window.setTimeout(triggerLoad, 5000);
+      window.addEventListener('cookie-preferences-changed', onPreferencesChanged);
+      cleanupFns.push(() =>
+        window.removeEventListener('cookie-preferences-changed', onPreferencesChanged)
+      );
     }
 
     cleanupFns.push(() => {
       cancelIdle();
-      events.forEach((eventName) => window.removeEventListener(eventName, triggerLoad));
+      removeEventListeners();
     });
 
     return () => {
