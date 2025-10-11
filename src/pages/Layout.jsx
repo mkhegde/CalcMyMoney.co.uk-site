@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Menu, ChevronDown, ChevronRight, ArrowRight } from 'lucide-react';
@@ -17,14 +17,14 @@ import {
 } from '@/components/ui/navigation-menu';
 import ScrollToTop from '../components/general/ScrollToTop';
 import CookieConsentBanner from '../components/general/CookieConsentBanner';
-import { calculatorCategories } from '../components/data/calculatorConfig';
 import { pageSeo, defaultOgImage, defaultOgAlt } from '../components/data/pageSeo';
-import CalculatorIndex from '../components/general/CalculatorIndex';
-import RelatedAuto from '@/components/calculators/RelatedAuto';
 import SeoHead from '@/components/seo/SeoHead';
 import { SeoProvider } from '@/components/seo/SeoContext';
 
 import Heading from '@/components/common/Heading';
+
+const LazyCalculatorIndex = lazy(() => import('../components/general/CalculatorIndex.jsx'));
+const LazyRelatedAuto = lazy(() => import('@/components/calculators/RelatedAuto.jsx'));
 
 const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
 
@@ -33,7 +33,28 @@ export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openCategories, setOpenCategories] = useState({});
   const [seoOverrides, setSeoOverrides] = useState({});
+  const [calculatorCategories, setCalculatorCategories] = useState([]);
   const isHomePage = location.pathname === createPageUrl('Home');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    import('../components/data/calculatorConfig.jsx')
+      .then((mod) => {
+        if (cancelled) return;
+        setCalculatorCategories(mod?.calculatorCategories || []);
+      })
+      .catch((error) => {
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to load calculator categories', error);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const costOfLivingBaseSlug = useMemo(
     () => COST_OF_LIVING_BASE_PATH.replace(/^\/+|\/+$/g, ''),
@@ -307,58 +328,92 @@ export default function Layout({ children, currentPageName }) {
   }, [currentPageName, location.pathname, fallbackH1Pages]); // CHANGED: added fallbackH1Pages
 
   useEffect(() => {
-    // Add Google Analytics script
-    const gaMeasurementId = 'G-ESNP2YRGWB';
+    if (typeof window === 'undefined') return undefined;
 
-    // Performance: preconnect to frequently used domains
-    const preconnects = [];
-    const addPreconnect = (href) => {
-      const link = document.createElement('link');
-      link.rel = 'preconnect';
-      link.href = href;
-      // crossOrigin="anonymous" is often needed for fonts and other assets served from a different origin,
-      // but might not be strictly necessary for all preconnects. Including for consistency based on outline.
-      if (href.startsWith('https://')) {
+    const gaMeasurementId = 'G-ESNP2YRGWB';
+    if (!gaMeasurementId.startsWith('G-')) return undefined;
+
+    let loaded = false;
+    let idleHandle = null;
+    const cleanupFns = [];
+
+    const loadGtm = () => {
+      if (loaded) return;
+      loaded = true;
+
+      const preconnectHosts = ['https://www.googletagmanager.com', 'https://www.google-analytics.com'];
+      const preconnectLinks = preconnectHosts.map((href) => {
+        const link = document.createElement('link');
+        link.rel = 'preconnect';
+        link.href = href;
         link.crossOrigin = 'anonymous';
-      }
-      document.head.appendChild(link);
-      preconnects.push(link);
+        document.head.appendChild(link);
+        return link;
+      });
+
+      const script = document.createElement('script');
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`;
+      script.async = true;
+      document.head.appendChild(script);
+
+      const inline = document.createElement('script');
+      inline.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${gaMeasurementId}', { send_page_view: false });
+      `;
+      document.head.appendChild(inline);
+
+      cleanupFns.push(() => {
+        preconnectLinks.forEach((link) => {
+          if (document.head.contains(link)) {
+            document.head.removeChild(link);
+          }
+        });
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+        if (document.head.contains(inline)) {
+          document.head.removeChild(inline);
+        }
+      });
     };
 
-    addPreconnect('https://www.googletagmanager.com');
-    addPreconnect('https://images.unsplash.com'); // Example for external image hosts if used
-    addPreconnect('https://qtrypzzcjebvfcihiynt.supabase.co'); // For Supabase storage
-    addPreconnect('https://xifmvsuddgebmlleggqz.supabase.co'); // For Supabase storage (new og image)
+    const cancelIdle = () => {
+      if (idleHandle === null) return;
+      if (typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(idleHandle);
+      } else {
+        clearTimeout(idleHandle);
+      }
+      idleHandle = null;
+    };
 
-    if (gaMeasurementId.startsWith('G-')) {
-      const script1 = document.createElement('script');
-      script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`;
-      script1.async = true;
-      document.head.appendChild(script1);
+    const triggerLoad = () => {
+      cancelIdle();
+      loadGtm();
+    };
 
-      const script2 = document.createElement('script');
-      script2.innerHTML = `
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${gaMeasurementId}');
-        `;
-      document.head.appendChild(script2);
+    const events = ['pointerdown', 'keydown', 'scroll'];
+    events.forEach((eventName) =>
+      window.addEventListener(eventName, triggerLoad, { once: true, passive: true })
+    );
 
-      return () => {
-        // Clean up scripts on component unmount
-        if (document.head.contains(script1)) {
-          document.head.removeChild(script1);
-        }
-        if (document.head.contains(script2)) {
-          document.head.removeChild(script2);
-        }
-        // Clean up preconnects
-        preconnects.forEach((link) => {
-          if (document.head.contains(link)) document.head.removeChild(link);
-        });
-      };
+    if (typeof window.requestIdleCallback === 'function') {
+      idleHandle = window.requestIdleCallback(triggerLoad, { timeout: 5000 });
+    } else {
+      idleHandle = window.setTimeout(triggerLoad, 5000);
     }
+
+    cleanupFns.push(() => {
+      cancelIdle();
+      events.forEach((eventName) => window.removeEventListener(eventName, triggerLoad));
+    });
+
+    return () => {
+      cleanupFns.forEach((fn) => fn());
+    };
   }, []);
 
   useEffect(() => {
@@ -515,53 +570,59 @@ export default function Layout({ children, currentPageName }) {
                     {/* Calculator Categories with Collapsibles */}
                     <div className="space-y-2">
                       <h3 className="mb-3 font-semibold text-foreground">Browse Calculators</h3>
-                      {calculatorCategories.map((category) => (
-                        <Collapsible
-                          key={category.slug}
-                          open={openCategories[category.slug]}
-                          onOpenChange={() => toggleCategory(category.slug)}
-                        >
-                          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg p-2 text-left transition-colors hover:bg-neutral-soft">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <category.icon className="h-4 w-4" />
-                              <span className="font-medium text-foreground">{category.name}</span>
-                            </div>
-                            {openCategories[category.slug] ? (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="pl-6 mt-2 space-y-3">
-                            {category.subCategories.map((subCategory) => (
-                              <div key={subCategory.name} className="space-y-2">
-                                <h4 className="border-b border-card-muted pb-1 text-sm font-medium text-muted-foreground">
-                                  {subCategory.name}
-                                </h4>
-                                <div className="space-y-1 pl-2">
-                                  {subCategory.calculators.map((calc) => (
-                                    <SheetClose key={calc.name} asChild>
-                                      <Link
-                                        to={calc.url}
-                                        className={`block py-1 text-sm transition-colors ${
-                                          calc.status === 'active'
-                                            ? 'text-muted-foreground hover:text-primary'
-                                            : 'cursor-not-allowed text-muted-foreground/60'
-                                        }`}
-                                      >
-                                        {calc.name}{' '}
-                                        {calc.status === 'planned' && (
-                                          <span className="text-xs">(soon)</span>
-                                        )}
-                                      </Link>
-                                    </SheetClose>
-                                  ))}
-                                </div>
+                      {calculatorCategories.length > 0 ? (
+                        calculatorCategories.map((category) => (
+                          <Collapsible
+                            key={category.slug}
+                            open={openCategories[category.slug]}
+                            onOpenChange={() => toggleCategory(category.slug)}
+                          >
+                            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg p-2 text-left transition-colors hover:bg-neutral-soft">
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <category.icon className="h-4 w-4" />
+                                <span className="font-medium text-foreground">{category.name}</span>
                               </div>
-                            ))}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ))}
+                              {openCategories[category.slug] ? (
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="pl-6 mt-2 space-y-3">
+                              {(category.subCategories || []).map((subCategory) => (
+                                <div key={subCategory.name} className="space-y-2">
+                                  <h4 className="border-b border-card-muted pb-1 text-sm font-medium text-muted-foreground">
+                                    {subCategory.name}
+                                  </h4>
+                                  <div className="space-y-1 pl-2">
+                                    {(subCategory.calculators || []).map((calc) => (
+                                      <SheetClose key={calc.name} asChild>
+                                        <Link
+                                          to={calc.url}
+                                          className={`block py-1 text-sm transition-colors ${
+                                            calc.status === 'active'
+                                              ? 'text-muted-foreground hover:text-primary'
+                                              : 'cursor-not-allowed text-muted-foreground/60'
+                                          }`}
+                                        >
+                                          {calc.name}{' '}
+                                          {calc.status === 'planned' && (
+                                            <span className="text-xs">(soon)</span>
+                                          )}
+                                        </Link>
+                                      </SheetClose>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </CollapsibleContent>
+                          </Collapsible>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground px-2 py-1.5">
+                          Loading calculators&hellip;
+                        </p>
+                      )}
                     </div>
                   </div>
                 </SheetContent>
@@ -585,12 +646,16 @@ export default function Layout({ children, currentPageName }) {
           {children}
           {/* Auto-related calculators for calculator pages */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-            <RelatedAuto />
+            <Suspense fallback={null}>
+              <LazyRelatedAuto />
+            </Suspense>
           </div>
         </main>
 
         {/* NEW: Global collapsed calculator index to add strong internal linking */}
-        <CalculatorIndex />
+        <Suspense fallback={null}>
+          <LazyCalculatorIndex />
+        </Suspense>
 
         {/* Footer */}
         <footer className="mt-16 border-t border-border bg-background non-printable">
@@ -656,25 +721,29 @@ export default function Layout({ children, currentPageName }) {
               <div>
                 <h4 className="mb-4 font-semibold text-foreground">Categories</h4>
                 <ul className="space-y-2 text-muted-foreground">
-                  {calculatorCategories.slice(0, 6).map((category) => (
-                    <li key={category.slug}>
-                      {isHomePage ? (
-                        <a
-                          href={`#${category.slug}`}
-                          className="text-muted-foreground transition-colors hover:text-primary hover:underline"
-                        >
-                          {category.name}
-                        </a>
-                      ) : (
-                        <Link
-                          to={`${createPageUrl('Home')}#${category.slug}`}
-                          className="text-muted-foreground transition-colors hover:text-primary hover:underline"
-                        >
-                          {category.name}
-                        </Link>
-                      )}
-                    </li>
-                  ))}
+                  {calculatorCategories.length > 0 ? (
+                    calculatorCategories.slice(0, 6).map((category) => (
+                      <li key={category.slug}>
+                        {isHomePage ? (
+                          <a
+                            href={`#${category.slug}`}
+                            className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                          >
+                            {category.name}
+                          </a>
+                        ) : (
+                          <Link
+                            to={`${createPageUrl('Home')}#${category.slug}`}
+                            className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                          >
+                            {category.name}
+                          </Link>
+                        )}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-muted-foreground/80">Categories loading&hellip;</li>
+                  )}
                 </ul>
               </div>
 

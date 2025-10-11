@@ -5,30 +5,30 @@ import { pageSeo } from '../components/data/pageSeo';
 import { createPageUrl } from '../utils/createPageUrl';
 import NotFound from './NotFound';
 
-// --- STATIC IMPORTS (Small pages / info pages) ---
-import Home from './Home';
-import PrivacyPolicy from './PrivacyPolicy';
-import CookiePolicy from './CookiePolicy';
-import Contact from './Contact';
-import Resources from './Resources';
-import Blog from './Blog';
-import Sitemap from './Sitemap';
-import JobSalaries from './JobSalaries';
-import CostOfLiving from './CostOfLiving';
-import UKGovernmentBudget from './UKGovernmentBudget';
-import TermsOfService from './TermsOfService';
-import Disclaimer from './Disclaimer';
-import BlogSmartMoneySavingTips from './BlogSmartMoneySavingTips';
-import BlogDebtRepaymentStrategies from './BlogDebtRepaymentStrategies';
-import BlogFinancialPsychology from './BlogFinancialPsychology';
-import BlogWhyCalculationsMatter from './BlogWhyCalculationsMatter.jsx';
-import JobSalaryPage from './JobSalaryPage';
-import CostOfLivingPage from './CostOfLivingPage';
-import UKFinancialStats from './UKFinancialStats';
-import Methodology from './Methodology';
-import About from './About';
-import SelfAssessmentGuide from './SelfAssessmentGuide';
-import LinkToUs from './LinkToUs';
+// --- STATIC PAGES (lazy-loaded info pages) ---
+const Home = lazy(() => import('./Home.jsx'));
+const PrivacyPolicy = lazy(() => import('./PrivacyPolicy.jsx'));
+const CookiePolicy = lazy(() => import('./CookiePolicy.jsx'));
+const Contact = lazy(() => import('./Contact.jsx'));
+const Resources = lazy(() => import('./Resources.jsx'));
+const Blog = lazy(() => import('./Blog.jsx'));
+const Sitemap = lazy(() => import('./Sitemap.jsx'));
+const JobSalaries = lazy(() => import('./JobSalaries.jsx'));
+const CostOfLiving = lazy(() => import('./CostOfLiving.jsx'));
+const UKGovernmentBudget = lazy(() => import('./UKGovernmentBudget.jsx'));
+const TermsOfService = lazy(() => import('./TermsOfService.jsx'));
+const Disclaimer = lazy(() => import('./Disclaimer.jsx'));
+const BlogSmartMoneySavingTips = lazy(() => import('./BlogSmartMoneySavingTips.jsx'));
+const BlogDebtRepaymentStrategies = lazy(() => import('./BlogDebtRepaymentStrategies.jsx'));
+const BlogFinancialPsychology = lazy(() => import('./BlogFinancialPsychology.jsx'));
+const BlogWhyCalculationsMatter = lazy(() => import('./BlogWhyCalculationsMatter.jsx'));
+const JobSalaryPage = lazy(() => import('./JobSalaryPage.jsx'));
+const CostOfLivingPage = lazy(() => import('./CostOfLivingPage.jsx'));
+const UKFinancialStats = lazy(() => import('./UKFinancialStats.jsx'));
+const Methodology = lazy(() => import('./Methodology.jsx'));
+const About = lazy(() => import('./About.jsx'));
+const SelfAssessmentGuide = lazy(() => import('./SelfAssessmentGuide.jsx'));
+const LinkToUs = lazy(() => import('./LinkToUs.jsx'));
 
 // Legacy redirects (old path -> new path)
 const LEGACY_REDIRECTS = {
