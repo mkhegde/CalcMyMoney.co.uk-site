@@ -300,9 +300,11 @@ function PagesContent() {
     <Layout currentPageName={currentPage}>
       <Suspense
         fallback={
-          <div className="p-10 text-center text-lg text-indigo-600">
-            <div className="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent rounded-full mr-2"></div>
-            Loading Calculator Page...
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-background/90 text-lg text-indigo-600">
+            <div className="flex items-center gap-3 rounded-full bg-card px-6 py-4 shadow-lg border border-border">
+              <div className="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent rounded-full"></div>
+              <span>Loading Calculator Page&hellip;</span>
+            </div>
           </div>
         }
       >

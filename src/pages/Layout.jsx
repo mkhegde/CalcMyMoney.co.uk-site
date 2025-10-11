@@ -36,6 +36,10 @@ export default function Layout({ children, currentPageName }) {
   const [calculatorCategories, setCalculatorCategories] = useState([]);
   const isHomePage = location.pathname === createPageUrl('Home');
   const loadingCalculatorCategories = calculatorCategories.length === 0;
+  const showRelatedAutoSection = useMemo(
+    () => /Calculator/i.test(currentPageName || ''),
+    [currentPageName]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -716,33 +720,35 @@ export default function Layout({ children, currentPageName }) {
           )}
           {children}
           {/* Auto-related calculators for calculator pages */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-            <Suspense
-              fallback={
-                <div className="min-h-[320px] rounded-xl border border-muted bg-muted/40 p-6 animate-pulse">
-                  <div className="h-6 w-48 rounded bg-muted-foreground/40" />
-                  <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {Array.from({ length: 6 }).map((_, index) => (
-                      <div
-                        // eslint-disable-next-line react/no-array-index-key
-                        key={`related-skeleton-${index}`}
-                        className="rounded-lg border border-muted/60 bg-background/60 p-4"
-                      >
-                        <div className="h-4 w-32 rounded bg-muted-foreground/30" />
-                        <div className="mt-3 space-y-2">
-                          <div className="h-3 w-full rounded bg-muted-foreground/20" />
-                          <div className="h-3 w-3/4 rounded bg-muted-foreground/20" />
-                          <div className="h-3 w-2/3 rounded bg-muted-foreground/20" />
+          {showRelatedAutoSection && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+              <Suspense
+                fallback={
+                  <div className="min-h-[360px] rounded-xl border border-muted bg-muted/40 p-6 animate-pulse">
+                    <div className="h-6 w-48 rounded bg-muted-foreground/40" />
+                    <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {Array.from({ length: 6 }).map((_, index) => (
+                        <div
+                          // eslint-disable-next-line react/no-array-index-key
+                          key={`related-skeleton-${index}`}
+                          className="rounded-lg border border-muted/60 bg-background/60 p-4"
+                        >
+                          <div className="h-4 w-32 rounded bg-muted-foreground/30" />
+                          <div className="mt-3 space-y-2">
+                            <div className="h-3 w-full rounded bg-muted-foreground/20" />
+                            <div className="h-3 w-3/4 rounded bg-muted-foreground/20" />
+                            <div className="h-3 w-2/3 rounded bg-muted-foreground/20" />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              }
-            >
-              <LazyRelatedAuto />
-            </Suspense>
-          </div>
+                }
+              >
+                <LazyRelatedAuto />
+              </Suspense>
+            </div>
+          )}
         </main>
 
         {/* NEW: Global collapsed calculator index to add strong internal linking */}
