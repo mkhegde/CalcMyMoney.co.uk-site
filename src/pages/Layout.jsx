@@ -35,6 +35,7 @@ export default function Layout({ children, currentPageName }) {
   const [seoOverrides, setSeoOverrides] = useState({});
   const [calculatorCategories, setCalculatorCategories] = useState([]);
   const isHomePage = location.pathname === createPageUrl('Home');
+  const loadingCalculatorCategories = calculatorCategories.length === 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -622,9 +623,12 @@ export default function Layout({ children, currentPageName }) {
                     <Separator className="my-4" />
 
                     {/* Calculator Categories with Collapsibles */}
-                    <div className="space-y-2">
+                    <div
+                      className="space-y-2"
+                      style={loadingCalculatorCategories ? { minHeight: '320px' } : undefined}
+                    >
                       <h3 className="mb-3 font-semibold text-foreground">Browse Calculators</h3>
-                      {calculatorCategories.length > 0 ? (
+                      {!loadingCalculatorCategories ? (
                         calculatorCategories.map((category) => (
                           <Collapsible
                             key={category.slug}
@@ -673,9 +677,22 @@ export default function Layout({ children, currentPageName }) {
                           </Collapsible>
                         ))
                       ) : (
-                        <p className="text-sm text-muted-foreground px-2 py-1.5">
-                          Loading calculators&hellip;
-                        </p>
+                        <div className="space-y-3">
+                          {Array.from({ length: 3 }).map((_, index) => (
+                            <div
+                              // eslint-disable-next-line react/no-array-index-key
+                              key={`category-skeleton-${index}`}
+                              className="rounded-lg border border-muted bg-muted/50 p-3 animate-pulse"
+                            >
+                              <div className="h-4 w-1/3 rounded bg-muted-foreground/40" />
+                              <div className="mt-2 space-y-2 pl-2">
+                                <div className="h-3 w-1/2 rounded bg-muted-foreground/20" />
+                                <div className="h-3 w-2/3 rounded bg-muted-foreground/20" />
+                                <div className="h-3 w-1/3 rounded bg-muted-foreground/20" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -700,14 +717,60 @@ export default function Layout({ children, currentPageName }) {
           {children}
           {/* Auto-related calculators for calculator pages */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-            <Suspense fallback={null}>
+            <Suspense
+              fallback={
+                <div className="min-h-[320px] rounded-xl border border-muted bg-muted/40 p-6 animate-pulse">
+                  <div className="h-6 w-48 rounded bg-muted-foreground/40" />
+                  <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div
+                        // eslint-disable-next-line react/no-array-index-key
+                        key={`related-skeleton-${index}`}
+                        className="rounded-lg border border-muted/60 bg-background/60 p-4"
+                      >
+                        <div className="h-4 w-32 rounded bg-muted-foreground/30" />
+                        <div className="mt-3 space-y-2">
+                          <div className="h-3 w-full rounded bg-muted-foreground/20" />
+                          <div className="h-3 w-3/4 rounded bg-muted-foreground/20" />
+                          <div className="h-3 w-2/3 rounded bg-muted-foreground/20" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              }
+            >
               <LazyRelatedAuto />
             </Suspense>
           </div>
         </main>
 
         {/* NEW: Global collapsed calculator index to add strong internal linking */}
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <section className="bg-background border-t border-border non-printable">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="h-6 w-64 rounded bg-muted-foreground/30 animate-pulse" />
+                <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div
+                      // eslint-disable-next-line react/no-array-index-key
+                      key={`index-skeleton-${index}`}
+                      className="rounded-lg border border-muted/60 bg-muted/30 p-4 animate-pulse"
+                    >
+                      <div className="h-4 w-32 rounded bg-muted-foreground/30" />
+                      <div className="mt-3 space-y-2">
+                        <div className="h-3 w-full rounded bg-muted-foreground/20" />
+                        <div className="h-3 w-5/6 rounded bg-muted-foreground/20" />
+                        <div className="h-3 w-3/4 rounded bg-muted-foreground/20" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          }
+        >
           <LazyCalculatorIndex />
         </Suspense>
 
@@ -778,10 +841,10 @@ export default function Layout({ children, currentPageName }) {
                 </ul>
               </div>
 
-              <div>
+              <div style={loadingCalculatorCategories ? { minHeight: '192px' } : undefined}>
                 <h4 className="mb-4 font-semibold text-foreground">Categories</h4>
                 <ul className="space-y-2 text-muted-foreground">
-                  {calculatorCategories.length > 0 ? (
+                  {!loadingCalculatorCategories ? (
                     calculatorCategories.slice(0, 6).map((category) => (
                       <li key={category.slug}>
                         {isHomePage ? (
@@ -802,7 +865,12 @@ export default function Layout({ children, currentPageName }) {
                       </li>
                     ))
                   ) : (
-                    <li className="text-muted-foreground/80">Categories loading&hellip;</li>
+                    Array.from({ length: 6 }).map((_, index) => (
+                      // eslint-disable-next-line react/no-array-index-key
+                      <li key={`footer-category-skeleton-${index}`}>
+                        <div className="h-3 w-32 rounded bg-muted-foreground/20 animate-pulse" />
+                      </li>
+                    ))
                   )}
                 </ul>
               </div>
