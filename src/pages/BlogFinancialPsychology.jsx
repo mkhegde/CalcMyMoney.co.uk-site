@@ -113,7 +113,7 @@ export default function BlogFinancialPsychology() {
         name: 'Calculate My Money',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://www.calcmymoney.co.uk/images/logo-high-res.png',
+          url: 'https://www.calcmymoney.co.uk/images/logo-high-res.webp',
         },
       },
     };
@@ -158,7 +158,12 @@ export default function BlogFinancialPsychology() {
             <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium dark:bg-purple-900/50 dark:text-purple-300">
               {post.category}
             </span>
-            <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mt-4 mb-4">
+            <Heading
+              as="h1"
+              size="h1"
+              weight="bold"
+              className="text-gray-900 dark:text-gray-100 mt-4 mb-4"
+            >
               {post.title}
             </Heading>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
@@ -179,7 +184,11 @@ export default function BlogFinancialPsychology() {
 
           <img
             src={createUnsplashUrl(heroImage.baseUrl, heroImage.params, heroImage.width)}
-            srcSet={createUnsplashSrcSet(heroImage.baseUrl, heroImage.params, heroImage.srcSetWidths)}
+            srcSet={createUnsplashSrcSet(
+              heroImage.baseUrl,
+              heroImage.params,
+              heroImage.srcSetWidths
+            )}
             sizes={heroImage.sizes}
             alt={post.imageAlt}
             width={heroImage.width}
@@ -199,7 +208,9 @@ export default function BlogFinancialPsychology() {
 
             <Separator className="my-8" />
 
-            <Heading as="h2" size="h2">The Hidden Forces Shaping Your Money Decisions</Heading>
+            <Heading as="h2" size="h2">
+              The Hidden Forces Shaping Your Money Decisions
+            </Heading>
             <div className="flex items-center gap-3 mb-4">
               <Brain className="w-6 h-6 text-purple-600" />
               <p className="text-lg font-semibold text-purple-800 dark:text-purple-300 mb-0">
@@ -258,7 +269,9 @@ export default function BlogFinancialPsychology() {
               </p>
             </div>
 
-            <Heading as="h2" size="h2">The Four Common UK Money Personalities</Heading>
+            <Heading as="h2" size="h2">
+              The Four Common UK Money Personalities
+            </Heading>
             <p>
               Most people fall into one (or a combination) of these money personality types.
               Recognizing yourself can be the first step toward financial awareness:
@@ -334,7 +347,9 @@ export default function BlogFinancialPsychology() {
               </Card>
             </div>
 
-            <Heading as="h2" size="h2">Common Money Myths That Hold Us Back</Heading>
+            <Heading as="h2" size="h2">
+              Common Money Myths That Hold Us Back
+            </Heading>
             <p>
               Many of the beliefs we hold about money aren't actually true, but they feel true
               because we've never questioned them. Here are some common ones among UK residents:
@@ -402,7 +417,9 @@ export default function BlogFinancialPsychology() {
               </p>
             </div>
 
-            <Heading as="h2" size="h2">The UK Context: Cultural Money Messages</Heading>
+            <Heading as="h2" size="h2">
+              The UK Context: Cultural Money Messages
+            </Heading>
             <p>
               In the UK, we have some unique cultural attitudes toward money that can impact our
               financial wellbeing:
@@ -426,7 +443,9 @@ export default function BlogFinancialPsychology() {
               </li>
             </ul>
 
-            <Heading as="h2" size="h2">Rewiring Your Money Mindset: Practical Steps</Heading>
+            <Heading as="h2" size="h2">
+              Rewiring Your Money Mindset: Practical Steps
+            </Heading>
             <div className="flex items-center gap-3 mb-4">
               <Target className="w-6 h-6 text-green-600" />
               <p className="text-lg font-semibold text-green-800 dark:text-green-300 mb-0">
@@ -493,7 +512,9 @@ export default function BlogFinancialPsychology() {
 
             <Separator className="my-8" />
 
-            <Heading as="h2" size="h2">Your Money, Your Journey</Heading>
+            <Heading as="h2" size="h2">
+              Your Money, Your Journey
+            </Heading>
             <p>
               There's no "perfect" relationship with money, just like there's no perfect
               relationship with anything else that matters. The goal isn't to eliminate all emotion

@@ -90,14 +90,17 @@ export default function BlogSmartMoneySavingTips() {
       keywords: post.tags.join(', '),
       mainEntityOfPage: {
         '@type': 'WebPage',
-        '@id': defaults?.canonical || defaults?.ogUrl || 'https://www.calcmymoney.co.uk/blog-smart-money-saving-tips',
+        '@id':
+          defaults?.canonical ||
+          defaults?.ogUrl ||
+          'https://www.calcmymoney.co.uk/blog-smart-money-saving-tips',
       },
       publisher: {
         '@type': 'Organization',
         name: 'Calculate My Money',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://www.calcmymoney.co.uk/images/logo-high-res.png',
+          url: 'https://www.calcmymoney.co.uk/images/logo-high-res.webp',
         },
       },
     };
@@ -163,7 +166,11 @@ export default function BlogSmartMoneySavingTips() {
 
           <img
             src={createUnsplashUrl(heroImage.baseUrl, heroImage.params, heroImage.width)}
-            srcSet={createUnsplashSrcSet(heroImage.baseUrl, heroImage.params, heroImage.srcSetWidths)}
+            srcSet={createUnsplashSrcSet(
+              heroImage.baseUrl,
+              heroImage.params,
+              heroImage.srcSetWidths
+            )}
             sizes={heroImage.sizes}
             alt={post.imageAlt}
             width={heroImage.width}
@@ -183,7 +190,9 @@ export default function BlogSmartMoneySavingTips() {
 
             <Separator className="my-8" />
 
-            <Heading as="h2" size="h2" className="heading-2">Winning the Grocery Game: Strategies for the Supermarket</Heading>
+            <Heading as="h2" size="h2" className="heading-2">
+              Winning the Grocery Game: Strategies for the Supermarket
+            </Heading>
             <p>
               Groceries are often one of the largest flexible expenses for families. Small changes
               here can lead to significant savings.
@@ -236,7 +245,9 @@ export default function BlogSmartMoneySavingTips() {
               </p>
             </div>
 
-            <Heading as="h2" size="h2" className="heading-2">Taming the Energy Beast: Heating, Lighting &amp; Appliances</Heading>
+            <Heading as="h2" size="h2" className="heading-2">
+              Taming the Energy Beast: Heating, Lighting &amp; Appliances
+            </Heading>
             <p>With fluctuating energy prices, making your home more energy-efficient is key.</p>
             <ul>
               <li>
@@ -284,7 +295,9 @@ export default function BlogSmartMoneySavingTips() {
               </p>
             </div>
 
-            <Heading as="h2" size="h2" className="heading-2">Quick Wins: Small Changes, Big Impact</Heading>
+            <Heading as="h2" size="h2" className="heading-2">
+              Quick Wins: Small Changes, Big Impact
+            </Heading>
             <p>Sometimes the smallest adjustments yield the greatest results:</p>
             <ul>
               <li>
@@ -307,7 +320,9 @@ export default function BlogSmartMoneySavingTips() {
 
             <Separator className="my-8" />
 
-            <Heading as="h2" size="h2" className="heading-2">Making it Sustainable: The Long Game</Heading>
+            <Heading as="h2" size="h2" className="heading-2">
+              Making it Sustainable: The Long Game
+            </Heading>
             <p>
               The key to lasting financial change isn't dramatic overnight transformations – it's
               building sustainable habits that compound over time. Start with one or two changes
