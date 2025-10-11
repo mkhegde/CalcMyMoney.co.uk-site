@@ -3,8 +3,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import critical from 'rollup-plugin-critical';
+import { visualizer } from 'rollup-plugin-visualizer';
 
-const enableCritical = !process.env.VERCEL && process.env.ENABLE_CRITICAL !== '0';
+// Opt-in critical CSS extraction only when explicitly requested.
+const enableCritical = process.env.ENABLE_CRITICAL === '1';
 
 export default defineConfig({
   plugins: [react()],
@@ -44,6 +46,16 @@ export default defineConfig({
                   height: 667,
                   base: 'dist/',
                 },
+              }),
+            ]
+          : []),
+        ...(process.env.ANALYZE_BUNDLE === '1'
+          ? [
+              visualizer({
+                filename: 'dist/bundle-report.html',
+                template: 'treemap',
+                gzipSize: true,
+                brotliSize: true,
               }),
             ]
           : []),
