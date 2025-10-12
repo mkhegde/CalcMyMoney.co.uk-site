@@ -1,8 +1,8 @@
 export const pageSeo = {
   Home: {
-    title: 'UK Salary, Tax & Mortgage Calculators | Calculate My Money',
+    title: 'All UK Financial Calculators | Calculate My Money',
     description:
-      'Free UK calculators for take-home pay, tax, NI, mortgages, savings and ROI. Fast, accurate tools for 2025/26.',
+      'Free UK financial calculators for salary take-home pay, tax, NI, mortgages, budgeting, savings and ROI. Fast, accurate tools for 2025/26.',
   },
   Resources: {
     title: 'Financial Resources & Guides | Calculate My Money',
@@ -96,26 +96,29 @@ export const pageSeo = {
       'Browse the sitemap for Calculate My Money to find all available financial calculators and resources.',
   },
   SalaryCalculatorUK: {
-    title: 'UK Salary Calculator (Take-Home Pay 2025/26)',
+    title: 'UK Financial Salary Calculator | Take-Home 2025/26',
     description:
-      'Calculate your UK take-home pay after tax and NI for 2025/26. Includes paycheck, pro-rata and gross-to-net tools.',
+      'Calculate your UK salary take-home pay after tax and NI with our financial calculator for 2025/26.',
   },
   SalaryCalculatorTakeHomePay: {
-    title: 'Take-Home Pay Calculator UK (2025/26)',
-    description: 'Estimate UK take-home pay after tax, NI, pension & student loans for 2025/26.',
+    title: 'Financial Take-Home Pay Calculator UK (2025/26)',
+    description:
+      'Estimate your UK salary take-home pay after tax, NI, pension and student loans with our financial tool for 2025/26.',
   },
   SalaryCalculatorPaycheck: {
-    title: 'Paycheck Calculator UK (After Tax & NI)',
+    title: 'Financial Paycheck Calculator UK (After Tax & NI)',
     description:
-      'Work out your UK paycheck after tax and NI. Supports weekly, fortnightly and monthly pay.',
+      'Work out your UK salary paycheck after tax and NI using our financial calculator with weekly, fortnightly and monthly modes.',
   },
   GrossToNetCalculator: {
-    title: 'Gross to Net Income Calculator UK',
-    description: 'Convert gross salary to net take-home pay with UK tax and NI for 2025/26.',
+    title: 'Financial Gross to Net Income Calculator UK',
+    description:
+      'Convert gross salary to net take-home pay with our UK financial calculator using 2025/26 tax and NI bands.',
   },
   ProRataSalaryCalculator: {
-    title: 'Pro-Rata Salary Calculator UK',
-    description: 'Convert annual salary to pro-rata pay by hours or days worked in the UK.',
+    title: 'Financial Pro-Rata Salary Calculator UK',
+    description:
+      'Convert an annual salary to pro-rata pay by hours or days worked in the UK with our financial calculator.',
   },
   MortgageCalculator: {
     title: 'UK Mortgage Calculator | Repayments & Affordability - Calculate My Money',

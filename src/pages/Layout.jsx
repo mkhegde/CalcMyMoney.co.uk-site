@@ -58,6 +58,16 @@ export default function Layout({ children, currentPageName }) {
     return FALLBACK_FOOTER_CATEGORIES;
   }, [calculatorCategories]);
 
+  // Remove static canonical tag after hydration to avoid duplicates once Helmet runs
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const staticCanonical = document.head?.querySelector('link[rel="canonical"][data-static-canonical="true"]');
+    if (staticCanonical) {
+      staticCanonical.parentNode?.removeChild(staticCanonical);
+    }
+    return undefined;
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
