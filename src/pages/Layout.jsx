@@ -27,6 +27,14 @@ const LazyCalculatorIndex = lazy(() => import('../components/general/CalculatorI
 const LazyRelatedAuto = lazy(() => import('@/components/calculators/RelatedAuto.jsx'));
 
 const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
+const FALLBACK_FOOTER_CATEGORIES = [
+  { name: 'Salary Calculator UK', href: '/salary-calculator-uk' },
+  { name: 'Income Tax Calculator', href: '/income-tax-calculator' },
+  { name: 'Mortgage Calculator', href: '/mortgage-calculator' },
+  { name: 'Budget Planner', href: '/budget-calculator' },
+  { name: 'Compound Interest Calculator', href: '/compound-interest-calculator' },
+  { name: 'Pension Calculator', href: '/pension-calculator' },
+];
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
@@ -40,6 +48,15 @@ export default function Layout({ children, currentPageName }) {
     () => /Calculator/i.test(currentPageName || ''),
     [currentPageName]
   );
+  const footerCategories = useMemo(() => {
+    if (calculatorCategories.length > 0) {
+      return calculatorCategories.slice(0, 6).map((category) => ({
+        name: category.name,
+        slug: category.slug,
+      }));
+    }
+    return FALLBACK_FOOTER_CATEGORIES;
+  }, [calculatorCategories]);
 
   useEffect(() => {
     let cancelled = false;
@@ -847,10 +864,10 @@ export default function Layout({ children, currentPageName }) {
               <div style={{ minHeight: '192px' }}>
                 <h4 className="mb-4 font-semibold text-foreground">Categories</h4>
                 <ul className="space-y-2 text-muted-foreground">
-                  {!loadingCalculatorCategories ? (
-                    calculatorCategories.slice(0, 6).map((category) => (
-                      <li key={category.slug}>
-                        {isHomePage ? (
+                  {footerCategories.map((category) => (
+                    <li key={category.slug ?? category.href}>
+                      {category.slug ? (
+                        isHomePage ? (
                           <a
                             href={`#${category.slug}`}
                             className="text-muted-foreground transition-colors hover:text-primary hover:underline"
@@ -864,17 +881,17 @@ export default function Layout({ children, currentPageName }) {
                           >
                             {category.name}
                           </Link>
-                        )}
-                      </li>
-                    ))
-                  ) : (
-                    Array.from({ length: 6 }).map((_, index) => (
-                      // eslint-disable-next-line react/no-array-index-key
-                      <li key={`footer-category-skeleton-${index}`}>
-                        <div className="h-3 w-32 rounded bg-muted-foreground/20 animate-pulse" />
-                      </li>
-                    ))
-                  )}
+                        )
+                      ) : (
+                        <Link
+                          to={category.href}
+                          className="text-muted-foreground transition-colors hover:text-primary hover:underline"
+                        >
+                          {category.name}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
                 </ul>
               </div>
 
