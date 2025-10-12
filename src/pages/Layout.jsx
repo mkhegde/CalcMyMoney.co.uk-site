@@ -165,7 +165,7 @@ export default function Layout({ children, currentPageName }) {
   const defaultSeo = useMemo(() => {
     const defaultTitle = 'Calculate My Money - Free UK Financial Calculators';
     const defaultDescription =
-      'Your go-to source for free UK financial calculators including salary, tax, mortgage, pension, and budget tools from Calculate My Money. Make smart money decisions.';
+      'Your go-to hub for free UK financial calculators covering salary, tax, NI, mortgages, budgeting, savings, pensions and ROI planning. Fast 2025/26 tools that help you make smart money decisions.';
 
     const title = pageData.title || defaultTitle;
     const description = pageData.description || defaultDescription;
