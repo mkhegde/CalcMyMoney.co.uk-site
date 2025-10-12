@@ -627,10 +627,7 @@ export default function Layout({ children, currentPageName }) {
                     <Separator className="my-4" />
 
                     {/* Calculator Categories with Collapsibles */}
-                    <div
-                      className="space-y-2"
-                      style={loadingCalculatorCategories ? { minHeight: '320px' } : undefined}
-                    >
+                    <div className="space-y-2" style={{ minHeight: '320px' }}>
                       <h3 className="mb-3 font-semibold text-foreground">Browse Calculators</h3>
                       {!loadingCalculatorCategories ? (
                         calculatorCategories.map((category) => (
@@ -847,7 +844,7 @@ export default function Layout({ children, currentPageName }) {
                 </ul>
               </div>
 
-              <div style={loadingCalculatorCategories ? { minHeight: '192px' } : undefined}>
+              <div style={{ minHeight: '192px' }}>
                 <h4 className="mb-4 font-semibold text-foreground">Categories</h4>
                 <ul className="space-y-2 text-muted-foreground">
                   {!loadingCalculatorCategories ? (

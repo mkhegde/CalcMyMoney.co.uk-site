@@ -1,23 +1,18 @@
 import { useLocation } from 'react-router-dom';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Search, Calculator, TrendingUp, Users, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
-import {
-  calculatorCategories,
-  allCalculators as flatCalculators,
-  getCalculatorStats,
-  searchCalculators,
-} from '../components/data/calculatorConfig';
-
 import { prefetchPage } from '@/utils/prefetchPage';
 import FAQSection from '../components/calculators/FAQSection';
 import { HandCoins, PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
 import { useSeo } from '@/components/seo/SeoContext';
 import Heading from '@/components/common/Heading';
+
+const DEFAULT_STATS = { total: 0, active: 0, categories: 0 };
 
 const homepageFaqs = [
   {
@@ -59,8 +54,42 @@ export default function Home() {
   const [pendingScrollSlug, setPendingScrollSlug] = useState(null);
   const lastHandledHashRef = useRef(null);
   const { setSeo, resetSeo } = useSeo();
+  const [calcData, setCalcData] = useState({
+    categories: [],
+    calculators: [],
+    stats: DEFAULT_STATS,
+    searchFn: null,
+    loading: true,
+  });
 
-  const stats = getCalculatorStats();
+  useEffect(() => {
+    let cancelled = false;
+    import('../components/data/calculatorConfig.jsx')
+      .then((mod) => {
+        if (cancelled) return;
+        setCalcData({
+          categories: mod?.calculatorCategories || [],
+          calculators: mod?.allCalculators || [],
+          stats: mod?.getCalculatorStats ? mod.getCalculatorStats() : DEFAULT_STATS,
+          searchFn: mod?.searchCalculators || null,
+          loading: false,
+        });
+      })
+      .catch((error) => {
+        if (import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to load calculator catalog', error);
+        }
+        setCalcData((prev) => ({ ...prev, loading: false }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const stats = calcData.stats;
+  const isCatalogLoading = calcData.loading;
+  const categoriesLoaded = calcData.categories.length > 0;
 
   // Popular/Featured calculators — use kebab-case slugs (no leading slash)
   const featuredSlugs = [
@@ -73,24 +102,80 @@ export default function Home() {
   ];
 
   // Build featured objects by exact URL match
-  const featuredCalcObjects = (() => {
+  const fallbackFeatured = [
+    {
+      name: 'Salary Calculator UK',
+      url: '/salary-calculator-uk',
+      description: 'Work out take-home pay for 2025/26.',
+      category: 'Salary',
+      icon: Calculator,
+    },
+    {
+      name: 'Mortgage Calculator',
+      url: '/mortgage-calculator',
+      description: 'Estimate repayments and interest costs.',
+      category: 'Property',
+      icon: HomeIcon,
+    },
+    {
+      name: 'Budget Planner',
+      url: '/budget-calculator',
+      description: 'Build a monthly budget and spot savings.',
+      category: 'Budgeting',
+      icon: PiggyBank,
+    },
+    {
+      name: 'Income Tax Calculator',
+      url: '/income-tax-calculator',
+      description: 'See your PAYE, NI and take-home pay.',
+      category: 'Tax',
+      icon: PoundSterling,
+    },
+    {
+      name: 'Compound Interest Calculator',
+      url: '/compound-interest-calculator',
+      description: 'Project savings with compounding returns.',
+      category: 'Investing',
+      icon: TrendingUp,
+    },
+    {
+      name: 'Pension Calculator',
+      url: '/pension-calculator',
+      description: 'Plan retirement contributions and growth.',
+      category: 'Retirement',
+      icon: Users,
+    },
+  ];
+
+  const featuredCalcObjects = useMemo(() => {
+    if (!calcData.calculators.length) return fallbackFeatured;
+
     const picks = featuredSlugs
-      .map((slug) => flatCalculators.find((c) => c.url === `/${slug}` && c.status === 'active'))
+      .map((slug) =>
+        calcData.calculators.find((c) => c.url === `/${slug}` && c.status === 'active')
+      )
       .filter(Boolean);
 
     // Fallback so the section never renders empty
-    return picks.length ? picks : flatCalculators.filter((c) => c.status === 'active').slice(0, 6);
-  })();
+    return picks.length
+      ? picks
+      : calcData.calculators.filter((c) => c.status === 'active').slice(0, 6);
+  }, [calcData.calculators]);
 
   // Handle search
   useEffect(() => {
+    if (!calcData.searchFn) {
+      setSearchResults([]);
+      return;
+    }
+
     if (searchQuery.trim()) {
-      const results = searchCalculators(searchQuery);
+      const results = calcData.searchFn(searchQuery);
       setSearchResults(results);
     } else {
       setSearchResults([]);
     }
-  }, [searchQuery]);
+  }, [searchQuery, calcData.searchFn]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -250,20 +335,32 @@ export default function Home() {
             </div>
 
             {/* Quick Stats */}
-            <div className="flex flex-wrap items-center justify-center gap-4 body text-muted-foreground sm:gap-8">
-              <div className="flex items-center gap-2">
-                <Calculator className="h-4 w-4 text-primary" />
-                <span>{stats.total} Calculators</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span>{stats.active} Active</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                <span>Free to Use</span>
-              </div>
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-4 body text-muted-foreground sm:gap-8">
+            {isCatalogLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  // eslint-disable-next-line react/no-array-index-key
+                  key={`stats-skeleton-${index}`}
+                  className="h-4 w-36 rounded bg-muted-foreground/20 animate-pulse"
+                />
+              ))
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4 text-primary" />
+                  <span>{stats.total} Calculators</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <span>{stats.active} Active</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span>Free to Use</span>
+                </div>
+              </>
+            )}
+          </div>
           </div>
         </div>
       </div>
@@ -374,62 +471,102 @@ export default function Home() {
 
           {/* Calculator Categories */}
           {showAllCalculators ? (
-            <div className="space-y-12">
-              {calculatorCategories.map((category) => (
-                <div key={category.slug} id={category.slug} className="scroll-mt-20">
-                  {/* Category Header */}
-                  <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
-                    <category.icon className="h-8 w-8 text-primary" />
-                    <div>
-                      <Heading as="h3" size="h3" weight="bold" className="text-foreground">
-                        {category.name}
-                      </Heading>
-                      <p className="body text-muted-foreground">{category.description}</p>
+            categoriesLoaded ? (
+              <div className="space-y-12">
+                {calcData.categories.map((category) => (
+                  <div key={category.slug} id={category.slug} className="scroll-mt-20">
+                    {/* Category Header */}
+                    <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
+                      <category.icon className="h-8 w-8 text-primary" />
+                      <div>
+                        <Heading as="h3" size="h3" weight="bold" className="text-foreground">
+                          {category.name}
+                        </Heading>
+                        <p className="body text-muted-foreground">{category.description}</p>
+                      </div>
+                    </div>
+
+                    {/* Sub-categories and Calculators */}
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {category.subCategories.map((subCategory) => (
+                        <div key={subCategory.name} className="space-y-3">
+                          <Heading
+                            as="h4"
+                            size="h3"
+                            className="border-l-4 border-primary pl-3 text-foreground"
+                          >
+                            {subCategory.name}
+                          </Heading>
+                          <div className="space-y-2 pl-3">
+                            {subCategory.calculators
+                              .filter((calc) => showAllCalculators || calc.status === 'active')
+                              .map((calc, index) => (
+                                <div key={index} className="flex items-center justify-between group">
+                                  {calc.status === 'active' ? (
+                                    <Link
+                                      to={calc.url}
+                                      onMouseEnter={() => calc.page && prefetchPage(calc.page)}
+                                      onFocus={() => calc.page && prefetchPage(calc.page)}
+                                      className="flex-1 body font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                                    >
+                                      {calc.name}
+                                    </Link>
+                                  ) : (
+                                    <span className="flex-1 body text-muted-foreground/60">{calc.name}</span>
+                                  )}
+                                  {(calc.status === 'planned' || calc.status === 'pending') && (
+                                    <Badge variant="outline" className="ml-2 caption text-primary">
+                                      Coming Soon
+                                    </Badge>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-
-                  {/* Sub-categories and Calculators */}
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {category.subCategories.map((subCategory) => (
-                      <div key={subCategory.name} className="space-y-3">
-                        <Heading
-                          as="h4"
-                          size="h3"
-                          className="border-l-4 border-primary pl-3 text-foreground"
-                        >
-                          {subCategory.name}
-                        </Heading>
-                        <div className="space-y-2 pl-3">
-                          {subCategory.calculators
-                            .filter((calc) => showAllCalculators || calc.status === 'active')
-                            .map((calc, index) => (
-                              <div key={index} className="flex items-center justify-between group">
-                                {calc.status === 'active' ? (
-                                  <Link
-                                    to={calc.url}
-                                    onMouseEnter={() => calc.page && prefetchPage(calc.page)}
-                                    onFocus={() => calc.page && prefetchPage(calc.page)}
-                                    className="flex-1 body font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-                                  >
-                                    {calc.name}
-                                  </Link>
-                                ) : (
-                                  <span className="flex-1 body text-muted-foreground/60">{calc.name}</span>
-                                )}
-                                {(calc.status === 'planned' || calc.status === 'pending') && (
-                                  <Badge variant="outline" className="ml-2 caption text-primary">
-                                    Coming Soon
-                                  </Badge>
-                                )}
-                              </div>
-                            ))}
-                        </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-12">
+                {Array.from({ length: 4 }).map((_, categoryIndex) => (
+                  <div
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={`category-skeleton-${categoryIndex}`}
+                    className="scroll-mt-20"
+                  >
+                    <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
+                      <div className="h-8 w-8 rounded-full bg-muted-foreground/20 animate-pulse" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-40 rounded bg-muted-foreground/20 animate-pulse" />
+                        <div className="h-3 w-64 rounded bg-muted-foreground/10 animate-pulse" />
                       </div>
-                    ))}
+                    </div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {Array.from({ length: 3 }).map((_, subIndex) => (
+                        <div
+                          // eslint-disable-next-line react/no-array-index-key
+                          key={`subcategory-skeleton-${categoryIndex}-${subIndex}`}
+                          className="space-y-3"
+                        >
+                          <div className="h-4 w-32 rounded bg-muted-foreground/20 animate-pulse" />
+                          <div className="space-y-2 pl-3">
+                            {Array.from({ length: 4 }).map((_, calcIndex) => (
+                              <div
+                                // eslint-disable-next-line react/no-array-index-key
+                                key={`calc-skeleton-${categoryIndex}-${subIndex}-${calcIndex}`}
+                                className="h-3 w-3/4 rounded bg-muted-foreground/15 animate-pulse"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           ) : (
             <div className="text-center text-muted-foreground">
               Expand the directory to explore every calculator we offer.
