@@ -913,7 +913,7 @@ export default function SalaryCalculatorUK() {
             <Breadcrumbs path={breadcrumbPath} />
             <div className="text-center">
               <Heading as="h1" size="h1" weight="bold" className="title-hero mb-4 text-hero-foreground">
-                UK Salary Calculator – Take-Home Pay 2025/26
+                UK Financial Salary Calculator – Calculate Take-Home 2025/26
               </Heading>
               <p className="lead text-muted-foreground max-w-3xl mx-auto">
                 Calculate your UK take-home pay for the 2025/26 tax year. Free salary calculator
@@ -1915,3 +1915,4 @@ export default function SalaryCalculatorUK() {
     </>
   );
 }
+

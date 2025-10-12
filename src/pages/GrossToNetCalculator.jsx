@@ -64,7 +64,7 @@ export default function GrossToNetCalculator() {
         <div className="bg-gray-50 border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
             <Heading as="h1" size="h1" weight="bold" className="text-gray-900">
-              Gross to Net Income Calculator (UK)
+              Financial Gross to Net Salary Calculator UK
             </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto mt-3">
               Convert gross salary to net take‑home pay with UK tax and NI for 2025/26.

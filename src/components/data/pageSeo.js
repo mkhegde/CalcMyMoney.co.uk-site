@@ -1,8 +1,8 @@
 export const pageSeo = {
   Home: {
-    title: 'All UK Financial Calculators | Calculate My Money',
+    title: 'All UK Financial Calculators | Income Tax & Take-Home',
     description:
-      'Free UK financial calculators for salary take-home pay, tax, NI, mortgages, budgeting, savings and ROI. Fast, accurate tools for 2025/26.',
+      'All UK financial calculators to calculate take-home pay, income tax, salary calculator tools, mortgages, budgeting and savings for 2025/26 at CalcMyMoney.',
   },
   Resources: {
     title: 'Financial Resources & Guides | Calculate My Money',
@@ -108,32 +108,32 @@ export const pageSeo = {
   SalaryCalculatorPaycheck: {
     title: 'Financial Paycheck Calculator UK (After Tax & NI)',
     description:
-      'Work out your UK salary paycheck after tax and NI using our financial calculator with weekly, fortnightly and monthly modes.',
+      'Calculate take-home salary per pay period with our financial paycheck calculator covering income tax, NI and pension deductions.',
   },
   GrossToNetCalculator: {
     title: 'Financial Gross to Net Income Calculator UK',
     description:
-      'Convert gross salary to net take-home pay with our UK financial calculator using 2025/26 tax and NI bands.',
+      'Calculate take-home pay by converting gross salary to net with our UK financial calculator using 2025/26 income tax and NI bands.',
   },
   ProRataSalaryCalculator: {
     title: 'Financial Pro-Rata Salary Calculator UK',
     description:
-      'Convert an annual salary to pro-rata pay by hours or days worked in the UK with our financial calculator.',
+      'Calculate pro-rata salary pay by hours or days worked in the UK with our financial calculator and see the take-home impact.',
   },
   MortgageCalculator: {
-    title: 'UK Mortgage Calculator | Repayments & Affordability - Calculate My Money',
+    title: 'UK Financial Mortgage Calculator – Payments',
     description:
-      'Estimate your UK mortgage repayments and check affordability with our free mortgage calculator. See monthly costs, interest, and the full amortization schedule.',
+      'Calculate mortgage payments, income tax-adjusted take-home affordability and compare deals with our UK financial calculator.',
   },
   BudgetCalculator: {
-    title: 'Budget Planner UK | Free Online Budgeting Tool - Calculate My Money',
+    title: 'UK Financial Budget Calculator – Plan Income',
     description:
-      'Create a personal budget with our free UK budget planner. Track income and expenses to manage your finances effectively.',
+      'Plan income, bills and savings with our UK financial budget calculator and see how salary and take-home pay fit your goals.',
   },
   CompoundInterestCalculator: {
-    title: 'Compound Interest Calculator UK | Grow Your Savings - Calculate My Money',
+    title: 'UK Financial Compound Interest Calculator',
     description:
-      'See how your savings can grow with our UK compound interest calculator. Plan for future investments and financial goals.',
+      'Project savings growth and see how regular salary take-home contributions grow with our UK financial compound interest calculator.',
   },
   PensionCalculator: {
     title: 'UK Pension Calculator | Plan Your Retirement - Calculate My Money',
@@ -161,9 +161,9 @@ export const pageSeo = {
       'See how the value of the pound has changed over time with our free UK inflation calculator. Compare the purchasing power of money between any two years.',
   },
   IncomeTaxCalculator: {
-    title: 'UK Income Tax Calculator 2025/26 | Calculate Your Tax Bill - Calculate My Money',
+    title: 'UK Income Tax Calculator 2025/26 | CalcMyMoney',
     description:
-      'Calculate your income tax for 2025/26 with our free UK tax calculator. Covers tax bands for England, Scotland, Wales & NI. Find out your true tax liability.',
+      'Financial income tax calculator for the 2025/26 UK tax year. Calculate take-home salary impact across tax bands for England, Scotland, Wales and Northern Ireland.',
   },
   SalaryIncreaseCalculator: {
     title: 'Salary Increase Calculator UK | See Your New Pay - Calculate My Money',

@@ -273,7 +273,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="text-center max-w-4xl mx-auto text-hero-foreground">
             <Heading as="h1" size="h1" weight="bold" className="title-hero text-hero-foreground mb-4">
-              Free UK Salary, Tax & Mortgage Calculators
+              All UK Financial Calculators – Income Tax & Take-Home Pay
             </Heading>
             <p className="lead text-muted-foreground mb-8">
               Use our fast, accurate UK calculators to estimate take-home pay, tax & NI, mortgage

@@ -64,7 +64,7 @@ export default function SalaryCalculatorTakeHomePay() {
         <div className="bg-gray-50 border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
             <Heading as="h1" size="h1" weight="bold" className="text-gray-900">
-              UK Take-Home Pay Calculator (2025/26)
+              UK Financial Take-Home Pay Calculator 2025/26
             </Heading>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto mt-3">
               Estimate UK take-home pay after tax, NI, pension and student loans for the 2025/26 tax
