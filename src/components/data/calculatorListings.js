@@ -28,6 +28,28 @@ export const calculatorListings = [
           'car loan payment calculator',
         ],
       },
+      {
+        name: 'Credit Card Repayment Calculator',
+        slug: 'credit-card-repayment-calculator',
+        path: '/calculators/credit-card-repayment-calculator',
+        keywords: ['credit card repayment calculator', 'credit card calculator'],
+      },
+      {
+        name: 'Debt Calculator',
+        slug: 'debt-calculator',
+        path: '/calculators/debt-calculator',
+        keywords: ['debt calculator', 'personal debt calculator', 'consumer debt calculator'],
+      },
+      {
+        name: 'Debt to Income Ratio Calculator',
+        slug: 'debt-to-income-ratio-calculator',
+        path: '/calculators/debt-to-income-ratio-calculator',
+        keywords: [
+          'debt to income ratio calculator',
+          'dti calculator',
+          'debt to income calculator',
+        ],
+      },
     ],
   },
   {
@@ -45,6 +67,23 @@ export const calculatorListings = [
           'deferred annuity calculator',
           'retirement annuity calculator',
           'lump sum annuity calculator',
+        ],
+      },
+    ],
+  },
+  {
+    category: 'Savings & Investments',
+    calculators: [
+      {
+        name: 'Compound Interest Calculator',
+        slug: 'compound-interest-calculator',
+        path: '/calculators/compound-interest-calculator',
+        keywords: [
+          'compound interest calculator',
+          'find compound interest calculator',
+          'calculating compound interest calculator',
+          'compound interest',
+          'daily compound interest calculator',
         ],
       },
     ],
@@ -88,6 +127,23 @@ export const calculatorListings = [
         path: '/calculators/car-cost-calculator',
         keywords: ['car cost calculator'],
       },
+      {
+        name: 'Commute Cost Calculator',
+        slug: 'commute-cost-calculator',
+        path: '/calculators/commute-cost-calculator',
+        keywords: ['commute cost calculator'],
+      },
+      {
+        name: 'Cost of Living Calculator',
+        slug: 'cost-of-living-calculator',
+        path: '/calculators/cost-of-living-calculator',
+        keywords: [
+          'cost of living',
+          'cost of living calculator',
+          'uk cost of living calculator',
+          'city cost of living calculator',
+        ],
+      },
     ],
   },
   {
@@ -103,6 +159,12 @@ export const calculatorListings = [
           'cgt calculator',
           'capital gains calculator',
         ],
+      },
+      {
+        name: 'Corporation Tax Calculator',
+        slug: 'corporation-tax-calculator',
+        path: '/calculators/corporation-tax-calculator',
+        keywords: ['corporation tax calculator', 'corporation tax', 'business tax calculator'],
       },
     ],
   },
@@ -129,6 +191,47 @@ export const calculatorListings = [
           'childcare calculator',
           'cost of childcare calculator',
         ],
+      },
+    ],
+  },
+  {
+    category: 'Income & Employment',
+    calculators: [
+      {
+        name: 'Commission Calculator',
+        slug: 'commission-calculator',
+        path: '/calculators/commission-calculator',
+        keywords: [
+          'commission calculator',
+          'sales commission calculator',
+          'commission pay calculator',
+        ],
+      },
+    ],
+  },
+  {
+    category: 'Business & Freelance',
+    calculators: [
+      {
+        name: 'Contractor Calculator',
+        slug: 'contractor-calculator',
+        path: '/calculators/contractor-calculator',
+        keywords: [
+          'contractor calculator',
+          'contractor take home pay calculator',
+          'limited company contractor calculator',
+        ],
+      },
+    ],
+  },
+  {
+    category: 'Miscellaneous & Tools',
+    calculators: [
+      {
+        name: 'Currency Converter',
+        slug: 'currency-converter',
+        path: '/calculators/currency-converter',
+        keywords: ['currency converter', 'money converter'],
       },
     ],
   },
