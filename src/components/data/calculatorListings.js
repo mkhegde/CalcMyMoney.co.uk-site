@@ -69,6 +69,12 @@ export const calculatorListings = [
           'lump sum annuity calculator',
         ],
       },
+      {
+        name: 'FIRE Calculator',
+        slug: 'fire-calculator',
+        path: '/calculators/fire-calculator',
+        keywords: ['fire calculator', 'financial independence retire early calculator'],
+      },
     ],
   },
   {
@@ -85,6 +91,12 @@ export const calculatorListings = [
           'compound interest',
           'daily compound interest calculator',
         ],
+      },
+      {
+        name: 'Future Value Calculator',
+        slug: 'future-value-calculator',
+        path: '/calculators/future-value-calculator',
+        keywords: ['future value calculator', 'fv calculator'],
       },
     ],
   },
@@ -144,6 +156,12 @@ export const calculatorListings = [
           'city cost of living calculator',
         ],
       },
+      {
+        name: 'Emergency Fund Calculator',
+        slug: 'emergency-fund-calculator',
+        path: '/calculators/emergency-fund-calculator',
+        keywords: ['emergency fund calculator', 'emergency savings calculator'],
+      },
     ],
   },
   {
@@ -165,6 +183,12 @@ export const calculatorListings = [
         slug: 'corporation-tax-calculator',
         path: '/calculators/corporation-tax-calculator',
         keywords: ['corporation tax calculator', 'corporation tax', 'business tax calculator'],
+      },
+      {
+        name: 'Dividend Tax Calculator',
+        slug: 'dividend-tax-calculator',
+        path: '/calculators/dividend-tax-calculator',
+        keywords: ['dividend tax calculator', 'dividend tax'],
       },
     ],
   },
@@ -207,6 +231,12 @@ export const calculatorListings = [
           'commission pay calculator',
         ],
       },
+      {
+        name: 'Holiday Pay Calculator',
+        slug: 'holiday-pay-calculator',
+        path: '/calculators/holiday-pay-calculator',
+        keywords: ['holiday pay calculator'],
+      },
     ],
   },
   {
@@ -221,6 +251,51 @@ export const calculatorListings = [
           'contractor take home pay calculator',
           'limited company contractor calculator',
         ],
+      },
+      {
+        name: 'Freelancer Day Rate Calculator',
+        slug: 'freelancer-day-rate-calculator',
+        path: '/calculators/freelancer-day-rate-calculator',
+        keywords: ['freelance day rate calculator', 'freelancer day rate calculator'],
+      },
+    ],
+  },
+  {
+    category: 'Take-Home & Net',
+    calculators: [
+      {
+        name: 'Gross to Net Calculator',
+        slug: 'gross-to-net-calculator',
+        path: '/calculators/gross-to-net-calculator',
+        keywords: ['gross to net calculator', 'gross to net', 'gross up calculator'],
+      },
+    ],
+  },
+  {
+    category: 'Income Planning & ROI',
+    calculators: [
+      {
+        name: 'Dream Lifestyle Calculator',
+        slug: 'dream-lifestyle-calculator',
+        path: '/calculators/dream-lifestyle-calculator',
+        keywords: ['dream lifestyle calculator'],
+      },
+      {
+        name: 'Effective Tax Rate Calculator',
+        slug: 'effective-tax-rate-calculator',
+        path: '/calculators/effective-tax-rate-calculator',
+        keywords: ['effective tax rate calculator', 'effective tax rate'],
+      },
+    ],
+  },
+  {
+    category: 'HOA & Utilities',
+    calculators: [
+      {
+        name: 'Energy Bill Calculator',
+        slug: 'energy-bill-calculator',
+        path: '/calculators/energy-bill-calculator',
+        keywords: ['energy bill calculator', 'electricity bill calculator', 'gas bill calculator'],
       },
     ],
   },
