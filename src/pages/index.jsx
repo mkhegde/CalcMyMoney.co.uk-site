@@ -366,6 +366,6 @@ function PagesContent() {
           <Route path="/ni-calculator" element={<LazyNiCalculator />} />
           <Route path="/overtime-bonus-calculator" element={<LazyOvertimeBonusCalculator />} />
           <Route path="/paye-calculator" element={<LazyPayeCalculator />} />
-          <Route path="/pension-calculator" element<
+          <Route path="/pension-calculator" element></Route>
 
 
