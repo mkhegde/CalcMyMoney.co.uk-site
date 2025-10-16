@@ -47,19 +47,19 @@ import { ukCities, createSlug } from '../components/data/seo-data';
 const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
 
 // --- LAZY IMPORTS (calculators) ---
-const LazyAmortizationCalculator = lazy(() => import('../calculators/amortization-calculator.js'));
-const LazyAnnuityCalculator = lazy(() => import('../calculators/annuity-calculator.js'));
+const LazyAmortizationCalculator = lazy(() => import('../calculators/amortization-calculator.jsx'));
+const LazyAnnuityCalculator = lazy(() => import('../calculators/annuity-calculator.jsx'));
 const LazyAverageDailyBalanceCalculator = lazy(() => import('../calculators/average-daily-balance-calculator.jsx'));
-const LazyBrrrrCalculator = lazy(() => import('../calculators/brrrr-calculator.js'));
-const LazyBudgetPlanner = lazy(() => import('../calculators/budget-planner.js'));
-const LazyBuyToLetMortgageCalculator = lazy(() => import('../calculators/buy-to-let-mortgage-calculator.js'));
-const LazyCapitalGainsTaxCalculator = lazy(() => import('../calculators/capital-gains-tax-calculator.js'));
-const LazyCarCostCalculator = lazy(() => import('../calculators/car-cost-calculator.js'));
+const LazyBrrrrCalculator = lazy(() => import('../calculators/brrrr-calculator.jsx'));
+const LazyBudgetPlanner = lazy(() => import('../calculators/budget-planner.jsx'));
+const LazyBuyToLetMortgageCalculator = lazy(() => import('../calculators/buy-to-let-mortgage-calculator.jsx'));
+const LazyCapitalGainsTaxCalculator = lazy(() => import('../calculators/capital-gains-tax-calculator.jsx'));
+const LazyCarCostCalculator = lazy(() => import('../calculators/car-cost-calculator.jsx'));
 const LazyCarFinanceCalculator = lazy(() => import('../calculators/car-finance-calculator.jsx'));
-const LazyCarLoanCalculator = lazy(() => import('../calculators/car-loan-calculator.js'));
+const LazyCarLoanCalculator = lazy(() => import('../calculators/car-loan-calculator.jsx'));
 const LazyCarPaymentCalculator = lazy(() => import('../calculators/car-payment-calculator.jsx'));
-const LazyChildBenefitCalculator = lazy(() => import('../calculators/child-benefit-calculator.js'));
-const LazyChildcareCostCalculator = lazy(() => import('../calculators/childcare-cost-calculator.js'));
+const LazyChildBenefitCalculator = lazy(() => import('../calculators/child-benefit-calculator.jsx'));
+const LazyChildcareCostCalculator = lazy(() => import('../calculators/childcare-cost-calculator.jsx'));
 const LazyCommissionCalculator = lazy(() => import('../calculators/commission-calculator.jsx'));
 const LazyCommuteCostCalculator = lazy(() => import('../calculators/commute-cost-calculator.jsx'));
 const LazyCompoundInterestCalculator = lazy(() => import('../calculators/compound-interest-calculator.jsx'));
@@ -419,3 +419,6 @@ export default function Pages() {
     </Router>
   );
 }
+
+
+
