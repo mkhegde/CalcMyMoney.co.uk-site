@@ -305,8 +305,16 @@ export default function BlogSmartMoneySavingTips() {
                 often offer personalized discounts.
               </li>
               <li>
-                <strong>Energy Supplier Switching:</strong> Use comparison sites to ensure you're on
-                the best tariff for your usage.
+                <strong>Energy Supplier Switching:</strong> Use comparison sites such as{' '}
+                <a
+                  href="https://www.gocompare.com/gas-and-electricity/guide/energy-calculator/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-medium text-emerald-700 dark:text-emerald-300"
+                >
+                  Go.Compare's energy calculator
+                </a>{' '}
+                to ensure you're on the best tariff for your usage.
               </li>
               <li>
                 <strong>Water-Saving Devices:</strong> Simple devices like shower timers or low-flow
