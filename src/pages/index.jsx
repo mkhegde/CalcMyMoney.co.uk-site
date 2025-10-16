@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'r
 import Layout from './Layout.jsx';
 import { pageSeo } from '../components/data/pageSeo';
 import { createPageUrl } from '../utils/createPageUrl';
+import { calculatorCategories } from '../components/data/calculatorConfig';
+import { ukCities, createSlug } from '../components/data/seo-data';
 import NotFound from './NotFound';
 
 // --- STATIC PAGES (lazy-loaded info pages) ---
@@ -34,15 +36,11 @@ const LinkToUs = lazy(() => import('./LinkToUs.jsx'));
 const LEGACY_REDIRECTS = {
   '/AnnuityCalculator': '/annuity-calculator',
   '/ProRataSalaryCalculator': '/pro-rata-salary-calculator',
-  '/overtimepaycalculator': '/overtime-bonus-calculator',
-  '/salary-calculator-u-k': '/salary-calculator',
-  '/mortgage-calculator-u-k': '/mortgage-calculator',
-  '/tax-calculators-u-k': '/income-tax-calculator',
+  '/overtimepaycalculator': '/overtime-pay-calculator',
+  '/salary-calculator-u-k': '/salary-calculator-uk',
+  '/mortgage-calculator-u-k': '/mortgage-calculator-uk',
+  '/tax-calculators-u-k': '/tax-calculators-uk',
 };
-
-// Pull calculator config so we can auto-generate routes for entries with `page`
-import { calculatorCategories } from '../components/data/calculatorConfig';
-import { ukCities, createSlug } from '../components/data/seo-data';
 
 const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
 
@@ -154,13 +152,28 @@ const PAGES = {
   LinkToUs,
 };
 
-// Flatten calculators from config
+// Flatten calculators from config so we can resolve <Routes> dynamically
 const _allCalcs = calculatorCategories.flatMap((cat) =>
   (cat?.subCategories || []).flatMap((sub) => sub?.calculators || [])
 );
 
-// Calculator routes are manually defined below to point at the new slug-based components.
-const DYNAMIC_CALC_ROUTES = [];
+// Vite glob loader for calculator pages
+const pageModules = import.meta.glob('./*.jsx');
+const _loadPage = (pageName) => {
+  if (!pageName) return null;
+  const key = `./${pageName}.jsx`;
+  const loader = pageModules[key];
+  return loader ? lazy(loader) : null;
+};
+
+// Build dynamic calculator routes from config driven entries
+const DYNAMIC_CALC_ROUTES = _allCalcs
+  .filter((calc) => calc?.status === 'active' && typeof calc.page === 'string' && calc.page.trim())
+  .map((calc) => {
+    const Component = _loadPage(calc.page);
+    return Component ? { path: calc.url, Component, name: calc.name } : null;
+  })
+  .filter(Boolean);
 
 const _normalizeSlug = (value = '') => {
   if (typeof value !== 'string') return '';
@@ -195,16 +208,24 @@ const _slugToPageName = (() => {
   _allCalcs.forEach((calc) => {
     if (!calc) return;
     if (calc.url) {
-      const target =
-        (typeof calc.page === 'string' && calc.page.trim()) || undefined;
+      const target = typeof calc.page === 'string' && calc.page.trim() ? calc.page.trim() : undefined;
       _registerSlug(map, calc.url, target);
+    }
+
+    if (typeof calc?.page === 'string' && calc.page.trim()) {
+      _registerSlug(map, createPageUrl(calc.page), calc.page.trim());
     }
   });
 
-  ukCities.forEach((city) => {
-    const slug = createSlug(city.name);
-    _registerSlug(map, `${COST_OF_LIVING_BASE_PATH}/${slug}`, 'CostOfLivingPage');
-  });
+  const costOfLivingBase = COST_OF_LIVING_BASE_PATH.replace(/^\/+|\/+$/g, '');
+  if (costOfLivingBase) {
+    ukCities.forEach((city) => {
+      if (!city?.name) return;
+      const slug = createSlug(city.name);
+      if (!slug) return;
+      _registerSlug(map, `${costOfLivingBase}/${slug}`, 'CostOfLivingPage');
+    });
+  }
 
   return map;
 })();
@@ -220,8 +241,7 @@ function LegacyCostOfLivingRedirect() {
   return <Navigate to={COST_OF_LIVING_BASE_PATH} replace />;
 }
 
-// Helper for Layout current page label
-function _getCurrentPage(pathname) {
+const _getCurrentPage = (pathname) => {
   const normalizedPath = _normalizeSlug(pathname || '/');
   if (!normalizedPath || normalizedPath === 'home') {
     return 'Home';
@@ -251,7 +271,7 @@ function _getCurrentPage(pathname) {
   }
 
   return 'LazyRoute';
-}
+};
 
 function PagesContent() {
   const location = useLocation();
@@ -282,20 +302,11 @@ function PagesContent() {
           {/* Manual calculator routes */}
           <Route path="/amortization-calculator" element={<LazyAmortizationCalculator />} />
           <Route path="/annuity-calculator" element={<LazyAnnuityCalculator />} />
-          <Route
-            path="/average-daily-balance-calculator"
-            element={<LazyAverageDailyBalanceCalculator />}
-          />
+          <Route path="/average-daily-balance-calculator" element={<LazyAverageDailyBalanceCalculator />} />
           <Route path="/brrrr-calculator" element={<LazyBrrrrCalculator />} />
           <Route path="/budget-planner" element={<LazyBudgetPlanner />} />
-          <Route
-            path="/buy-to-let-mortgage-calculator"
-            element={<LazyBuyToLetMortgageCalculator />}
-          />
-          <Route
-            path="/capital-gains-tax-calculator"
-            element={<LazyCapitalGainsTaxCalculator />}
-          />
+          <Route path="/buy-to-let-mortgage-calculator" element={<LazyBuyToLetMortgageCalculator />} />
+          <Route path="/capital-gains-tax-calculator" element={<LazyCapitalGainsTaxCalculator />} />
           <Route path="/car-cost-calculator" element={<LazyCarCostCalculator />} />
           <Route path="/car-finance-calculator" element={<LazyCarFinanceCalculator />} />
           <Route path="/car-loan-calculator" element={<LazyCarLoanCalculator />} />
@@ -304,68 +315,118 @@ function PagesContent() {
           <Route path="/childcare-cost-calculator" element={<LazyChildcareCostCalculator />} />
           <Route path="/commission-calculator" element={<LazyCommissionCalculator />} />
           <Route path="/commute-cost-calculator" element={<LazyCommuteCostCalculator />} />
-          <Route
-            path="/compound-interest-calculator"
-            element={<LazyCompoundInterestCalculator />}
-          />
+          <Route path="/compound-interest-calculator" element={<LazyCompoundInterestCalculator />} />
           <Route path="/contractor-calculator" element={<LazyContractorCalculator />} />
-          <Route
-            path="/corporation-tax-calculator"
-            element={<LazyCorporationTaxCalculator />}
-          />
+          <Route path="/corporation-tax-calculator" element={<LazyCorporationTaxCalculator />} />
           <Route path="/cost-of-living-calculator" element={<LazyCostOfLivingCalculator />} />
           <Route path="/debt-calculator" element={<LazyDebtCalculator />} />
-          <Route
-            path="/debt-to-income-ratio-calculator"
-            element={<LazyDebtToIncomeRatioCalculator />}
-          />
+          <Route path="/debt-to-income-ratio-calculator" element={<LazyDebtToIncomeRatioCalculator />} />
           <Route path="/discount-calculator" element={<LazyDiscountCalculator />} />
           <Route path="/dividend-tax-calculator" element={<LazyDividendTaxCalculator />} />
           <Route path="/down-payment-calculator" element={<LazyDownPaymentCalculator />} />
-          <Route
-            path="/dream-lifestyle-calculator"
-            element={<LazyDreamLifestyleCalculator />}
-          />
+          <Route path="/dream-lifestyle-calculator" element={<LazyDreamLifestyleCalculator />} />
           <Route path="/energy-bill-calculator" element={<LazyEnergyBillCalculator />} />
           <Route path="/fire-calculator" element={<LazyFireCalculator />} />
           <Route path="/first-time-buyer-calculator" element={<LazyFirstTimeBuyerCalculator />} />
           <Route path="/fuel-cost-calculator" element={<LazyFuelCostCalculator />} />
           <Route path="/gross-to-net-calculator" element={<LazyGrossToNetCalculator />} />
           <Route path="/holiday-pay-calculator" element={<LazyHolidayPayCalculator />} />
-          <Route
-            path="/home-equity-loan-calculator"
-            element={<LazyHomeEquityLoanCalculator />}
-          />
-          <Route
-            path="/hourly-to-annual-salary-calculator"
-            element={<LazyHourlyToAnnualSalaryCalculator />}
-          />
-          <Route
-            path="/household-bills-splitter"
-            element={<LazyHouseholdBillsSplitter />}
-          />
+          <Route path="/home-equity-loan-calculator" element={<LazyHomeEquityLoanCalculator />} />
+          <Route path="/hourly-to-annual-salary-calculator" element={<LazyHourlyToAnnualSalaryCalculator />} />
+          <Route path="/household-bills-splitter" element={<LazyHouseholdBillsSplitter />} />
           <Route path="/income-tax-calculator" element={<LazyIncomeTaxCalculator />} />
           <Route path="/inflation-calculator" element={<LazyInflationCalculator />} />
           <Route path="/investment-calculator" element={<LazyInvestmentCalculator />} />
           <Route path="/isa-calculator" element={<LazyIsaCalculator />} />
-          <Route
-            path="/mortgage-affordability-calculator"
-            element={<LazyMortgageAffordabilityCalculator />}
-          />
+          <Route path="/mortgage-affordability-calculator" element={<LazyMortgageAffordabilityCalculator />} />
           <Route path="/mortgage-calculator" element={<LazyMortgageCalculator />} />
-          <Route
-            path="/mortgage-comparison-calculator"
-            element={<LazyMortgageComparisonCalculator />}
-          />
-          <Route
-            path="/mortgage-repayment-calculator"
-            element={<LazyMortgageRepaymentCalculator />}
-          />
+          <Route path="/mortgage-comparison-calculator" element={<LazyMortgageComparisonCalculator />} />
+          <Route path="/mortgage-repayment-calculator" element={<LazyMortgageRepaymentCalculator />} />
           <Route path="/net-income-uk-calculator" element={<LazyNetIncomeUkCalculator />} />
           <Route path="/net-worth-calculator" element={<LazyNetWorthCalculator />} />
           <Route path="/ni-calculator" element={<LazyNiCalculator />} />
           <Route path="/overtime-bonus-calculator" element={<LazyOvertimeBonusCalculator />} />
           <Route path="/paye-calculator" element={<LazyPayeCalculator />} />
-          <Route path="/pension-calculator" element></Route>
+          <Route path="/pension-calculator" element={<LazyPensionCalculator />} />
+          <Route path="/percentage-change-calculator" element={<LazyPercentageChangeCalculator />} />
+          <Route path="/personal-allowance-calculator" element={<LazyPersonalAllowanceCalculator />} />
+          <Route path="/personal-finance-calculator" element={<LazyPersonalFinanceCalculator />} />
+          <Route path="/personal-loan-calculator" element={<LazyPersonalLoanCalculator />} />
+          <Route path="/present-value-calculator" element={<LazyPresentValueCalculator />} />
+          <Route path="/price-per-unit-calculator" element={<LazyPricePerUnitCalculator />} />
+          <Route path="/pro-rata-salary-calculator" element={<LazyProRataSalaryCalculator />} />
+          <Route path="/property-flipping-calculator" element={<LazyPropertyFlippingCalculator />} />
+          <Route path="/property-tax-calculator" element={<LazyPropertyTaxCalculator />} />
+          <Route path="/rent-to-buy-calculator" element={<LazyRentToBuyCalculator />} />
+          <Route path="/rent-vs-buy-calculator" element={<LazyRentVsBuyCalculator />} />
+          <Route path="/rental-yield-calculator" element={<LazyRentalYieldCalculator />} />
+          <Route path="/retirement-calculator" element={<LazyRetirementCalculator />} />
+          <Route path="/retirement-savings-calculator" element={<LazyRetirementSavingsCalculator />} />
+          <Route path="/reverse-mortgage-calculator" element={<LazyReverseMortgageCalculator />} />
+          <Route path="/roi-calculator" element={<LazyRoiCalculator />} />
+          <Route path="/rule-of-72-calculator" element={<LazyRuleOf72Calculator />} />
+          <Route path="/salary-calculator" element={<LazySalaryCalculator />} />
+          <Route path="/salary-sacrifice-calculator" element={<LazySalarySacrificeCalculator />} />
+          <Route path="/savings-calculator" element={<LazySavingsCalculator />} />
+          <Route path="/savings-goal-calculator" element={<LazySavingsGoalCalculator />} />
+          <Route path="/sdlt-calculator" element={<LazySdltCalculator />} />
+          <Route path="/student-loan-repayment-calculator" element={<LazyStudentLoanRepaymentCalculator />} />
+          <Route path="/subscription-cost-calculator" element={<LazySubscriptionCostCalculator />} />
+          <Route path="/time-value-of-money-calculator" element={<LazyTimeValueOfMoneyCalculator />} />
+          <Route path="/tip-calculator" element={<LazyTipCalculator />} />
+          <Route path="/travel-budget-calculator" element={<LazyTravelBudgetCalculator />} />
+          <Route path="/vat-calculator" element={<LazyVatCalculator />} />
+          <Route path="/wedding-budget-calculator" element={<LazyWeddingBudgetCalculator />} />
+          <Route path="/weekly-budget-planner" element={<LazyWeeklyBudgetPlanner />} />
+          <Route path="/yearly-income-calculator" element={<LazyYearlyIncomeCalculator />} />
+          <Route path="/zero-based-budgeting-calculator" element={<LazyZeroBasedBudgetingCalculator />} />
 
+          {/* Job Salaries */}
+          <Route path="/job-salaries" element={<JobSalaries />} />
+          <Route path="/job-salaries/:slug" element={<JobSalaryPage />} />
 
+          {/* Inline legacy redirects (must be <Route> children) */}
+          {Object.entries(LEGACY_REDIRECTS).map(([from, to]) => (
+            <Route key={`legacy:${from}`} path={from} element={<Navigate to={to} replace />} />
+          ))}
+
+          {/* Static/Blog/Data */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/cookie-policy" element={<CookiePolicy />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/sitemap" element={<Sitemap />} />
+          <Route path="/cost-of-living" element={<CostOfLiving />} />
+          <Route path="/cost-of-living/:slug" element={<CostOfLivingPage />} />
+          <Route path="/uk-government-budget" element={<UKGovernmentBudget />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/disclaimer" element={<Disclaimer />} />
+          <Route path="/blog-smart-money-saving-tips" element={<BlogSmartMoneySavingTips />} />
+          <Route path="/blog-debt-repayment-strategies" element={<BlogDebtRepaymentStrategies />} />
+          <Route path="/blog-financial-psychology" element={<BlogFinancialPsychology />} />
+          <Route path="/blog/why-small-calculations-matter" element={<BlogWhyCalculationsMatter />} />
+          <Route path="/job-salary-page" element={<JobSalaryPage />} />
+          <Route path="/jobsalarypage" element={<JobSalaryPage />} />
+          <Route path="/cost-of-living-page" element={<LegacyCostOfLivingRedirect />} />
+          <Route path="/uk-financial-stats" element={<UKFinancialStats />} />
+          <Route path="/methodology" element={<Methodology />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
+          <Route path="/link-to-us" element={<LinkToUs />} />
+
+          {/* 404 LAST */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </Layout>
+  );
+}
+
+export default function Pages() {
+  return (
+    <Router>
+      <PagesContent />
+    </Router>
+  );
+}
