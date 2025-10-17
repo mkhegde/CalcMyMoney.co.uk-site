@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Calculator, Scales, Percent, PieChart as PieChartIcon } from 'lucide-react';
+import { Calculator, Scale, Percent, PieChart as PieChartIcon } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 import Heading from '@/components/common/Heading';
@@ -316,7 +316,7 @@ export default function CapitalGainsTaxCalculatorPage() {
             <Card className="border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-900/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold text-indigo-900 dark:text-indigo-100">
-                  <Scales className="h-5 w-5" />
+                  <Scale className="h-5 w-5" />
                   Gain Summary
                 </CardTitle>
               </CardHeader>
