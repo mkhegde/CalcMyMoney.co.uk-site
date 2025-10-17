@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Head from 'next/head';
 import {
   ResponsiveContainer,
   BarChart,
@@ -20,6 +19,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = [
   'buy to let mortgage calculator',
@@ -34,6 +34,21 @@ const metaDescription =
   'Use our buy to let mortgage calculator to plan deposits, compare BTL mortgage calculator stress tests, and forecast buy to let mortgage yields for upcoming rentals.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/buy-to-let-mortgage-calculator';
+
+const webpageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Buy-to-Let Mortgage Calculator',
+  url: canonicalUrl,
+  description: metaDescription,
+  keywords: keywords.slice(0, 5),
+  inLanguage: 'en-GB',
+  potentialAction: {
+    '@type': 'Action',
+    name: 'Analyse buy to let mortgage',
+    target: canonicalUrl,
+  },
+};
 
 const defaultInputs = {
   propertyPrice: '325000',
@@ -177,44 +192,19 @@ export default function BuyToLetMortgageCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <Head>
-        <title>Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta
-          property="og:title"
-          content="Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator"
-        />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:title"
-          content="Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator"
-        />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Buy-to-Let Mortgage Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: keywords.slice(0, 5),
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Analyse buy to let mortgage',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Head>
+      <SeoHead
+        title="Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator"
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle="Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator"
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="Calc My Money"
+        twitterTitle="Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator"
+        twitterDescription={metaDescription}
+        jsonLd={[webpageSchema]}
+      />
 
       <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">

@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import Head from 'next/head';
 import { Calculator, Gauge, Car, Wallet } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -20,6 +19,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = ['car cost calculator'];
 
@@ -27,6 +27,21 @@ const metaDescription =
   'Use our car cost calculator to factor purchase finance, insurance, fuel, tax, and maintenance so you know the true monthly cost of running your car.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/car-cost-calculator';
+
+const webpageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Car Cost Calculator',
+  url: canonicalUrl,
+  description: metaDescription,
+  keywords,
+  inLanguage: 'en-GB',
+  potentialAction: {
+    '@type': 'Action',
+    name: 'Calculate car running costs',
+    target: canonicalUrl,
+  },
+};
 
 const faqItems = [
   {
@@ -157,38 +172,19 @@ export default function CarCostCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <Head>
-        <title>Car Cost Calculator | Car Cost Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Car Cost Calculator | Car Cost Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Car Cost Calculator | Car Cost Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Car Cost Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Calculate car running costs',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Head>
+      <SeoHead
+        title="Car Cost Calculator | Car Cost Calculator"
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle="Car Cost Calculator | Car Cost Calculator"
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="Calc My Money"
+        twitterTitle="Car Cost Calculator | Car Cost Calculator"
+        twitterDescription={metaDescription}
+        jsonLd={[webpageSchema]}
+      />
 
       <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">

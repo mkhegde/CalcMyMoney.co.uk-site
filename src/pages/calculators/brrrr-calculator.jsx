@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Head from 'next/head';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -20,6 +19,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import SeoHead from '@/components/seo/SeoHead';
 
 const brrrrKeywords = ['brrrr calculator', 'brrrr real estate calculator'];
 
@@ -27,6 +27,21 @@ const metaDescription =
   'Use our BRRRR calculator to map buy-rehab-rent-refinance results while the BRRRR real estate calculator tracks cash flow, equity, and cash-out potential for your next deal.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/brrrr-calculator';
+
+const webpageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'BRRRR Calculator',
+  url: canonicalUrl,
+  description: metaDescription,
+  keywords: brrrrKeywords.slice(0, 5),
+  inLanguage: 'en-GB',
+  potentialAction: {
+    '@type': 'Action',
+    name: 'Run BRRRR analysis',
+    target: canonicalUrl,
+  },
+};
 
 const faqItems = [
   {
@@ -145,38 +160,19 @@ export default function BRRRRCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <Head>
-        <title>BRRRR Calculator | BRRRR Real Estate Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="BRRRR Calculator | BRRRR Real Estate Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="BRRRR Calculator | BRRRR Real Estate Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'BRRRR Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: brrrrKeywords.slice(0, 5),
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Run BRRRR analysis',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Head>
+      <SeoHead
+        title="BRRRR Calculator | BRRRR Real Estate Calculator"
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle="BRRRR Calculator | BRRRR Real Estate Calculator"
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="Calc My Money"
+        twitterTitle="BRRRR Calculator | BRRRR Real Estate Calculator"
+        twitterDescription={metaDescription}
+        jsonLd={[webpageSchema]}
+      />
 
       <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-gray-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">

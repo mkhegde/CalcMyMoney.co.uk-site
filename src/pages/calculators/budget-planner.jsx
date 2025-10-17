@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import Head from 'next/head';
 import { Calculator, Wallet, PiggyBank, PlusCircle } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
@@ -9,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import SeoHead from '@/components/seo/SeoHead';
 
 const budgetKeywords = ['monthly budget calculator', 'budget calculator'];
 
@@ -16,6 +16,21 @@ const metaDescription =
   'Use our monthly budget calculator to track income, compare categories with the budget calculator, and plan savings goals with flexible monthly adjustments.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/budget-planner';
+
+const webpageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Budget Planner',
+  url: canonicalUrl,
+  description: metaDescription,
+  keywords: budgetKeywords.slice(0, 5),
+  inLanguage: 'en-GB',
+  potentialAction: {
+    '@type': 'Action',
+    name: 'Build a monthly budget',
+    target: canonicalUrl,
+  },
+};
 
 const faqItems = [
   {
@@ -108,38 +123,19 @@ export default function BudgetPlannerPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <Head>
-        <title>Budget Planner | Budget Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Budget Planner | Budget Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Budget Planner | Budget Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Budget Planner',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: budgetKeywords.slice(0, 5),
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Build a monthly budget',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Head>
+      <SeoHead
+        title="Budget Planner | Budget Calculator"
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle="Budget Planner | Budget Calculator"
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="Calc My Money"
+        twitterTitle="Budget Planner | Budget Calculator"
+        twitterDescription={metaDescription}
+        jsonLd={[webpageSchema]}
+      />
 
       <section className="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-800 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">

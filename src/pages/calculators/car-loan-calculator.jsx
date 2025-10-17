@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Head from 'next/head';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -20,6 +19,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = [
   'car loan calculator',
@@ -34,6 +34,21 @@ const metaDescription =
   'Use our car loan calculator to compare car loan options, evaluate a new car loan calculator scenario, and stress-test finance terms in an auto loan calculator.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/car-loan-calculator';
+
+const webpageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Car Loan Calculator',
+  url: canonicalUrl,
+  description: metaDescription,
+  keywords: keywords.slice(0, 5),
+  inLanguage: 'en-GB',
+  potentialAction: {
+    '@type': 'Action',
+    name: 'Plan car finance payments',
+    target: canonicalUrl,
+  },
+};
 
 const defaultInputs = {
   vehiclePrice: '28000',
@@ -152,38 +167,19 @@ export default function CarLoanCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <Head>
-        <title>Car Loan Calculator | Car Loan</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Car Loan Calculator | Car Loan" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Car Loan Calculator | Car Loan" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Car Loan Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: keywords.slice(0, 5),
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Plan car finance payments',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Head>
+      <SeoHead
+        title="Car Loan Calculator | Car Loan"
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle="Car Loan Calculator | Car Loan"
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="Calc My Money"
+        twitterTitle="Car Loan Calculator | Car Loan"
+        twitterDescription={metaDescription}
+        jsonLd={[webpageSchema]}
+      />
 
       <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">

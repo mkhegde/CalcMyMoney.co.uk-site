@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import Head from 'next/head';
 import { Calculator, Scales, Percent, PieChart as PieChartIcon } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = [
   'capital gains tax calculator',
@@ -28,6 +28,21 @@ const metaDescription =
   'Use our capital gains tax calculator to estimate capital gains tax, compare CGT calculator scenarios, and plan allowances with this capital gains calculator.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/capital-gains-tax-calculator';
+
+const webpageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Capital Gains Tax Calculator',
+  url: canonicalUrl,
+  description: metaDescription,
+  keywords,
+  inLanguage: 'en-GB',
+  potentialAction: {
+    '@type': 'Action',
+    name: 'Estimate capital gains tax',
+    target: canonicalUrl,
+  },
+};
 
 const COLORS = ['#6366f1', '#10b981', '#f97316', '#0ea5e9'];
 
@@ -130,38 +145,19 @@ export default function CapitalGainsTaxCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <Head>
-        <title>Capital Gains Tax Calculator | Capital Gains Tax</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Capital Gains Tax Calculator | Capital Gains Tax" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Capital Gains Tax Calculator | Capital Gains Tax" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Capital Gains Tax Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate capital gains tax',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Head>
+      <SeoHead
+        title="Capital Gains Tax Calculator | Capital Gains Tax"
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle="Capital Gains Tax Calculator | Capital Gains Tax"
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="Calc My Money"
+        twitterTitle="Capital Gains Tax Calculator | Capital Gains Tax"
+        twitterDescription={metaDescription}
+        jsonLd={[webpageSchema]}
+      />
 
       <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">

@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import Head from 'next/head';
 import { Baby, Calculator, PiggyBank } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -20,6 +19,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = [
   'childcare cost calculator',
@@ -32,6 +32,21 @@ const metaDescription =
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/childcare-cost-calculator';
 const schemaKeywords = keywords.slice(0, 5);
+
+const webpageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Childcare Cost Calculator',
+  url: canonicalUrl,
+  description: metaDescription,
+  keywords: schemaKeywords,
+  inLanguage: 'en-GB',
+  potentialAction: {
+    '@type': 'Action',
+    name: 'Estimate childcare costs',
+    target: canonicalUrl,
+  },
+};
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -107,38 +122,19 @@ export default function ChildcareCostCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <Head>
-        <title>Childcare Cost Calculator | Childcare Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Childcare Cost Calculator | Childcare Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Childcare Cost Calculator | Childcare Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Childcare Cost Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate childcare costs',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Head>
+      <SeoHead
+        title="Childcare Cost Calculator | Childcare Calculator"
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle="Childcare Cost Calculator | Childcare Calculator"
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="Calc My Money"
+        twitterTitle="Childcare Cost Calculator | Childcare Calculator"
+        twitterDescription={metaDescription}
+        jsonLd={[webpageSchema]}
+      />
 
       <section className="bg-gradient-to-r from-pink-900 via-rose-900 to-pink-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
