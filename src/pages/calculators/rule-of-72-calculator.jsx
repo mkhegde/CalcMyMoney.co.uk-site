@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Calculator, SandTimer, TrendingUp, ArrowRightLeft, LineChart } from 'lucide-react';
+import { Calculator, Hourglass, TrendingUp, ArrowRightLeft, LineChart } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -155,7 +155,7 @@ export default function RuleOf72CalculatorPage() {
             <Card className="border border-emerald-200 bg-white text-slate-900 shadow-md dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-100">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <SandTimer className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+                  <Hourglass className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
                   Doubling time inputs
                 </CardTitle>
               </CardHeader>
