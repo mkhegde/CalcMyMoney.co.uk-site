@@ -108,7 +108,7 @@ const LazyRetirementCalculator = lazy(() => import('./calculators/retirement-cal
 const LazyRetirementSavingsCalculator = lazy(() => import('./calculators/retirement-savings-calculator.jsx'));
 const LazyReverseMortgageCalculator = lazy(() => import('./calculators/reverse-mortgage-calculator.jsx'));
 const LazyRoiCalculator = lazy(() => import('./calculators/roi-calculator.jsx'));
-const LazyRuleOf72Calculator = lazy(() => import('./calculators/rule-of72-calculator.jsx'));
+const LazyRuleOf72Calculator = lazy(() => import('./calculators/rule-of-72-calculator.jsx'));
 const LazySalaryCalculator = lazy(() => import('./calculators/salary-calculator.jsx'));
 const LazySalarySacrificeCalculator = lazy(() => import('./calculators/salary-sacrifice-calculator.jsx'));
 const LazySavingsCalculator = lazy(() => import('./calculators/savings-calculator.jsx'));
@@ -415,4 +415,26 @@ function PagesContent() {
           <Route path="/job-salary-page" element={<JobSalaryPage />} />
           <Route path="/jobsalarypage" element={<JobSalaryPage />} />
           <Route path="/cost-of-living-page" element={<LegacyCostOfLivingRedirect />} />
-          <Route path="/uk-financial-stats" element
+          <Route path="/uk-financial-stats" element={<UKFinancialStats />} />
+          <Route path="/methodology" element={<Methodology />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
+          <Route path="/link-to-us" element={<LinkToUs />} />
+
+          {/* Catch-all */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </Layout>
+  );
+}
+
+function Pages() {
+  return (
+    <Router>
+      <PagesContent />
+    </Router>
+  );
+}
+
+export default Pages;

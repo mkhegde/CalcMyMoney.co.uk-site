@@ -353,3 +353,40 @@ export default function AverageDailyBalanceCalculator() {
           <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
             Smart Strategies to Minimize Interest
           </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Schedule additional repayments before your statement closes and ringfence a small buffer
+            fund. Lower daily balances slash finance charges, while a cash reserve stops you from
+            leaning on costly credit during tight months.
+          </p>
+        </section>
+      </CalculatorWrapper>
+
+      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
+            Why Average Daily Balance Matters
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Credit card issuers calculate interest using your average daily balance, so keeping tabs
+            on mid-cycle spending is essential. Track balance changes to plan payments and compare
+            whether balance transfer deals could reduce costs.
+          </p>
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Stay Ahead of the Billing Cycle
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Note the dates new statements are generated, automate payments, and avoid late-month
+            purchases when the balance is already high. These proactive steps keep your average
+            balance lean and interest predictable.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={faqItems} />
+        </div>
+      </section>
+    </div>
+  );
+}

@@ -283,15 +283,89 @@ export default function ReverseMortgageCalculator() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Projected debt (15 years)</p>
+                    <p className="text-muted-foreground">Projected debt ({results.yearsProjection} years)</p>
                     <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                       {currencyFormatter.format(results.projectedDebt)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Remaining equity (15 years)</p>
+                    <p className="text-muted-foreground">Remaining equity ({results.yearsProjection} years)</p>
                     <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                       {currencyFormatter.format(results.remainingEquity)}
                     </p>
                   </div>
                   <div>
+                    <p className="text-muted-foreground">Projection horizon</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {results.yearsProjection} years
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-purple-100 dark:border-purple-800 bg-purple-50/60 dark:bg-purple-950/40 px-4 py-3 text-muted-foreground">
+                  Figures are indicative. Enhanced LTVs may apply for health-based applications or joint borrowers.
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-purple-200 dark:border-purple-900 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <HandCoins className="h-5 w-5 text-purple-500" />
+                  Cashflow Considerations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  Drawdown facilities release funds gradually, limiting compound interest compared to a single lump sum. Use the monthly drawdown input to test how regular income changes projected balances.
+                </p>
+                <p>
+                  Keep a portion of proceeds aside for one-off costs such as home adaptations or clearing unsecured debts so the equity release meets your goals.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-purple-200 dark:border-purple-900 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <LifeBuoy className="h-5 w-5 text-purple-500" />
+                  Safeguards &amp; Advice
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  Engage an FCA-regulated adviser to compare lifetime mortgages, understand early repayment charges, and confirm the no-negative-equity guarantee.
+                </p>
+                <p>
+                  Share decisions with family. Equity release reduces potential inheritances, so align expectations early.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </CalculatorWrapper>
+
+      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
+            Reverse Mortgage Insights
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Compare interest roll-up, fees, and LTV limits before committing. Adjust the inputs to see how age, property value, and drawdown choices affect both the net release today and equity later.
+          </p>
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Plan for Flexibility
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Consider whether you might move, repay early, or make voluntary payments. Understanding product flexibility and potential charges helps you choose the right lifetime mortgage.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={faqItems} />
+        </div>
+      </section>
+    </div>
+  );
+}

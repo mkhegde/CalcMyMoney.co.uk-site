@@ -337,3 +337,129 @@ export default function PropertyFlippingCalculator() {
                 <CardTitle className="flex items-center gap-2 text-base font-semibold">
                   <Home className="h-5 w-5 text-amber-500" />
                   Flip Profit Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-muted-foreground">Total investment</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {currencyFormatter.format(results.totalInvestment)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Net sale proceeds</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {currencyFormatter.format(results.netProceeds)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Gross profit</p>
+                    <p className="text-lg font-semibold text-amber-600">
+                      {currencyFormatter.format(results.grossProfit)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Return on investment</p>
+                    <p className="text-lg font-semibold text-amber-600">
+                      {results.roi.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-amber-100 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/40 px-4 py-3 text-muted-foreground">
+                  Aiming for at least a 20% ROI helps cover unexpected costs and estate agent
+                  commissions. Test different sale prices to see how sensitive profit is to market
+                  fluctuations.
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-amber-200 dark:border-amber-900 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <Hammer className="h-5 w-5 text-amber-500" />
+                  Renovation &amp; Holding Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Renovation budget</p>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    {currencyFormatter.format(results.renovationCost)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Contingency reserve</p>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    {currencyFormatter.format(results.contingency)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Holding costs</p>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    {currencyFormatter.format(results.holdingCosts)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Selling fees</p>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                    {currencyFormatter.format(results.sellingFees)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-amber-200 dark:border-amber-900 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <TrendingUp className="h-5 w-5 text-amber-500" />
+                  Deal Timeline Insights
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  Keep the holding period tight. Every extra month adds carrying costs and erodes
+                  net profit. Proactive project management keeps trades on schedule.
+                </p>
+                <p>
+                  Track renovation cash flow. Pay suppliers when milestones are complete and review
+                  receipts weekly to avoid scope creep that destroys ROI.
+                </p>
+                <p>
+                  Research exit pricing before you buy. Comparable evidence supports valuation and
+                  strengthens negotiations with agents and buyers.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </CalculatorWrapper>
+
+      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
+            Flip Calculator Insights
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Successful flips balance realistic purchase prices with disciplined renovation budgets.
+            Use this calculator to run profitability scenarios, stress test sale prices, and confirm
+            whether a project meets your target return.
+          </p>
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Plan for Contingencies
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Build in a contingency buffer and monitor costs weekly. Adjusting scope early protects
+            profit if survey surprises, labour shortages, or conveyancing delays surface.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={faqItems} />
+        </div>
+      </section>
+    </div>
+  );
+}
