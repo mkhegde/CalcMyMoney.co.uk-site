@@ -352,15 +352,15 @@ export default function CompoundInterestCalculatorPage() {
               <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
                 <div className="flex items-center justify-between">
                   <span>Total value</span>
-                  <span>{currencyFormatter(results.balance)}</span>
+                    <span>{currencyFormatter.format(results.balance)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Total contributed</span>
-                  <span>{currencyFormatter(results.totalContributions)}</span>
+                    <span>{currencyFormatter.format(results.totalContributions)}</span>
                 </div>
                 <div className="flex items-center justify-between font-semibold text-slate-700 dark:text-slate-200">
                   <span>Interest earned</span>
-                  <span>{currencyFormatter(results.interestEarned)}</span>
+                    <span>{currencyFormatter.format(results.interestEarned)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -413,7 +413,7 @@ export default function CompoundInterestCalculatorPage() {
                 {results.projection.slice(0, 15).map((row) => (
                   <div key={row.year} className="flex items-center justify-between">
                     <span>Year {row.year}</span>
-                    <span>{currencyFormatter(row.balance)}</span>
+                    <span>{currencyFormatter.format(row.balance)}</span>
                   </div>
                 ))}
                 {results.projection.length > 15 && (

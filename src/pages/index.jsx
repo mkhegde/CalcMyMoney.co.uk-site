@@ -369,6 +369,8 @@ function PagesContent() {
           <Route path="/roi-calculator" element={<LazyRoiCalculator />} />
           <Route path="/rule-of-72-calculator" element={<LazyRuleOf72Calculator />} />
           <Route path="/salary-calculator" element={<LazySalaryCalculator />} />
+          <Route path="/salary-calculator-uk" element={<LazySalaryCalculator />} />
+          <Route path="/budget-calculator" element={<LazyBudgetPlanner />} />
           <Route path="/salary-sacrifice-calculator" element={<LazySalarySacrificeCalculator />} />
           <Route path="/savings-calculator" element={<LazySavingsCalculator />} />
           <Route path="/savings-goal-calculator" element={<LazySavingsGoalCalculator />} />
