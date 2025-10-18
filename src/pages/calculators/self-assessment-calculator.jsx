@@ -331,17 +331,69 @@ export default function SelfAssessmentCalculator() {
             </Card>
           </div>
         </div>
+      </CalculatorWrapper>
 
-        <section className="mt-12 space-y-6">
+      <section className="mt-12 space-y-6">
+        <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
+          Calculate Self Assessment to Estimate Your Tax Bill
+        </Heading>
+        <p className="text-base text-muted-foreground leading-relaxed">
+          Combine trading income, allowable expenses, and National Insurance to forecast HMRC
+          submissions. Planning ahead makes tax return season less stressful.
+        </p>
+
+        <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+          Manage Tax Bills with Confidence
+        </Heading>
+        <p className="text-base text-muted-foreground leading-relaxed">
+          Review your bookkeeping monthly so you know how much profit is building up. Setting aside
+          a fixed percentage of each invoice keeps the January and July deadlines covered.
+        </p>
+
+        <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+          Track Payments on Account Early
+        </Heading>
+        <p className="text-base text-muted-foreground leading-relaxed">
+          HMRC collects advance instalments when tax exceeds £1,000. Use the calculator to see the
+          balancing payment and next year’s first instalment, then schedule transfers into your tax
+          reserve.
+        </p>
+      </section>
+
+      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Self Assessment to Estimate Your Tax Bill
+            Self Assessment Filing Checklist
           </Heading>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Combine trading income, allowable expenses, and National Insurance to forecast HMRC
-            submissions. Planning ahead makes tax return season less stressful.
+            Gather bank statements, invoices, mileage logs, and pension paperwork before you sit
+            down to complete your return. Digitising paperwork streamlines submissions and reduces
+            audit risk.
           </p>
-
           <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Manage Tax Bill for Sole Trader Tax Confidence
+            Reduce Last-Minute Surprises
           </Heading>
-        ...
+          <p className="text-base text-muted-foreground leading-relaxed">
+            File early if you are due a refund or need time to arrange payment. Early filing also
+            highlights any missing records while there is still time to request duplicates.
+          </p>
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            When to Seek Professional Advice
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Complex scenarios such as capital gains, foreign income, or large pension
+            contributions benefit from an accountant’s review. They can also ensure you claim all
+            reliefs available to sole traders.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={faqItems} />
+        </div>
+      </section>
+    </div>
+  );
+}
+
