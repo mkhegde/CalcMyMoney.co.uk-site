@@ -2,47 +2,26 @@ import { useLocation } from 'react-router-dom';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Search, Calculator, TrendingUp, Users, ExternalLink } from 'lucide-react';
+import {
+  Search,
+  Calculator,
+  TrendingUp,
+  Users,
+  ExternalLink,
+  CreditCard,
+  Wallet,
+  Zap,
+  Briefcase,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 import { prefetchPage } from '@/utils/prefetchPage';
-import FAQSection from '../components/calculators/FAQSection';
-import { HandCoins, PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
+import { PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
 import { useSeo } from '@/components/seo/SeoContext';
 import Heading from '@/components/common/Heading';
 
 const DEFAULT_STATS = { total: 0, active: 0, categories: 0 };
-
-const homepageFaqs = [
-  {
-    question: 'How accurate are your UK salary/tax calculators?',
-    answer: (
-      <>
-        <p>
-          Our calculators are designed to be highly accurate, based on the latest UK tax laws and
-          financial regulations. They use up-to-date information for Income Tax, National Insurance,
-          pension contributions, and student loans for the specified tax year (2025/26).
-        </p>
-        <p className="mt-2">
-          While we strive for precision, these tools are for estimation purposes and should not be
-          considered financial advice. Always consult with a qualified financial advisor for
-          personal financial decisions.
-        </p>
-      </>
-    ),
-  },
-  {
-    question: 'Which tax year do the calculators use (2025/26)?',
-    answer:
-      'All relevant calculators, including the Salary, Income Tax, and National Insurance calculators, have been updated and are based on the 2025/26 UK tax year, which runs from 6 April 2025 to 5 April 2026. Rates and thresholds for England, Scotland, Wales, and Northern Ireland are applied where applicable.',
-  },
-  {
-    question: 'Can I download or print the results?',
-    answer:
-      "Yes. Most of our calculators feature 'Export' or 'Print' buttons that allow you to either download your results as a CSV/PDF file or generate a printer-friendly version of the summary. This makes it easy to save your calculations for your records or share them with others.",
-  },
-];
 
 export default function Home() {
   const location = useLocation();
@@ -91,77 +70,6 @@ export default function Home() {
   const isCatalogLoading = calcData.loading;
   const categoriesLoaded = calcData.categories.length > 0;
 
-  // Popular/Featured calculators — use kebab-case slugs (no leading slash)
-  const featuredSlugs = [
-    'salary-calculator-uk',
-    'mortgage-calculator',
-    'budget-calculator',
-    'income-tax-calculator',
-    'compound-interest-calculator',
-    'pension-calculator',
-  ];
-
-  // Build featured objects by exact URL match
-  const fallbackFeatured = [
-    {
-      name: 'Salary Calculator UK',
-      url: '/salary-calculator-uk',
-      description: 'Work out take-home pay for 2025/26.',
-      category: 'Salary',
-      icon: Calculator,
-    },
-    {
-      name: 'Mortgage Calculator',
-      url: '/mortgage-calculator',
-      description: 'Estimate repayments and interest costs.',
-      category: 'Property',
-      icon: HomeIcon,
-    },
-    {
-      name: 'Budget Planner',
-      url: '/budget-calculator',
-      description: 'Build a monthly budget and spot savings.',
-      category: 'Budgeting',
-      icon: PiggyBank,
-    },
-    {
-      name: 'Income Tax Calculator',
-      url: '/income-tax-calculator',
-      description: 'See your PAYE, NI and take-home pay.',
-      category: 'Tax',
-      icon: PoundSterling,
-    },
-    {
-      name: 'Compound Interest Calculator',
-      url: '/compound-interest-calculator',
-      description: 'Project savings with compounding returns.',
-      category: 'Investing',
-      icon: TrendingUp,
-    },
-    {
-      name: 'Pension Calculator',
-      url: '/pension-calculator',
-      description: 'Plan retirement contributions and growth.',
-      category: 'Retirement',
-      icon: Users,
-    },
-  ];
-
-  const featuredCalcObjects = useMemo(() => {
-    if (!calcData.calculators.length) return fallbackFeatured;
-
-    const picks = featuredSlugs
-      .map((slug) =>
-        calcData.calculators.find((c) => c.url === `/${slug}` && c.status === 'active')
-      )
-      .filter(Boolean);
-
-    // Fallback so the section never renders empty
-    return picks.length
-      ? picks
-      : calcData.calculators.filter((c) => c.status === 'active').slice(0, 6);
-  }, [calcData.calculators]);
-
   // Handle search
   useEffect(() => {
     if (!calcData.searchFn) {
@@ -181,32 +89,72 @@ export default function Home() {
     setSearchQuery(e.target.value);
   };
 
-  const hubCards = [
+  const fallbackHubCards = [
     {
-      title: 'Salary & Income',
-      icon: HandCoins,
-      link: '#income-employment',
-      description: 'Calculate take-home pay, tax, and more.',
-    },
-    {
-      title: 'Tax Calculators',
-      icon: PoundSterling,
-      link: '#tax-calculators',
-      description: 'Tools for income tax, NI, VAT, and CGT.',
-    },
-    {
-      title: 'Mortgage & Loans',
+      title: 'Mortgages & Property',
       icon: HomeIcon,
-      link: '#property-mortgages',
-      description: 'Estimate repayments and affordability.',
+      link: '#mortgages-property',
+      description: 'Planning tools for buyers, landlords, and homeowners managing property decisions.',
     },
     {
-      title: 'Savings & Finance',
+      title: 'Tax & Income',
+      icon: PoundSterling,
+      link: '#tax-income',
+      description: 'Understand deductions, take-home pay, and tax liabilities on every type of income.',
+    },
+    {
+      title: 'Retirement & Pensions',
+      icon: TrendingUp,
+      link: '#retirement-pensions',
+      description: 'Plan retirement ages, pension withdrawals, and contribution strategies.',
+    },
+    {
+      title: 'Savings & Investments',
       icon: PiggyBank,
       link: '#savings-investments',
-      description: 'Plan investments and savings goals.',
+      description: 'Track growth, optimise allowances, and compare investment strategies.',
+    },
+    {
+      title: 'Debt & Loans',
+      icon: CreditCard,
+      link: '#debt-loans',
+      description: 'Plan repayments, understand borrowing costs, and accelerate debt freedom.',
+    },
+    {
+      title: 'Budgeting & Planning',
+      icon: Wallet,
+      link: '#budgeting-planning',
+      description: 'Coordinate spending plans, short-term goals, and day-to-day money decisions.',
+    },
+    {
+      title: 'Business & Freelancing',
+      icon: Briefcase,
+      link: '#business-freelancing',
+      description: 'Support sole traders, contractors, and directors with cash flow and taxes.',
+    },
+    {
+      title: 'Utilities & Tools',
+      icon: Zap,
+      link: '#utilities-tools',
+      description: 'Compare household bills, transport costs, and essential living expenses.',
+    },
+    {
+      title: 'Family & Lifestyle',
+      icon: Users,
+      link: '#family-lifestyle',
+      description: 'Manage household finances, life events, and long-term family planning costs.',
     },
   ];
+
+  const hubCards = useMemo(() => {
+    if (!calcData.categories.length) return fallbackHubCards;
+    return calcData.categories.map((category) => ({
+      title: category.name,
+      icon: category.icon || Calculator,
+      link: `#${category.slug}`,
+      description: category.description,
+    }));
+  }, [calcData.categories]);
 
   useEffect(() => {
     if (!hasQuery) {
@@ -395,59 +343,6 @@ export default function Home() {
               <p className="body text-muted-foreground">{card.description}</p>
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* Featured/Popular Calculators */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8 text-center">
-          <Heading
-            as="h2"
-            size="h2"
-            weight="bold"
-            className="mb-4 flex items-center justify-center gap-3 text-foreground"
-          >
-            <Calculator className="h-9 w-9 text-primary" />
-            Popular Calculators
-          </Heading>
-          <p className="lead text-muted-foreground">
-            The most used financial calculators on our platform
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-          {featuredCalcObjects.map((calc, index) => (
-            <Link
-              key={index}
-              to={calc.url}
-              onMouseEnter={() => calc.page && prefetchPage(calc.page)}
-              onFocus={() => calc.page && prefetchPage(calc.page)}
-              className="group block rounded-lg border border-card-muted bg-card p-6 transition-all duration-200 hover:border-primary/50 hover:shadow-md"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <calc.icon className="h-5 w-5 text-primary" />
-                <Heading
-                  as="h3"
-                  size="h3"
-                  className="text-foreground transition-colors group-hover:text-primary"
-                >
-                  {calc.name}
-                </Heading>
-              </div>
-              <p className="mb-2 body text-muted-foreground">{calc.description}</p>
-              <p className="caption text-neutral-soft-foreground">{calc.category}</p>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Homepage FAQ Section */}
-      <div className="bg-background py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Heading as="h2" size="h2" weight="bold" underline className="text-foreground text-center mb-10">
-            Common Questions
-          </Heading>
-          <FAQSection faqs={homepageFaqs} />
         </div>
       </div>
 

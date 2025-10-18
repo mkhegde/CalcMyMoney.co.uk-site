@@ -253,7 +253,16 @@ export default function BlogSmartMoneySavingTips() {
               <li>
                 <strong>Understand Your Usage:</strong> Many smart meters or online accounts provide
                 a detailed breakdown of your energy consumption. Identify peak usage times or
-                'energy hungry' appliances.
+                'energy hungry' appliances. Use{' '}
+                <a
+                  href="https://www.gocompare.com/gas-and-electricity/guide/energy-calculator/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-medium text-emerald-700 dark:text-emerald-300"
+                >
+                  Go.Compare's energy appliance calculator
+                </a>{' '}
+                to understand the cost of running an appliance and how much energy it uses.
               </li>
               <li>
                 <strong>Smart Thermostat & Zoned Heating:</strong> Invest in a smart thermostat that
@@ -305,15 +314,7 @@ export default function BlogSmartMoneySavingTips() {
                 often offer personalized discounts.
               </li>
               <li>
-                <strong>Energy Supplier Switching:</strong> Use comparision sites such as{' '}
-                <a
-                  href="https://www.gocompare.com/gas-and-electricity/guide/energy-calculator/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline font-medium text-emerald-700 dark:text-emerald-300"
-                >
-                  Go.Compare's energy calculator
-                </a>{' '}
+                <strong>Energy Supplier Switching:</strong> Use commonly available UK comparision sites
                 to ensure you're on the best tariff for usage.
               </li>
               <li>
