@@ -28,12 +28,15 @@ const LazyRelatedAuto = lazy(() => import('@/components/calculators/RelatedAuto.
 
 const COST_OF_LIVING_BASE_PATH = createPageUrl('CostOfLiving');
 const FALLBACK_FOOTER_CATEGORIES = [
-  { name: 'Salary Calculator UK', href: '/salary-calculator-uk' },
-  { name: 'Income Tax Calculator', href: '/income-tax-calculator' },
-  { name: 'Mortgage Calculator', href: '/mortgage-calculator' },
-  { name: 'Budget Planner', href: '/budget-calculator' },
-  { name: 'Compound Interest Calculator', href: '/compound-interest-calculator' },
-  { name: 'Pension Calculator', href: '/pension-calculator' },
+  { name: 'Mortgages & Property', slug: 'mortgages-property' },
+  { name: 'Tax & Income', slug: 'tax-income' },
+  { name: 'Retirement & Pensions', slug: 'retirement-pensions' },
+  { name: 'Savings & Investments', slug: 'savings-investments' },
+  { name: 'Debt & Loans', slug: 'debt-loans' },
+  { name: 'Budgeting & Planning', slug: 'budgeting-planning' },
+  { name: 'Business & Freelancing', slug: 'business-freelancing' },
+  { name: 'Utilities & Tools', slug: 'utilities-tools' },
+  { name: 'Family & Lifestyle', slug: 'family-lifestyle' },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -50,7 +53,7 @@ export default function Layout({ children, currentPageName }) {
   );
   const footerCategories = useMemo(() => {
     if (calculatorCategories.length > 0) {
-      return calculatorCategories.slice(0, 6).map((category) => ({
+      return calculatorCategories.map((category) => ({
         name: category.name,
         slug: category.slug,
       }));
