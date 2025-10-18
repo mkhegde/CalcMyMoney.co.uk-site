@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ukCities, createSlug } from '../components/data/seo-data';
@@ -12,6 +13,15 @@ export default function CostOfLiving() {
 
   return (
     <div className="bg-white dark:bg-gray-900">
+      <Helmet>
+        <title>UK Cost of Living Calculator - Estimate Your Monthly Expenses</title>
+        <meta
+          name="description"
+          content="Calculate the average monthly cost of living in various UK cities including rent, utilities, and transport. Get a complete breakdown of typical household expenditures."
+        />
+        <link rel="canonical" href="https://calcmymoney.co.uk/CostOfLiving" />
+      </Helmet>
+
       <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">

@@ -20,6 +20,7 @@ import CookieConsentBanner from '../components/general/CookieConsentBanner';
 import { pageSeo, defaultOgImage, defaultOgAlt } from '../components/data/pageSeo';
 import SeoHead from '@/components/seo/SeoHead';
 import { SeoProvider } from '@/components/seo/SeoContext';
+import { HelmetProvider } from 'react-helmet-async';
 
 import Heading from '@/components/common/Heading';
 
@@ -528,10 +529,11 @@ export default function Layout({ children, currentPageName }) {
     'relative inline-flex items-center px-1 py-2 text-sm font-semibold text-muted-foreground transition-all duration-200 after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 hover:text-foreground hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
   return (
-    <SeoProvider value={seoContextValue}>
-      <div className="min-h-screen bg-background text-foreground">
-        <ScrollToTop />
-        <SeoHead {...mergedSeo} />
+    <HelmetProvider>
+      <SeoProvider value={seoContextValue}>
+        <div className="min-h-screen bg-background text-foreground">
+          <ScrollToTop />
+          <SeoHead {...mergedSeo} />
         <style jsx global>{`
           html {
             scroll-behavior: smooth;
@@ -1046,8 +1048,9 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </footer>
 
-        <CookieConsentBanner />
-      </div>
-    </SeoProvider>
+          <CookieConsentBanner />
+        </div>
+      </SeoProvider>
+    </HelmetProvider>
   );
 }
