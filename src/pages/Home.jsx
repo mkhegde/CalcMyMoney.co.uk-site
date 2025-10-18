@@ -20,8 +20,21 @@ import { prefetchPage } from '@/utils/prefetchPage';
 import { PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
 import { useSeo } from '@/components/seo/SeoContext';
 import Heading from '@/components/common/Heading';
+import { calculatorCategories as DEFAULT_DIRECTORY_CATEGORIES } from '../components/data/calculatorConfig.js';
 
 const DEFAULT_STATS = { total: 0, active: 0, categories: 0 };
+
+const ICONS_BY_SLUG = {
+  'mortgages-property': HomeIcon,
+  'tax-income': PoundSterling,
+  'retirement-pensions': TrendingUp,
+  'savings-investments': PiggyBank,
+  'debt-loans': CreditCard,
+  'budgeting-planning': Wallet,
+  'business-freelancing': Briefcase,
+  'utilities-tools': Zap,
+  'family-lifestyle': Users,
+};
 
 export default function Home() {
   const location = useLocation();
@@ -89,72 +102,35 @@ export default function Home() {
     setSearchQuery(e.target.value);
   };
 
-  const fallbackHubCards = [
-    {
-      title: 'Mortgages & Property',
-      icon: HomeIcon,
-      link: '#mortgages-property',
-      description: 'Planning tools for buyers, landlords, and homeowners managing property decisions.',
-    },
-    {
-      title: 'Tax & Income',
-      icon: PoundSterling,
-      link: '#tax-income',
-      description: 'Understand deductions, take-home pay, and tax liabilities on every type of income.',
-    },
-    {
-      title: 'Retirement & Pensions',
-      icon: TrendingUp,
-      link: '#retirement-pensions',
-      description: 'Plan retirement ages, pension withdrawals, and contribution strategies.',
-    },
-    {
-      title: 'Savings & Investments',
-      icon: PiggyBank,
-      link: '#savings-investments',
-      description: 'Track growth, optimise allowances, and compare investment strategies.',
-    },
-    {
-      title: 'Debt & Loans',
-      icon: CreditCard,
-      link: '#debt-loans',
-      description: 'Plan repayments, understand borrowing costs, and accelerate debt freedom.',
-    },
-    {
-      title: 'Budgeting & Planning',
-      icon: Wallet,
-      link: '#budgeting-planning',
-      description: 'Coordinate spending plans, short-term goals, and day-to-day money decisions.',
-    },
-    {
-      title: 'Business & Freelancing',
-      icon: Briefcase,
-      link: '#business-freelancing',
-      description: 'Support sole traders, contractors, and directors with cash flow and taxes.',
-    },
-    {
-      title: 'Utilities & Tools',
-      icon: Zap,
-      link: '#utilities-tools',
-      description: 'Compare household bills, transport costs, and essential living expenses.',
-    },
-    {
-      title: 'Family & Lifestyle',
-      icon: Users,
-      link: '#family-lifestyle',
-      description: 'Manage household finances, life events, and long-term family planning costs.',
-    },
-  ];
+  const fallbackHubCards = useMemo(
+    () =>
+      DEFAULT_DIRECTORY_CATEGORIES.map((category) => {
+        const Icon = ICONS_BY_SLUG[category.slug] || Calculator;
+        return {
+          title: category.name,
+          icon: Icon,
+          link: `#${category.slug}`,
+          description: category.description,
+        };
+      }),
+    []
+  );
+
+  const directoryCategories = useMemo(() => {
+    if (!calcData.categories.length) return DEFAULT_DIRECTORY_CATEGORIES;
+    const map = new Map(calcData.categories.map((category) => [category.slug, category]));
+    return DEFAULT_DIRECTORY_CATEGORIES.map((category) => map.get(category.slug) || category);
+  }, [calcData.categories]);
 
   const hubCards = useMemo(() => {
     if (!calcData.categories.length) return fallbackHubCards;
-    return calcData.categories.map((category) => ({
+    return directoryCategories.map((category) => ({
       title: category.name,
-      icon: category.icon || Calculator,
+      icon: category.icon || ICONS_BY_SLUG[category.slug] || Calculator,
       link: `#${category.slug}`,
       description: category.description,
     }));
-  }, [calcData.categories]);
+  }, [calcData.categories, directoryCategories, fallbackHubCards]);
 
   useEffect(() => {
     if (!hasQuery) {
@@ -368,7 +344,7 @@ export default function Home() {
           {showAllCalculators ? (
             categoriesLoaded ? (
               <div className="space-y-12">
-                {calcData.categories.map((category) => (
+                {directoryCategories.map((category) => (
                   <div key={category.slug} id={category.slug} className="scroll-mt-20">
                     {/* Category Header */}
                     <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
