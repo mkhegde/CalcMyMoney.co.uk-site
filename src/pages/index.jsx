@@ -71,32 +71,31 @@ const LazyDividendTaxCalculator = lazy(() => import('./calculators/dividend-tax-
 const LazyDownPaymentCalculator = lazy(() => import('./calculators/down-payment-calculator.jsx'));
 const LazyDreamLifestyleCalculator = lazy(() => import('./calculators/dream-lifestyle-calculator.jsx'));
 const LazyEnergyBillCalculator = lazy(() => import('./calculators/energy-bill-calculator.jsx'));
-const LazyFireCalculator = lazy(() => import('./calculators/fire-calculator.jsx'));
-const LazyFirstTimeBuyerCalculator = lazy(() => import('./calculators/first-time-buyer-calculator.jsx'));
-const LazyFuelCostCalculator = lazy(() => import('./calculators/fuel-cost-calculator.jsx'));
-const LazyGrossToNetCalculator = lazy(() => import('./calculators/gross-to-net-calculator.jsx'));
-const LazyHolidayPayCalculator = lazy(() => import('./calculators/holiday-pay-calculator.jsx'));
-const LazyHomeEquityLoanCalculator = lazy(() => import('./calculators/home-equity-loan-calculator.jsx'));
-const LazyHourlyToAnnualSalaryCalculator = lazy(() => import('./calculators/hourly-to-annual-salary-calculator.jsx'));
-const LazyHouseholdBillsSplitter = lazy(() => import('./calculators/household-bills-splitter.jsx'));
-const LazyIncomeTaxCalculator = lazy(() => import('./calculators/income-tax-calculator.jsx'));
-const LazyInflationCalculator = lazy(() => import('./calculators/inflation-calculator.jsx'));
-const LazyInvestmentCalculator = lazy(() => import('./calculators/investment-calculator.jsx'));
-const LazyIsaCalculator = lazy(() => import('./calculators/isa-calculator.jsx'));
+const LazyEffectiveTaxRateCalculator = lazy(() => import('./calculators/effective-tax-rate-calculator.jsx'));
+const LazyEmergencyFundCalculator = lazy(() => import('./calculators/emergency-fund-calculator.jsx'));
+const LazyFreelancerDayRateCalculator = lazy(() => import('./calculators/freelancer-day-rate-calculator.jsx'));
+const LazyFutureValueCalculator = lazy(() => import('./calculators/future-value-calculator.jsx'));
+const LazyInheritanceTaxCalculator = lazy(() => import('./calculators/inheritance-tax-calculator.jsx'));
+const LazyLoanComparisonCalculator = lazy(() => import('./calculators/loan-comparison-calculator.jsx'));
+const LazyLoanRepaymentCalculator = lazy(() => import('./calculators/loan-repayment-calculator.jsx'));
+const LazyMaternityPayCalculator = lazy(() => import('./calculators/maternity-pay-calculator.jsx'));
+const LazyMinimumWageCalculator = lazy(() => import('./calculators/minimum-wage-calculator.jsx'));
 const LazyMortgageAffordabilityCalculator = lazy(() => import('./calculators/mortgage-affordability-calculator.jsx'));
 const LazyMortgageCalculator = lazy(() => import('./calculators/mortgage-calculator.jsx'));
 const LazyMortgageComparisonCalculator = lazy(() => import('./calculators/mortgage-comparison-calculator.jsx'));
 const LazyMortgageRepaymentCalculator = lazy(() => import('./calculators/mortgage-repayment-calculator.jsx'));
-const LazyNetIncomeUkCalculator = lazy(() => import('./calculators/net-income-uk-calculator.jsx'));
+const LazyNationalInsuranceCalculator = lazy(() => import('./calculators/national-insurance-calculator.jsx'));
 const LazyNetWorthCalculator = lazy(() => import('./calculators/net-worth-calculator.jsx'));
-const LazyNiCalculator = lazy(() => import('./calculators/ni-calculator.jsx'));
 const LazyOvertimeBonusCalculator = lazy(() => import('./calculators/overtime-bonus-calculator.jsx'));
-const LazyPayeCalculator = lazy(() => import('./calculators/paye-calculator.jsx'));
+const LazyOvertimePayCalculator = lazy(() => import('./calculators/overtime-pay-calculator.jsx'));
+const LazyOvertimeRateCalculator = lazy(() => import('./calculators/overtime-rate-calculator.jsx'));
+const LazyPAYECalculator = lazy(() => import('./calculators/paye-calculator.jsx'));
+const LazyPayrollCalculator = lazy(() => import('./calculators/payroll-calculator.jsx'));
 const LazyPensionCalculator = lazy(() => import('./calculators/pension-calculator.jsx'));
-const LazyPercentageChangeCalculator = lazy(() => import('./calculators/percentage-change-calculator.jsx'));
-const LazyPersonalAllowanceCalculator = lazy(() => import('./calculators/personal-allowance-calculator.jsx'));
+const LazyPensionContributionCalculator = lazy(() => import('./calculators/pension-contribution-calculator.jsx'));
 const LazyPersonalFinanceCalculator = lazy(() => import('./calculators/personal-finance-calculator.jsx'));
 const LazyPersonalLoanCalculator = lazy(() => import('./calculators/personal-loan-calculator.jsx'));
+const LazyPersonalAllowanceCalculator = lazy(() => import('./calculators/personal-allowance-calculator.jsx'));
 const LazyPresentValueCalculator = lazy(() => import('./calculators/present-value-calculator.jsx'));
 const LazyPricePerUnitCalculator = lazy(() => import('./calculators/price-per-unit-calculator.jsx'));
 const LazyProRataSalaryCalculator = lazy(() => import('./calculators/pro-rata-salary-calculator.jsx'));
@@ -109,18 +108,21 @@ const LazyRetirementCalculator = lazy(() => import('./calculators/retirement-cal
 const LazyRetirementSavingsCalculator = lazy(() => import('./calculators/retirement-savings-calculator.jsx'));
 const LazyReverseMortgageCalculator = lazy(() => import('./calculators/reverse-mortgage-calculator.jsx'));
 const LazyRoiCalculator = lazy(() => import('./calculators/roi-calculator.jsx'));
-const LazyRuleOf72Calculator = lazy(() => import('./calculators/rule-of-72-calculator.jsx'));
+const LazyRuleOf72Calculator = lazy(() => import('./calculators/rule-of72-calculator.jsx'));
 const LazySalaryCalculator = lazy(() => import('./calculators/salary-calculator.jsx'));
 const LazySalarySacrificeCalculator = lazy(() => import('./calculators/salary-sacrifice-calculator.jsx'));
 const LazySavingsCalculator = lazy(() => import('./calculators/savings-calculator.jsx'));
 const LazySavingsGoalCalculator = lazy(() => import('./calculators/savings-goal-calculator.jsx'));
-const LazySdltCalculator = lazy(() => import('./calculators/sdlt-calculator.jsx'));
+const LazySDLTCalculator = lazy(() => import('./calculators/sdlt-calculator.jsx'));
+const LazySelfAssessmentCalculator = lazy(() => import('./calculators/self-assessment-calculator.jsx'));
 const LazyStudentLoanRepaymentCalculator = lazy(() => import('./calculators/student-loan-repayment-calculator.jsx'));
 const LazySubscriptionCostCalculator = lazy(() => import('./calculators/subscription-cost-calculator.jsx'));
+const LazyTakeHomePayCalculator = lazy(() => import('./calculators/take-home-pay-calculator.jsx'));
+const LazyTaxRefundCalculator = lazy(() => import('./calculators/tax-refund-calculator.jsx'));
 const LazyTimeValueOfMoneyCalculator = lazy(() => import('./calculators/time-value-of-money-calculator.jsx'));
 const LazyTipCalculator = lazy(() => import('./calculators/tip-calculator.jsx'));
 const LazyTravelBudgetCalculator = lazy(() => import('./calculators/travel-budget-calculator.jsx'));
-const LazyVatCalculator = lazy(() => import('./calculators/vat-calculator.jsx'));
+const LazyVATCalculator = lazy(() => import('./calculators/vat-calculator.jsx'));
 const LazyWeddingBudgetCalculator = lazy(() => import('./calculators/wedding-budget-calculator.jsx'));
 const LazyWeeklyBudgetPlanner = lazy(() => import('./calculators/weekly-budget-planner.jsx'));
 const LazyYearlyIncomeCalculator = lazy(() => import('./calculators/yearly-income-calculator.jsx'));
@@ -152,12 +154,12 @@ const PAGES = {
   LinkToUs,
 };
 
-// Flatten calculators from config so we can resolve <Routes> dynamically
+// Flatten calculators from config
 const _allCalcs = calculatorCategories.flatMap((cat) =>
   (cat?.subCategories || []).flatMap((sub) => sub?.calculators || [])
 );
 
-// Vite glob loader for calculator pages
+// Vite glob loader for pages
 const pageModules = import.meta.glob('./*.jsx');
 const _loadPage = (pageName) => {
   if (!pageName) return null;
@@ -166,12 +168,12 @@ const _loadPage = (pageName) => {
   return loader ? lazy(loader) : null;
 };
 
-// Build dynamic calculator routes from config driven entries
+// Build dynamic routes
 const DYNAMIC_CALC_ROUTES = _allCalcs
-  .filter((calc) => calc?.status === 'active' && typeof calc.page === 'string' && calc.page.trim())
-  .map((calc) => {
-    const Component = _loadPage(calc.page);
-    return Component ? { path: calc.url, Component, name: calc.name } : null;
+  .filter((c) => c?.status === 'active' && typeof c.page === 'string' && c.page.trim())
+  .map((c) => {
+    const Component = _loadPage(c.page);
+    return Component ? { path: c.url, Component, name: c.name } : null;
   })
   .filter(Boolean);
 
@@ -185,7 +187,7 @@ const _normalizeSlug = (value = '') => {
 const _registerSlug = (map, slug, pageName) => {
   if (!pageName || typeof pageName !== 'string') return;
   const normalized = _normalizeSlug(slug);
-  if (normalized === undefined) return;
+  if (!normalized) return;
   if (!map.has(normalized)) {
     map.set(normalized, pageName);
   }
@@ -208,7 +210,8 @@ const _slugToPageName = (() => {
   _allCalcs.forEach((calc) => {
     if (!calc) return;
     if (calc.url) {
-      const target = typeof calc.page === 'string' && calc.page.trim() ? calc.page.trim() : undefined;
+      const target =
+        (typeof calc.page === 'string' && calc.page.trim()) || undefined;
       _registerSlug(map, calc.url, target);
     }
 
@@ -241,7 +244,8 @@ function LegacyCostOfLivingRedirect() {
   return <Navigate to={COST_OF_LIVING_BASE_PATH} replace />;
 }
 
-const _getCurrentPage = (pathname) => {
+// Helper for Layout current page label
+function _getCurrentPage(pathname) {
   const normalizedPath = _normalizeSlug(pathname || '/');
   if (!normalizedPath || normalizedPath === 'home') {
     return 'Home';
@@ -271,7 +275,7 @@ const _getCurrentPage = (pathname) => {
   }
 
   return 'LazyRoute';
-};
+}
 
 function PagesContent() {
   const location = useLocation();
@@ -326,32 +330,31 @@ function PagesContent() {
           <Route path="/down-payment-calculator" element={<LazyDownPaymentCalculator />} />
           <Route path="/dream-lifestyle-calculator" element={<LazyDreamLifestyleCalculator />} />
           <Route path="/energy-bill-calculator" element={<LazyEnergyBillCalculator />} />
-          <Route path="/fire-calculator" element={<LazyFireCalculator />} />
-          <Route path="/first-time-buyer-calculator" element={<LazyFirstTimeBuyerCalculator />} />
-          <Route path="/fuel-cost-calculator" element={<LazyFuelCostCalculator />} />
-          <Route path="/gross-to-net-calculator" element={<LazyGrossToNetCalculator />} />
-          <Route path="/holiday-pay-calculator" element={<LazyHolidayPayCalculator />} />
-          <Route path="/home-equity-loan-calculator" element={<LazyHomeEquityLoanCalculator />} />
-          <Route path="/hourly-to-annual-salary-calculator" element={<LazyHourlyToAnnualSalaryCalculator />} />
-          <Route path="/household-bills-splitter" element={<LazyHouseholdBillsSplitter />} />
-          <Route path="/income-tax-calculator" element={<LazyIncomeTaxCalculator />} />
-          <Route path="/inflation-calculator" element={<LazyInflationCalculator />} />
-          <Route path="/investment-calculator" element={<LazyInvestmentCalculator />} />
-          <Route path="/isa-calculator" element={<LazyIsaCalculator />} />
+          <Route path="/effective-tax-rate-calculator" element={<LazyEffectiveTaxRateCalculator />} />
+          <Route path="/emergency-fund-calculator" element={<LazyEmergencyFundCalculator />} />
+          <Route path="/freelancer-day-rate-calculator" element={<LazyFreelancerDayRateCalculator />} />
+          <Route path="/future-value-calculator" element={<LazyFutureValueCalculator />} />
+          <Route path="/inheritance-tax-calculator" element={<LazyInheritanceTaxCalculator />} />
+          <Route path="/loan-comparison-calculator" element={<LazyLoanComparisonCalculator />} />
+          <Route path="/loan-repayment-calculator" element={<LazyLoanRepaymentCalculator />} />
+          <Route path="/maternity-pay-calculator" element={<LazyMaternityPayCalculator />} />
+          <Route path="/minimum-wage-calculator" element={<LazyMinimumWageCalculator />} />
           <Route path="/mortgage-affordability-calculator" element={<LazyMortgageAffordabilityCalculator />} />
           <Route path="/mortgage-calculator" element={<LazyMortgageCalculator />} />
           <Route path="/mortgage-comparison-calculator" element={<LazyMortgageComparisonCalculator />} />
           <Route path="/mortgage-repayment-calculator" element={<LazyMortgageRepaymentCalculator />} />
-          <Route path="/net-income-uk-calculator" element={<LazyNetIncomeUkCalculator />} />
+          <Route path="/national-insurance-calculator" element={<LazyNationalInsuranceCalculator />} />
           <Route path="/net-worth-calculator" element={<LazyNetWorthCalculator />} />
-          <Route path="/ni-calculator" element={<LazyNiCalculator />} />
           <Route path="/overtime-bonus-calculator" element={<LazyOvertimeBonusCalculator />} />
-          <Route path="/paye-calculator" element={<LazyPayeCalculator />} />
+          <Route path="/overtime-pay-calculator" element={<LazyOvertimePayCalculator />} />
+          <Route path="/overtime-rate-calculator" element={<LazyOvertimeRateCalculator />} />
+          <Route path="/paye-calculator" element={<LazyPAYECalculator />} />
+          <Route path="/payroll-calculator" element={<LazyPayrollCalculator />} />
           <Route path="/pension-calculator" element={<LazyPensionCalculator />} />
-          <Route path="/percentage-change-calculator" element={<LazyPercentageChangeCalculator />} />
-          <Route path="/personal-allowance-calculator" element={<LazyPersonalAllowanceCalculator />} />
+          <Route path="/pension-contribution-calculator" element={<LazyPensionContributionCalculator />} />
           <Route path="/personal-finance-calculator" element={<LazyPersonalFinanceCalculator />} />
           <Route path="/personal-loan-calculator" element={<LazyPersonalLoanCalculator />} />
+          <Route path="/personal-allowance-calculator" element={<LazyPersonalAllowanceCalculator />} />
           <Route path="/present-value-calculator" element={<LazyPresentValueCalculator />} />
           <Route path="/price-per-unit-calculator" element={<LazyPricePerUnitCalculator />} />
           <Route path="/pro-rata-salary-calculator" element={<LazyProRataSalaryCalculator />} />
@@ -369,13 +372,16 @@ function PagesContent() {
           <Route path="/salary-sacrifice-calculator" element={<LazySalarySacrificeCalculator />} />
           <Route path="/savings-calculator" element={<LazySavingsCalculator />} />
           <Route path="/savings-goal-calculator" element={<LazySavingsGoalCalculator />} />
-          <Route path="/sdlt-calculator" element={<LazySdltCalculator />} />
+          <Route path="/sdlt-calculator" element={<LazySDLTCalculator />} />
+          <Route path="/self-assessment-calculator" element={<LazySelfAssessmentCalculator />} />
           <Route path="/student-loan-repayment-calculator" element={<LazyStudentLoanRepaymentCalculator />} />
           <Route path="/subscription-cost-calculator" element={<LazySubscriptionCostCalculator />} />
+          <Route path="/take-home-pay-calculator" element={<LazyTakeHomePayCalculator />} />
+          <Route path="/tax-refund-calculator" element={<LazyTaxRefundCalculator />} />
           <Route path="/time-value-of-money-calculator" element={<LazyTimeValueOfMoneyCalculator />} />
           <Route path="/tip-calculator" element={<LazyTipCalculator />} />
           <Route path="/travel-budget-calculator" element={<LazyTravelBudgetCalculator />} />
-          <Route path="/vat-calculator" element={<LazyVatCalculator />} />
+          <Route path="/vat-calculator" element={<LazyVATCalculator />} />
           <Route path="/wedding-budget-calculator" element={<LazyWeddingBudgetCalculator />} />
           <Route path="/weekly-budget-planner" element={<LazyWeeklyBudgetPlanner />} />
           <Route path="/yearly-income-calculator" element={<LazyYearlyIncomeCalculator />} />
@@ -409,26 +415,4 @@ function PagesContent() {
           <Route path="/job-salary-page" element={<JobSalaryPage />} />
           <Route path="/jobsalarypage" element={<JobSalaryPage />} />
           <Route path="/cost-of-living-page" element={<LegacyCostOfLivingRedirect />} />
-          <Route path="/uk-financial-stats" element={<UKFinancialStats />} />
-          <Route path="/methodology" element={<Methodology />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
-          <Route path="/link-to-us" element={<LinkToUs />} />
-
-          {/* 404 LAST */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </Layout>
-  );
-}
-
-export default function Pages() {
-  return (
-    <Router>
-      <PagesContent />
-    </Router>
-  );
-}
-
-
+          <Route path="/uk-financial-stats" element

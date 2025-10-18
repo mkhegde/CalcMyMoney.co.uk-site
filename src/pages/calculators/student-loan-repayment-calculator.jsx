@@ -1,405 +1,358 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { GraduationCap, Calculator, Scale, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Calculator, GraduationCap, Clock, PiggyBank } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
-
-const keywords = [
-  'student loan repayment calculator',
-  'student loan calculator',
-  'student finance calculator',
-  'loan payment calculator',
-];
-
-const metaDescription =
-  'Use our student loan repayment calculator, student loan calculator, student finance calculator, and loan payment calculator to plan repayments and interest.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/student-loan-repayment-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+
+const schemaKeywords = [
+  'Interest Rate',
+  'Loan Balance',
+  'Repayment Schedule',
+  'Loan Write-Off',
+  'Student Finance',
+];
+
+const plans = [
+  { value: 'plan1', label: 'Plan 1 (pre-2012, England/Wales)', threshold: 24990, rate: 0.09, writeOffYears: 25 },
+  { value: 'plan2', label: 'Plan 2 (post-2012, England/Wales)', threshold: 27295, rate: 0.09, writeOffYears: 30 },
+  { value: 'plan4', label: 'Plan 4 (Scotland)', threshold: 27660, rate: 0.09, writeOffYears: 30 },
+  { value: 'plan5', label: 'Plan 5 (England from 2023)', threshold: 25000, rate: 0.09, writeOffYears: 40 },
+  { value: 'postgrad', label: 'Postgraduate loan', threshold: 21000, rate: 0.06, writeOffYears: 30 },
+];
+
+const faqItems = [
+  {
+    question: 'How are UK student loan repayments calculated?',
+    answer:
+      'Repayments are a percentage of earnings above the plan-specific threshold. For example, Plan 2 repays 9% of income above £27,295, collected through PAYE.',
+  },
+  {
+    question: 'What interest rate should I use?',
+    answer:
+      'Student loan interest is linked to RPI with plan-specific uplifts. Use the latest SLC announced rate or your current statement rate for accurate forecasting.',
+  },
+  {
+    question: 'When is the loan written off?',
+    answer:
+      'Write-off rules depend on the plan. Plan 2 and Plan 4 loans are written off 30 years after April following graduation, Plan 1 after 25 years, and Plan 5 after 40 years.',
+  },
+];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
-  minimumFractionDigits: 0,
+  minimumFractionDigits: 2,
 });
 
-const defaultInputs = {
-  loanBalance: 32000,
-  annualSalary: 38000,
-  repaymentPlan: 'plan2',
-  overpayment: 100,
-  annualSalaryGrowth: 3,
-};
+function getPlan(value) {
+  return plans.find((plan) => plan.value === value) ?? plans[1];
+}
 
-const repaymentPlans = {
-  plan1: {
-    name: 'Plan 1',
-    threshold: 24375,
-    rate: 0.09,
-    interestRate: 5,
-    writeOffYears: 25,
-  },
-  plan2: {
-    name: 'Plan 2',
-    threshold: 27295,
-    rate: 0.09,
-    interestRate: 6.5,
-    writeOffYears: 30,
-  },
-  plan4: {
-    name: 'Plan 4 (Scotland)',
-    threshold: 31660,
-    rate: 0.09,
-    interestRate: 6,
-    writeOffYears: 30,
-  },
-  plan5: {
-    name: 'Plan 5',
-    threshold: 25000,
-    rate: 0.09,
-    interestRate: 6.25,
-    writeOffYears: 40,
-  },
-};
+export default function StudentLoanRepaymentCalculator() {
+  const [inputs, setInputs] = useState({
+    annualIncome: '38000',
+    expectedIncomeGrowth: '2',
+    loanBalance: '32000',
+    interestRate: '6.25',
+    plan: 'plan2',
+  });
 
-const studentLoanFaqs = [
-  {
-    question: 'How are repayments calculated?',
-    answer:
-      'Once your salary exceeds the plan threshold, you pay 9% of income above the line. The student loan repayment calculator applies this idea annually and adds interest linked to your plan.',
-  },
-  {
-    question: 'Do overpayments help?',
-    answer:
-      'Voluntary overpayments reduce the balance faster. Combine the student loan calculator payoff data with your budgeting to clear debt earlier if you expect higher lifetime earnings.',
-  },
-  {
-    question: 'What about write-off rules?',
-    answer:
-      'Each repayment plan writes off the remaining balance after 25–40 years. The student finance calculator shows whether you are projected to repay before the write-off kicks in.',
-  },
-];
+  const handleChange = useCallback((field, value) => {
+    setInputs((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
-const calculateRepayments = ({
-  loanBalance,
-  annualSalary,
-  repaymentPlan,
-  overpayment,
-  annualSalaryGrowth,
-}) => {
-  const plan = repaymentPlans[repaymentPlan] ?? repaymentPlans.plan2;
-  const rate = plan.rate;
-  const threshold = plan.threshold;
-  const interestRate = plan.interestRate / 100;
-  const writeOffYears = plan.writeOffYears;
-
-  let balance = Math.max(Number(loanBalance) || 0, 0);
-  let salary = Math.max(Number(annualSalary) || 0, 0);
-  const overpaymentValue = Math.max(Number(overpayment) || 0, 0);
-  const salaryGrowthRate = Math.max(Number(annualSalaryGrowth) || 0, 0) / 100;
-
-  const yearlyBreakdown = [];
-  let totalPaid = 0;
-  let year = 0;
-
-  while (balance > 0 && year < writeOffYears) {
-    year += 1;
-    const interest = balance * interestRate;
-    balance += interest;
-
-    const annualRequiredPayment = Math.max((salary - threshold) * rate, 0);
-    const totalPayment = Math.min(balance, annualRequiredPayment + overpaymentValue * 12);
-
-    balance -= totalPayment;
-    totalPaid += totalPayment;
-
-    yearlyBreakdown.push({
-      year,
-      salary,
-      interest,
-      payment: totalPayment,
-      balance: Math.max(balance, 0),
+  const reset = useCallback(() => {
+    setInputs({
+      annualIncome: '38000',
+      expectedIncomeGrowth: '2',
+      loanBalance: '32000',
+      interestRate: '6.25',
+      plan: 'plan2',
     });
+  }, []);
 
-    salary *= 1 + salaryGrowthRate;
-  }
+  const results = useMemo(() => {
+    const annualIncome = Number(inputs.annualIncome) || 0;
+    const incomeGrowth = Math.max(0, Number(inputs.expectedIncomeGrowth) || 0) / 100;
+    const loanBalance = Number(inputs.loanBalance) || 0;
+    const interestRate = Number(inputs.interestRate) / 100 || 0;
+    const plan = getPlan(inputs.plan);
 
-  const writeOff = balance > 0;
+    const threshold = plan.threshold;
+    const repaymentRate = plan.rate;
+    const annualRepayment = Math.max(0, (annualIncome - threshold) * repaymentRate);
+    const monthlyRepayment = annualRepayment / 12;
 
-  return { yearlyBreakdown, totalPaid, balance: Math.max(balance, 0), yearsTaken: year, writeOff };
-};
+    // simple projection assuming income grows annually; stops after write-off years or zero balance
+    let remainingBalance = loanBalance;
+    let cumulativePaid = 0;
+    let years = 0;
+    let projectedIncome = annualIncome;
+    const maxYears = plan.writeOffYears;
 
-export default function StudentLoanRepaymentCalculatorPage() {
-  const [inputs, setInputs] = useState(defaultInputs);
+    while (remainingBalance > 0 && years < maxYears) {
+      const interest = remainingBalance * interestRate;
+      const yearlyRepayment = Math.max(0, (projectedIncome - threshold) * repaymentRate);
+      const repaymentApplied = Math.min(yearlyRepayment, remainingBalance + interest);
+      remainingBalance = remainingBalance + interest - repaymentApplied;
+      cumulativePaid += repaymentApplied;
+      years += 1;
+      projectedIncome *= 1 + incomeGrowth;
+      if (yearlyRepayment <= 0 && incomeGrowth === 0) {
+        break;
+      }
+    }
 
-  const results = useMemo(
-    () =>
-      calculateRepayments({
-        loanBalance: inputs.loanBalance,
-        annualSalary: inputs.annualSalary,
-        repaymentPlan: inputs.repaymentPlan,
-        overpayment: inputs.overpayment,
-        annualSalaryGrowth: inputs.annualSalaryGrowth,
-      }),
-    [inputs]
-  );
+    const cleared = remainingBalance <= 1;
+    const writeOff = !cleared && years >= maxYears;
 
-  const resetAll = () => setInputs(defaultInputs);
+    return {
+      annualIncome,
+      incomeGrowth,
+      loanBalance,
+      interestRate,
+      plan,
+      annualRepayment,
+      monthlyRepayment,
+      cumulativePaid,
+      remainingBalance: Math.max(0, remainingBalance),
+      yearsElapsed: years,
+      cleared,
+      writeOffYear: writeOff ? years : null,
+    };
+  }, [inputs]);
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>Student Loan Repayment Calculator | Student Loan Calculator</title>
-        <meta name="description" content={metaDescription} />
+        <title>Student Loan Repayment &amp; SLC Calculator</title>
+        <meta
+          name="description"
+          content="Student Loan Repayment Calculator for UK graduates. Estimate SLC repayments, repayment thresholds, and loan duration under Plan 2 rules."
+        />
+        <meta
+          name="keywords"
+          content="Student Loan Repayment Calculator, Plan 2, Repayment Threshold"
+        />
         <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Student Loan Repayment Calculator | Student Loan Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Student Loan Repayment Calculator | Student Loan Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
-              '@type': 'WebPage',
+              '@type': 'FinancialProduct',
               name: 'Student Loan Repayment Calculator',
+              description:
+                'Model student finance repayments including interest rate, loan balance, repayment schedule, and potential loan write-off.',
               url: canonicalUrl,
-              description: metaDescription,
               keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Plan repayments with a student loan repayment calculator',
-                target: canonicalUrl,
-              },
             }),
           }}
         />
       </Helmet>
 
-      <section className="bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-r from-slate-900 via-rose-900 to-slate-900 text-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Heading as="h1" size="h1" weight="bold" className="text-white">
             Student Loan Repayment Calculator
           </Heading>
-          <p className="text-lg text-emerald-100 md:text-xl">
-            Understand repayments, interest, and write-off timelines for UK student loans across plans
-            1, 2, 4, and 5.
+          <p className="text-lg md:text-xl text-rose-100">
+            Calculate student loan repayments, view monthly payment estimates, and understand loan
+            duration under SLC rules for your repayment amount.
           </p>
         </div>
       </section>
 
-      <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 bg-white text-slate-900 shadow-md dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Student finance calculator inputs
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="loanBalance">Current loan balance (£)</Label>
-                  <Input
-                    id="loanBalance"
-                    type="number"
-                    min="0"
-                    step="100"
-                    value={inputs.loanBalance}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        loanBalance: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="annualSalary">Current annual salary (£)</Label>
-                  <Input
-                    id="annualSalary"
-                    type="number"
-                    min="0"
-                    step="500"
-                    value={inputs.annualSalary}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        annualSalary: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="repaymentPlan">Repayment plan</Label>
-                  <select
-                    id="repaymentPlan"
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                    value={inputs.repaymentPlan}
-                    onChange={(event) =>
-                      setInputs((prev) => ({ ...prev, repaymentPlan: event.target.value }))
-                    }
-                  >
-                    {Object.entries(repaymentPlans).map(([key, plan]) => (
-                      <option key={key} value={key}>
-                        {plan.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="overpayment">Monthly voluntary overpayment (£)</Label>
-                  <Input
-                    id="overpayment"
-                    type="number"
-                    min="0"
-                    step="10"
-                    value={inputs.overpayment}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        overpayment: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="annualSalaryGrowth">Expected annual salary growth (%)</Label>
-                  <Slider
-                    id="annualSalaryGrowth"
-                    value={[Number(inputs.annualSalaryGrowth)]}
-                    min={0}
-                    max={10}
-                    step={0.5}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        annualSalaryGrowth: Number(value[0].toFixed(1)),
-                      }))
-                    }
-                    className="mt-3"
-                  />
-                  <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                    <span>0%</span>
-                    <span>{inputs.annualSalaryGrowth.toFixed(1)}%</span>
-                    <span>10%</span>
-                  </div>
-                </div>
-                <Button variant="outline" onClick={resetAll} className="w-full">
-                  Reset to example plan
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+          <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <Calculator className="h-5 w-5 text-rose-500" />
+                Loan Inputs
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-sm font-medium">Repayment plan</Label>
+                <select
+                  value={inputs.plan}
+                  onChange={(event) => handleChange('plan', event.target.value)}
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                >
+                  {plans.map((plan) => (
+                    <option key={plan.value} value={plan.value}>
+                      {plan.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="annualIncome" className="text-sm font-medium">
+                  Annual income (GBP)
+                </Label>
+                <Input
+                  id="annualIncome"
+                  inputMode="decimal"
+                  value={inputs.annualIncome}
+                  onChange={(event) => handleChange('annualIncome', event.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="expectedIncomeGrowth" className="text-sm font-medium">
+                  Expected annual income growth (%)
+                </Label>
+                <Input
+                  id="expectedIncomeGrowth"
+                  inputMode="decimal"
+                  value={inputs.expectedIncomeGrowth}
+                  onChange={(event) => handleChange('expectedIncomeGrowth', event.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="loanBalance" className="text-sm font-medium">
+                  Current loan balance (GBP)
+                </Label>
+                <Input
+                  id="loanBalance"
+                  inputMode="decimal"
+                  value={inputs.loanBalance}
+                  onChange={(event) => handleChange('loanBalance', event.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="interestRate" className="text-sm font-medium">
+                  Interest rate (%)
+                </Label>
+                <Input
+                  id="interestRate"
+                  inputMode="decimal"
+                  value={inputs.interestRate}
+                  onChange={(event) => handleChange('interestRate', event.target.value)}
+                />
+              </div>
+              <Button type="button" variant="outline" onClick={reset}>
+                Reset inputs
+              </Button>
+            </CardContent>
+          </Card>
 
           <div className="space-y-6">
-            <Card className="border border-emerald-200 bg-emerald-50 text-slate-900 shadow-md dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-slate-100">
+            <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calculator className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
-                  Student loan calculator summary
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <GraduationCap className="h-5 w-5 text-rose-500" />
+                  Repayment Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="rounded-md border border-white/40 bg-white/60 p-4 text-center dark:border-white/10 dark:bg-white/10">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Total paid</p>
-                  <p className="text-2xl font-semibold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.totalPaid)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-white/40 bg-white/60 p-4 dark:border-white/10 dark:bg-white/10">
-                  <div className="flex items-center justify-between">
-                    <span>Years until cleared / write-off</span>
-                    <span>{results.yearsTaken}</span>
+              <CardContent className="space-y-4 text-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-muted-foreground">Plan threshold</p>
+                    <p className="text-lg font-semibold text-rose-600">
+                      {currencyFormatter.format(results.plan.threshold)}
+                    </p>
                   </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span>Balance remaining</span>
-                    <span>{currencyFormatter.format(results.balance)}</span>
+                  <div>
+                    <p className="text-muted-foreground">Monthly payment estimate</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {currencyFormatter.format(results.monthlyRepayment)}
+                    </p>
                   </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span>Write-off applies?</span>
-                    <span>{results.writeOff ? 'Yes' : 'No'}</span>
+                  <div>
+                    <p className="text-muted-foreground">Annual repayment</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {currencyFormatter.format(results.annualRepayment)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Cumulative paid</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {currencyFormatter.format(results.cumulativePaid)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Remaining balance (projection)</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {currencyFormatter.format(results.remainingBalance)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Years until cleared/write-off</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {results.cleared
+                        ? `${results.yearsElapsed} years`
+                        : results.writeOffYear
+                          ? `${results.writeOffYear} years (write-off)`
+                          : `${results.yearsElapsed} years modelled`}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-200 bg-white text-slate-900 shadow-md dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
+            <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Repayment timeline
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <Clock className="h-5 w-5 text-rose-500" />
+                  Repayment Outlook
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {results.yearlyBreakdown.length === 0 && (
-                  <p className="text-center text-slate-600 dark:text-slate-300">
-                    Adjust the inputs to see annual payments, interest, and balances.
-                  </p>
-                )}
-                {results.yearlyBreakdown.map((year) => (
-                  <div
-                    key={year.year}
-                    className="grid grid-cols-4 gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800"
-                  >
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">
-                      Year {year.year}
-                    </span>
-                    <span className="text-right text-slate-600 dark:text-slate-300">
-                      Salary {currencyFormatter.format(year.salary)}
-                    </span>
-                    <span className="text-right text-slate-600 dark:text-slate-300">
-                      Paid {currencyFormatter.format(year.payment)}
-                    </span>
-                    <span className="text-right text-slate-600 dark:text-slate-300">
-                      Balance {currencyFormatter.format(year.balance)}
-                    </span>
-                  </div>
-                ))}
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  Use the monthly payment estimate to budget for student loan deductions alongside tax
+                  and National Insurance on your payslip.
+                </p>
+                <p>
+                  If income exceeds the threshold only late in the tax year, repayments start when HMRC
+                  receives updated earnings. Forecasting prevents surprise deductions.
+                </p>
+                <p>
+                  Project how salary growth impacts repayments and loan duration. Higher earnings
+                  shorten the repayment period but also increase total paid before loan write-off.
+                </p>
               </CardContent>
             </Card>
-
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading as="h2" size="h2" weight="semibold" className="text-slate-900 dark:text-slate-100">
-                Loan payment calculator guidance
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Run multiple scenarios using the loan payment calculator to see how salary jumps,
-                family leave, or changing plans influence your student debt path.
-              </p>
-              <Heading as="h3" size="h3" weight="semibold" className="text-slate-900 dark:text-slate-100">
-                Student finance calculator tips
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Log in to your Student Loans Company account annually to grab your balance and interest
-                rate. Update this student finance calculator so you stay informed.
-              </p>
-            </section>
-
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader className="px-0">
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  <AlertTriangle className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Need help understanding your plan?
-                </CardTitle>
-              </CardHeader>
-              <FAQSection faqs={studentLoanFaqs} />
-            </section>
           </div>
         </div>
+
+        <section className="mt-12 space-y-6">
+          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
+            Calculate Student Loan Repayment with Confidence
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Estimate monthly payment, assess loan duration, and review SLC rules so you stay on top of
+            your repayment amount and financial planning goals.
+          </p>
+
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Monthly Payment Transparency
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Knowing the expected deduction helps you prepare for payslip changes each April when
+            thresholds and interest rates update.
+          </p>
+
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Understand Loan Duration and Write-Off Rules
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Projecting future repayments shows whether you are likely to repay the balance or have it
+            written off, informing long-term financial decisions.
+          </p>
+        </section>
+
+        <section className="mt-12">
+          <FAQSection faqs={faqItems} />
+        </section>
       </CalculatorWrapper>
     </div>
   );

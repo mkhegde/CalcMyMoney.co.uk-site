@@ -1,29 +1,51 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Calculator, CalendarRange, Percent, Receipt } from 'lucide-react';
+import { Calculator, CreditCard, CalendarDays, TrendingDown } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
 
-const keywords = [
-  'average daily balance calculator',
-  'average daily balance',
-  'average balance calculator',
-  'credit card interest calculator',
-  'loan balance calculator',
+const canonicalUrl =
+  'https://www.calcmymoney.co.uk/calculators/average-daily-balance-calculator';
+
+const schemaKeywords = [
+  'Credit Card Debt',
+  'Monthly Payments',
+  'Annual Percentage Rate (APR)',
+  'Finance Charge',
+  'Debt Management',
 ];
 
-const metaDescription =
-  'Use our average daily balance calculator and average balance calculator to estimate credit card interest calculator charges and loan balance calculator accruals.';
+const defaultTransactions = [
+  { id: 1, day: '1', amount: '-50', description: 'Purchase' },
+  { id: 2, day: '12', amount: '200', description: 'Payment' },
+  { id: 3, day: '20', amount: '-120', description: 'Purchase' },
+];
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/average-daily-balance-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+let transactionId = 4;
+
+const faqItems = [
+  {
+    question: 'What is the average daily balance method?',
+    answer:
+      'Credit card issuers sum daily balances across the billing cycle, divide by the number of days to get the average daily balance, then apply APR/12 to calculate interest charges.',
+  },
+  {
+    question: 'How can I minimize interest?',
+    answer:
+      'Make payments early in the billing cycle and avoid new charges. Lower daily balances reduce the average and therefore the interest charged.',
+  },
+  {
+    question: 'Does this calculator account for grace periods?',
+    answer:
+      'The calculation focuses on average daily balance and finance charge. Grace period rules vary by issuer, so confirm with your credit card provider.',
+  },
+];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -31,328 +53,303 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 2,
 });
 
-const percentFormatter = new Intl.NumberFormat('en-GB', {
-  style: 'percent',
-  minimumFractionDigits: 2,
-});
+export default function AverageDailyBalanceCalculator() {
+  const [billingDays, setBillingDays] = useState('30');
+  const [startingBalance, setStartingBalance] = useState('1200');
+  const [apr, setApr] = useState('19.9');
+  const [transactions, setTransactions] = useState(defaultTransactions);
 
-const defaultEntries = [
-  { id: 'period-1', days: 10, balance: 1250 },
-  { id: 'period-2', days: 8, balance: 925 },
-  { id: 'period-3', days: 12, balance: 600 },
-];
-
-const averageDailyFaqs = [
-  {
-    question: 'What transactions should I include?',
-    answer:
-      'List each period where your balance stayed constant. Use statement activity to note the number of days after a purchase or payment. The average daily balance calculator multiplies each balance by the days it was outstanding.',
-  },
-  {
-    question: 'Does this work for loans as well as credit cards?',
-    answer:
-      'Yes. The same approach works for overdrafts, credit cards, and lines of credit. Enter each balance and the days it remained outstanding to estimate the finance charge.',
-  },
-  {
-    question: 'How is interest calculated from the average balance?',
-    answer:
-      'Lenders multiply the average daily balance by the daily periodic rate (APR ÷ 365) and the number of days on the statement. Adjust the APR slider to see how interest changes.',
-  },
-];
-
-const calculateAverageDailyBalance = ({ entries, statementDays, apr }) => {
-  const totalDays = Math.max(statementDays, 1);
-  const weightedSum = entries.reduce(
-    (sum, entry) => sum + (Number(entry.balance) || 0) * (Number(entry.days) || 0),
-    0
-  );
-  const daysTracked = entries.reduce((sum, entry) => sum + (Number(entry.days) || 0), 0);
-  const averageBalance = totalDays > 0 ? weightedSum / totalDays : 0;
-
-  const dailyRate = Math.max(apr, 0) / 100 / 365;
-  const financeCharge = averageBalance * dailyRate * Math.max(statementDays, 0);
-
-  return {
-    averageBalance,
-    financeCharge,
-    daysTracked,
-    unexplainedDays: Math.max(totalDays - daysTracked, 0),
-    dailyRate,
-  };
-};
-
-export default function AverageDailyBalanceCalculatorPage() {
-  const [statementDays, setStatementDays] = useState(30);
-  const [apr, setApr] = useState(19.9);
-  const [entries, setEntries] = useState(defaultEntries);
-
-  const results = useMemo(
-    () =>
-      calculateAverageDailyBalance({
-        entries,
-        statementDays: Number(statementDays) || 0,
-        apr: Number(apr) || 0,
-      }),
-    [entries, statementDays, apr]
-  );
-
-  const updateEntry = (id, field, value) => {
-    setEntries((items) =>
-      items.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+  const updateTransaction = useCallback((id, field, value) => {
+    setTransactions((prev) =>
+      prev.map((txn) => (txn.id === id ? { ...txn, [field]: value } : txn)),
     );
-  };
+  }, []);
 
-  const addEntry = () => {
-    const id = `period-${entries.length + 1}`;
-    setEntries((items) => [...items, { id, days: 1, balance: 0 }]);
-  };
+  const removeTransaction = useCallback((id) => {
+    setTransactions((prev) => prev.filter((txn) => txn.id !== id));
+  }, []);
 
-  const removeEntry = (id) => {
-    setEntries((items) => items.filter((item) => item.id !== id));
-  };
+  const addTransaction = useCallback(() => {
+    setTransactions((prev) => [
+      ...prev,
+      { id: transactionId++, day: '15', amount: '0', description: 'Adjustment' },
+    ]);
+  }, []);
 
-  const resetAll = () => {
-    setStatementDays(30);
-    setApr(19.9);
-    setEntries(defaultEntries);
-  };
+  const reset = useCallback(() => {
+    setBillingDays('30');
+    setStartingBalance('1200');
+    setApr('19.9');
+    setTransactions(defaultTransactions);
+  }, []);
+
+  const results = useMemo(() => {
+    const days = Math.max(1, Number(billingDays) || 30);
+    const initialBalance = Number(startingBalance) || 0;
+    const aprValue = Number(apr) / 100 || 0;
+
+    const entries = [
+      ...transactions
+        .map((txn) => ({
+          day: Math.min(days, Math.max(1, Number(txn.day) || 1)),
+          amount: Number(txn.amount) || 0,
+          description: txn.description || '',
+        }))
+        .sort((a, b) => a.day - b.day),
+    ];
+
+    let runningBalance = initialBalance;
+    let totalBalanceDays = 0;
+    let previousDay = 1;
+
+    for (const entry of entries) {
+      const span = entry.day - previousDay;
+      totalBalanceDays += runningBalance * span;
+      runningBalance += entry.amount;
+      previousDay = entry.day;
+    }
+    totalBalanceDays += runningBalance * (days - previousDay + 1);
+
+    const averageDailyBalance = totalBalanceDays / days;
+    const monthlyPeriodicRate = aprValue / 12;
+    const financeCharge = averageDailyBalance * monthlyPeriodicRate;
+
+    return {
+      averageDailyBalance,
+      financeCharge,
+      monthlyPeriodicRate,
+      endingBalance: runningBalance,
+      days,
+    };
+  }, [apr, billingDays, startingBalance, transactions]);
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>Average Daily Balance Calculator | Average Daily Balance</title>
-        <meta name="description" content={metaDescription} />
+        <title>Average Daily Balance &amp; Credit Card Interest Calculator</title>
+        <meta
+          name="description"
+          content="Average Daily Balance Calculator to estimate credit card interest charges and understand billing cycle finance charges."
+        />
+        <meta
+          name="keywords"
+          content="Average Daily Balance Calculator, Interest Charges, Billing Cycle"
+        />
         <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Average Daily Balance Calculator | Average Daily Balance" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Average Daily Balance Calculator | Average Daily Balance" />
-        <meta name="twitter:description" content={metaDescription} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
-              '@type': 'WebPage',
+              '@type': 'FinancialProduct',
               name: 'Average Daily Balance Calculator',
+              description:
+                'Estimate credit card debt interest using average daily balance, monthly payments, APR, and finance charge calculations for debt management.',
               url: canonicalUrl,
-              description: metaDescription,
               keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate charges with an average daily balance calculator',
-                target: canonicalUrl,
-              },
             }),
           }}
         />
       </Helmet>
 
-      <section className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-r from-slate-900 via-rose-900 to-slate-900 text-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Heading as="h1" size="h1" weight="bold" className="text-white">
             Average Daily Balance Calculator
           </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
-            Break down balances by day to see the precise interest impact for your credit card or line of
-            credit statement period.
+          <p className="text-lg md:text-xl text-rose-100">
+            Calculate average daily balance, understand the credit card interest method, and discover
+            strategies to minimize interest while maintaining healthy credit utilization.
           </p>
         </div>
       </section>
 
-      <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-indigo-200 bg-white text-slate-900 shadow-md dark:border-indigo-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <CalendarRange className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                  Statement settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="statementDays">Statement length (days)</Label>
-                  <Slider
-                    id="statementDays"
-                    className="mt-3"
-                    value={[Number(statementDays)]}
-                    onValueChange={(value) => setStatementDays(Number(value[0].toFixed(0)))}
-                    min={10}
-                    max={45}
-                    step={1}
-                  />
-                  <div className="flex justify-between text-sm text-indigo-700 dark:text-indigo-200">
-                    <span>10</span>
-                    <span>{statementDays}</span>
-                    <span>45</span>
-                  </div>
+      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+          <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <Calculator className="h-5 w-5 text-rose-500" />
+                Billing Cycle Inputs
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="billingDays" className="text-sm font-medium">
+                  Billing cycle length (days)
+                </Label>
+                <Input
+                  id="billingDays"
+                  inputMode="numeric"
+                  value={billingDays}
+                  onChange={(event) => setBillingDays(event.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="startingBalance" className="text-sm font-medium">
+                  Starting balance (GBP)
+                </Label>
+                <Input
+                  id="startingBalance"
+                  inputMode="decimal"
+                  value={startingBalance}
+                  onChange={(event) => setStartingBalance(event.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="apr" className="text-sm font-medium">
+                  Annual percentage rate (APR %)
+                </Label>
+                <Input
+                  id="apr"
+                  inputMode="decimal"
+                  value={apr}
+                  onChange={(event) => setApr(event.target.value)}
+                />
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Transactions during cycle
+                  </span>
+                  <Button type="button" variant="outline" size="sm" onClick={addTransaction}>
+                    Add transaction
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="apr">APR (% per year)</Label>
-                  <Slider
-                    id="apr"
-                    className="mt-3"
-                    value={[Number(apr)]}
-                    onValueChange={(value) => setApr(Number(value[0].toFixed(1)))}
-                    min={0}
-                    max={39.9}
-                    step={0.1}
-                  />
-                  <div className="flex justify-between text-sm text-indigo-700 dark:text-indigo-200">
-                    <span>0%</span>
-                    <span>{apr.toFixed(1)}%</span>
-                    <span>39.9%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-indigo-200 bg-white text-slate-900 shadow-md dark:border-indigo-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calculator className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                  Balance periods
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {entries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="grid gap-2 md:grid-cols-[1fr_auto_auto] md:items-center"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs uppercase text-slate-500">Days</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="1"
-                        inputMode="numeric"
-                        value={entry.days}
-                        onChange={(event) =>
-                          updateEntry(entry.id, 'days', Number(event.target.value) || 0)
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs uppercase text-slate-500">Balance (£)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="1"
-                        inputMode="decimal"
-                        value={entry.balance}
-                        onChange={(event) =>
-                          updateEntry(entry.id, 'balance', Number(event.target.value) || 0)
-                        }
-                      />
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="justify-self-end text-indigo-600 dark:text-indigo-300"
-                      onClick={() => removeEntry(entry.id)}
+                <div className="space-y-3">
+                  {transactions.map((txn) => (
+                    <div
+                      key={txn.id}
+                      className="grid grid-cols-[70px_1fr_1fr_auto] items-center gap-2"
                     >
-                      ✕
-                    </Button>
-                  </div>
-                ))}
-                <Button variant="outline" className="w-full" onClick={addEntry}>
-                  Add balance period
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                      <Input
+                        value={txn.day}
+                        inputMode="numeric"
+                        onChange={(event) =>
+                          updateTransaction(txn.id, 'day', event.target.value)
+                        }
+                        placeholder="Day"
+                      />
+                      <Input
+                        value={txn.amount}
+                        inputMode="decimal"
+                        onChange={(event) =>
+                          updateTransaction(txn.id, 'amount', event.target.value)
+                        }
+                        placeholder="Amount"
+                      />
+                      <Input
+                        value={txn.description}
+                        onChange={(event) =>
+                          updateTransaction(txn.id, 'description', event.target.value)
+                        }
+                        placeholder="Description"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeTransaction(txn.id)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Button type="button" variant="outline" onClick={reset}>
+                Reset inputs
+              </Button>
+            </CardContent>
+          </Card>
 
           <div className="space-y-6">
-            <Card className="border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
+            <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Percent className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                  Average balance summary
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <CreditCard className="h-5 w-5 text-rose-500" />
+                  Credit Card Interest Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span>Average daily balance</span>
-                  <span>{currencyFormatter.format(results.averageBalance)}</span>
+              <CardContent className="space-y-4 text-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-muted-foreground">Average daily balance</p>
+                    <p className="text-lg font-semibold text-rose-600">
+                      {currencyFormatter.format(results.averageDailyBalance)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Finance charge (current cycle)</p>
+                    <p className="text-lg font-semibold text-rose-600">
+                      {currencyFormatter.format(results.financeCharge)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Monthly periodic rate</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {(results.monthlyPeriodicRate * 100).toFixed(3)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Ending balance projection</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {currencyFormatter.format(results.endingBalance)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Billing cycle length</p>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      {results.days} days
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span>Daily periodic rate</span>
-                  <span>{percentFormatter.format(results.dailyRate)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Finance charge estimate</span>
-                  <span>{currencyFormatter.format(results.financeCharge)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Days tracked</span>
-                  <span>{results.daysTracked}</span>
-                </div>
-                {results.unexplainedDays > 0 && (
-                  <p className="text-xs text-amber-600 dark:text-amber-300">
-                    You have {results.unexplainedDays} unassigned days. Add additional balance periods or
-                    adjust statement length to ensure totals match.
-                  </p>
-                )}
               </CardContent>
             </Card>
 
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Average balance calculator workflow
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Start with the average balance calculator above, then reconcile the results against your
-                statement. Combine multiple cards or overdrafts to see how balances fluctuate across your
-                full portfolio.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Credit card interest calculator checks
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Feed the average daily balance into your credit card interest calculator to validate the
-                issuer’s finance charge. Spot mistakes early and adjust repayments to limit future interest.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Loan balance calculator insights
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                For loans with interest calculated daily, plug in the outstanding balances after each
-                payment. The loan balance calculator approach highlights how extra payments reduce average
-                balances and interest charges over time.
-              </p>
-            </section>
-
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <FAQSection faqs={averageDailyFaqs} />
-            </section>
-
-            <Button variant="outline" className="w-full" onClick={resetAll}>
-              Reset to example statement
-            </Button>
+            <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                  <TrendingDown className="h-5 w-5 text-rose-500" />
+                  Debt Management Tips
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  Pay early in the billing cycle to lower the daily balance and reduce accrued
+                  interest. Multiple smaller payments can outperform one payment at the end of the
+                  cycle.
+                </p>
+                <p>
+                  Consolidate high-interest debt or switch to 0% promotional cards to slow finance
+                  charge accumulation, improving debt management outcomes.
+                </p>
+                <p>
+                  Monitor credit utilization—keeping balances below 30% of available credit supports
+                  stronger credit scores and cheaper borrowing.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </CalculatorWrapper>
-    </div>
-  );
-}
+
+        <section className="mt-12 space-y-6">
+          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
+            Calculate Average Daily Balance and Credit Card Interest Method
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Understand how daily balance fluctuations influence interest. This calculator helps you
+            minimize interest and keep credit utilization in check.
+          </p>
+
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Daily Balance Insights Tame High APR Cards
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Track spending and repayments to avoid unnecessary finance charges. Early payments lower
+            the average balance and reduce monthly charges.
+          </p>
+
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Smart Strategies to Minimize Interest
+          </Heading>

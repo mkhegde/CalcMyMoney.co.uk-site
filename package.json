@@ -7,7 +7,7 @@
     "node": "20.x"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "npm run sitemap && vite",
     "build": "npm run sitemap && cross-env ROLLUP_SKIP_NATIVE=true vite build && npm run seo:assert",
     "sitemap": "node scripts/generate-sitemap.mjs",
     "seo:assert": "node scripts/seo-assert.mjs",
