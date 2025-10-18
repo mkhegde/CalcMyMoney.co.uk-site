@@ -1,18 +1,39 @@
 import { createPageUrl } from '../../utils/createPageUrl.js';
+import {
+  Calculator as CalculatorIcon,
+  Home,
+  Coins,
+  PiggyBank,
+  FileText,
+  Briefcase,
+  LineChart,
+  Zap,
+  Users,
+  CreditCard,
+  Wallet,
+} from 'lucide-react';
+
+const toSlug = (value = '') =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 const createCalculatorEntry = (name, pageName, description) => ({
   name,
   pageName,
   description,
-  icon: 'IconPath/CalculatorIcon.svg',
+  icon: CalculatorIcon,
+  status: 'active',
+  tags: [],
   url: createPageUrl(pageName),
 });
 
-export const calculatorCategories = [
+const rawCategories = [
   {
     name: 'Mortgages & Property',
     description: 'Planning tools for buyers, landlords, and homeowners managing property decisions.',
-    icon: 'IconPath/Category/Mortgages.svg',
+    icon: Home,
     calculators: [
       createCalculatorEntry(
         'Mortgage Repayment Calculator',
@@ -79,7 +100,7 @@ export const calculatorCategories = [
   {
     name: 'Tax & Income',
     description: 'Understand deductions, take-home pay, and tax liabilities on every type of income.',
-    icon: 'IconPath/Category/Tax.svg',
+    icon: Coins,
     calculators: [
       createCalculatorEntry(
         'UK Income Tax Calculator',
@@ -151,7 +172,7 @@ export const calculatorCategories = [
   {
     name: 'Retirement & Pensions',
     description: 'Plan retirement ages, pension withdrawals, and contribution strategies.',
-    icon: 'IconPath/Category/Retirement.svg',
+    icon: FileText,
     calculators: [
       createCalculatorEntry(
         'Pension Growth Forecast Calculator',
@@ -218,7 +239,7 @@ export const calculatorCategories = [
   {
     name: 'Savings & Investments',
     description: 'Track growth, optimise allowances, and compare investment strategies.',
-    icon: 'IconPath/Category/Savings.svg',
+    icon: PiggyBank,
     calculators: [
       createCalculatorEntry(
         'Compound Interest Calculator',
@@ -285,7 +306,7 @@ export const calculatorCategories = [
   {
     name: 'Debt & Loans',
     description: 'Plan repayments, understand borrowing costs, and accelerate debt freedom.',
-    icon: 'IconPath/Category/Debt.svg',
+    icon: CreditCard,
     calculators: [
       createCalculatorEntry(
         'Loan Repayment Schedule Calculator',
@@ -352,7 +373,7 @@ export const calculatorCategories = [
   {
     name: 'Budgeting & Planning',
     description: 'Coordinate spending plans, short-term goals, and day-to-day money decisions.',
-    icon: 'IconPath/Category/Budgeting.svg',
+    icon: Wallet,
     calculators: [
       createCalculatorEntry(
         'Monthly Budget Planner',
@@ -419,7 +440,7 @@ export const calculatorCategories = [
   {
     name: 'Business & Freelancing',
     description: 'Support sole traders, contractors, and directors with cash flow and taxes.',
-    icon: 'IconPath/Category/Business.svg',
+    icon: Briefcase,
     calculators: [
       createCalculatorEntry(
         'Freelancer Day Rate Calculator',
@@ -481,7 +502,7 @@ export const calculatorCategories = [
   {
     name: 'Utilities & Tools',
     description: 'Compare household bills, transport costs, and essential living expenses.',
-    icon: 'IconPath/Category/Utilities.svg',
+    icon: Zap,
     calculators: [
       createCalculatorEntry(
         'Energy Tariff Comparison Calculator',
@@ -543,7 +564,7 @@ export const calculatorCategories = [
   {
     name: 'Family & Lifestyle',
     description: 'Manage household finances, life events, and long-term family planning costs.',
-    icon: 'IconPath/Category/Family.svg',
+    icon: Users,
     calculators: [
       createCalculatorEntry(
         'Childcare Cost Planner',
@@ -604,7 +625,58 @@ export const calculatorCategories = [
   },
 ];
 
-export const totalCalculatorCount = calculatorCategories.reduce(
-  (sum, category) => sum + category.calculators.length,
-  0
+const enrichCalculators = (items = []) =>
+  items.map((calc) => ({
+    ...calc,
+    status: calc.status || 'active',
+    tags: Array.isArray(calc.tags) ? calc.tags : [],
+  }));
+
+export const calculatorCategories = rawCategories.map(({ name, description, icon, calculators }) => {
+  const categoryTag = toSlug(name);
+  const calculatorsWithDefaults = enrichCalculators(calculators).map((calc) => ({
+    ...calc,
+    tags: Array.from(new Set([...(calc.tags || []), categoryTag])),
+  }));
+  return {
+    name,
+    slug: toSlug(name),
+    description,
+    icon,
+    calculators: calculatorsWithDefaults,
+    subCategories: [
+      {
+        name: `${name} Tools`,
+        calculators: calculatorsWithDefaults,
+      },
+    ],
+  };
+});
+
+export const allCalculators = calculatorCategories.flatMap((category) =>
+  (category.subCategories || []).flatMap((sub) => sub.calculators || [])
 );
+
+export const totalCalculatorCount = allCalculators.length;
+
+export const getAllCalculators = () => calculatorCategories;
+
+export const getCalculatorStats = () => {
+  const total = allCalculators.length;
+  const active = allCalculators.filter((calc) => calc.status === 'active').length;
+  const pending = total - active;
+  return { total, active, pending };
+};
+
+export const getCalculatorsByStatus = (status) =>
+  allCalculators.filter((calc) => calc.status === status);
+
+export const searchCalculators = (query) => {
+  const term = String(query || '').toLowerCase();
+  if (!term) return [];
+  return allCalculators.filter(
+    (calc) =>
+      calc.name.toLowerCase().includes(term) ||
+      calc.description.toLowerCase().includes(term)
+  );
+};

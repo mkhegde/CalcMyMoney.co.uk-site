@@ -1,4 +1,4 @@
-import { getAllCalculators } from '@/components/data/calculatorConfig';
+import { getAllCalculators } from '@/components/data/calculatorConfig.js';
 
 // Curated overrides for edge cases. Keyed by canonical calculator URL.
 // Each value: array of { name, url, description? }

@@ -435,3 +435,53 @@ export default function RentVsBuyCalculator() {
           </Heading>
           <p className="text-base text-muted-foreground leading-relaxed">
             Renting offers flexibility, while owning builds equity. Align the decision with your
+            long-term plans, risk tolerance, and the costs of moving or remodelling. The right answer
+            can change if your career, family, or financial goals shift.
+          </p>
+
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Optimise Your Deposit Strategy
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            If a purchase is a few years away, model how savings or investments could grow. A larger
+            deposit may unlock lower mortgage rates or reduce monthly payments, tipping the balance in
+            favour of buying.
+          </p>
+        </section>
+      </CalculatorWrapper>
+
+      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
+            Rent vs Buy Insights
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Test multiple horizons, mortgage rates, and rent inflation scenarios so you understand when
+            the scales tip in favour of ownership. Pair the numbers with lifestyle goals for the most
+            confident decision.
+          </p>
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Plan for Ownership Extras
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Budget for solicitor fees, moving costs, surveys, insurance, and ongoing maintenance. The
+            calculator makes it easy to add these so you compare the full cost of each option.
+          </p>
+          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
+            Keep a Financial Buffer
+          </Heading>
+          <p className="text-base text-muted-foreground leading-relaxed">
+            Whether renting or buying, hold an emergency fund. Unexpected repairs, void periods, or job
+            changes can happen, and a buffer protects your plan.
+          </p>
+        </div>
+      </section>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={faqItems} />
+        </div>
+      </section>
+    </div>
+  );
+}

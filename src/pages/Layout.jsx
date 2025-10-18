@@ -71,7 +71,7 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     let cancelled = false;
 
-    import('../components/data/calculatorConfig.jsx')
+    import('../components/data/calculatorConfig.js')
       .then((mod) => {
         if (cancelled) return;
         setCalculatorCategories(mod?.calculatorCategories || []);

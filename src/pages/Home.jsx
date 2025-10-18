@@ -64,7 +64,7 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false;
-    import('../components/data/calculatorConfig.jsx')
+    import('../components/data/calculatorConfig.js')
       .then((mod) => {
         if (cancelled) return;
         setCalcData({

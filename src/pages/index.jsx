@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'r
 import Layout from './Layout.jsx';
 import { pageSeo } from '../components/data/pageSeo';
 import { createPageUrl } from '../utils/createPageUrl';
-import { calculatorCategories } from '../components/data/calculatorConfig';
+import { calculatorCategories } from '../components/data/calculatorConfig.js';
 import { ukCities, createSlug } from '../components/data/seo-data';
 import NotFound from './NotFound';
 

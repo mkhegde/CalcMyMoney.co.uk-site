@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Calculator, ReceiptRefund, FileWarning, BadgeCheck } from 'lucide-react';
+import { Calculator, Receipt, FileWarning, BadgeCheck } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
@@ -266,7 +266,7 @@ export default function TaxRefundCalculator() {
             <Card className="border border-blue-200 dark:border-blue-900 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <ReceiptRefund className="h-5 w-5 text-blue-500" />
+                  <Receipt className="h-5 w-5 text-blue-500" />
                   Refund Result
                 </CardTitle>
               </CardHeader>

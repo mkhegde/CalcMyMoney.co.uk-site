@@ -1,7 +1,7 @@
 // src/pages/calculators/loan-comparison-calculator.jsx
 import React, { useState, useMemo, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Calculator, Balance, Scale, LineChart } from 'lucide-react';
+import { Calculator, Scale, LineChart } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';

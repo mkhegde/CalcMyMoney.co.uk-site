@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { calculatorCategories } from '../components/data/calculatorConfig';
+import { calculatorCategories } from '../components/data/calculatorConfig.js';
 import { jobTitles, ukCities, createSlug } from '../components/data/seo-data';
 
 import Heading from '@/components/common/Heading';
