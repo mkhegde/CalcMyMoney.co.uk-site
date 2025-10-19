@@ -66,6 +66,11 @@ const rawCategories = [
         'Check how much you can borrow and the deposit needed as a first-time buyer.'
       ),
       createCalculatorEntry(
+        'Down Payment Calculator',
+        'DownPaymentCalculator',
+        'Plan your house deposit by combining savings contributions, investment growth, and moving costs.'
+      ),
+      createCalculatorEntry(
         'Shared Ownership Rent Calculator',
         'SharedOwnershipRentCalculator',
         'Calculate rent, mortgage, and service charge costs for shared ownership homes.'
@@ -131,6 +136,11 @@ const rawCategories = [
         'Dividend Tax Calculator',
         'DividendTaxCalculator',
         'Project dividend tax liabilities across different income bands and allowances.'
+      ),
+      createCalculatorEntry(
+        'Effective Tax Rate Calculator',
+        'EffectiveTaxRateCalculator',
+        'Combine income tax, National Insurance, and other payroll deductions to see your true average tax rate.'
       ),
       createCalculatorEntry(
         'Capital Gains Tax Calculator',
@@ -292,9 +302,9 @@ const rawCategories = [
         'See how reinvesting dividends accelerates long-term portfolio growth.'
       ),
       createCalculatorEntry(
-        'FIRE Number Calculator',
-        'FIRENumberCalculator',
-        'Estimate the portfolio size needed to reach financial independence.'
+        'FIRE Calculator',
+        'FireCalculator',
+        'Map your financial independence number, projected portfolio growth, and retirement timeline.'
       ),
       createCalculatorEntry(
         'Investment Fee Impact Calculator',
@@ -357,6 +367,16 @@ const rawCategories = [
         'Debt Avalanche Calculator',
         'DebtAvalancheCalculator',
         'Optimise repayment order by focusing on highest interest debts first.'
+      ),
+      createCalculatorEntry(
+        'Debt Calculator',
+        'DebtCalculator',
+        'Build a personalised repayment plan showing payoff dates, total interest, and the impact of extra payments.'
+      ),
+      createCalculatorEntry(
+        'Debt to Income Ratio Calculator',
+        'DebtToIncomeRatioCalculator',
+        'Measure how much of your monthly income is absorbed by repayments before applying for new credit.'
       ),
       createCalculatorEntry(
         'Personal Loan Eligibility Estimator',
@@ -431,6 +451,11 @@ const rawCategories = [
         'Split shared expenses fairly across households, trips, or events.'
       ),
       createCalculatorEntry(
+        'Discount Calculator',
+        'DiscountCalculator',
+        'Combine percentage and fixed discounts to calculate true savings before you buy.'
+      ),
+      createCalculatorEntry(
         'Holiday Budget Calculator',
         'HolidayBudgetCalculator',
         'Plan holiday spending with savings targets and cost breakdowns.'
@@ -449,6 +474,11 @@ const rawCategories = [
         'Savings Rate Tracker',
         'SavingsRateTracker',
         'Track savings rate over time and see how it affects financial goals.'
+      ),
+      createCalculatorEntry(
+        'Dream Lifestyle Calculator',
+        'DreamLifestyleCalculator',
+        'Price your dream lifestyle, set savings buffers, and define the income needed to sustain it.'
       ),
       createCalculatorEntry(
         'Subscription Clean-Up Calculator',
@@ -578,6 +608,11 @@ const rawCategories = [
         'Energy Tariff Comparison Calculator',
         'EnergyTariffComparisonCalculator',
         'Compare energy tariffs and estimate annual savings from switching provider.'
+      ),
+      createCalculatorEntry(
+        'Energy Bill Calculator',
+        'EnergyBillCalculator',
+        'Estimate monthly and annual energy bills across electricity and gas, including VAT and standing charges.'
       ),
       createCalculatorEntry(
         'Electric Vehicle Charging Cost Calculator',
