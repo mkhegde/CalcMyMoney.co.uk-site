@@ -1,591 +1,460 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { Calculator, Calendar, FileSpreadsheet, Percent } from 'lucide-react';
+import React, { useMemo, useState, useCallback } from 'react';
+import { Calculator, Table, TrendingUp, Download, Printer } from 'lucide-react';
 
-import { breadcrumbSchema } from '@/components/seo/JsonLd';
-import Heading from '@/components/common/Heading';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
-import ExportActions from '@/components/calculators/ExportActions';
-import FAQSection from '@/components/calculators/FAQSection';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+// --- Utility Components (Defined internally to comply with Single-File Mandate) ---
+const Card = ({ className = '', children }) => (
+  <div className={`rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900 ${className}`}>
+    {children}
+  </div>
+);
+const CardHeader = ({ children }) => <div className="flex flex-col space-y-1.5 p-6">{children}</div>;
+const CardTitle = ({ children, className = '' }) => <h3 className={`text-xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>;
+const CardContent = ({ children, className = '' }) => <div className={`p-6 pt-0 ${className}`}>{children}</div>;
+const Input = ({ value, onChange, type = 'text', min = 0, step, inputMode, id, ...props }) => {
+    const displayValue = String(value).replace(/[^0-9.]/g, '');
+    const handleChange = (e) => {
+        const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+        onChange({ target: { value: rawValue } });
+    };
+    return (
+        <input
+            id={id}
+            type="text"
+            inputMode={inputMode || 'decimal'}
+            pattern="[0-9]*[.]?[0-9]*"
+            min={min}
+            step={step}
+            value={displayValue}
+            onChange={handleChange}
+            className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-50 dark:ring-offset-gray-950 dark:placeholder:text-gray-400 dark:focus-visible:ring-blue-400 tabular-nums"
+            {...props}
+        />
+    );
+};
+const Slider = ({ value, onValueChange, min, max, step, id, className = '' }) => {
+  const displayValue = Array.isArray(value) ? value[0] : value;
+  const percentage = ((displayValue - min) / (max - min)) * 100;
+  return (
+    <div className={`relative flex w-full items-center ${className}`}>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={displayValue}
+        onChange={(e) => onValueChange([Number(e.target.value)])}
+        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-blue-600"
+        style={{
+          background: `linear-gradient(to right, #2563eb 0%, #2563eb ${percentage}%, #d1d5db ${percentage}%, #d1d5db 100%)`,
+        }}
+      />
+    </div>
+  );
+};
+const Label = ({ htmlFor, children }) => (
+  <label htmlFor={htmlFor} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-gray-300">
+    {children}
+  </label>
+);
+const Button = ({ children, onClick, variant = 'default', className = '', Icon, ...props }) => {
+  const baseClasses = 'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2';
+  let variantClasses = 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 shadow-md hover:shadow-lg'; // Default
 
-const amortizationKeywords = [
-  'loan amortization calculator',
-  'loan amortization',
-  'loan amortization schedule',
-  'amortization schedule',
-  'amortization calculator',
-  'loan amortization schedule calculator',
-];
+  if (variant === 'outline') {
+    variantClasses = 'border border-gray-300 bg-white text-gray-900 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-50 dark:hover:bg-gray-700';
+  } else if (variant === 'ghost') {
+    variantClasses = 'hover:bg-gray-100 dark:hover:bg-gray-800 text-blue-600 dark:text-blue-400';
+  }
 
-const metaDescription =
-  'Use our loan amortization calculator to explore loan amortization and build a loan amortization schedule for mortgages, personal loans, or refinancing.';
+  return (
+    <button onClick={onClick} className={`${baseClasses} ${variantClasses} ${className}`} {...props}>
+      {Icon && <Icon className="mr-2 h-4 w-4" />}
+      {children}
+    </button>
+  );
+};
+const MainWrapper = ({ children }) => (
+  <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    {children}
+  </main>
+);
 
-const canonicalUrl = 'https://calcmymoney.co.uk/amortization-calculator';
-const schemaKeywords = amortizationKeywords.slice(0, 5);
-
-const amortizationFAQs = [
-  {
-    question: 'What is a loan amortization schedule?',
-    answer:
-      'An amortization schedule breaks every repayment into principal and interest so you always know how much of your balance is outstanding and how quickly you are building equity.',
-  },
-  {
-    question: 'How does extra repayment affect loan amortization?',
-    answer:
-      'Additional payments reduce your remaining balance, which means more of each future repayment goes to principal rather than interest, shortening your loan term and cutting total interest costs.',
-  },
-  {
-    question: 'Why should I export the amortization schedule?',
-    answer:
-      'Exporting the full table makes it easy to share the results with advisers, compare refinancing offers, or model “what if” scenarios in your own spreadsheet.',
-  },
-];
+// --- Calculation Logic ---
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
-  maximumFractionDigits: 2,
+  minimumFractionDigits: 2,
 });
 
-const percentageFormatter = new Intl.NumberFormat('en-GB', {
-  maximumFractionDigits: 2,
-});
+const calculateAmortization = (principal, annualRate, years) => {
+  const P = principal;
+  const i = annualRate / 100 / 12; // Monthly interest rate
+  const n = years * 12; // Total number of payments
 
-const generateAmortizationSchedule = (principal, monthlyRate, totalMonths) => {
-  const schedule = [];
-  let balance = principal;
-  let cumulativeInterest = 0;
-
-  if (monthlyRate === 0) {
-    const flatPrincipal = principal / totalMonths;
-    for (let month = 1; month <= totalMonths; month += 1) {
-      balance -= flatPrincipal;
-      schedule.push({
-        month,
-        interestPortion: 0,
-        principalPortion: flatPrincipal,
-        cumulativeInterest,
-        remainingBalance: Math.max(balance, 0),
-      });
-    }
-    return schedule;
+  if (P <= 0 || n <= 0) {
+    return { monthlyPayment: 0, totalInterest: 0, totalPaid: 0, schedule: [] };
   }
 
-  const monthlyPayment = (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -totalMonths));
+  let monthlyPayment = 0;
+  if (i > 0) {
+    // Standard Amortization Formula: M = P [ i(1 + i)^n ] / [ (1 + i)^n – 1]
+    monthlyPayment = P * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+  } else {
+    // Zero interest loan
+    monthlyPayment = P / n;
+  }
 
-  for (let month = 1; month <= totalMonths; month += 1) {
-    const interestPortion = balance * monthlyRate;
-    const principalPortion = monthlyPayment - interestPortion;
-    cumulativeInterest += interestPortion;
-    balance -= principalPortion;
+  let balance = P;
+  let totalInterest = 0;
+  let schedule = [];
+
+  for (let paymentNumber = 1; paymentNumber <= n; paymentNumber++) {
+    let interestPayment = balance * i;
+    let principalPayment = monthlyPayment - interestPayment;
+
+    // Adjust last payment to zero out the loan due to potential rounding errors
+    if (paymentNumber === n) {
+        principalPayment = balance;
+        monthlyPayment = principalPayment + interestPayment;
+    }
+
+    balance -= principalPayment;
+    totalInterest += interestPayment;
 
     schedule.push({
-      month,
-      interestPortion,
-      principalPortion,
-      cumulativeInterest,
-      remainingBalance: Math.max(balance, 0),
+      payment: paymentNumber,
+      paymentAmount: monthlyPayment,
+      principal: principalPayment,
+      interest: interestPayment,
+      balance: Math.max(0, balance),
     });
   }
 
-  return schedule;
-};
+  const totalPaid = P + totalInterest;
 
-const buildCsv = ({
-  amount,
-  rate,
-  termYears,
-  monthlyPayment,
-  totalInterest,
-  totalRepayment,
-  schedule,
-}) => {
-  const header = [
-    ['Metric', 'Value'],
-    ['Loan Amount', currencyFormatter.format(amount)],
-    ['Interest Rate', `${percentageFormatter.format(rate)}%`],
-    ['Loan Term', `${termYears} years`],
-    ['Monthly Payment', currencyFormatter.format(monthlyPayment)],
-    ['Total Interest Paid', currencyFormatter.format(totalInterest)],
-    ['Total Repayment', currencyFormatter.format(totalRepayment)],
-    [],
-    ['Month', 'Interest Portion', 'Principal Portion', 'Cumulative Interest', 'Remaining Balance'],
-  ];
-
-  const rows = schedule.map((entry) => [
-    entry.month,
-    currencyFormatter.format(entry.interestPortion),
-    currencyFormatter.format(entry.principalPortion),
-    currencyFormatter.format(entry.cumulativeInterest),
-    currencyFormatter.format(entry.remainingBalance),
-  ]);
-
-  return [...header, ...rows];
-};
-
-export default function AmortizationCalculatorPage() {
-  const [loanAmount, setLoanAmount] = useState('250000');
-  const [interestRate, setInterestRate] = useState('5');
-  const [loanTermYears, setLoanTermYears] = useState('30');
-  const [results, setResults] = useState(null);
-  const [hasCalculated, setHasCalculated] = useState(false);
-  const [csvData, setCsvData] = useState([]);
-
-  const handleCalculate = useCallback(() => {
-    const amount = Number(loanAmount) || 0;
-    const ratePercent = Number(interestRate) || 0;
-    const termYears = Number(loanTermYears) || 0;
-
-    if (amount <= 0 || ratePercent < 0 || termYears <= 0) {
-      setResults(null);
-      setHasCalculated(true);
-      setCsvData([]);
-      return;
-    }
-
-    const totalMonths = termYears * 12;
-    const monthlyRate = ratePercent / 100 / 12;
-    const schedule = generateAmortizationSchedule(amount, monthlyRate, totalMonths);
-    const monthlyPayment =
-      monthlyRate === 0
-        ? amount / totalMonths
-        : (amount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -totalMonths));
-    const totalRepayment = monthlyPayment * totalMonths;
-    const totalInterest = totalRepayment - amount;
-
-    const computed = {
-      amount,
-      ratePercent,
-      termYears,
-      monthlyPayment,
-      totalInterest,
-      totalRepayment,
-      schedule,
-    };
-
-    setResults(computed);
-    setCsvData(buildCsv(computed));
-    setHasCalculated(true);
-  }, [interestRate, loanAmount, loanTermYears]);
-
-  useEffect(() => {
-    handleCalculate();
-  }, [handleCalculate]);
-
-  const breadcrumbJson = breadcrumbSchema([
-    { name: 'Home', item: 'https://www.calcmymoney.co.uk/' },
-    {
-      name: 'Loans & Debt Calculators',
-      item: 'https://www.calcmymoney.co.uk/calculators#loans-debt',
-    },
-    { name: 'Amortization Calculator', item: canonicalUrl },
-  ]);
-
-  const webpageSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: 'Amortization Calculator',
-    description: metaDescription,
-    url: canonicalUrl,
-    keywords: schemaKeywords,
-    inLanguage: 'en-GB',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: canonicalUrl,
-      'query-input': 'required name=loan amortization calculator',
-    },
-    about: {
-      '@type': 'FinancialProduct',
-      name: 'Loan Amortization Schedule',
-      description:
-        'Interactive calculator that generates detailed loan amortization schedules, including interest and principal breakdowns.',
-    },
+  return {
+    monthlyPayment: monthlyPayment,
+    totalInterest: totalInterest,
+    totalPaid: totalPaid,
+    schedule: schedule,
   };
+};
 
-  const monthlyPaymentDisplay = results
-    ? currencyFormatter.format(results.monthlyPayment)
-    : '£0.00';
-  const totalInterestDisplay = results
-    ? currencyFormatter.format(Math.max(results.totalInterest, 0))
-    : '£0.00';
-  const totalRepaymentDisplay = results
-    ? currencyFormatter.format(Math.max(results.totalRepayment, 0))
-    : '£0.00';
+// --- Data Handling & Export Functions ---
 
-  const loanSliderMax = Math.max(1000000, Number(loanAmount) || 0);
-  const rateSliderMax = Math.max(20, Number(interestRate) || 0);
-  const termSliderMax = Math.max(40, Number(loanTermYears) || 0);
+const exportToCsv = (schedule, inputs, results) => {
+    if (schedule.length === 0) return;
+
+    // Define the UTF-8 Byte Order Mark (BOM)
+    const BOM = '\ufeff';
+
+    // Helper for formatting currency values for CSV fields (raw number without symbol)
+    const csvValue = (value) => value.toFixed(2);
+
+    // Input Parameters
+    const inputLines = [
+      `Loan Amount (£): ${csvValue(inputs.principal)}`,
+      `Annual Interest Rate (%): ${inputs.annualRate}`,
+      `Loan Term (Years): ${inputs.years}`,
+      `Monthly Payment (£): ${csvValue(results.monthlyPayment)}`,
+      `Total Interest Paid (£): ${csvValue(results.totalInterest)}`,
+      `Total Paid (£): ${csvValue(results.totalPaid)}`,
+    ];
+
+    // Header Row - Use the symbol in the header for clarity
+    const headers = [
+      'Payment #',
+      'Payment Amount (£)',
+      'Principal (£)',
+      'Interest (£)',
+      'Remaining Balance (£)'
+    ];
+
+    // Data Rows - Use raw numeric data (formatted to 2 decimal places)
+    const dataRows = schedule.map(row => [
+      row.payment,
+      csvValue(row.paymentAmount),
+      csvValue(row.principal),
+      csvValue(row.interest),
+      csvValue(row.balance),
+    ]);
+
+    const allRows = [
+      ...inputLines.map(line => [line]),
+      [], // Spacer
+      headers,
+      ...dataRows
+    ];
+
+    const csvContent = allRows.map(e => e.join(',')).join('\n');
+    const finalContent = BOM + csvContent;
+
+    const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'amortization_schedule.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
+
+const printDocument = () => {
+    window.print();
+};
+
+// --- Main Application Component ---
+
+export default function App() {
+  const [inputs, setInputs] = useState({
+    principal: 200000,
+    annualRate: 4.5,
+    years: 25,
+  });
+
+  const [scheduleVisible, setScheduleVisible] = useState(false);
+
+  const handleSliderChange = useCallback((name, value) => {
+    setInputs(prev => ({
+      ...prev,
+      [name]: Number(value[0].toFixed(name === 'annualRate' ? 2 : 0)),
+    }));
+  }, []);
+
+  const handleInputChange = useCallback((name, value) => {
+    const numberValue = Number(value);
+    setInputs(prev => ({
+      ...prev,
+      [name]: isNaN(numberValue) ? 0 : numberValue,
+    }));
+  }, []);
+
+  const { monthlyPayment, totalInterest, totalPaid, schedule } = useMemo(
+    () => calculateAmortization(inputs.principal, inputs.annualRate, inputs.years),
+    [inputs]
+  );
+
+  const resetAll = useCallback(() =>
+    setInputs({
+      principal: 200000,
+      annualRate: 4.5,
+      years: 25,
+    }),
+    []
+  );
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>UK Loan Amortization Schedule Calculator | CalcMyMoney 2025</title>
-        <meta
-          name="description"
-          content="Generate detailed amortization schedules for UK mortgages, personal loans, or refinancing plans. Compare monthly payments, track interest against principal, and export lender-ready tables."
-        />
-        <link rel="canonical" href="https://calcmymoney.co.uk/amortization-calculator" />
-      </Helmet>
-      <Helmet>
-        <title>Amortization Calculator | Loan Amortization</title>
-        <meta name="description" content={metaDescription} />
-        <meta name="keywords" content={amortizationKeywords.join(', ')} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Amortization Calculator | Loan Amortization" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Amortization Calculator | Loan Amortization" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJson) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
-        />
-      </Helmet>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 font-sans antialiased">
+      {/* Print Styles */}
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          .print-schedule-table { display: table !important; }
+          .print-container { width: 100%; margin: 0; padding: 0; background: white !important; color: black !important; }
+          .summary-grid { display: block !important; }
+          .summary-item { margin-bottom: 1rem; border: 1px solid #ccc; padding: 10px; border-radius: 8px; }
+          .schedule-wrapper { max-height: none !important; overflow: visible !important; }
+          .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          .schedule-table th, .schedule-table td { border: 1px solid #ccc; padding: 8px; text-align: right; }
+          .schedule-table th:first-child, .schedule-table td:first-child { text-align: left; }
+        }
+      `}</style>
 
-      <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
+      {/* Header */}
+      <section className="bg-gradient-to-r from-blue-700 via-slate-800 to-blue-700 py-16 text-white shadow-xl no-print">
+        <div className="mx-auto max-w-4xl space-y-4 px-4 text-center sm:px-6 lg:px-8">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white">
             Amortization Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-slate-200">
-            Master loan amortization with real-time charts and tables. Generate a personalised loan
-            amortization schedule, compare repayment scenarios, and download your amortization
-            schedule for future planning.
+          </h1>
+          <p className="text-lg md:text-xl text-blue-100/90">
+            Determine your monthly loan payments and see the full principal/interest breakdown.
           </p>
         </div>
       </section>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
-          <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-indigo-600" />
-                Loan Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label
-                  htmlFor="loan-amount"
-                  className="flex items-center justify-between text-sm font-medium"
-                >
-                  <span>Loan Amount</span>
-                  <span className="text-indigo-600 font-semibold">
-                    {currencyFormatter.format(Number(loanAmount) || 0)}
-                  </span>
-                </Label>
-                <Input
-                  id="loan-amount"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  step="1000"
-                  className="mt-2"
-                  value={loanAmount}
-                  onChange={(event) => setLoanAmount(event.target.value)}
-                />
-                <Slider
-                  value={[Math.min(Math.max(Number(loanAmount) || 0, 0), loanSliderMax)]}
-                  onValueChange={(value) => setLoanAmount(String(value[0]))}
-                  max={loanSliderMax}
-                  min={0}
-                  step={1000}
-                  className="mt-4"
-                />
-              </div>
-
-              <div>
-                <Label
-                  htmlFor="interest-rate"
-                  className="flex items-center justify-between text-sm font-medium"
-                >
-                  <span>Annual Interest</span>
-                  <span className="text-indigo-600 font-semibold">
-                    {percentageFormatter.format(Number(interestRate) || 0)}%
-                  </span>
-                </Label>
-                <Input
-                  id="interest-rate"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  step="0.1"
-                  className="mt-2"
-                  value={interestRate}
-                  onChange={(event) => setInterestRate(event.target.value)}
-                />
-                <Slider
-                  value={[Math.min(Math.max(Number(interestRate) || 0, 0), rateSliderMax)]}
-                  onValueChange={(value) => setInterestRate(String(value[0]))}
-                  max={rateSliderMax}
-                  min={0}
-                  step={0.1}
-                  className="mt-4"
-                />
-              </div>
-
-              <div>
-                <Label
-                  htmlFor="loan-term"
-                  className="flex items-center justify-between text-sm font-medium"
-                >
-                  <span>Loan Term (years)</span>
-                  <span className="text-indigo-600 font-semibold">
-                    {Number(loanTermYears) || 0} years
-                  </span>
-                </Label>
-                <Input
-                  id="loan-term"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  step="1"
-                  className="mt-2"
-                  value={loanTermYears}
-                  onChange={(event) => setLoanTermYears(event.target.value)}
-                />
-                <Slider
-                  value={[Math.min(Math.max(Number(loanTermYears) || 0, 1), termSliderMax)]}
-                  onValueChange={(value) => setLoanTermYears(String(value[0]))}
-                  max={termSliderMax}
-                  min={1}
-                  step={1}
-                  className="mt-4"
-                />
-              </div>
-
-              <Button type="button" onClick={handleCalculate} className="w-full">
-                Recalculate Schedule
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
+      {/* Main Content */}
+      <MainWrapper className="print-container">
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* LEFT COLUMN: Inputs */}
+          <div className="space-y-6 lg:col-span-1 no-print">
+            <Card className="border-blue-300 dark:border-blue-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calendar className="h-5 w-5 text-indigo-600" />
-                  Loan Amortization Overview
+                <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-300">
+                  <Calculator className="h-5 w-5" />
+                  Loan Details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-3 text-center">
-                <div className="rounded-md bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Monthly Payment</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {monthlyPaymentDisplay}
-                  </p>
+              <CardContent className="space-y-6">
+                {/* Principal Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="principal">Loan Amount (£)</Label>
+                  <Input
+                    id="principal"
+                    min="100"
+                    step="1000"
+                    value={inputs.principal}
+                    onChange={(e) => handleInputChange('principal', e.target.value)}
+                  />
                 </div>
-                <div className="rounded-md bg-rose-50 dark:bg-rose-900/40 p-4 border border-rose-200 dark:border-rose-900">
-                  <p className="text-sm text-rose-600 dark:text-rose-200">Total Interest</p>
-                  <p className="text-2xl font-bold text-rose-700 dark:text-rose-100">
-                    {totalInterestDisplay}
-                  </p>
+                {/* Annual Rate Slider */}
+                <div className="space-y-4">
+                  <Label htmlFor="annualRate">Annual Interest Rate (%)</Label>
+                  <Slider
+                    id="annualRate"
+                    value={[inputs.annualRate]}
+                    onValueChange={(value) => handleSliderChange('annualRate', value)}
+                    min={0.1}
+                    max={15.0}
+                    step={0.1}
+                  />
+                  <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>0.1%</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-300">
+                      {inputs.annualRate.toFixed(2)}%
+                    </span>
+                    <span>15.0%</span>
+                  </div>
                 </div>
-                <div className="rounded-md bg-emerald-50 dark:bg-emerald-900/40 p-4 border border-emerald-200 dark:border-emerald-900">
-                  <p className="text-sm text-emerald-600 dark:text-emerald-200">Total Repayment</p>
-                  <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-100">
-                    {totalRepaymentDisplay}
-                  </p>
+                {/* Years Slider */}
+                <div className="space-y-4">
+                  <Label htmlFor="years">Loan Term (Years)</Label>
+                  <Slider
+                    id="years"
+                    value={[inputs.years]}
+                    onValueChange={(value) => handleSliderChange('years', value)}
+                    min={1}
+                    max={30}
+                    step={1}
+                  />
+                  <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>1 year</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-300">
+                      {inputs.years} years
+                    </span>
+                    <span>30 years</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <Heading
-                as="h2"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Detailed Loan Amortization Schedule
-              </Heading>
-              {hasCalculated && results && csvData.length > 0 && (
-                <ExportActions
-                  csvData={csvData}
-                  fileName="loan-amortization-schedule"
-                  title="Loan Amortization Schedule"
-                />
-              )}
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={resetAll}
+                >
+                    Reset
+                </Button>
+                <Button
+                    Icon={Download}
+                    variant="default"
+                    className="flex-1"
+                    onClick={() => exportToCsv(schedule, inputs, { monthlyPayment, totalInterest, totalPaid })}
+                    disabled={schedule.length === 0}
+                >
+                    Export CSV
+                </Button>
+                <Button
+                    Icon={Printer}
+                    variant="outline"
+                    className="flex-1"
+                    onClick={printDocument}
+                >
+                    Print Schedule
+                </Button>
             </div>
+          </div>
 
-            {hasCalculated && results ? (
-              <>
-                <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                      <Percent className="h-5 w-5 text-indigo-600" />
-                      Principal vs Interest
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={320}>
-                      <AreaChart data={results.schedule}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis
-                          dataKey="month"
-                          label={{ value: 'Month', position: 'insideBottom', offset: -5 }}
-                        />
-                        <YAxis
-                          tickFormatter={(value) =>
-                            currencyFormatter.format(value).replace(/\.00$/, '')
-                          }
-                        />
-                        <Tooltip
-                          formatter={(value) =>
-                            currencyFormatter.format(Number(value)).replace(/\.00$/, '')
-                          }
-                          labelFormatter={(value) => `Month ${value}`}
-                        />
-                        <Legend />
-                        <Area
-                          type="monotone"
-                          dataKey="remainingBalance"
-                          name="Remaining Balance"
-                          stroke="#4f46e5"
-                          fill="#4f46e5"
-                          fillOpacity={0.3}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="cumulativeInterest"
-                          name="Cumulative Interest"
-                          stroke="#dc2626"
-                          fill="#dc2626"
-                          fillOpacity={0.25}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                <Card className="border border-gray-200 dark:border-gray-800 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                      <FileSpreadsheet className="h-5 w-5 text-indigo-600" />
-                      Full Loan Amortization Schedule
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="max-h-96 overflow-y-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead className="sticky top-0 bg-slate-100 dark:bg-slate-900 text-xs uppercase tracking-wide">
-                        <tr>
-                          <th className="px-4 py-3">Month</th>
-                          <th className="px-4 py-3">Interest</th>
-                          <th className="px-4 py-3">Principal</th>
-                          <th className="px-4 py-3">Cumulative Interest</th>
-                          <th className="px-4 py-3">Balance</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {results.schedule.map((row) => (
-                          <tr
-                            key={row.month}
-                            className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/40"
-                          >
-                            <td className="px-4 py-2 font-medium text-slate-700 dark:text-slate-200">
-                              {row.month}
-                            </td>
-                            <td className="px-4 py-2 text-rose-600 dark:text-rose-200">
-                              {currencyFormatter.format(row.interestPortion)}
-                            </td>
-                            <td className="px-4 py-2 text-emerald-600 dark:text-emerald-200">
-                              {currencyFormatter.format(row.principalPortion)}
-                            </td>
-                            <td className="px-4 py-2 text-slate-700 dark:text-slate-200">
-                              {currencyFormatter.format(row.cumulativeInterest)}
-                            </td>
-                            <td className="px-4 py-2 font-semibold text-slate-900 dark:text-slate-100">
-                              {currencyFormatter.format(row.remainingBalance)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </CardContent>
-                </Card>
-              </>
-            ) : (
-              <Card className="h-64 border border-dashed border-indigo-300 dark:border-indigo-900 flex items-center justify-center text-center">
-                <div className="space-y-2 text-slate-500 dark:text-slate-300">
-                  <Calculator className="mx-auto h-10 w-10 text-indigo-500" />
-                  <p className="text-lg font-semibold">Ready when you are</p>
-                  <p className="text-sm">
-                    Adjust the loan amount, rate, and term to generate your personalised loan
-                    amortization schedule.
-                  </p>
+          {/* RIGHT COLUMNS: Results and Schedule */}
+          <div className="space-y-6 lg:col-span-2">
+            {/* Summary Results */}
+            <Card className="bg-blue-50 dark:bg-gray-800 border-blue-500 dark:border-blue-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                  <TrendingUp className="h-6 w-6" />
+                  Repayment Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 summary-grid">
+                  <div className="space-y-1 summary-item border-b sm:border-b-0 sm:border-r pb-4 sm:pb-0 dark:border-gray-700 pr-4">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Payment</p>
+                    <p className="text-3xl font-extrabold text-blue-800 dark:text-blue-300 tabular-nums">
+                      {currencyFormatter.format(monthlyPayment)}
+                    </p>
+                  </div>
+                  <div className="space-y-1 summary-item border-b sm:border-b-0 sm:border-r pb-4 sm:pb-0 dark:border-gray-700 pr-4">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Interest Paid</p>
+                    <p className="text-3xl font-extrabold text-blue-800 dark:text-blue-300 tabular-nums">
+                      {currencyFormatter.format(totalInterest)}
+                    </p>
+                  </div>
+                  <div className="space-y-1 summary-item">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Payments</p>
+                    <p className="text-3xl font-extrabold text-blue-800 dark:text-blue-300 tabular-nums">
+                      {currencyFormatter.format(totalPaid)}
+                    </p>
+                  </div>
                 </div>
-              </Card>
-            )}
+              </CardContent>
+            </Card>
+
+            {/* Amortization Schedule */}
+            <Card className="dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-gray-100">
+                        <Table className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+                        Amortization Schedule
+                    </CardTitle>
+                    <Button
+                        variant="ghost"
+                        onClick={() => setScheduleVisible(!scheduleVisible)}
+                        className="no-print"
+                    >
+                        {scheduleVisible ? 'Hide Table' : 'Show Table'}
+                    </Button>
+                </CardHeader>
+                <CardContent className="pt-0 pb-4">
+                    <div className={`schedule-wrapper ${scheduleVisible ? 'max-h-[500px]' : 'max-h-0'} overflow-y-auto transition-max-height duration-500 ease-in-out`}>
+                        <div className="min-w-full print-schedule-table" style={{ display: scheduleVisible ? 'block' : 'none' }}>
+                            <table className="w-full text-right text-sm schedule-table">
+                                <thead className="text-xs uppercase bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-400 sticky top-0">
+                                    <tr>
+                                        <th scope="col" className="py-2 px-1 font-bold text-left">Payment</th>
+                                        <th scope="col" className="py-2 px-1 font-bold">Payment (£)</th>
+                                        <th scope="col" className="py-2 px-1 font-bold">Principal (£)</th>
+                                        <th scope="col" className="py-2 px-1 font-bold">Interest (£)</th>
+                                        <th scope="col" className="py-2 px-1 font-bold">Balance (£)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {schedule.map((row, index) => (
+                                    <tr key={index} className={`border-b dark:border-gray-700 ${index % 12 === 11 ? 'bg-blue-100/50 dark:bg-gray-700/50 font-semibold' : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+                                        <td className="py-1 px-1 text-left whitespace-nowrap">{row.payment}</td>
+                                        <td className="py-1 px-1 tabular-nums">{currencyFormatter.format(row.paymentAmount)}</td>
+                                        <td className="py-1 px-1 tabular-nums">{currencyFormatter.format(row.principal)}</td>
+                                        <td className="py-1 px-1 tabular-nums text-red-600 dark:text-red-400">{currencyFormatter.format(row.interest)}</td>
+                                        <td className="py-1 px-1 tabular-nums text-blue-600 dark:text-blue-400">{currencyFormatter.format(row.balance)}</td>
+                                    </tr>
+                                ))}
+                                {schedule.length === 0 && (
+                                    <tr><td colSpan="5" className="text-center italic text-gray-400 py-4">Enter valid loan details to generate the schedule.</td></tr>
+                                )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
           </div>
         </div>
-      </CalculatorWrapper>
-
-      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="space-y-4">
-            <Heading
-              as="h2"
-              size="h2"
-              weight="semibold"
-              className="text-slate-900 dark:text-slate-100"
-            >
-              Loan Amortization Schedule Insights
-            </Heading>
-            <p className="text-base text-slate-600 dark:text-slate-300">
-              A transparent loan amortization schedule shows exactly how each repayment splits
-              between loan amortization and interest. By comparing your amortization schedule month
-              by month, you can spot when overpayments deliver the most value and understand the
-              tipping point where interest drops below principal.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <Heading
-              as="h3"
-              size="h3"
-              weight="semibold"
-              className="text-slate-900 dark:text-slate-100"
-            >
-              Choosing the Right Loan Amortization Schedule Calculator
-            </Heading>
-            <p className="text-base text-slate-600 dark:text-slate-300">
-              This amortization calculator combines charts, tables, and export tools so you can
-              tailor any loan amortization calculator scenario to your needs. Use it as a loan
-              amortization schedule calculator before refinancing, planning home improvements, or
-              comparing how different amortization schedule options affect your long-term costs.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={amortizationFAQs} />
-        </div>
-      </section>
+      </MainWrapper>
     </div>
   );
 }
