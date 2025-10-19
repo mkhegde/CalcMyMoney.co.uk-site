@@ -329,6 +329,11 @@ const rawCategories = [
         'Generate amortisation schedules for personal, car, or secured loans.'
       ),
       createCalculatorEntry(
+        'Average Daily Balance Calculator',
+        'AverageDailyBalanceCalculator',
+        'Estimate credit card finance charges using the average daily balance method.'
+      ),
+      createCalculatorEntry(
         'Amortisation Calculator',
         'AmortizationCalculator',
         'Model monthly repayments and track interest versus principal across the loan term.'
@@ -392,6 +397,11 @@ const rawCategories = [
         'Car Loan Calculator',
         'CarLoanCalculator',
         'Estimate monthly car finance payments, total interest, and payoff time with overpayments.'
+      ),
+      createCalculatorEntry(
+        'Business Loan Calculator',
+        'BusinessLoanCalculator',
+        'Plan business loan repayments, total interest, and overpayments before borrowing.'
       ),
       createCalculatorEntry(
         'Student Loan Payoff Accelerator',
@@ -531,6 +541,11 @@ const rawCategories = [
         'Business Mileage Expense Calculator',
         'BusinessMileageExpenseCalculator',
         'Track mileage claims and calculate HMRC-approved reimbursement amounts.'
+      ),
+      createCalculatorEntry(
+        'Break-Even Calculator',
+        'BreakEvenCalculator',
+        'Calculate contribution margin, break-even units, and sales needed for profit.'
       ),
       createCalculatorEntry(
         'Commission Calculator',
