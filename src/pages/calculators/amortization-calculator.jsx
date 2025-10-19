@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import {
   Area,
   AreaChart,
@@ -35,7 +36,7 @@ const amortizationKeywords = [
 const metaDescription =
   'Use our loan amortization calculator to explore loan amortization and build a loan amortization schedule for mortgages, personal loans, or refinancing.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/amortization-calculator';
+const canonicalUrl = 'https://calcmymoney.co.uk/amortization-calculator';
 const schemaKeywords = amortizationKeywords.slice(0, 5);
 
 const amortizationFAQs = [
@@ -233,6 +234,14 @@ export default function AmortizationCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
+      <Helmet>
+        <title>UK Loan Amortization Schedule Calculator | CalcMyMoney 2025</title>
+        <meta
+          name="description"
+          content="Generate detailed amortization schedules for UK mortgages, personal loans, or refinancing plans. Compare monthly payments, track interest against principal, and export lender-ready tables."
+        />
+        <link rel="canonical" href="https://calcmymoney.co.uk/amortization-calculator" />
+      </Helmet>
       <SeoHead
         title="Amortization Calculator | Loan Amortization"
         description={metaDescription}

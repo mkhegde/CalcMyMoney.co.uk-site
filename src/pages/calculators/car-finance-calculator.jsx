@@ -22,7 +22,7 @@ const keywords = [
 const metaDescription =
   'Use our car finance calculator and car finance payment calculator to model car finance repayments, compare auto finance calculator deals, and plan your next car finance purchase.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/car-finance-calculator';
+const canonicalUrl = 'https://calcmymoney.co.uk/calculators/car-finance-calculator';
 const schemaKeywords = keywords.slice(0, 5);
 
 const currencyFormatter = (value) =>
@@ -120,6 +120,7 @@ export default function CarFinanceCalculatorPage() {
       <Helmet>
         <title>Car Finance Calculator | Car Finance Payment Calculator</title>
         <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={keywords.join(', ')} />
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:title" content="Car Finance Calculator | Car Finance Payment Calculator" />
         <meta property="og:description" content={metaDescription} />

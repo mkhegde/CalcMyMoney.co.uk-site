@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/business-loan-calculator';
+const canonicalUrl = 'https://calcmymoney.co.uk/calculators/business-loan-calculator';
 
 const schemaKeywords = [
   'Business Funding',

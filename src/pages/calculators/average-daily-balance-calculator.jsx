@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
 const canonicalUrl =
-  'https://www.calcmymoney.co.uk/calculators/average-daily-balance-calculator';
+  'https://calcmymoney.co.uk/calculators/average-daily-balance-calculator';
 
 const schemaKeywords = [
   'Credit Card Debt',

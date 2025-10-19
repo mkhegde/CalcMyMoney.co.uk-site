@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   ResponsiveContainer,
@@ -19,7 +20,6 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = [
   'buy to let mortgage calculator',
@@ -33,7 +33,8 @@ const keywords = [
 const metaDescription =
   'Use our buy to let mortgage calculator to plan deposits, compare BTL mortgage calculator stress tests, and forecast buy to let mortgage yields for upcoming rentals.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/buy-to-let-mortgage-calculator';
+const canonicalUrl = 'https://calcmymoney.co.uk/calculators/buy-to-let-mortgage-calculator';
+const pageTitle = 'Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator';
 
 const webpageSchema = {
   '@context': 'https://schema.org',
@@ -191,22 +192,27 @@ export default function BuyToLetMortgageCalculatorPage() {
   const sliderStressMax = Math.max(9, Number(inputs.stressRate) || 0);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <SeoHead
-        title="Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator"
-        description={metaDescription}
-        canonical={canonicalUrl}
-        ogTitle="Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator"
-        ogDescription={metaDescription}
-        ogUrl={canonicalUrl}
-        ogType="website"
-        ogSiteName="Calc My Money"
-        twitterTitle="Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator"
-        twitterDescription={metaDescription}
-        jsonLd={[webpageSchema]}
-      />
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={keywords.join(', ')} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Calc My Money" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
+        />
+      </Helmet>
 
-      <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
+      <div className="bg-white dark:bg-gray-950">
+        <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Heading as="h1" size="h1" weight="bold" className="text-white">
             Buy-to-Let Mortgage Calculator
@@ -216,9 +222,9 @@ export default function BuyToLetMortgageCalculatorPage() {
             you can invest with confidence.
           </p>
         </div>
-      </section>
+        </section>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        <CalculatorWrapper className="bg-white dark:bg-gray-950">
         <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
           <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
             <CardHeader>
@@ -480,9 +486,9 @@ export default function BuyToLetMortgageCalculatorPage() {
             </Card>
           </div>
         </div>
-      </CalculatorWrapper>
+        </CalculatorWrapper>
 
-      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <Heading
             as="h2"
@@ -524,13 +530,14 @@ export default function BuyToLetMortgageCalculatorPage() {
             the tax so you maintain enough reserves for voids and repairs once the tenants move in.
           </p>
         </div>
-      </section>
+        </section>
 
-      <section className="bg-white dark:bg-gray-950 py-12">
+        <section className="bg-white dark:bg-gray-950 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <FAQSection faqs={faqItems} />
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
 }

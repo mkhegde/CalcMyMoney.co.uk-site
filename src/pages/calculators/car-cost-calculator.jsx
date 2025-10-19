@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Calculator, Gauge, Car, Wallet } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -19,14 +20,14 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = ['car cost calculator'];
 
 const metaDescription =
   'Use our car cost calculator to factor purchase finance, insurance, fuel, tax, and maintenance so you know the true monthly cost of running your car.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/car-cost-calculator';
+const canonicalUrl = 'https://calcmymoney.co.uk/calculators/car-cost-calculator';
+const pageTitle = 'Car Cost Calculator | Car Cost Calculator';
 
 const webpageSchema = {
   '@context': 'https://schema.org',
@@ -171,22 +172,28 @@ export default function CarCostCalculatorPage() {
   const depositSliderMax = Math.max(50, Number(inputs.depositPercent) || 0);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <SeoHead
-        title="Car Cost Calculator | Car Cost Calculator"
-        description={metaDescription}
-        canonical={canonicalUrl}
-        ogTitle="Car Cost Calculator | Car Cost Calculator"
-        ogDescription={metaDescription}
-        ogUrl={canonicalUrl}
-        ogType="website"
-        ogSiteName="Calc My Money"
-        twitterTitle="Car Cost Calculator | Car Cost Calculator"
-        twitterDescription={metaDescription}
-        jsonLd={[webpageSchema]}
-      />
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={keywords.join(', ')} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Calc My Money" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
+        />
+      </Helmet>
 
-      <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white py-16">
+      <div className="bg-white dark:bg-gray-950">
+        <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Heading as="h1" size="h1" weight="bold" className="text-white">
             Car Cost Calculator
@@ -196,9 +203,9 @@ export default function CarCostCalculatorPage() {
             fuel, and ongoing ownership expenses.
           </p>
         </div>
-      </section>
+        </section>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        <CalculatorWrapper className="bg-white dark:bg-gray-950">
         <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
           <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
             <CardHeader>
@@ -508,9 +515,9 @@ export default function CarCostCalculatorPage() {
             </Card>
           </div>
         </div>
-      </CalculatorWrapper>
+        </CalculatorWrapper>
 
-      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <Heading
             as="h2"
@@ -539,13 +546,14 @@ export default function CarCostCalculatorPage() {
             you choose the car that balances comfort, running costs, and long-term value.
           </p>
         </div>
-      </section>
+        </section>
 
-      <section className="bg-white dark:bg-gray-950 py-12">
+        <section className="bg-white dark:bg-gray-950 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <FAQSection faqs={faqItems} />
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
 }

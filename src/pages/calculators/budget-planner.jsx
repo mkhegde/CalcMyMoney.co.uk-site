@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Calculator, Wallet, PiggyBank, PlusCircle } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 import Heading from '@/components/common/Heading';
@@ -8,14 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import SeoHead from '@/components/seo/SeoHead';
 
 const budgetKeywords = ['monthly budget calculator', 'budget calculator'];
 
 const metaDescription =
   'Use our monthly budget calculator to track income, compare categories with the budget calculator, and plan savings goals with flexible monthly adjustments.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/budget-planner';
+const canonicalUrl = 'https://calcmymoney.co.uk/calculators/budget-planner';
+const pageTitle = 'Budget Planner | Budget Calculator';
 
 const webpageSchema = {
   '@context': 'https://schema.org',
@@ -122,22 +123,27 @@ export default function BudgetPlannerPage() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <SeoHead
-        title="Budget Planner | Budget Calculator"
-        description={metaDescription}
-        canonical={canonicalUrl}
-        ogTitle="Budget Planner | Budget Calculator"
-        ogDescription={metaDescription}
-        ogUrl={canonicalUrl}
-        ogType="website"
-        ogSiteName="Calc My Money"
-        twitterTitle="Budget Planner | Budget Calculator"
-        twitterDescription={metaDescription}
-        jsonLd={[webpageSchema]}
-      />
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={budgetKeywords.join(', ')} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Calc My Money" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
+        />
+      </Helmet>
 
-      <section className="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-800 text-white py-16">
+      <div className="bg-white dark:bg-gray-950">
+        <section className="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-800 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Heading as="h1" size="h1" weight="bold" className="text-white">
             Budget Planner
@@ -147,9 +153,9 @@ export default function BudgetPlannerPage() {
             interactive budgeting workspace.
           </p>
         </div>
-      </section>
+        </section>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        <CalculatorWrapper className="bg-white dark:bg-gray-950">
         <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
           <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
             <CardHeader>
@@ -316,9 +322,9 @@ export default function BudgetPlannerPage() {
             </Card>
           </div>
         </div>
-      </CalculatorWrapper>
+        </CalculatorWrapper>
 
-      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <Heading
             as="h2"
@@ -348,13 +354,14 @@ export default function BudgetPlannerPage() {
             expenses.
           </p>
         </div>
-      </section>
+        </section>
 
-      <section className="bg-white dark:bg-gray-950 py-12">
+        <section className="bg-white dark:bg-gray-950 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <FAQSection faqs={faqItems} />
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
 }

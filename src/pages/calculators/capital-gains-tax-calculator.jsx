@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import React, { useState, useMemo, useCallback } from 'react';
 import { Calculator, Scale, Percent, PieChart as PieChartIcon } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
@@ -15,7 +16,6 @@ import {
 } from '@/components/ui/select';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = [
   'capital gains tax calculator',
@@ -27,7 +27,8 @@ const keywords = [
 const metaDescription =
   'Use our capital gains tax calculator to estimate capital gains tax, compare CGT calculator scenarios, and plan allowances with this capital gains calculator.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/capital-gains-tax-calculator';
+const canonicalUrl = 'https://calcmymoney.co.uk/calculators/capital-gains-tax-calculator';
+const pageTitle = 'Capital Gains Tax Calculator | Capital Gains Tax';
 
 const webpageSchema = {
   '@context': 'https://schema.org',
@@ -144,22 +145,27 @@ export default function CapitalGainsTaxCalculatorPage() {
   }, [inputs]);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <SeoHead
-        title="Capital Gains Tax Calculator | Capital Gains Tax"
-        description={metaDescription}
-        canonical={canonicalUrl}
-        ogTitle="Capital Gains Tax Calculator | Capital Gains Tax"
-        ogDescription={metaDescription}
-        ogUrl={canonicalUrl}
-        ogType="website"
-        ogSiteName="Calc My Money"
-        twitterTitle="Capital Gains Tax Calculator | Capital Gains Tax"
-        twitterDescription={metaDescription}
-        jsonLd={[webpageSchema]}
-      />
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={keywords.join(', ')} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Calc My Money" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
+        />
+      </Helmet>
 
-      <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
+      <div className="bg-white dark:bg-gray-950">
+        <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Heading as="h1" size="h1" weight="bold" className="text-white">
             Capital Gains Tax Calculator
@@ -169,9 +175,9 @@ export default function CapitalGainsTaxCalculatorPage() {
             CGT calculator.
           </p>
         </div>
-      </section>
+        </section>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        <CalculatorWrapper className="bg-white dark:bg-gray-950">
         <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
           <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
             <CardHeader>
@@ -411,9 +417,9 @@ export default function CapitalGainsTaxCalculatorPage() {
             </Card>
           </div>
         </div>
-      </CalculatorWrapper>
+        </CalculatorWrapper>
 
-      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <Heading
             as="h2"
@@ -443,13 +449,14 @@ export default function CapitalGainsTaxCalculatorPage() {
             allowances for you and your partner.
           </p>
         </div>
-      </section>
+        </section>
 
-      <section className="bg-white dark:bg-gray-950 py-12">
+        <section className="bg-white dark:bg-gray-950 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <FAQSection faqs={faqItems} />
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
 }

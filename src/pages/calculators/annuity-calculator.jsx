@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Calculator, Calendar, PoundSterling, TrendingUp } from 'lucide-react';
 
-import SeoHead from '@/components/seo/SeoHead';
 import { breadcrumbSchema } from '@/components/seo/JsonLd';
 import Heading from '@/components/common/Heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -136,19 +136,22 @@ export default function AnnuityCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <SeoHead
-        title="Annuity Calculator | Best Annuity Calculator"
-        description={metaDescription}
-        canonical={canonicalUrl}
-        ogTitle="Annuity Calculator | Best Annuity Calculator"
-        ogDescription={metaDescription}
-        ogUrl={canonicalUrl}
-        ogType="website"
-        ogSiteName="Calc My Money"
-        twitterTitle="Annuity Calculator | Best Annuity Calculator"
-        twitterDescription={metaDescription}
-        jsonLd={[breadcrumbJson, webpageSchema]}
-      />
+      <Helmet>
+        <title>Annuity Calculator | Best Annuity Calculator</title>
+        <meta name="description" content={metaDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        {/* OpenGraph/Twitter tags using static data - these were manually included in the old SeoHead */}
+        <meta property="og:title" content="Annuity Calculator | Best Annuity Calculator" />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Calc My Money" />
+        <meta name="twitter:title" content="Annuity Calculator | Best Annuity Calculator" />
+        <meta name="twitter:description" content={metaDescription} />
+        {/* We keep the JSON-LD schemas, as Helmet can handle them */}
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJson)}</script>
+        <script type="application/ld+json">{JSON.stringify(webpageSchema)}</script>
+      </Helmet>
 
       <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">

@@ -10,6 +10,7 @@ import {
   Legend,
 } from 'recharts';
 import { Calculator, Building2, BarChart3, TrendingUp } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 import Heading from '@/components/common/Heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,14 +20,13 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import SeoHead from '@/components/seo/SeoHead';
-
 const brrrrKeywords = ['brrrr calculator', 'brrrr real estate calculator'];
 
 const metaDescription =
   'Use our BRRRR calculator to map buy-rehab-rent-refinance results while the BRRRR real estate calculator tracks cash flow, equity, and cash-out potential for your next deal.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/brrrr-calculator';
+const canonicalUrl = 'https://calcmymoney.co.uk/calculators/brrrr-calculator';
+const pageTitle = 'BRRRR Calculator | BRRRR Real Estate Calculator';
 
 const webpageSchema = {
   '@context': 'https://schema.org',
@@ -159,22 +159,27 @@ export default function BRRRRCalculatorPage() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <SeoHead
-        title="BRRRR Calculator | BRRRR Real Estate Calculator"
-        description={metaDescription}
-        canonical={canonicalUrl}
-        ogTitle="BRRRR Calculator | BRRRR Real Estate Calculator"
-        ogDescription={metaDescription}
-        ogUrl={canonicalUrl}
-        ogType="website"
-        ogSiteName="Calc My Money"
-        twitterTitle="BRRRR Calculator | BRRRR Real Estate Calculator"
-        twitterDescription={metaDescription}
-        jsonLd={[webpageSchema]}
-      />
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={brrrrKeywords.join(', ')} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Calc My Money" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
+        />
+      </Helmet>
 
-      <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-gray-900 text-white py-16">
+      <div className="bg-white dark:bg-gray-950">
+        <section className="bg-gradient-to-r from-slate-900 via-slate-800 to-gray-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Heading as="h1" size="h1" weight="bold" className="text-white">
             BRRRR Calculator
@@ -184,9 +189,9 @@ export default function BRRRRCalculatorPage() {
             you can recycle capital into the next deal.
           </p>
         </div>
-      </section>
+        </section>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        <CalculatorWrapper className="bg-white dark:bg-gray-950">
         <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
           <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
             <CardHeader>
@@ -470,9 +475,9 @@ export default function BRRRRCalculatorPage() {
             </Card>
           </div>
         </div>
-      </CalculatorWrapper>
+        </CalculatorWrapper>
 
-      <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
+        <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <Heading
             as="h2"
@@ -502,13 +507,14 @@ export default function BRRRRCalculatorPage() {
             you go under contract.
           </p>
         </div>
-      </section>
+        </section>
 
-      <section className="bg-white dark:bg-gray-950 py-12">
+        <section className="bg-white dark:bg-gray-950 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <FAQSection faqs={faqItems} />
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
 }
