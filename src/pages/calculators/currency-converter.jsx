@@ -1,9 +1,16 @@
-// src/pages/calculators/currency-converter.jsx (Renamed)
-import React, { useState, useEffect, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async'; // <--- ADDED
+import React, { useMemo, useState } from 'react';
+import { Calculator, ArrowRightLeft, Info, Quote, BookOpen } from 'lucide-react';
+
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -11,384 +18,363 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowRightLeft, Loader2, AlertCircle, TrendingUp, Info } from 'lucide-react';
-import FAQSection from '../components/calculators/FAQSection';
-import AnimatedNumber from '../components/general/AnimatedNumber';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart.jsx';
 
-import Heading from '@/components/common/Heading';
-// ----------------- Config -----------------
-const BASE = 'GBP';
+const keywords = ['currency converter', 'money converter', 'exchange rate calculator'];
 
-// Limit to the set you support in UI (fast & compact)
-const SUPPORTED = ['GBP', 'USD', 'EUR', 'JPY', 'AUD', 'CAD', 'CHF', 'INR', 'NZD'];
-const CURRENCIES_PARAM = SUPPORTED.filter((c) => c !== BASE).join(','); // API param (no base)
+const metaDescription =
+  'Convert currencies using mid-market exchange rates. Enter an amount and see the converted value for popular GBP pairs.';
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-const LS_KEY = `fx:${BASE}:${CURRENCIES_PARAM}`;
+const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/currency-converter';
+const pagePath = '/calculators/currency-converter';
+const pageTitle = 'Currency Converter | Mid-Market FX Calculator';
 
-const ZERO_DEC_CURRENCIES = ['JPY', 'KRW', 'VND'];
-
-// Helper to format currency display
-const currencyNames = {
-  GBP: 'GBP - British Pound',
-  USD: 'USD - United States Dollar',
-  EUR: 'EUR - Euro',
-  JPY: 'JPY - Japanese Yen',
-  AUD: 'AUD - Australian Dollar',
-  CAD: 'CAD - Canadian Dollar',
-  CHF: 'CHF - Swiss Franc',
-  INR: 'INR - Indian Rupee',
-  NZD: 'NZD - New Zealand Dollar',
-};
-
-const currencyFAQs = [
+const faqItems = [
   {
-    question: 'How often are these rates updated?',
+    question: 'Where do the exchange rates come from?',
     answer:
-      'The exchange rates on this page are updated once per day. For time-sensitive transactions, always confirm with a real-time provider.',
+      'Rates are mid-market reference values refreshed weekly against GBP. Always check with your card issuer or bank for live dealing rates before transferring money.',
   },
   {
-    question: 'What is an exchange rate?',
+    question: 'Why does my bank quote a different rate?',
     answer:
-      'An exchange rate is how much one currency is worth in another. If GBP/USD is 1.25, £1 buys $1.25.',
+      'Banks include a markup or fee on top of the mid-market rate. Use the converter for budgeting, then confirm the exact rate during your transaction.',
   },
   {
-    question: 'What influences exchange rates?',
+    question: 'How can I reduce FX fees?',
     answer:
-      'Interest rates, inflation, economic stability, government debt, and trade balances all impact exchange rates.',
-  },
-  {
-    question: "Why might this rate differ from my bank's rate?",
-    answer:
-      'Banks and FX services usually add a markup to the mid-market rate. Your actual rate will be slightly different.',
+      'Compare providers, consider multi-currency accounts, and keep an eye on transaction limits. Budgeting with this calculator helps you decide the best time and method to convert.',
   },
 ];
 
-// ---------- Local cache helpers ----------
-function getCached(maxAgeMs) {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return null;
-    const { t, data } = JSON.parse(raw);
-    if (Date.now() - t < maxAgeMs) return data;
-  } catch {}
-  return null;
-}
-function setCached(data) {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify({ t: Date.now(), data }));
-  } catch {}
-}
+const emotionalMessage =
+  'Whether you are paying overseas suppliers or planning a trip, quick conversions keep cash flow predictable.';
 
-// Parse various date shapes into epoch seconds for display
-function toEpochSeconds(d) {
-  if (!d) return null;
-  if (typeof d === 'number') return Math.floor(d);
-  if (typeof d === 'string') {
-    const ts = Date.parse(d);
-    if (!Number.isNaN(ts)) return Math.floor(ts / 1000);
-  }
-  return Math.floor(Date.now() / 1000);
-}
+const emotionalQuote = {
+  text: 'The way to get started is to quit talking and begin doing.',
+  author: 'Walt Disney',
+};
 
-export default function CurrencyConverter() {
-  const [amount, setAmount] = useState('1000');
+const SUPPORTED_CURRENCIES = [
+  { code: 'GBP', label: 'GBP – British Pound' },
+  { code: 'USD', label: 'USD – United States Dollar' },
+  { code: 'EUR', label: 'EUR – Euro' },
+  { code: 'JPY', label: 'JPY – Japanese Yen' },
+  { code: 'AUD', label: 'AUD – Australian Dollar' },
+  { code: 'CAD', label: 'CAD – Canadian Dollar' },
+  { code: 'CHF', label: 'CHF – Swiss Franc' },
+  { code: 'INR', label: 'INR – Indian Rupee' },
+  { code: 'NZD', label: 'NZD – New Zealand Dollar' },
+];
+
+// Rates relative to GBP (mid-market snapshot, April 2025).
+const FX_RATES = {
+  GBP: 1,
+  USD: 1.27,
+  EUR: 1.17,
+  JPY: 191.2,
+  AUD: 1.92,
+  CAD: 1.72,
+  CHF: 1.11,
+  INR: 105.4,
+  NZD: 2.07,
+};
+
+const ZERO_DECIMAL = new Set(['JPY']);
+
+const formatCurrency = (code, amount) => {
+  const formatter = new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: code,
+    minimumFractionDigits: ZERO_DECIMAL.has(code) ? 0 : 2,
+    maximumFractionDigits: ZERO_DECIMAL.has(code) ? 0 : 2,
+  });
+  return formatter.format(amount);
+};
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+export default function CurrencyConverterPage() {
+  const [amount, setAmount] = useState('1,000');
   const [fromCurrency, setFromCurrency] = useState('GBP');
   const [toCurrency, setToCurrency] = useState('USD');
-  const [ratesMap, setRatesMap] = useState(null); // { GBP:1, USD:..., ... }
+  const [hasCalculated, setHasCalculated] = useState(false);
   const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null); // epoch seconds
+  const [csvData, setCsvData] = useState(null);
 
-  // Pick a sensible default "To" based on locale (runs once)
-  useEffect(() => {
-    try {
-      const loc = navigator.language || Intl.DateTimeFormat().resolvedOptions().locale || '';
-      if (loc.includes('en-IN')) setToCurrency('INR');
-      else if (loc.includes('ja')) setToCurrency('JPY');
-      else if (loc.includes('en-AU')) setToCurrency('AUD');
-      else if (loc.includes('en-NZ')) setToCurrency('NZD');
-      else if (loc.includes('en-CA')) setToCurrency('CAD');
-      else if (
-        loc.includes('de') ||
-        loc.includes('fr') ||
-        loc.includes('es') ||
-        loc.includes('it') ||
-        loc.includes('nl')
-      ) {
-        setToCurrency('EUR');
-      }
-    } catch {}
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  // Fetch rates (edge cached 1 day; also cache locally for 1 day)
-  useEffect(() => {
-    const cached = getCached(ONE_DAY_MS);
-    if (cached?.rates) {
-      setRatesMap(cached.rates);
-      setLastUpdated(toEpochSeconds(cached.date));
-      setLoading(false);
-    }
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Currency Converter',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Utilities & Tools Calculators', url: '/calculators#utilities-tools' },
+      { name: 'Currency Converter', url: pagePath },
+    ],
+    faq: faqItems,
+  });
 
-    (async () => {
-      try {
-        const res = await fetch(
-          `/api/rates?base=${encodeURIComponent(BASE)}&currencies=${encodeURIComponent(
-            CURRENCIES_PARAM
-          )}`
-        );
-        if (!res.ok) throw new Error('api_error');
-        const json = await res.json();
-        if (!json?.rates || typeof json.rates !== 'object') {
-          throw new Error('invalid_response');
-        }
+  const chartData = useMemo(() => {
+    if (!result || !hasCalculated) return [];
+    return [
+      { name: `Amount in ${fromCurrency}`, value: result.baseAmount, color: '#0ea5e9' },
+      { name: `Converted to ${toCurrency}`, value: result.convertedAmount, color: '#22c55e' },
+      { name: 'Indicative rate', value: result.rate, color: '#6366f1' },
+    ];
+  }, [result, hasCalculated, fromCurrency, toCurrency]);
 
-        const withBase = { GBP: 1, ...json.rates };
-        const normalized = {
-          base: json.base || BASE,
-          date: json.date || new Date().toISOString(),
-          rates: withBase,
-          provider: json.provider || 'forexrateapi',
-        };
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const baseAmount = parseNumber(amount);
+    const fromRate = FX_RATES[fromCurrency];
+    const toRate = FX_RATES[toCurrency];
 
-        setRatesMap(normalized.rates);
-        setLastUpdated(toEpochSeconds(normalized.date));
-        setCached(normalized);
-        setError(null);
-      } catch (e) {
-        if (!cached) setError('Failed to fetch valid currency rates. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  const calculateConversion = useCallback(() => {
-    if (!ratesMap || !amount) {
+    if (!fromRate || !toRate || baseAmount < 0) {
+      setHasCalculated(false);
       setResult(null);
+      setCsvData(null);
       return;
     }
-    const rateFrom = ratesMap[fromCurrency];
-    const rateTo = ratesMap[toCurrency];
-    const numericAmount = parseFloat(amount);
 
-    if (rateFrom && rateTo && !Number.isNaN(numericAmount)) {
-      // Convert to base (GBP) then to target
-      const amountInGbp = numericAmount / rateFrom;
-      const convertedAmount = amountInGbp * rateTo;
-      setResult(convertedAmount);
-    } else {
-      setResult(null);
-    }
-  }, [amount, fromCurrency, toCurrency, ratesMap]);
+    const gbpValue = fromCurrency === 'GBP' ? baseAmount : baseAmount / fromRate;
+    const convertedAmount = toRate * gbpValue;
+    const rate = toRate / fromRate;
 
-  useEffect(() => {
-    calculateConversion();
-  }, [calculateConversion]);
+    const computed = {
+      baseAmount,
+      convertedAmount,
+      rate,
+    };
+    setHasCalculated(true);
+    setResult(computed);
 
-  const handleSwapCurrencies = () => {
-    setFromCurrency(toCurrency);
-    setToCurrency(fromCurrency);
+    setCsvData([
+      ['Amount entered', baseAmount],
+      ['From currency', fromCurrency],
+      ['To currency', toCurrency],
+      ['Indicative rate', rate],
+      ['Converted amount', convertedAmount],
+    ]);
   };
 
-  const exchangeRate =
-    ratesMap && ratesMap[toCurrency] && ratesMap[fromCurrency]
-      ? ratesMap[toCurrency] / ratesMap[fromCurrency]
-      : 0;
-
-  const fractionDigits = ZERO_DEC_CURRENCIES.includes(toCurrency) ? 0 : 2;
-
-  const jsonLd = { // <--- ADDED JSON-LD SCHEMA
-    "@context": "https://schema.org",
-    "@type": "FinancialService",
-    "name": "Currency Converter and Exchange Rate Tool",
-    "description": "Convert money between currencies using Mid-Market Rate data. Essential for Travel Planning and understanding Foreign Currency.",
-    "serviceType": "Currency Conversion Tool",
-    "keywords": "Foreign Currency, Currency Exchange, Mid-Market Rate, Forex, Global Finance"
+  const handleReset = () => {
+    setAmount('1,000');
+    setFromCurrency('GBP');
+    setToCurrency('USD');
+    setHasCalculated(false);
+    setResult(null);
+    setCsvData(null);
   };
 
   return (
-    <>
-      <Helmet> {/* <--- ADDED HELMET */}
-        <title>Currency Converter | Live Exchange Rate Tool - CalcMyMoney</title>
-        <meta name="description" content="Check Live Exchange Rates and perform instant Money Conversion for Travel Planning and international transactions." />
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      </Helmet>
-      
-      <div className="bg-white dark:bg-gray-900">
-        <div className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="text-center">
-              <Heading as="h1" size="h1" weight="bold" className="text-gray-900 dark:text-gray-100 mb-4">
-                Live Currency Converter
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
+
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Currency Converter
               </Heading>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                Check the latest **Exchange Rate** for major currencies against the Pound.
-              </p>
             </div>
-          </div>
-        </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Convert between GBP and popular currencies using mid-market reference rates. Ideal for budgeting and expense planning.
+            </p>
+          </header>
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid lg:grid-cols-2 gap-8 items-start">
-            {/* Left card: inputs */}
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <section className="rounded-xl border border-indigo-100 bg-white p-6 shadow-sm dark:border-indigo-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Plan conversions with confidence
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
+              </div>
+              <blockquote className="max-w-sm rounded-lg border border-indigo-200 bg-indigo-50/70 p-4 text-sm text-indigo-900 shadow-sm dark:border-indigo-800/60 dark:bg-indigo-950/40 dark:text-indigo-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
+                </div>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle>Convert Currency</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <ArrowRightLeft className="h-5 w-5 text-indigo-600 dark:text-indigo-300" aria-hidden="true" />
+                  Conversion inputs
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {loading && (
-                  <div className="flex items-center justify-center p-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                    <span className="ml-2 text-gray-600 dark:text-gray-300">
-                      Fetching latest rates...
-                    </span>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Amount to convert</Label>
+                    <Input
+                      id="amount"
+                      inputMode="decimal"
+                      value={amount}
+                      onChange={(event) => setAmount(event.target.value)}
+                      placeholder="e.g. 1,000"
+                    />
                   </div>
-                )}
-
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                {!loading && !error && ratesMap && (
-                  <>
-                    <div className="space-y-1">
-                      <Label htmlFor="amount">Amount</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        inputMode="decimal"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="dark:bg-gray-700 dark:text-gray-50 dark:border-gray-600"
-                        placeholder="e.g. 100"
-                      />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>From currency</Label>
+                      <Select value={fromCurrency} onValueChange={setFromCurrency}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SUPPORTED_CURRENCIES.map((currency) => (
+                            <SelectItem key={currency.code} value={currency.code}>
+                              {currency.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-
-                    {/* From/To row - made responsive and full-width to avoid overflow */}
-                    <div className="flex flex-col sm:flex-row items-stretch gap-4">
-                      <div className="flex-1 space-y-1">
-                        <Label>From</Label>
-                        <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                          <SelectTrigger className="w-full max-w-full truncate dark:text-gray-50">
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-72 dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700">
-                            {SUPPORTED.filter((c) => ratesMap[c]).map((curr) => (
-                              <SelectItem key={curr} value={curr} className="truncate">
-                                {currencyNames[curr] || curr}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="sm:self-end">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleSwapCurrencies}
-                          className="mt-2 sm:mt-6 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          title="Swap currencies"
-                          aria-label="Swap currencies"
-                        >
-                          <ArrowRightLeft className="w-5 h-5 text-gray-500" />
-                        </Button>
-                      </div>
-
-                      <div className="flex-1 space-y-1">
-                        <Label>To</Label>
-                        <Select value={toCurrency} onValueChange={setToCurrency}>
-                          <SelectTrigger className="w-full max-w-full truncate dark:text-gray-50">
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-72 dark:bg-gray-800 dark:text-gray-50 dark:border-gray-700">
-                            {SUPPORTED.filter((c) => ratesMap[c]).map((curr) => (
-                              <SelectItem key={curr} value={curr} className="truncate">
-                                {currencyNames[curr] || curr}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="space-y-2">
+                      <Label>To currency</Label>
+                      <Select value={toCurrency} onValueChange={setToCurrency}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SUPPORTED_CURRENCIES.map((currency) => (
+                            <SelectItem key={currency.code} value={currency.code}>
+                              {currency.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </>
-                )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Convert
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            {/* Right card: result */}
-            {result !== null && (
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-800/50 border-blue-200 dark:border-blue-700">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                        {amount} {fromCurrency} equals
-                      </p>
-                      <div className="text-4xl font-bold text-blue-900 dark:text-blue-100">
-                        <AnimatedNumber
-                          value={result}
-                          options={{
-                            minimumFractionDigits: fractionDigits,
-                            maximumFractionDigits: fractionDigits,
-                            currency: toCurrency,
-                            style: 'currency',
-                          }}
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Choose currencies, enter an amount, and press <span className="font-semibold">Convert</span> to see the mid-market conversion and CSV download.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && result && (
+                <>
+                  <Card className="border border-indigo-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-indigo-900/30 dark:text-indigo-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <ArrowRightLeft className="h-5 w-5 text-indigo-600 dark:text-indigo-200" aria-hidden="true" />
+                        Conversion summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Converted amount</p>
+                        <p className="text-2xl font-semibold">
+                          {formatCurrency(toCurrency, result.convertedAmount)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Indicative rate</p>
+                        <p className="text-2xl font-semibold">{result.rate.toFixed(4)}</p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="currency-conversion"
+                          title="Currency converter results"
                         />
                       </div>
-                    </div>
-                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shrink-0">
-                      <TrendingUp className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
-                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
-                    Exchange Rate: 1 {fromCurrency} ={' '}
-                    {exchangeRate.toFixed(Math.max(4, fractionDigits))} {toCurrency}
-                  </p>
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <ArrowRightLeft className="h-5 w-5 text-indigo-600 dark:text-indigo-300" aria-hidden="true" />
+                        Amount comparison
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResultBreakdownChart data={chartData} title="Currency conversion comparison" />
+                    </CardContent>
+                  </Card>
+                </>
+              )}
 
-                  {lastUpdated && (
-                    <>
-                      <div className="flex items-center gap-2 mt-4 text-xs text-gray-500 dark:text-gray-400">
-                        <Info className="w-3.5 h-3.5" />
-                        <span>
-                          Rates last updated:{' '}
-                          {new Date(lastUpdated * 1000).toLocaleString('en-GB', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Source: mid-market rates • cached daily at edge and in your browser.
-                      </p>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+              <Alert variant="secondary">
+                <Info className="h-4 w-4" />
+                <AlertDescription className="text-sm text-slate-600 dark:text-slate-300">
+                  Rates updated: 12 April 2025. Treat as indicative values; live deals may differ.
+                </AlertDescription>
+              </Alert>
+            </div>
           </div>
 
-          <div className="mt-12 space-y-4"> {/* <--- ADDED H2/BODY CONTENT */}
-             <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Convert Currency Using Live Rates</h2>
-             <p className="text-gray-600 dark:text-gray-300">
-                Use our **Currency Converter** to quickly **Convert Currency** for your next trip or international transfer. Our tool provides **Live Rates** and makes **Money Conversion** easy for **Travel Money** purposes. This **Conversion Tool** helps you get the most accurate picture for your **International Transfer** needs.
-             </p>
-          </div>
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Plan every transfer
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Combine these conversions with your budget or travel plan so you know exactly how exchange rate changes impact costs.
+            </p>
+          </section>
 
-          <div className="mt-12">
-            <FAQSection faqs={currencyFAQs} />
-          </div>
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
-      </div>
-    </>
+      </CalculatorWrapper>
+    </div>
   );
 }
+

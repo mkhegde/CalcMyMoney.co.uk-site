@@ -1,31 +1,61 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Home, MapPin, Percent } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Calculator, Home, MapPin, Percent, Quote, BookOpen } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart.jsx';
+
+const keywords = ['council tax calculator', 'uk council tax', 'council tax bands'];
+
+const metaDescription =
+  'Estimate UK council tax by band, local authority rate, parish precepts, and discounts. Understand your annual, monthly, and weekly bills.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/council-tax-calculator';
+const pagePath = '/calculators/council-tax-calculator';
+const pageTitle = 'Council Tax Calculator | UK Band & Discount Estimator';
 
-const schemaKeywords = [
-  'Property Valuation',
-  'Annual Charge',
-  'Exemptions',
-  'Council Services',
-  'UK Rates',
+const faqItems = [
+  {
+    question: 'How is council tax calculated?',
+    answer:
+      'Each property sits in valuation bands A–H. The council sets a Band D rate, and other bands are a fraction or multiple of Band D. Parish precepts and adult discounts adjust the final bill.',
+  },
+  {
+    question: 'Am I eligible for a discount?',
+    answer:
+      'Single adults, students, carers, and certain empty properties may qualify for discounts or exemptions. Select the relevant discount to estimate your reduced bill.',
+  },
+  {
+    question: 'How often should I review my council tax bill?',
+    answer:
+      'Recalculate whenever your household changes, you move, or your local authority updates rates. Verifying the numbers helps you budget for monthly payments.',
+  },
 ];
+
+const emotionalMessage =
+  'Council tax is one of the largest household bills. Plan it properly and you can set aside funds for savings instead of scrambling at year end.';
+
+const emotionalQuote = {
+  text: 'Beware of little expenses; a small leak will sink a great ship.',
+  author: 'Benjamin Franklin',
+};
 
 const TAX_BANDS = [
   { band: 'A', multiplier: 6 / 9 },
@@ -46,314 +76,347 @@ const DISCOUNT_OPTIONS = [
   { value: 'other50', label: 'Other 50% discount', percentage: 50 },
 ];
 
-const faqItems = [
-  {
-    question: 'How is council tax calculated for my property?',
-    answer:
-      'Each property is allocated a valuation band (A to H) based on its April 1991 value in England and Scotland, or April 2003 in Wales. Your local authority sets a Band D rate, and other bands are charged as a fraction or multiple of that rate.',
-  },
-  {
-    question: 'Can I get a single person discount?',
-    answer:
-      'If only one adult lives in a property, the council tax bill is reduced by 25%. Use the single person discount option to reflect this reduction.',
-  },
-  {
-    question: 'What exemptions exist?',
-    answer:
-      'Full-time students, certain care leavers, and properties left empty for specific reasons may qualify for exemptions. Check with your local government office for the status that applies to your household.',
-  },
-];
-
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
   minimumFractionDigits: 2,
 });
 
-export default function CouncilTaxCalculator() {
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+function calculateCouncilTax({ band, bandDCharge, parishPrecept, discountCode }) {
+  const bandInfo = TAX_BANDS.find((item) => item.band === band) ?? TAX_BANDS[3];
+  const baseCharge = parseNumber(bandDCharge);
+  const parishCharge = parseNumber(parishPrecept);
+  const discount = DISCOUNT_OPTIONS.find((item) => item.value === discountCode) ?? DISCOUNT_OPTIONS[0];
+
+  const annualChargeBeforeDiscount = baseCharge * bandInfo.multiplier + parishCharge;
+  const discountAmount = (annualChargeBeforeDiscount * discount.percentage) / 100;
+  const annualCharge = Math.max(annualChargeBeforeDiscount - discountAmount, 0);
+  const monthlyCharge = annualCharge / 12;
+  const weeklyCharge = annualCharge / 52;
+
+  return {
+    band,
+    annualCharge,
+    monthlyCharge,
+    weeklyCharge,
+    annualChargeBeforeDiscount,
+    discountAmount,
+    discountPercentage: discount.percentage,
+  };
+}
+
+export default function CouncilTaxCalculatorPage() {
   const [inputs, setInputs] = useState({
     band: 'D',
-    localBandDCharge: '2050',
+    bandDCharge: '2,050',
     parishPrecept: '80',
-    adultCount: '2',
     discountCode: 'none',
   });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const reset = useCallback(() => {
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Council Tax Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Utilities & Tools Calculators', url: '/calculators#utilities-tools' },
+      { name: 'Council Tax Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
+
+  const chartData = useMemo(() => {
+    if (!results || !hasCalculated) return [];
+    return [
+      { name: 'Annual council tax', value: results.annualCharge, color: '#0ea5e9' },
+      { name: 'Discount applied', value: results.discountAmount, color: '#f97316' },
+      { name: 'Parish precept', value: parseNumber(inputs.parishPrecept), color: '#22c55e' },
+    ].filter((segment) => segment.value > 0);
+  }, [results, hasCalculated, inputs.parishPrecept]);
+
+  const handleInputChange = (field) => (event) => {
+    const { value } = event.target;
+    setInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleBandChange = (value) => {
+    setInputs((prev) => ({
+      ...prev,
+      band: value,
+    }));
+  };
+
+  const handleDiscountChange = (value) => {
+    setInputs((prev) => ({
+      ...prev,
+      discountCode: value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const computed = calculateCouncilTax(inputs);
+    setHasCalculated(true);
+    setResults(computed);
+
+    setCsvData([
+      ['Band', computed.band],
+      ['Band D charge', parseNumber(inputs.bandDCharge)],
+      ['Parish precept', parseNumber(inputs.parishPrecept)],
+      ['Discount (%)', computed.discountPercentage],
+      ['Annual charge before discount', computed.annualChargeBeforeDiscount],
+      ['Discount amount', computed.discountAmount],
+      ['Final annual charge', computed.annualCharge],
+      ['Monthly charge', computed.monthlyCharge],
+      ['Weekly charge', computed.weeklyCharge],
+    ]);
+  };
+
+  const handleReset = () => {
     setInputs({
       band: 'D',
-      localBandDCharge: '2050',
+      bandDCharge: '2,050',
       parishPrecept: '80',
-      adultCount: '2',
       discountCode: 'none',
     });
-  }, []);
-
-  const results = useMemo(() => {
-    const selectedBand =
-      TAX_BANDS.find((bandInfo) => bandInfo.band === inputs.band) || TAX_BANDS[3];
-    const baseBandD = Number(inputs.localBandDCharge) || 0;
-    const parishPrecept = Number(inputs.parishPrecept) || 0;
-    const adultCount = Math.max(0, Number(inputs.adultCount) || 0);
-    const discountOption =
-      DISCOUNT_OPTIONS.find((option) => option.value === inputs.discountCode) ||
-      DISCOUNT_OPTIONS[0];
-
-    const annualBeforeDiscount = baseBandD * selectedBand.multiplier + parishPrecept;
-    let discountPercentage = discountOption.percentage;
-    if (discountOption.value === 'none' && adultCount === 1) {
-      // Auto single-person 25% discount if only one adult and no other discount selected
-      discountPercentage = 25;
-    }
-    const annualDiscount = (annualBeforeDiscount * discountPercentage) / 100;
-    const annualPayable = Math.max(0, annualBeforeDiscount - annualDiscount);
-    const monthlyPayable = annualPayable / 12;
-
-    return {
-      annualBeforeDiscount,
-      discountPercentage,
-      annualDiscount,
-      annualPayable,
-      monthlyPayable,
-      bandMultiplier: selectedBand.multiplier,
-    };
-  }, [inputs]);
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Council Tax &amp; Local Authority Tax Calculator</title>
-        <meta
-          name="description"
-          content="Council Tax Calculator showing tax bands, discounts, and annual charges for UK households. Estimate your local authority tax bill quickly."
-        />
-        <meta name="keywords" content="Council Tax Calculator, Tax Bands, Discounts" />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'GovernmentService',
-              name: 'Council Tax Calculator',
-              description:
-                'Tool for estimating UK council tax based on property valuation bands, annual charges, exemptions, and discounts for local authority services.',
-              areaServed: 'GB',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Council Tax Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
-            Calculate council tax, review council tax bands, and estimate property bills with
-            discounts applied for your household.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-600/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Council Tax Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Estimate your council tax bill for any UK valuation band, apply single-person discounts, and see the monthly and weekly amounts you need to budget.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-indigo-500" />
-                Council Tax Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="text-sm font-medium">Property valuation band</Label>
-                <Select
-                  value={inputs.band}
-                  onValueChange={(value) => handleChange('band', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select band" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TAX_BANDS.map((bandInfo) => (
-                      <SelectItem key={bandInfo.band} value={bandInfo.band}>
-                        Band {bandInfo.band} (multiplier {bandInfo.multiplier.toFixed(2)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <section className="rounded-xl border border-sky-100 bg-white p-6 shadow-sm dark:border-sky-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Keep your council bill predictable
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
               </div>
-              <div>
-                <Label htmlFor="localBandDCharge" className="text-sm font-medium">
-                  Local authority Band D charge (GBP)
-                </Label>
-                <Input
-                  id="localBandDCharge"
-                  inputMode="decimal"
-                  value={inputs.localBandDCharge}
-                  onChange={(event) => handleChange('localBandDCharge', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="parishPrecept" className="text-sm font-medium">
-                  Parish / town precept (GBP)
-                </Label>
-                <Input
-                  id="parishPrecept"
-                  inputMode="decimal"
-                  value={inputs.parishPrecept}
-                  onChange={(event) => handleChange('parishPrecept', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="adultCount" className="text-sm font-medium">
-                  Number of adults in property
-                </Label>
-                <Input
-                  id="adultCount"
-                  inputMode="numeric"
-                  value={inputs.adultCount}
-                  onChange={(event) => handleChange('adultCount', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Discounts and exemptions</Label>
-                <Select
-                  value={inputs.discountCode}
-                  onValueChange={(value) => handleChange('discountCode', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select discount" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DISCOUNT_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Home className="h-5 w-5 text-indigo-500" />
-                  Council Tax Bands Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Annual bill before discounts</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.annualBeforeDiscount)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Band multiplier</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {results.bandMultiplier.toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Discount applied</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {results.discountPercentage}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Annual discount value</p>
-                    <p className="text-lg font-semibold text-indigo-600">
-                      {currencyFormatter.format(results.annualDiscount)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Annual council tax payable</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.annualPayable)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Monthly instalment</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.monthlyPayable)}
-                    </p>
-                  </div>
+              <blockquote className="max-w-sm rounded-lg border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-900 shadow-sm dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
                 </div>
-              </CardContent>
-            </Card>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-sky-700 dark:text-sky-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
 
-            <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <MapPin className="h-5 w-5 text-indigo-500" />
-                  Local Government Notes
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Home className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                  Property and household details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  Validate property valuation with your local government; appeals can only be made
-                  under specific circumstances.
-                </p>
-                <p>
-                  Council tax funds council services including waste collection, social care, and
-                  emergency response coordination. Annual charges differ between authorities.
-                </p>
-                <p>
-                  Single person discount and student exemptions reduce liability but may require
-                  submitting evidence to the local authority each year.
-                </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Valuation band</Label>
+                      <Select value={inputs.band} onValueChange={handleBandChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select band" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TAX_BANDS.map((band) => (
+                            <SelectItem key={band.band} value={band.band}>
+                              Band {band.band}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="bandDCharge">Local Band D charge (£)</Label>
+                      <Input
+                        id="bandDCharge"
+                        inputMode="decimal"
+                        value={inputs.bandDCharge}
+                        onChange={handleInputChange('bandDCharge')}
+                        placeholder="e.g. 2,050"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="parishPrecept">Parish / town precept (£)</Label>
+                      <Input
+                        id="parishPrecept"
+                        inputMode="decimal"
+                        value={inputs.parishPrecept}
+                        onChange={handleInputChange('parishPrecept')}
+                        placeholder="e.g. 80"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Discount or exemption</Label>
+                      <Select value={inputs.discountCode} onValueChange={handleDiscountChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select discount" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DISCOUNT_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate council tax
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
+
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Pick your band, Band D charge, and discounts, then press{' '}
+                    <span className="font-semibold">Calculate council tax</span> to see annual, monthly, and weekly amounts.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-sky-200 bg-white shadow-sm dark:border-sky-900 dark:bg-sky-900/30 dark:text-sky-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <MapPin className="h-5 w-5 text-sky-600 dark:text-sky-200" aria-hidden="true" />
+                        Council tax summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Annual bill</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.annualCharge)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Monthly payments</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.monthlyCharge)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Weekly equivalent</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.weeklyCharge)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Discount applied</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.discountAmount)} ({results.discountPercentage}%)
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="council-tax-results"
+                          title="Council tax calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Percent className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                        Charge breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResultBreakdownChart data={chartData} title="Council tax allocation" />
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Budget ahead for council tax
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Set aside the monthly amount in a separate account or switch to 12 instalments if your council allows it. Keep supporting documents to claim discounts you’re entitled to.
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Council Tax with Property Bill Clarity
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Enter your council tax bands and local authority charges to estimate your yearly property
-            bill. Adjust for single person discount and council tax reductions to plan payments ahead
-            of the financial year.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Council Tax Bands and Local Government Rates
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Each band represents a proportion of the Band D charge. Councils also levy parish or town
-            precepts, so final bills differ even within the same valuation band.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Manage Discounts and Exemptions
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Ensure single person discount, student exemptions, or disability band reductions are
-            reflected on your account. Updating the calculator helps households budget monthly
-            property bills accurately.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );
 }
+

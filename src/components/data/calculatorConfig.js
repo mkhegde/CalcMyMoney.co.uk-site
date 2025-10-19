@@ -344,6 +344,11 @@ const rawCategories = [
         'Build a plan to clear credit card balances faster with targeted payments.'
       ),
       createCalculatorEntry(
+        'Credit Card Repayment Calculator',
+        'CreditCardRepaymentCalculator',
+        'Estimate payoff time, total interest, and monthly payments for credit card balances.'
+      ),
+      createCalculatorEntry(
         'Debt Snowball Calculator',
         'DebtSnowballCalculator',
         'Prioritise smaller balances first and track progress with the snowball method.'
@@ -451,6 +456,11 @@ const rawCategories = [
         'Identify recurring subscriptions and quantify savings from cancelling unused ones.'
       ),
       createCalculatorEntry(
+        'Cost of Living Calculator',
+        'CostOfLivingCalculator',
+        'Compare monthly spending across housing, utilities, transport, and lifestyle costs.'
+      ),
+      createCalculatorEntry(
         'Budget Calculator',
         'BudgetCalculator',
         'Balance income, expenses, savings, and debt payments in a monthly budget.'
@@ -498,9 +508,9 @@ const rawCategories = [
         'Set day rates that cover expenses, downtime, and desired profit margins.'
       ),
       createCalculatorEntry(
-        'Corporation Tax Estimator',
-        'CorporationTaxEstimator',
-        'Estimate corporation tax liabilities based on reported profits.'
+        'Corporation Tax Calculator',
+        'CorporationTaxCalculator',
+        'Estimate UK corporation tax, marginal relief, and post-tax profit for limited companies.'
       ),
       createCalculatorEntry(
         'VAT Registration Threshold Checker',
@@ -573,6 +583,11 @@ const rawCategories = [
         'Electric Vehicle Charging Cost Calculator',
         'ElectricVehicleChargingCostCalculator',
         'Estimate the cost of charging an EV at home, work, or public stations.'
+      ),
+      createCalculatorEntry(
+        'Currency Converter',
+        'CurrencyConverter',
+        'Convert GBP to popular currencies using mid-market reference rates.'
       ),
       createCalculatorEntry(
         'Car Cost Calculator',

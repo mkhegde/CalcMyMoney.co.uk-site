@@ -1,15 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Home, ShoppingBasket, Car, PiggyBank } from 'lucide-react';
+import { Calculator, Home, ShoppingBasket, Car, PiggyBank, Quote, BookOpen } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart.jsx';
 
 const keywords = [
   'cost of living',
@@ -19,330 +23,380 @@ const keywords = [
 ];
 
 const metaDescription =
-  'Use our cost of living calculator to compare living costs, plan expenses with a cost of living calculator, and benchmark city cost of living calculator results for relocation.';
+  'Estimate your monthly and annual UK living costs. Compare housing, utilities, groceries, transport, and lifestyle spending for any city.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/cost-of-living-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+const pagePath = '/calculators/cost-of-living-calculator';
+const pageTitle = 'Cost of Living Calculator | UK City Expense Planner';
 
-const costCategories = [
+const faqItems = [
   {
-    key: 'housing',
-    label: 'Housing (rent/mortgage)',
-    defaultValue: 1200,
-    icon: <Home className="h-4 w-4" />,
+    question: 'What expenses should I include in the cost of living?',
+    answer:
+      'Add rent or mortgage payments, utilities, food, commuting, insurance, childcare, entertainment, and savings. Adjust the categories to reflect your household.',
   },
   {
-    key: 'utilities',
-    label: 'Utilities & council tax',
-    defaultValue: 250,
-    icon: <Home className="h-4 w-4" />,
+    question: 'How do I compare two cities?',
+    answer:
+      'Run the calculation for each city, adjusting the location multiplier to reflect higher or lower prices. Compare the monthly or annual totals to gauge the salary you need.',
   },
   {
-    key: 'groceries',
-    label: 'Groceries & essentials',
-    defaultValue: 350,
-    icon: <ShoppingBasket className="h-4 w-4" />,
-  },
-  {
-    key: 'transport',
-    label: 'Transport & commuting',
-    defaultValue: 180,
-    icon: <Car className="h-4 w-4" />,
-  },
-  {
-    key: 'lifestyle',
-    label: 'Lifestyle & leisure',
-    defaultValue: 220,
-    icon: <PiggyBank className="h-4 w-4" />,
+    question: 'How often should I revisit my cost of living?',
+    answer:
+      'Update the figures whenever you move, receive a pay rise, or your household changes. Reviewing quarterly keeps budgets aligned with inflation.',
   },
 ];
 
-const costOfLivingFaqs = [
-  {
-    question: 'How do I compare the cost of living between two cities?',
-    answer:
-      'Enter estimated expenses for each category and adjust the city adjustment slider. This adds a percentage increase or decrease to reflect local prices so you can compare cities side-by-side.',
-  },
-  {
-    question: 'What expenses should be included?',
-    answer:
-      'Include rent or mortgage payments, utilities, food, transport, insurance, childcare, and entertainment. Adding an emergency fund contribution can help manage unexpected expenses.',
-  },
-  {
-    question: 'How often should I review my cost of living?',
-    answer:
-      'Review your cost of living whenever you experience a major change—relocation, job change, or family expansion. Keeping figures up to date helps you stay on budget and negotiate salaries confidently.',
-  },
-];
+const emotionalMessage =
+  'Knowing your baseline cost of living turns salary negotiations into confident conversations. Plan the numbers so relocation decisions feel deliberate.';
 
-const calculateCostOfLiving = ({ adjustments, categories }) => {
-  const baseMonthlyCost = categories.reduce(
-    (sum, category) => sum + Number(category.value || 0),
-    0
-  );
-
-  const cityAdjustmentMultiplier = 1 + Number(adjustments.cityAdjustment || 0) / 100;
-  const savingsPercentage = Number(adjustments.savingsRate || 0) / 100;
-
-  const adjustedMonthlyCost = baseMonthlyCost * cityAdjustmentMultiplier;
-  const savingsTarget = adjustedMonthlyCost * savingsPercentage;
-  const totalMonthlyBudget = adjustedMonthlyCost + savingsTarget;
-  const annualBudget = totalMonthlyBudget * 12;
-
-  return {
-    baseMonthlyCost,
-    adjustedMonthlyCost,
-    savingsTarget,
-    totalMonthlyBudget,
-    annualBudget,
-  };
+const emotionalQuote = {
+  text: 'The question isn’t who is going to let me; it’s who is going to stop me.',
+  author: 'Ayn Rand',
 };
 
-const formatCurrency = (value) =>
-  value.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 });
+const categoriesConfig = [
+  { key: 'housing', label: 'Housing (rent or mortgage)', icon: Home, defaultValue: '1,200' },
+  { key: 'utilities', label: 'Utilities & council tax', icon: Home, defaultValue: '250' },
+  { key: 'groceries', label: 'Groceries & essentials', icon: ShoppingBasket, defaultValue: '350' },
+  { key: 'transport', label: 'Transport & commuting', icon: Car, defaultValue: '180' },
+  { key: 'lifestyle', label: 'Lifestyle & leisure', icon: PiggyBank, defaultValue: '220' },
+];
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 2,
+});
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
 
 export default function CostOfLivingCalculatorPage() {
   const [categoryValues, setCategoryValues] = useState(
-    costCategories.map((category) => ({ ...category, value: category.defaultValue }))
+    categoriesConfig.reduce(
+      (acc, item) => ({
+        ...acc,
+        [item.key]: item.defaultValue,
+      }),
+      {}
+    )
   );
-  const [adjustments, setAdjustments] = useState({
-    cityAdjustment: 8,
-    savingsRate: 15,
+  const [locationMultiplier, setLocationMultiplier] = useState('0');
+  const [householdSize, setHouseholdSize] = useState('1');
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
+
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Cost of Living Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Budgeting & Planning Calculators', url: '/calculators#budgeting' },
+      { name: 'Cost of Living Calculator', url: pagePath },
+    ],
+    faq: faqItems,
   });
 
-  const results = useMemo(
-    () => calculateCostOfLiving({ adjustments, categories: categoryValues }),
-    [adjustments, categoryValues]
-  );
+  const chartData = useMemo(() => {
+    if (!results || !hasCalculated) return [];
+    return results.breakdown
+      .map((item) => ({
+        name: item.label,
+        value: item.monthlyCost,
+      }))
+      .filter((item) => item.value > 0);
+  }, [results, hasCalculated]);
 
-  const resetState = () => {
+  const handleCategoryChange = (key) => (event) => {
+    const { value } = event.target;
+    setCategoryValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const multiplier = parseNumber(locationMultiplier) / 100;
+    const household = Math.max(parseNumber(householdSize), 1);
+
+    const breakdown = categoriesConfig.map((category) => {
+      const base = parseNumber(categoryValues[category.key]);
+      const adjusted = base * (1 + multiplier);
+      return {
+        key: category.key,
+        label: category.label,
+        monthlyCost: adjusted,
+      };
+    });
+
+    const monthlyTotal = breakdown.reduce((sum, item) => sum + item.monthlyCost, 0);
+    const annualTotal = monthlyTotal * 12;
+    const perPersonMonthly = monthlyTotal / household;
+    const perPersonAnnual = annualTotal / household;
+
+    const computed = {
+      breakdown,
+      monthlyTotal,
+      annualTotal,
+      perPersonMonthly,
+      perPersonAnnual,
+      multiplierPercent: multiplier * 100,
+      household,
+    };
+    setHasCalculated(true);
+    setResults(computed);
+
+    const csvRows = [
+      ['Category', 'Monthly cost (£)'],
+      ...breakdown.map((item) => [item.label, item.monthlyCost]),
+      [],
+      ['Household members', household],
+      ['Location adjustment (%)', multiplier * 100],
+      ['Monthly cost', monthlyTotal],
+      ['Annual cost', annualTotal],
+      ['Per-person monthly cost', perPersonMonthly],
+      ['Per-person annual cost', perPersonAnnual],
+    ];
+    setCsvData(csvRows);
+  };
+
+  const handleReset = () => {
     setCategoryValues(
-      costCategories.map((category) => ({ ...category, value: category.defaultValue }))
+      categoriesConfig.reduce(
+        (acc, item) => ({
+          ...acc,
+          [item.key]: item.defaultValue,
+        }),
+        {}
+      )
     );
-    setAdjustments({ cityAdjustment: 8, savingsRate: 15 });
+    setLocationMultiplier('0');
+    setHouseholdSize('1');
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
   };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Cost of Living Calculator | Cost of Living</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Cost of Living Calculator | Cost of Living" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Cost of Living Calculator | Cost of Living" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Cost of Living Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate cost of living',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Cost of Living Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
-            Understand your monthly and annual living costs, adjust for city price differences, and
-            set an achievable savings goal.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Cost of Living Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Capture the cost of housing, bills, transport, food, and lifestyle to understand the salary you need in any UK location.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
-          <Card className="border border-blue-200 dark:border-blue-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-blue-500" />
-                Monthly Expenses
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {categoryValues.map((category, index) => (
-                <div key={category.key}>
-                  <Label
-                    htmlFor={category.key}
-                    className="text-sm font-medium flex items-center gap-2"
-                  >
-                    {category.icon}
-                    {category.label}
-                  </Label>
-                  <Input
-                    id={category.key}
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    value={category.value}
-                    onChange={(event) => {
-                      const value = Number(event.target.value);
-                      setCategoryValues((prev) =>
-                        prev.map((item, itemIndex) =>
-                          itemIndex === index ? { ...item, value } : item
-                        )
-                      );
-                    }}
-                  />
+          <section className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm dark:border-blue-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Budget for the lifestyle you want
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
+              </div>
+              <blockquote className="max-w-sm rounded-lg border border-blue-200 bg-blue-50/70 p-4 text-sm text-blue-900 shadow-sm dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-blue-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
                 </div>
-              ))}
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-blue-700 dark:text-blue-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
 
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  City adjustment
-                  <span className="text-blue-600 font-semibold">{adjustments.cityAdjustment}%</span>
-                </Label>
-                <Slider
-                  value={[adjustments.cityAdjustment]}
-                  onValueChange={(value) =>
-                    setAdjustments((prev) => ({ ...prev, cityAdjustment: value[0] }))
-                  }
-                  min={-20}
-                  max={40}
-                  step={1}
-                />
-                <p className="text-xs text-slate-500 mt-2">
-                  Reflects higher or lower prices compared with your current city.
-                </p>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Savings target
-                  <span className="text-blue-600 font-semibold">{adjustments.savingsRate}%</span>
-                </Label>
-                <Slider
-                  value={[adjustments.savingsRate]}
-                  onValueChange={(value) =>
-                    setAdjustments((prev) => ({ ...prev, savingsRate: value[0] }))
-                  }
-                  min={0}
-                  max={30}
-                  step={1}
-                />
-                <p className="text-xs text-slate-500 mt-2">
-                  Percentage of your adjusted expenses to allocate to savings or investments.
-                </p>
-              </div>
-
-              <Button variant="outline" onClick={resetState} className="w-full">
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/30">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
-                  <PiggyBank className="h-5 w-5" />
-                  Cost Summary
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Home className="h-5 w-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+                  Monthly expense inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid md:grid-cols-4 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-blue-900/60 p-4 border border-blue-100 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-200">Base monthly cost</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    {formatCurrency(results.baseMonthlyCost)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-blue-900/60 p-4 border border-blue-100 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-200">Adjusted monthly</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    {formatCurrency(results.adjustedMonthlyCost)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-blue-900/60 p-4 border border-blue-100 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-200">Savings target</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    {formatCurrency(results.savingsTarget)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-blue-900/60 p-4 border border-blue-100 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-200">Annual budget</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    {formatCurrency(results.annualBudget)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  Monthly Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-6">
-                {categoryValues.map((category) => (
-                  <div key={category.key}>
-                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-1">
-                      {category.label}
-                    </h3>
-                    <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                      {formatCurrency(category.value)}
-                    </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {categoriesConfig.map((category) => (
+                      <div key={category.key} className="space-y-2">
+                        <Label htmlFor={category.key}>{category.label}</Label>
+                        <Input
+                          id={category.key}
+                          inputMode="decimal"
+                          value={categoryValues[category.key]}
+                          onChange={handleCategoryChange(category.key)}
+                          placeholder={`e.g. ${category.defaultValue}`}
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="locationMultiplier">Location adjustment (%)</Label>
+                      <Input
+                        id="locationMultiplier"
+                        inputMode="decimal"
+                        value={locationMultiplier}
+                        onChange={(event) => setLocationMultiplier(event.target.value)}
+                        placeholder="e.g. 10 for London premium"
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Increase or decrease costs to reflect regional price differences.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="householdSize">Household size</Label>
+                      <Input
+                        id="householdSize"
+                        inputMode="numeric"
+                        value={householdSize}
+                        onChange={(event) => setHouseholdSize(event.target.value)}
+                        placeholder="e.g. 2"
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Used to calculate per-person cost of living.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate cost of living
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                City cost of living calculator guidance
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Adjust the city price slider when comparing locations. The city cost of living
-                calculator increases or decreases each expense so you can align salary expectations
-                with local market rates.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Planning ahead with a uk cost of living calculator
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Use the uk cost of living calculator to review budgets before job moves, university
-                decisions, or returning from parental leave. Combine it with our savings tools to
-                keep future plans funded.
-              </p>
-            </section>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your monthly costs and press{' '}
+                    <span className="font-semibold">Calculate cost of living</span> to see total, per-person, and annual figures.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-blue-200 bg-white shadow-sm dark:border-blue-900 dark:bg-blue-900/30 dark:text-blue-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-blue-600 dark:text-blue-200" aria-hidden="true" />
+                        Living cost summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Monthly cost</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.monthlyTotal)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Annual cost</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.annualTotal)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Per-person monthly</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.perPersonMonthly)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Per-person annual</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.perPersonAnnual)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="cost-of-living-results"
+                          title="Cost of living calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {chartData.length > 0 && (
+                    <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <PiggyBank className="h-5 w-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+                          Spend breakdown
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResultBreakdownChart data={chartData} title="Monthly cost allocation" />
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Keep expenses realistic
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Compare these costs with your take-home pay and savings goals so you can adjust budgets ahead of time rather than reacting to shortfalls.
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
       </CalculatorWrapper>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={costOfLivingFaqs} />
-        </div>
-      </section>
     </div>
   );
 }

@@ -162,25 +162,25 @@ export default function BreakEvenCalculatorPage() {
     }));
   };
 
+  const buildCsv = (computed) => [
+    ['Break-even analysis'],
+    ['Selling price per unit', currencyFormatter.format(parseNumber(inputs.sellingPrice))],
+    ['Variable cost per unit', currencyFormatter.format(parseNumber(inputs.variableCost))],
+    ['Contribution margin per unit', currencyFormatter.format(computed.contributionMargin)],
+    ['Margin ratio', `${numberFormatter.format(computed.marginRatio * 100)}%`],
+    ['Total fixed costs', currencyFormatter.format(computed.totalFixed)],
+    ['Break-even units', numberFormatter.format(computed.breakEvenUnits)],
+    ['Break-even sales', currencyFormatter.format(computed.breakEvenSales)],
+    ['Units for target profit', numberFormatter.format(computed.profitUnits)],
+    ['Sales for target profit', currencyFormatter.format(computed.profitSales)],
+  ];
+
   const handleSubmit = (event) => {
     event.preventDefault();
     const computed = calculateBreakEven(inputs);
     setHasCalculated(true);
     setResults(computed);
-
-    const rows = [
-      ['Selling price per unit', currencyFormatter.format(parseNumber(inputs.sellingPrice))],
-      ['Variable cost per unit', currencyFormatter.format(parseNumber(inputs.variableCost))],
-      ['Contribution margin per unit', currencyFormatter.format(computed.contributionMargin)],
-      ['Margin ratio', `${numberFormatter.format(computed.marginRatio * 100)}%`],
-      ['Total fixed costs', currencyFormatter.format(computed.totalFixed)],
-      ['Break-even units', numberFormatter.format(computed.breakEvenUnits)],
-      ['Break-even sales', currencyFormatter.format(computed.breakEvenSales)],
-      ['Units for target profit', numberFormatter.format(computed.profitUnits)],
-      ['Sales for target profit', currencyFormatter.format(computed.profitSales)],
-    ];
-
-    setCsvData([['Break-even analysis'], ...rows]);
+    setCsvData(buildCsv(computed));
   };
 
   const handleReset = () => {
@@ -191,10 +191,26 @@ export default function BreakEvenCalculatorPage() {
       startupCosts: '7,500',
       desiredProfit: '8,000',
     });
-    setHasCalculated(false);
-    setResults(null);
-    setCsvData(null);
+    const computed = calculateBreakEven({
+      sellingPrice: '95',
+      variableCost: '42',
+      monthlyFixedCosts: '18,000',
+      startupCosts: '7,500',
+      desiredProfit: '8,000',
+    });
+    setHasCalculated(true);
+    setResults(computed);
+    setCsvData(buildCsv(computed));
   };
+
+  useMemo(() => {
+    if (!hasCalculated) {
+      const computed = calculateBreakEven(inputs);
+      setResults(computed);
+      setCsvData(buildCsv(computed));
+      setHasCalculated(true);
+    }
+  }, [hasCalculated]);*** End Patch
 
   return (
     <div className="bg-slate-50 dark:bg-slate-900">
@@ -439,4 +455,5 @@ export default function BreakEvenCalculatorPage() {
     </div>
   );
 }
+
 

@@ -1,42 +1,59 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, CreditCard, TrendingDown, ShieldCheck } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Calculator, CreditCard, TrendingDown, ShieldCheck, Quote, BookOpen } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart.jsx';
+
+const keywords = [
+  'credit card repayment calculator',
+  'credit card calculator',
+  'credit card payoff calculator',
+  'credit card interest calculator',
+];
+
+const metaDescription =
+  'See how long it takes to repay UK credit card debt. Compare minimum payments versus fixed payments, total interest, and payoff dates.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/credit-card-repayment-calculator';
-
-const schemaKeywords = [
-  'Credit Card Balance',
-  'Interest Rate',
-  'Payoff Date',
-  'Monthly Payment',
-  'Debt Management',
-];
+const pagePath = '/calculators/credit-card-repayment-calculator';
+const pageTitle = 'Credit Card Repayment Calculator | UK Payoff Planner';
 
 const faqItems = [
   {
-    question: 'How can I pay off credit card debt faster?',
+    question: 'Why should I pay more than the minimum?',
     answer:
-      'Pay more than the minimum each month, target the highest interest balance first, and consider balance transfer offers with lower introductory rates. Track your progress to stay motivated.',
+      'Minimum payments mostly cover interest. Paying extra each month slashes total interest and months to clear the balance. Use this calculator to test different payment levels.',
   },
   {
-    question: 'What happens if I only make the minimum payment?',
+    question: 'How is the minimum payment calculated?',
     answer:
-      'Only paying the minimum extends the payoff date dramatically and increases total interest. Use this calculator to see how small increases in payment shorten the repayment period.',
+      'Most lenders set the minimum as a percentage of the balance, with a small floor (e.g. £5). Adjust these inputs to mirror your card’s terms.',
   },
   {
-    question: 'Should I consolidate my credit card debt?',
+    question: 'Should I consider a balance transfer?',
     answer:
-      'Debt consolidation can simplify payments and reduce interest if you qualify for a lower rate. Compare the new payment schedule against your current plan before committing.',
+      'If you qualify for a 0% card, the interest-free period can speed up repayment. Run the numbers here first so you know the regular payoff time as a benchmark.',
   },
 ];
+
+const emotionalMessage =
+  'Watching your balance fall each month turns discipline into momentum. Map out the journey so you stay motivated until the debt disappears.';
+
+const emotionalQuote = {
+  text: 'Success is the sum of small efforts, repeated day in and day out.',
+  author: 'Robert Collier',
+};
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -44,341 +61,367 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 2,
 });
 
-function payoffEstimate(balance, annualRatePercent, monthlyPayment, minPaymentRate, minPaymentFloor) {
-  const monthlyRate = annualRatePercent / 100 / 12;
-  let remainingBalance = balance;
-  let months = 0;
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+function calculateRepayment({
+  balance,
+  apr,
+  monthlyPayment,
+  minPaymentPercent,
+  minPaymentFloor,
+}) {
+  const monthlyRate = Math.max(parseNumber(apr), 0) / 100 / 12;
+  let remaining = Math.max(parseNumber(balance), 0);
+  const fixedPayment = Math.max(parseNumber(monthlyPayment), 0);
+  const minRate = Math.max(parseNumber(minPaymentPercent), 0) / 100;
+  const minFloor = Math.max(parseNumber(minPaymentFloor), 0);
+
+  const schedule = [];
   let totalInterest = 0;
   let totalPaid = 0;
+  let months = 0;
 
-  while (remainingBalance > 0 && months < 1200) {
-    const interest = remainingBalance * monthlyRate;
-    const minimumDue = Math.max(minPaymentFloor, (remainingBalance + interest) * minPaymentRate);
-    const paymentThisMonth = Math.max(monthlyPayment, minimumDue);
-    const principalPaid = paymentThisMonth - interest;
+  while (remaining > 0 && months < 1200) {
+    const interest = remaining * monthlyRate;
+    const minimumDue = Math.max(minFloor, (remaining + interest) * minRate);
+    const payment = Math.max(fixedPayment, minimumDue);
 
-    if (principalPaid <= 0) {
-      // Payment not enough to cover interest; break to avoid infinite loop
+    if (payment <= interest) {
+      // payment does not cover interest; break to avoid infinite loop
       totalInterest += interest;
-      totalPaid += paymentThisMonth;
+      totalPaid += payment;
       months += 1;
       break;
     }
 
-    remainingBalance = Math.max(0, remainingBalance - principalPaid);
+    const principal = Math.min(payment - interest, remaining);
+    remaining = Math.max(remaining - principal, 0);
+
+    schedule.push({
+      month: months + 1,
+      payment,
+      interest,
+      principal,
+      balance: remaining,
+    });
+
     totalInterest += interest;
-    totalPaid += paymentThisMonth;
+    totalPaid += payment;
     months += 1;
 
-    if (remainingBalance <= 0) break;
+    if (remaining <= 0) break;
   }
 
   return {
     months,
     totalInterest,
     totalPaid,
-    remainingBalance,
+    schedule,
+    remaining,
   };
 }
 
-export default function CreditCardRepaymentCalculator() {
+export default function CreditCardRepaymentCalculatorPage() {
   const [inputs, setInputs] = useState({
-    balance: '4500',
-    annualRate: '23.9',
-    monthlyPayment: '200',
-    minPaymentRate: '0.03',
+    balance: '4,500',
+    apr: '24.9',
+    monthlyPayment: '150',
+    minPaymentPercent: '2.5',
     minPaymentFloor: '5',
   });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const reset = useCallback(() => {
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Credit Card Repayment Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Debt & Loans Calculators', url: '/calculators#debt-loans' },
+      { name: 'Credit Card Repayment Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
+
+  const chartData = useMemo(() => {
+    if (!results || !hasCalculated) return [];
+    return [
+      { name: 'Interest paid', value: results.totalInterest, color: '#f97316' },
+      { name: 'Principal repaid', value: results.totalPaid - results.totalInterest, color: '#2563eb' },
+    ].filter((segment) => segment.value > 0);
+  }, [results, hasCalculated]);
+
+  const handleInputChange = (field) => (event) => {
+    const { value } = event.target;
+    setInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const computed = calculateRepayment(inputs);
+    setHasCalculated(true);
+    setResults(computed);
+
+    const csvRows = [
+      ['Month', 'Payment (£)', 'Interest (£)', 'Principal (£)', 'Balance (£)'],
+      ...computed.schedule.map((row) => [
+        row.month,
+        row.payment,
+        row.interest,
+        row.principal,
+        row.balance,
+      ]),
+    ];
+
+    setCsvData([
+      ['Starting balance', parseNumber(inputs.balance)],
+      ['APR', `${inputs.apr}%`],
+      ['Monthly payment', parseNumber(inputs.monthlyPayment)],
+      ['Minimum payment rate', `${inputs.minPaymentPercent}%`],
+      ['Minimum payment floor', parseNumber(inputs.minPaymentFloor)],
+      ['Total interest paid', computed.totalInterest],
+      ['Total paid', computed.totalPaid],
+      ['Months to clear balance', computed.months],
+      [],
+      ...csvRows,
+    ]);
+  };
+
+  const handleReset = () => {
     setInputs({
-      balance: '4500',
-      annualRate: '23.9',
-      monthlyPayment: '200',
-      minPaymentRate: '0.03',
+      balance: '4,500',
+      apr: '24.9',
+      monthlyPayment: '150',
+      minPaymentPercent: '2.5',
       minPaymentFloor: '5',
     });
-  }, []);
-
-  const results = useMemo(() => {
-    const balance = Number(inputs.balance) || 0;
-    const annualRate = Number(inputs.annualRate) || 0;
-    const monthlyPayment = Number(inputs.monthlyPayment) || 0;
-    const minPaymentRate = Number(inputs.minPaymentRate) || 0;
-    const minPaymentFloor = Number(inputs.minPaymentFloor) || 0;
-
-    const minimumScenario = payoffEstimate(
-      balance,
-      annualRate,
-      0,
-      Math.max(0.01, minPaymentRate),
-      Math.max(1, minPaymentFloor),
-    );
-    const acceleratedScenario = payoffEstimate(
-      balance,
-      annualRate,
-      Math.max(monthlyPayment, 0),
-      Math.max(0.01, minPaymentRate),
-      Math.max(1, minPaymentFloor),
-    );
-
-    const monthsSaved =
-      minimumScenario.months && acceleratedScenario.months
-        ? minimumScenario.months - acceleratedScenario.months
-        : 0;
-    const interestSaved = minimumScenario.totalInterest - acceleratedScenario.totalInterest;
-
-    return {
-      balance,
-      annualRate,
-      monthlyPayment,
-      minPaymentRate,
-      minPaymentFloor,
-      minimumScenario,
-      acceleratedScenario,
-      monthsSaved,
-      interestSaved,
-    };
-  }, [inputs]);
-
-  const payoffYears = (months) => (months ? (months / 12).toFixed(1) : 'n/a');
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Credit Card Repayment &amp; Debt Payoff Calculator</title>
-        <meta
-          name="description"
-          content="Credit Card Repayment Calculator showing payoff timelines, minimum payment comparisons, and total interest to help plan debt payoff."
-        />
-        <meta
-          name="keywords"
-          content="Credit Card Calculator, Minimum Payment, Total Interest"
-        />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FinancialProduct',
-              name: 'Credit Card Repayment Calculator',
-              description:
-                'Debt payoff planning tool for credit card balances, visualising interest charges, payoff dates, and monthly payment requirements.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-rose-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Credit Card Repayment Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-rose-100">
-            Calculate payoff timelines, manage credit card debt, and understand interest charges on the journey to debt free financial freedom.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-rose-600/10 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Credit Card Repayment Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Enter your balance, APR, and planned payment to see how long it takes to clear your UK credit card debt and how much interest you’ll pay.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-rose-500" />
-                Credit Card Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="balance" className="text-sm font-medium">
-                  Current balance (GBP)
-                </Label>
-                <Input
-                  id="balance"
-                  inputMode="decimal"
-                  value={inputs.balance}
-                  onChange={(event) => handleChange('balance', event.target.value)}
-                />
+          <section className="rounded-xl border border-rose-100 bg-white p-6 shadow-sm dark:border-rose-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Plan your path to debt-free
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
               </div>
-              <div>
-                <Label htmlFor="annualRate" className="text-sm font-medium">
-                  Annual interest rate (% APR)
-                </Label>
-                <Input
-                  id="annualRate"
-                  inputMode="decimal"
-                  value={inputs.annualRate}
-                  onChange={(event) => handleChange('annualRate', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="monthlyPayment" className="text-sm font-medium">
-                  Planned monthly payment (GBP)
-                </Label>
-                <Input
-                  id="monthlyPayment"
-                  inputMode="decimal"
-                  value={inputs.monthlyPayment}
-                  onChange={(event) => handleChange('monthlyPayment', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="minPaymentRate" className="text-sm font-medium">
-                  Minimum payment rate (fraction e.g. 0.03)
-                </Label>
-                <Input
-                  id="minPaymentRate"
-                  inputMode="decimal"
-                  value={inputs.minPaymentRate}
-                  onChange={(event) => handleChange('minPaymentRate', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="minPaymentFloor" className="text-sm font-medium">
-                  Minimum payment floor (GBP)
-                </Label>
-                <Input
-                  id="minPaymentFloor"
-                  inputMode="decimal"
-                  value={inputs.minPaymentFloor}
-                  onChange={(event) => handleChange('minPaymentFloor', event.target.value)}
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+              <blockquote className="max-w-sm rounded-lg border border-rose-200 bg-rose-50/70 p-4 text-sm text-rose-900 shadow-sm dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
+                </div>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-rose-700 dark:text-rose-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
 
-          <div className="space-y-6">
-            <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <CreditCard className="h-5 w-5 text-rose-500" />
-                  Minimum Payment Scenario
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CreditCard className="h-5 w-5 text-rose-600 dark:text-rose-300" aria-hidden="true" />
+                  Card details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Payoff time (months)</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {results.minimumScenario.months || 'n/a'}
-                    </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="balance">Current balance (£)</Label>
+                      <Input
+                        id="balance"
+                        inputMode="decimal"
+                        value={inputs.balance}
+                        onChange={handleInputChange('balance')}
+                        placeholder="e.g. 4,500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="apr">APR (% per year)</Label>
+                      <Input
+                        id="apr"
+                        inputMode="decimal"
+                        value={inputs.apr}
+                        onChange={handleInputChange('apr')}
+                        placeholder="e.g. 24.9"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyPayment">Monthly payment (£)</Label>
+                      <Input
+                        id="monthlyPayment"
+                        inputMode="decimal"
+                        value={inputs.monthlyPayment}
+                        onChange={handleInputChange('monthlyPayment')}
+                        placeholder="e.g. 150"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="minPaymentPercent">Minimum payment rate (% of balance + interest)</Label>
+                      <Input
+                        id="minPaymentPercent"
+                        inputMode="decimal"
+                        value={inputs.minPaymentPercent}
+                        onChange={handleInputChange('minPaymentPercent')}
+                        placeholder="e.g. 2.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="minPaymentFloor">Minimum payment floor (£)</Label>
+                      <Input
+                        id="minPaymentFloor"
+                        inputMode="decimal"
+                        value={inputs.minPaymentFloor}
+                        onChange={handleInputChange('minPaymentFloor')}
+                        placeholder="e.g. 5"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Payoff time (years)</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {payoffYears(results.minimumScenario.months)}
-                    </p>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate repayment plan
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Total interest paid</p>
-                    <p className="text-lg font-semibold text-rose-600">
-                      {currencyFormatter.format(results.minimumScenario.totalInterest)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Total payments</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.minimumScenario.totalPaid)}
-                    </p>
-                  </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <TrendingDown className="h-5 w-5 text-rose-500" />
-                  Accelerated Payoff
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Payoff time (months)</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {results.acceleratedScenario.months || 'n/a'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Payoff time (years)</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {payoffYears(results.acceleratedScenario.months)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Total interest paid</p>
-                    <p className="text-lg font-semibold text-emerald-600">
-                      {currencyFormatter.format(results.acceleratedScenario.totalInterest)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Total payments</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.acceleratedScenario.totalPaid)}
-                    </p>
-                  </div>
-                </div>
-                <div className="rounded border border-muted-foreground/15 px-4 py-3 text-sm text-muted-foreground">
-                  <p>
-                    Months saved: <span className="font-semibold">{results.monthsSaved}</span>
-                  </p>
-                  <p>
-                    Interest saved:{' '}
-                    <span className="font-semibold">
-                      {currencyFormatter.format(results.interestSaved)}
-                    </span>
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Add your balance, APR, and payment, then press{' '}
+                    <span className="font-semibold">Calculate repayment plan</span> to see payoff time and interest.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-rose-200 bg-white shadow-sm dark:border-rose-900 dark:bg-rose-900/30 dark:text-rose-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <TrendingDown className="h-5 w-5 text-rose-600 dark:text-rose-200" aria-hidden="true" />
+                        Repayment summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-rose-900 dark:text-rose-200">Months to clear balance</p>
+                        <p className="text-2xl font-semibold">{results.months}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-rose-900 dark:text-rose-200">Total interest paid</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalInterest)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-rose-900 dark:text-rose-200">Total paid</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalPaid)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="credit-card-repayment-schedule"
+                          title="Credit card repayment calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <ShieldCheck className="h-5 w-5 text-rose-600 dark:text-rose-300" aria-hidden="true" />
+                        Interest versus principal
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResultBreakdownChart data={chartData} title="Credit card repayment breakdown" />
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-rose-600 dark:text-rose-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Stay in control of repayments
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Automate payments above the minimum, track promotional APR expiry dates, and review balances monthly so you stay on track.
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Payoff for Credit Card Debt Reduction
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Compare minimum payments against aggressive payoff plans to see how quickly you can
-            eliminate interest charges and reach debt free status. Use the results to set monthly
-            targets that accelerate financial freedom.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Track Credit Card Debt and Interest Charges
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Monitoring your balance, interest rate, and payment size keeps credit card debt under
-            control. Applying extra payments prevents interest from compounding and shortens payoff
-            dates considerably.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Plan for Debt Free Financial Freedom
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Once balances are cleared, redirect monthly payments into savings or investments. A
-            disciplined payoff strategy is the foundation for long-term financial freedom and healthy
-            credit scores.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );
 }
+
