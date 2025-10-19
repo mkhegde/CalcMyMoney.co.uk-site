@@ -134,6 +134,13 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 0,
 });
 
+// A new formatter for CSV export that returns a raw number string
+// We will use raw number fields in the CSV data rows instead.
+// const csvFormatter = new Intl.NumberFormat('en-GB', {
+//   minimumFractionDigits: 0,
+// });
+
+
 const compoundFaqs = [
   {
     question: 'How often should I compound?',
@@ -319,8 +326,12 @@ const CompoundChart = ({ data, years, currencyFormatter }) => {
 
 const exportToCsv = (data, inputs) => {
     if (data.length === 0) return;
+    
+    // Define the UTF-8 Byte Order Mark (BOM)
+    // This is crucial for programs like Excel to correctly interpret UTF-8 encoding.
+    const BOM = '\ufeff'; 
 
-    // Header Row
+    // Header Row - Reintroducing the symbol as BOM should handle encoding
     const headers = [
       'Year',
       'Total Balance (£)',
@@ -328,17 +339,17 @@ const exportToCsv = (data, inputs) => {
       'Interest Earned (£)'
     ];
 
-    // Input Parameters
+    // Input Parameters - Reintroducing the symbol
     const inputLines = [
-      `Initial Deposit: £${inputs.initialDeposit}`,
-      `Monthly Contribution: £${inputs.monthlyContribution}`,
+      `Initial Deposit (£): ${inputs.initialDeposit}`,
+      `Monthly Contribution (£): ${inputs.monthlyContribution}`,
       `Annual Growth Rate: ${inputs.contributionAnnualGrowth}%`,
       `Annual Interest Rate: ${inputs.annualRate}%`,
       `Compounding Frequency: ${inputs.compoundingFrequency}`,
       `Years Invested: ${inputs.years}`
     ];
 
-    // Data Rows
+    // Data Rows - Use raw numeric data
     const dataRows = data.map(row => [
       row.year,
       row.balance,
@@ -354,7 +365,12 @@ const exportToCsv = (data, inputs) => {
     ];
 
     const csvContent = allRows.map(e => e.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Combine BOM and CSV content
+    const finalContent = BOM + csvContent;
+
+    // Create a Blob with UTF-8 encoding
+    const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     if (link.download !== undefined) {
         const url = URL.createObjectURL(blob);
