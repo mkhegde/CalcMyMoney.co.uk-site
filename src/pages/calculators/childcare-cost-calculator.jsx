@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Baby, Calculator, PiggyBank } from 'lucide-react';
+import React, { Suspense, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Baby, Calculator, PiggyBank, Quote, BookOpen } from 'lucide-react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -12,48 +12,29 @@ import {
   CartesianGrid,
 } from 'recharts';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 
-const keywords = [
-  'childcare cost calculator',
-  'childcare calculator',
-  'cost of childcare calculator',
-];
+const ResultBreakdownChart = React.lazy(() => import('@/components/calculators/ResultBreakdownChart.jsx'));
+
+const keywords = ['childcare cost calculator', 'childcare calculator', 'cost of childcare calculator'];
 
 const metaDescription =
-  'Use our childcare cost calculator to plan fees, compare childcare calculator scenarios, and map cost of childcare calculator insights for your family budget.';
+  'Plan nursery, childminder, and wraparound care fees with this UK childcare cost calculator. See the impact of government support on your monthly cash flow.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/childcare-cost-calculator';
-const schemaKeywords = keywords.slice(0, 5);
-
-const webpageSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'WebPage',
-  name: 'Childcare Cost Calculator',
-  url: canonicalUrl,
-  description: metaDescription,
-  keywords: schemaKeywords,
-  inLanguage: 'en-GB',
-  potentialAction: {
-    '@type': 'Action',
-    name: 'Estimate childcare costs',
-    target: canonicalUrl,
-  },
-};
-
-const currencyFormatter = new Intl.NumberFormat('en-GB', {
-  style: 'currency',
-  currency: 'GBP',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
+const pagePath = '/calculators/childcare-cost-calculator';
+const pageTitle = 'Childcare Cost Calculator | UK Childcare Budget Planner';
 
 const defaultInputs = {
   dailyRate: '65',
@@ -64,306 +45,451 @@ const defaultInputs = {
   monthlySupport: '0',
 };
 
-const childcareFaqs = [
+const faqItems = [
   {
-    question: 'Which costs should I include in childcare budgeting?',
+    question: 'Which childcare costs should I include?',
     answer:
-      'Add the daily nursery or childminder rate, number of days needed, projected weeks per year, and extras such as meals, clubs, or registration charges. Include subsidies or Tax-Free Childcare so you understand the net cash leaving your account.',
+      'Include nursery or childminder day rates, the number of days each child attends, wraparound care, meals, clubs, and registration fees. Adding everything gives you a reliable monthly figure.',
   },
   {
-    question: 'How do I reflect government childcare support?',
+    question: 'How do I factor in government support?',
     answer:
-      'Enter any monthly support you receive, such as Tax-Free Childcare top-ups, 30 free hours in England, or employer childcare vouchers. The calculator subtracts the support amount from the projected total so you can see the true cost.',
+      'Enter the monthly value of Tax-Free Childcare, free hours, or employer childcare vouchers in the support field. The calculator subtracts this to show the net cash leaving your account.',
   },
   {
     question: 'Can I model different schedules for each child?',
     answer:
-      'This version assumes the same daily rate and schedule for every child. For different timetables, run a scenario for each child and combine the results, or adjust the daily rate to reflect the blended cost.',
+      'This version assumes the same schedule and rate for every child. For different routines, run separate calculations and sum the results, or adjust the daily rate to a blended average.',
   },
 ];
 
+const emotionalMessage =
+  'Childcare spending can feel daunting, but clear numbers replace the worry with actionable plans for work, savings, and support.';
+
+const emotionalQuote = {
+  text: 'The days are long, but the years are short.',
+  author: 'Gretchen Rubin',
+};
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
+function parseNumber(value) {
+  if (value == null) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function formatCurrency(value) {
+  return currencyFormatter.format(Number.isFinite(value) ? value : 0);
+}
+
+function calculateChildcareCosts(inputs) {
+  const dailyRate = parseNumber(inputs.dailyRate);
+  const daysPerWeek = parseNumber(inputs.daysPerWeek);
+  const weeksPerYear = parseNumber(inputs.weeksPerYear);
+  const children = parseNumber(inputs.children);
+  const monthlyExtras = parseNumber(inputs.monthlyExtras);
+  const monthlySupport = parseNumber(inputs.monthlySupport);
+
+  if (dailyRate <= 0 || daysPerWeek <= 0 || weeksPerYear <= 0 || children <= 0) {
+    return null;
+  }
+
+  const weeklyCost = dailyRate * daysPerWeek * children;
+  const annualCareCost = weeklyCost * weeksPerYear;
+  const monthlyCareCost = annualCareCost / 12;
+  const totalMonthlyCost = Math.max(monthlyCareCost + monthlyExtras - monthlySupport, 0);
+  const totalAnnualCost = totalMonthlyCost * 12;
+  const netWeeklyCost = weeksPerYear > 0 ? (totalAnnualCost / weeksPerYear) : 0;
+
+  return {
+    dailyRate,
+    daysPerWeek,
+    weeksPerYear,
+    children,
+    monthlyExtras,
+    monthlySupport,
+    weeklyCost,
+    monthlyCareCost,
+    totalMonthlyCost,
+    totalAnnualCost,
+    netWeeklyCost,
+  };
+}
+
 export default function ChildcareCostCalculatorPage() {
   const [inputs, setInputs] = useState(defaultInputs);
+  const [calculation, setCalculation] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [csvData, setCsvData] = useState(null);
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const results = useMemo(() => {
-    const dailyRate = Number(inputs.dailyRate) || 0;
-    const daysPerWeek = Number(inputs.daysPerWeek) || 0;
-    const weeksPerYear = Number(inputs.weeksPerYear) || 0;
-    const children = Number(inputs.children) || 0;
-    const monthlyExtras = Number(inputs.monthlyExtras) || 0;
-    const monthlySupport = Number(inputs.monthlySupport) || 0;
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Childcare Cost Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Family & Lifestyle', url: '/calculators#family' },
+      { name: 'Childcare Cost Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
 
-    const weeklyCost = dailyRate * daysPerWeek * children;
-    const annualCareCost = weeklyCost * weeksPerYear;
-    const monthlyCareCost = annualCareCost / 12;
-    const totalMonthlyCost = Math.max(monthlyCareCost + monthlyExtras - monthlySupport, 0);
-    const totalAnnualCost = totalMonthlyCost * 12;
-    const netWeeklyCost = (totalMonthlyCost * 12) / weeksPerYear || 0;
+  const barChartData = useMemo(() => {
+    if (!calculation || !hasCalculated) return [];
+    return [
+      {
+        name: 'Monthly costs',
+        'Care fees': calculation.monthlyCareCost,
+        Extras: calculation.monthlyExtras,
+        Support: calculation.monthlySupport * -1,
+      },
+    ];
+  }, [calculation, hasCalculated]);
 
-    const chartData = [
-      { name: 'Care Fees', value: monthlyCareCost },
-      { name: 'Extras', value: monthlyExtras },
-      { name: 'Support', value: -monthlySupport },
+  const pieChartData = useMemo(() => {
+    if (!calculation || !hasCalculated) return [];
+    return [
+      { name: 'Care fees', value: calculation.monthlyCareCost, color: '#ec4899' },
+      { name: 'Extras', value: calculation.monthlyExtras, color: '#f97316' },
+      { name: 'Support', value: calculation.monthlySupport * -1, color: '#22d3ee' },
+    ].filter((item) => item.value > 0);
+  }, [calculation, hasCalculated]);
+
+  const handleInputChange = (field) => (event) => {
+    const { value } = event.target;
+    setInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const result = calculateChildcareCosts(inputs);
+    setHasCalculated(true);
+
+    if (!result) {
+      setCalculation(null);
+      setCsvData(null);
+      return;
+    }
+
+    setCalculation(result);
+
+    const csvRows = [
+      ['Metric', 'Value'],
+      ['Weekly care cost', formatCurrency(result.weeklyCost)],
+      ['Monthly care cost', formatCurrency(result.monthlyCareCost)],
+      ['Monthly extras', formatCurrency(result.monthlyExtras)],
+      ['Monthly support', formatCurrency(result.monthlySupport)],
+      ['Total monthly cost', formatCurrency(result.totalMonthlyCost)],
+      ['Total annual cost', formatCurrency(result.totalAnnualCost)],
+      ['Net weekly cost', formatCurrency(result.netWeeklyCost)],
     ];
 
-    return {
-      weeklyCost,
-      monthlyCareCost,
-      totalMonthlyCost,
-      totalAnnualCost,
-      netWeeklyCost,
-      chartData,
-    };
-  }, [inputs]);
+    setCsvData(csvRows);
+  };
+
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setCalculation(null);
+    setCsvData(null);
+    setHasCalculated(false);
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Childcare Cost Calculator | Childcare Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <meta name="keywords" content={keywords.join(', ')} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Childcare Cost Calculator | Childcare Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Childcare Cost Calculator | Childcare Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-pink-900 via-rose-900 to-pink-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Childcare Cost Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-pink-100">
-            Forecast nursery, childminder, and wraparound care expenses with a childcare calculator
-            that adapts to your family.
-          </p>
-        </div>
-      </section>
-
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-pink-200 dark:border-pink-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-pink-600" />
-                Care Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div>
-                <Label htmlFor="dailyRate" className="text-sm font-medium">
-                  Daily rate per child (£)
-                </Label>
-                <Input
-                  id="dailyRate"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  value={inputs.dailyRate}
-                  onChange={(event) => handleChange('dailyRate', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Days per week
-                  <span className="text-pink-600 font-semibold">{inputs.daysPerWeek}</span>
-                </Label>
-                <Slider
-                  value={[Number(inputs.daysPerWeek)]}
-                  onValueChange={(value) => handleChange('daysPerWeek', String(value[0]))}
-                  min={1}
-                  max={7}
-                  step={1}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Weeks per year
-                  <span className="text-pink-600 font-semibold">{inputs.weeksPerYear}</span>
-                </Label>
-                <Slider
-                  value={[Number(inputs.weeksPerYear)]}
-                  onValueChange={(value) => handleChange('weeksPerYear', String(value[0]))}
-                  min={30}
-                  max={52}
-                  step={1}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Number of children
-                  <span className="text-pink-600 font-semibold">{inputs.children}</span>
-                </Label>
-                <Slider
-                  value={[Number(inputs.children)]}
-                  onValueChange={(value) => handleChange('children', String(value[0]))}
-                  min={1}
-                  max={4}
-                  step={1}
-                />
-              </div>
-              <div>
-                <Label htmlFor="monthlyExtras" className="text-sm font-medium">
-                  Monthly extras (£)
-                </Label>
-                <Input
-                  id="monthlyExtras"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  value={inputs.monthlyExtras}
-                  onChange={(event) => handleChange('monthlyExtras', event.target.value)}
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  Include meals, clubs, nappies, or transport.
-                </p>
-              </div>
-              <div>
-                <Label htmlFor="monthlySupport" className="text-sm font-medium">
-                  Monthly support (£)
-                </Label>
-                <Input
-                  id="monthlySupport"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  value={inputs.monthlySupport}
-                  onChange={(event) => handleChange('monthlySupport', event.target.value)}
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  Add Tax-Free Childcare, free hours, or employer vouchers.
-                </p>
-              </div>
-              <Button type="button" variant="outline" onClick={() => setInputs(defaultInputs)}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="border border-pink-200 dark:border-pink-900 bg-pink-50 dark:bg-pink-900/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-pink-900 dark:text-pink-100">
-                  <Baby className="h-5 w-5" />
-                  Cost Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-3 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-pink-900/60 p-4 border border-pink-100 dark:border-pink-800">
-                  <p className="text-sm text-pink-700 dark:text-pink-200">Weekly Care Cost</p>
-                  <p className="text-2xl font-bold text-pink-900 dark:text-pink-100">
-                    {currencyFormatter.format(results.weeklyCost)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-pink-900/60 p-4 border border-pink-100 dark:border-pink-800">
-                  <p className="text-sm text-pink-700 dark:text-pink-200">Monthly Total</p>
-                  <p className="text-2xl font-bold text-pink-900 dark:text-pink-100">
-                    {currencyFormatter.format(results.totalMonthlyCost)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-pink-900/60 p-4 border border-pink-100 dark:border-pink-800">
-                  <p className="text-sm text-pink-700 dark:text-pink-200">Annual Total</p>
-                  <p className="text-2xl font-bold text-pink-900 dark:text-pink-100">
-                    {currencyFormatter.format(results.totalAnnualCost)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <PiggyBank className="h-5 w-5 text-slate-600" />
-                  Childcare Budget Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Care Fees (monthly)</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.monthlyCareCost)}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Net Weekly Cost</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.netWeeklyCost)}
-                  </p>
-                  <p className="text-xs text-slate-500">Adjusted for support and weeks attended.</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  Monthly Cost of Childcare Calculator View
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={results.chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => currencyFormatter.format(Number(value))} />
-                    <Tooltip formatter={(value) => currencyFormatter.format(Number(value))} />
-                    <Legend />
-                    <Bar dataKey="value" fill="#f472b6" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                How this Childcare Calculator supports planning
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-pink-600/10 text-pink-700 dark:bg-pink-500/20 dark:text-pink-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Childcare Cost Calculator
               </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Input your monthly schedule, extras, and government support to see how the childcare
-                calculator alters your spending. It is flexible enough for nursery, childminder, or
-                wraparound care arrangements, helping you manage cash flow across the year.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Using the Cost of Childcare Calculator for comparisons
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Estimate monthly and annual childcare spending, weigh extras, and see how government support offsets
+              bills. Update the inputs as your family’s schedule evolves.
+            </p>
+          </header>
+
+          <section className="rounded-xl border border-pink-100 bg-white p-6 shadow-sm dark:border-pink-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Bring clarity to care planning
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
+              </div>
+              <blockquote className="max-w-sm rounded-lg border border-pink-200 bg-pink-50/70 p-4 text-sm text-pink-900 shadow-sm dark:border-pink-800/60 dark:bg-pink-950/40 dark:text-pink-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
+                </div>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-pink-700 dark:text-pink-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Baby className="h-5 w-5 text-pink-600 dark:text-pink-300" aria-hidden="true" />
+                  Care schedule
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="dailyRate">Daily rate (£)</Label>
+                      <Input
+                        id="dailyRate"
+                        inputMode="decimal"
+                        value={inputs.dailyRate}
+                        onChange={handleInputChange('dailyRate')}
+                        placeholder="e.g. 65"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="daysPerWeek">Days per week</Label>
+                      <Input
+                        id="daysPerWeek"
+                        inputMode="decimal"
+                        value={inputs.daysPerWeek}
+                        onChange={handleInputChange('daysPerWeek')}
+                        placeholder="e.g. 4"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="weeksPerYear">Weeks per year</Label>
+                      <Input
+                        id="weeksPerYear"
+                        inputMode="decimal"
+                        value={inputs.weeksPerYear}
+                        onChange={handleInputChange('weeksPerYear')}
+                        placeholder="e.g. 48"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="children">Number of children</Label>
+                      <Input
+                        id="children"
+                        inputMode="decimal"
+                        value={inputs.children}
+                        onChange={handleInputChange('children')}
+                        placeholder="e.g. 2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyExtras">Monthly extras (£)</Label>
+                      <Input
+                        id="monthlyExtras"
+                        inputMode="decimal"
+                        value={inputs.monthlyExtras}
+                        onChange={handleInputChange('monthlyExtras')}
+                        placeholder="e.g. 45"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlySupport">Monthly support (£)</Label>
+                      <Input
+                        id="monthlySupport"
+                        inputMode="decimal"
+                        value={inputs.monthlySupport}
+                        onChange={handleInputChange('monthlySupport')}
+                        placeholder="e.g. 100"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate childcare costs
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/50 text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter the childcare schedule, extras, and support, then press{' '}
+                    <span className="font-semibold">Calculate childcare costs</span> to see monthly and annual totals
+                    with download options.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && !calculation && (
+                <Card className="border border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+                  <CardContent className="py-6 text-sm">
+                    Please check the inputs. Daily rate, days per week, weeks per year, and number of children must
+                    all be greater than zero.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && calculation && (
+                <>
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-pink-600 dark:text-pink-300" aria-hidden="true" />
+                        Cost summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Total monthly cost</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatCurrency(calculation.totalMonthlyCost)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Total annual cost</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatCurrency(calculation.totalAnnualCost)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Weekly cost per schedule</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatCurrency(calculation.weeklyCost)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Net weekly cost after support</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatCurrency(calculation.netWeeklyCost)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="childcare-cost-results"
+                          title="Childcare cost calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-pink-600 dark:text-pink-300" aria-hidden="true" />
+                        Monthly cost balance
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={pieChartData} title="Childcare cost composition" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-pink-600 dark:text-pink-300" aria-hidden="true" />
+                        Monthly cash flow
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={barChartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis tickFormatter={(value) => formatCurrency(value)} />
+                          <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                          <Legend />
+                          <Bar dataKey="Care fees" fill="#ec4899" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="Extras" fill="#f97316" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="Support" fill="#22d3ee" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+          </div>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-pink-600 dark:text-pink-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Childcare budgeting tips
               </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Experiment with different weekly schedules or fee structures to compare providers.
-                By adjusting the cost of childcare calculator inputs you can gauge the long-term
-                affordability of nurseries, clubs, or nanny shares before signing a contract.
-              </p>
-            </section>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Check for expanded free hours, spread payments using Tax-Free Childcare, and build a sinking fund for
+              school holidays. Revisiting this calculator each term keeps your childcare budget accurate.
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+
+          <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 md:flex-row">
+            <span>Explore more family and childcare planning tools.</span>
+            <Link
+              to="/calculators"
+              className="inline-flex items-center rounded-lg border border-pink-200 px-4 py-2 font-medium text-pink-700 transition hover:border-pink-400 hover:text-pink-900 dark:border-pink-800 dark:text-pink-300 dark:hover:border-pink-600 dark:hover:text-pink-100"
+            >
+              Browse calculator directory
+            </Link>
           </div>
         </div>
       </CalculatorWrapper>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={childcareFaqs} />
-        </div>
-      </section>
     </div>
   );
 }
+

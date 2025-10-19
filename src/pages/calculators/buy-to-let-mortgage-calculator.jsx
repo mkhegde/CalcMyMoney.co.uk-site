@@ -1,25 +1,39 @@
-import { Helmet } from 'react-helmet-async';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Calculator,
+  Home,
+  Percent,
+  PiggyBank,
+  BarChart3,
+  Quote,
+  BookOpen,
+} from 'lucide-react';
 import {
   ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
   CartesianGrid,
+  Tooltip,
   Legend,
 } from 'recharts';
-import { Calculator, Home, Percent, PiggyBank, BarChart3 } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+
+const ResultBreakdownChart = React.lazy(() => import('@/components/calculators/ResultBreakdownChart.jsx'));
 
 const keywords = [
   'buy to let mortgage calculator',
@@ -31,34 +45,46 @@ const keywords = [
 ];
 
 const metaDescription =
-  'Use our buy to let mortgage calculator to plan deposits, compare BTL mortgage calculator stress tests, and forecast buy to let mortgage yields for upcoming rentals.';
+  'Work out deposits, stamp duty, rental coverage and yields with the UK buy-to-let mortgage calculator. Stress test your rent against lender coverage rules before you apply.';
 
-const canonicalUrl = 'https://calcmymoney.co.uk/calculators/buy-to-let-mortgage-calculator';
-const pageTitle = 'Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator';
-
-const webpageSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'WebPage',
-  name: 'Buy-to-Let Mortgage Calculator',
-  url: canonicalUrl,
-  description: metaDescription,
-  keywords: keywords.slice(0, 5),
-  inLanguage: 'en-GB',
-  potentialAction: {
-    '@type': 'Action',
-    name: 'Analyse buy to let mortgage',
-    target: canonicalUrl,
-  },
-};
+const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/buy-to-let-mortgage-calculator';
+const pagePath = '/calculators/buy-to-let-mortgage-calculator';
+const pageTitle = 'Buy-to-Let Mortgage Calculator | BTL Mortgage Calculator UK';
 
 const defaultInputs = {
-  propertyPrice: '325000',
+  propertyPrice: '325,000',
   depositPercent: '25',
-  interestRate: '5.5',
+  interestRate: '5.50',
   termYears: '25',
-  monthlyRent: '1600',
+  monthlyRent: '1,600',
   otherMonthlyCosts: '350',
-  stressRate: '7',
+  stressRate: '7.00',
+};
+
+const faqItems = [
+  {
+    question: 'What stress rate do UK lenders use for buy-to-let?',
+    answer:
+      'Most buy-to-let lenders stress test rent at 6–8% with an income coverage ratio between 125% and 145%. This calculator lets you adjust the stress rate so you can check affordability before you submit an application.',
+  },
+  {
+    question: 'How much cash do I need for a buy-to-let purchase?',
+    answer:
+      'You normally need a 25% deposit, plus the 3% stamp duty surcharge and solicitor fees. Our calculator factors in stamp duty and adds a three-month expense buffer to help you plan the total capital required.',
+  },
+  {
+    question: 'Does the calculator show rental yield?',
+    answer:
+      'Yes. You will see gross and net yield percentages, along with rental coverage metrics that indicate whether your rent supports the mortgage at the chosen interest rate.',
+  },
+];
+
+const emotionalMessage =
+  'A well-managed let provides both income today and long-term capital growth. Know your numbers and you can invest with assurance rather than anxiety.';
+
+const emotionalQuote = {
+  text: 'Do not wait to buy real estate. Buy real estate and wait.',
+  author: 'Will Rogers',
 };
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
@@ -69,6 +95,7 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
 });
 
 const percentageFormatter = new Intl.NumberFormat('en-GB', {
+  minimumFractionDigits: 1,
   maximumFractionDigits: 2,
 });
 
@@ -79,13 +106,28 @@ const stampDutyBands = [
   { threshold: 1500000, rate: 0.15 },
 ];
 
-const calculateStampDuty = (price) => {
-  if (price <= 0) return 0;
-  let remaining = price;
-  let duty = 0;
+function parseNumber(value) {
+  if (value == null) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
 
-  for (let i = stampDutyBands.length - 1; i >= 0; i -= 1) {
-    const { threshold, rate } = stampDutyBands[i];
+function formatCurrency(value) {
+  return currencyFormatter.format(Number.isFinite(value) ? value : 0);
+}
+
+function formatPercent(value) {
+  return `${percentageFormatter.format(Number.isFinite(value) ? value : 0)}%`;
+}
+
+function calculateStampDuty(price) {
+  if (price <= 0) return 0;
+  let duty = 0;
+  let remaining = price;
+
+  for (let index = stampDutyBands.length - 1; index >= 0; index -= 1) {
+    const { threshold, rate } = stampDutyBands[index];
     if (price > threshold) {
       const taxable = remaining - threshold;
       duty += taxable * rate;
@@ -94,450 +136,470 @@ const calculateStampDuty = (price) => {
   }
 
   return duty;
-};
+}
 
-const calculateMortgagePayment = (principal, annualRatePercent, termYears) => {
+function calculateMortgagePayment(principal, annualRatePercent, termYears) {
+  if (principal <= 0 || termYears <= 0) return 0;
   const monthlyRate = annualRatePercent / 100 / 12;
   const totalMonths = termYears * 12;
-  if (principal <= 0 || annualRatePercent <= 0 || termYears <= 0) return 0;
   if (monthlyRate === 0) return principal / totalMonths;
   return (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -totalMonths));
-};
+}
 
-const faqItems = [
-  {
-    question: 'What is a stress test rate for buy-to-let mortgages?',
-    answer:
-      'Lenders often stress test rental income at a higher interest rate, commonly between 6% and 8%, to ensure the rent covers mortgage payments by at least 125-145%. Adjust the stress rate slider to see how your rental coverage shifts.',
-  },
-  {
-    question: 'How much deposit do I need for a buy-to-let mortgage?',
-    answer:
-      'Most lenders require a 25% minimum deposit for buy-to-let. Larger deposits can secure better rates and improve your loan-to-value ratio, which lowers monthly payments and boosts cash flow.',
-  },
-  {
-    question: 'Does the calculator include buy-to-let stamp duty?',
-    answer:
-      'Yes. The calculator estimates the additional 3% surcharge and banded UK stamp duty rates for second properties, helping you understand the true cash you need to complete the purchase.',
-  },
-];
+function calculateBuyToLet(inputs) {
+  const propertyPrice = parseNumber(inputs.propertyPrice);
+  const depositPercent = parseNumber(inputs.depositPercent);
+  const interestRate = parseNumber(inputs.interestRate);
+  const termYears = parseNumber(inputs.termYears);
+  const monthlyRent = parseNumber(inputs.monthlyRent);
+  const otherMonthlyCosts = parseNumber(inputs.otherMonthlyCosts);
+  const stressRate = parseNumber(inputs.stressRate);
+
+  if (propertyPrice <= 0 || depositPercent <= 0 || termYears <= 0 || monthlyRent <= 0) {
+    return null;
+  }
+
+  const depositAmount = propertyPrice * (depositPercent / 100);
+  const loanAmount = Math.max(propertyPrice - depositAmount, 0);
+  const ltv = propertyPrice > 0 ? (loanAmount / propertyPrice) * 100 : 0;
+  const repaymentPayment = calculateMortgagePayment(loanAmount, interestRate, termYears);
+  const interestOnlyPayment = (loanAmount * (interestRate / 100)) / 12;
+  const stressPayment = (loanAmount * (stressRate / 100)) / 12;
+
+  const annualRent = monthlyRent * 12;
+  const annualCosts = otherMonthlyCosts * 12;
+  const annualMortgageCost = interestOnlyPayment * 12;
+  const annualNetIncome = annualRent - annualCosts - annualMortgageCost;
+  const rentalCoverage = interestOnlyPayment > 0 ? (monthlyRent / interestOnlyPayment) * 100 : 0;
+  const stressCoverage = stressPayment > 0 ? (monthlyRent / stressPayment) * 100 : 0;
+  const grossYield = propertyPrice > 0 ? (annualRent / propertyPrice) * 100 : 0;
+  const netYield = propertyPrice > 0 ? ((annualRent - annualCosts) / propertyPrice) * 100 : 0;
+
+  const stampDuty = calculateStampDuty(propertyPrice);
+  const totalCashRequired = depositAmount + stampDuty + otherMonthlyCosts * 3;
+
+  return {
+    propertyPrice,
+    depositPercent,
+    depositAmount,
+    loanAmount,
+    ltv,
+    interestRate,
+    termYears,
+    repaymentPayment,
+    interestOnlyPayment,
+    stressRate,
+    stressPayment,
+    monthlyRent,
+    otherMonthlyCosts,
+    annualRent,
+    annualCosts,
+    annualMortgageCost,
+    annualNetIncome,
+    rentalCoverage,
+    stressCoverage,
+    grossYield,
+    netYield,
+    stampDuty,
+    totalCashRequired,
+  };
+}
 
 export default function BuyToLetMortgageCalculatorPage() {
   const [inputs, setInputs] = useState(defaultInputs);
-  const [results, setResults] = useState(() => ({}));
+  const [calculation, setCalculation] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [csvData, setCsvData] = useState(null);
 
-  const handleInputChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  useEffect(() => {
-    const propertyPrice = Number(inputs.propertyPrice) || 0;
-    const depositPercent = Number(inputs.depositPercent) || 0;
-    const interestRate = Number(inputs.interestRate) || 0;
-    const termYears = Number(inputs.termYears) || 0;
-    const monthlyRent = Number(inputs.monthlyRent) || 0;
-    const otherMonthlyCosts = Number(inputs.otherMonthlyCosts) || 0;
-    const stressRate = Number(inputs.stressRate) || 0;
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Buy-to-Let Mortgage Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Mortgages & Property', url: '/calculators#mortgages-property' },
+      { name: 'Buy-to-Let Mortgage Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
 
-    const depositAmount = propertyPrice * (depositPercent / 100);
-    const loanAmount = Math.max(propertyPrice - depositAmount, 0);
-    const ltv = propertyPrice > 0 ? (loanAmount / propertyPrice) * 100 : 0;
-    const mortgagePayment = calculateMortgagePayment(loanAmount, interestRate, termYears);
-    const interestOnlyPayment = (loanAmount * (interestRate / 100)) / 12;
-    const stressPayment = (loanAmount * (stressRate / 100)) / 12;
-    const annualRent = monthlyRent * 12;
-    const annualCosts = otherMonthlyCosts * 12;
-    const annualMortgageCost = interestOnlyPayment * 12;
-    const annualNetIncome = annualRent - annualCosts - annualMortgageCost;
-    const rentalCoverage = interestOnlyPayment > 0 ? monthlyRent / interestOnlyPayment : 0;
-    const stressCoverage = stressPayment > 0 ? monthlyRent / stressPayment : 0;
-    const grossYield = propertyPrice > 0 ? (annualRent / propertyPrice) * 100 : 0;
-    const netYield = propertyPrice > 0 ? ((annualRent - annualCosts) / propertyPrice) * 100 : 0;
-
-    const stampDuty = calculateStampDuty(propertyPrice);
-    const totalCashRequired = depositAmount + stampDuty + (otherMonthlyCosts * 3 || 0);
-
-    const chartData = [
+  const barChartData = useMemo(() => {
+    if (!calculation || !hasCalculated) return [];
+    return [
       {
-        name: 'Monthly',
-        Rent: monthlyRent,
-        'Mortgage (Interest Only)': interestOnlyPayment,
-        'Other Costs': otherMonthlyCosts,
+        name: 'Monthly comparison',
+        Rent: calculation.monthlyRent,
+        'Interest-only mortgage': calculation.interestOnlyPayment,
+        'Other costs': calculation.otherMonthlyCosts,
       },
     ];
+  }, [calculation, hasCalculated]);
 
-    setResults({
-      depositAmount,
-      loanAmount,
-      ltv,
-      mortgagePayment,
-      interestOnlyPayment,
-      stressPayment,
-      annualRent,
-      annualCosts,
-      annualMortgageCost,
-      annualNetIncome,
-      rentalCoverage,
-      stressCoverage,
-      grossYield,
-      netYield,
-      stampDuty,
-      totalCashRequired,
-      chartData,
-    });
-  }, [inputs]);
+  const pieChartData = useMemo(() => {
+    if (!calculation || !hasCalculated) return [];
+    return [
+      { name: 'Deposit', value: calculation.depositAmount, color: '#2563eb' },
+      { name: 'Stamp duty', value: calculation.stampDuty, color: '#0ea5e9' },
+      { name: 'Expense buffer', value: calculation.otherMonthlyCosts * 3, color: '#22d3ee' },
+    ];
+  }, [calculation, hasCalculated]);
 
-  const sliderDepositMax = Math.max(40, Number(inputs.depositPercent) || 0);
-  const sliderRateMax = Math.max(10, Number(inputs.interestRate) || 0);
-  const sliderStressMax = Math.max(9, Number(inputs.stressRate) || 0);
+  const handleInputChange = (field) => (event) => {
+    const { value } = event.target;
+    setInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const result = calculateBuyToLet(inputs);
+    setHasCalculated(true);
+
+    if (!result) {
+      setCalculation(null);
+      setCsvData(null);
+      return;
+    }
+
+    setCalculation(result);
+
+    const csvRows = [
+      ['Metric', 'Value'],
+      ['Deposit amount', formatCurrency(result.depositAmount)],
+      ['Loan amount', formatCurrency(result.loanAmount)],
+      ['Loan-to-value', formatPercent(result.ltv)],
+      ['Repayment mortgage payment', formatCurrency(result.repaymentPayment)],
+      ['Interest-only payment', formatCurrency(result.interestOnlyPayment)],
+      ['Stress payment', formatCurrency(result.stressPayment)],
+      ['Monthly rent', formatCurrency(result.monthlyRent)],
+      ['Other monthly costs', formatCurrency(result.otherMonthlyCosts)],
+      ['Gross yield', formatPercent(result.grossYield)],
+      ['Net yield', formatPercent(result.netYield)],
+      ['Rental coverage (interest-only)', formatPercent(result.rentalCoverage)],
+      ['Rental coverage (stress)', formatPercent(result.stressCoverage)],
+      ['Stamp duty estimate', formatCurrency(result.stampDuty)],
+      ['Total cash required', formatCurrency(result.totalCashRequired)],
+    ];
+    setCsvData(csvRows);
+  };
+
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setCalculation(null);
+    setCsvData(null);
+    setHasCalculated(false);
+  };
 
   return (
-    <>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={metaDescription} />
-        <meta name="keywords" content={keywords.join(', ')} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
-      <div className="bg-white dark:bg-gray-950">
-        <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Buy-to-Let Mortgage Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
-            See your deposit, loan-to-value, mortgage payments, and rental coverage in seconds so
-            you can invest with confidence.
-          </p>
-        </div>
-        </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-600/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Buy-to-Let Mortgage Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Evaluate rent coverage, yields, deposit requirements, and stamp duty for your next buy-to-let
+              purchase. The calculator follows UK tax rules, putting you in control before speaking to lenders or
+              brokers.
+            </p>
+          </header>
 
-        <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-emerald-500" />
-                Property & Mortgage Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="propertyPrice" className="text-sm font-medium">
-                    Property Price (£)
-                  </Label>
-                  <Input
-                    id="propertyPrice"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    value={inputs.propertyPrice}
-                    onChange={(event) => handleInputChange('propertyPrice', event.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Deposit (%)
-                    <span className="text-emerald-600 font-semibold">
-                      {percentageFormatter.format(Number(inputs.depositPercent) || 0)}%
-                    </span>
-                  </Label>
-                  <Slider
-                    value={[Number(inputs.depositPercent)]}
-                    onValueChange={(value) => handleInputChange('depositPercent', String(value[0]))}
-                    min={15}
-                    max={sliderDepositMax}
-                    step={1}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium flex justify-between items-center">
-                      Interest Rate
-                      <span className="text-emerald-600 font-semibold">
-                        {percentageFormatter.format(Number(inputs.interestRate) || 0)}%
-                      </span>
-                    </Label>
-                    <Slider
-                      value={[Number(inputs.interestRate)]}
-                      onValueChange={(value) => handleInputChange('interestRate', String(value[0]))}
-                      min={1}
-                      max={sliderRateMax}
-                      step={0.1}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="termYears" className="text-sm font-medium">
-                      Term (years)
-                    </Label>
-                    <Input
-                      id="termYears"
-                      type="number"
-                      inputMode="numeric"
-                      min={5}
-                      step={1}
-                      value={inputs.termYears}
-                      onChange={(event) => handleInputChange('termYears', event.target.value)}
-                    />
-                  </div>
-                </div>
+          <section className="rounded-xl border border-sky-100 bg-white p-6 shadow-sm dark:border-sky-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Make confident property decisions
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
               </div>
-
-              <div className="pt-4 border-t border-emerald-100 dark:border-emerald-900 space-y-4">
-                <div>
-                  <Label htmlFor="monthlyRent" className="text-sm font-medium">
-                    Monthly Rent (£)
-                  </Label>
-                  <Input
-                    id="monthlyRent"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    value={inputs.monthlyRent}
-                    onChange={(event) => handleInputChange('monthlyRent', event.target.value)}
-                  />
+              <blockquote className="max-w-sm rounded-lg border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-900 shadow-sm dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
                 </div>
-                <div>
-                  <Label htmlFor="otherMonthlyCosts" className="text-sm font-medium">
-                    Other Monthly Costs (£)
-                  </Label>
-                  <Input
-                    id="otherMonthlyCosts"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    value={inputs.otherMonthlyCosts}
-                    onChange={(event) => handleInputChange('otherMonthlyCosts', event.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Stress Test Rate
-                    <span className="text-emerald-600 font-semibold">
-                      {percentageFormatter.format(Number(inputs.stressRate) || 0)}%
-                    </span>
-                  </Label>
-                  <Slider
-                    value={[Number(inputs.stressRate)]}
-                    onValueChange={(value) => handleInputChange('stressRate', String(value[0]))}
-                    min={5}
-                    max={sliderStressMax}
-                    step={0.1}
-                  />
-                </div>
-              </div>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-sky-700 dark:text-sky-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
 
-              <Button type="button" variant="outline" onClick={() => setInputs(defaultInputs)}>
-                Reset to defaults
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/30">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
-                  <Home className="h-5 w-5" />
-                  Mortgage Snapshot
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Home className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                  Property details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid md:grid-cols-3 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/50 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Loan Amount</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.loanAmount || 0)}
-                  </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-200">
-                    Deposit {currencyFormatter.format(results.depositAmount || 0)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/50 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Interest Only</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.interestOnlyPayment || 0)}
-                    <span className="text-base text-emerald-600 dark:text-emerald-200">/mo</span>
-                  </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-200">
-                    Repayment {currencyFormatter.format(results.mortgagePayment || 0)}/mo
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/50 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">LTV</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {percentageFormatter.format(results.ltv || 0)}%
-                  </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-200">
-                    Stress Rent Cover {(results.stressCoverage || 0).toFixed(2)}x
-                  </p>
-                </div>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="propertyPrice">Property price (£)</Label>
+                      <Input
+                        id="propertyPrice"
+                        inputMode="decimal"
+                        value={inputs.propertyPrice}
+                        onChange={handleInputChange('propertyPrice')}
+                        placeholder="e.g. 325,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="depositPercent">Deposit (%)</Label>
+                      <Input
+                        id="depositPercent"
+                        inputMode="decimal"
+                        value={inputs.depositPercent}
+                        onChange={handleInputChange('depositPercent')}
+                        placeholder="e.g. 25"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="interestRate">Interest rate (% APR)</Label>
+                      <Input
+                        id="interestRate"
+                        inputMode="decimal"
+                        value={inputs.interestRate}
+                        onChange={handleInputChange('interestRate')}
+                        placeholder="e.g. 5.50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="termYears">Mortgage term (years)</Label>
+                      <Input
+                        id="termYears"
+                        inputMode="decimal"
+                        value={inputs.termYears}
+                        onChange={handleInputChange('termYears')}
+                        placeholder="e.g. 25"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyRent">Monthly rent (£)</Label>
+                      <Input
+                        id="monthlyRent"
+                        inputMode="decimal"
+                        value={inputs.monthlyRent}
+                        onChange={handleInputChange('monthlyRent')}
+                        placeholder="e.g. 1,600"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="otherMonthlyCosts">Other monthly costs (£)</Label>
+                      <Input
+                        id="otherMonthlyCosts"
+                        inputMode="decimal"
+                        value={inputs.otherMonthlyCosts}
+                        onChange={handleInputChange('otherMonthlyCosts')}
+                        placeholder="e.g. 350"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stressRate">Stress rate (% APR)</Label>
+                      <Input
+                        id="stressRate"
+                        inputMode="decimal"
+                        value={inputs.stressRate}
+                        onChange={handleInputChange('stressRate')}
+                        placeholder="e.g. 7.00"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate buy-to-let results
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <PiggyBank className="h-5 w-5 text-slate-600" />
-                  Cash Flow & Yield
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Annual Rent</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.annualRent || 0)}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Annual Costs</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(
-                      (results.annualCosts || 0) + (results.annualMortgageCost || 0)
-                    )}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Annual Net Income</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.annualNetIncome || 0)}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Rental Coverage (ICR)</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {(results.rentalCoverage || 0).toFixed(2)}x
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Gross Yield</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {percentageFormatter.format(results.grossYield || 0)}%
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Net Yield</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {percentageFormatter.format(results.netYield || 0)}%
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/50 text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter the property details and rental assumptions, then press{' '}
+                    <span className="font-semibold">Calculate buy-to-let results</span> to reveal deposit
+                    requirements, rent coverage, yields, and downloadable outputs.
+                  </CardContent>
+                </Card>
+              )}
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <BarChart3 className="h-5 w-5 text-slate-600" />
-                  Monthly Cash Flow Chart
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={results.chartData || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis tickFormatter={(value) => currencyFormatter.format(Number(value))} />
-                    <Tooltip formatter={(value) => currencyFormatter.format(Number(value))} />
-                    <Legend />
-                    <Bar dataKey="Rent" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Mortgage (Interest Only)" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Other Costs" fill="#f97316" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+              {hasCalculated && !calculation && (
+                <Card className="border border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+                  <CardContent className="py-6 text-sm">
+                    Please review the figures. Ensure property price, deposit percentage, term, and monthly rent
+                    are all positive numbers before calculating.
+                  </CardContent>
+                </Card>
+              )}
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Percent className="h-5 w-5 text-slate-600" />
-                  Stamp Duty & Cash Required
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Buy-to-Let Stamp Duty</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.stampDuty || 0)}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-500">Total Cash to Complete</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.totalCashRequired || 0)}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Includes deposit, buy to let mortgage stamp duty, and three months of running
-                    costs.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+              {hasCalculated && calculation && (
+                <>
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                        Investment summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Deposit required</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatCurrency(calculation.depositAmount)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Stamp duty surcharge</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatCurrency(calculation.stampDuty)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Interest-only coverage</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatPercent(calculation.rentalCoverage)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Stress rate coverage</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatPercent(calculation.stressCoverage)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Gross yield</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatPercent(calculation.grossYield)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">Net yield</p>
+                        <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {formatPercent(calculation.netYield)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="buy-to-let-mortgage-results"
+                          title="Buy-to-let mortgage calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Percent className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                        Cash requirement breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={pieChartData} title="Cash needed for completion" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BarChart3 className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                        Monthly rent coverage
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={barChartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis tickFormatter={(value) => formatCurrency(value)} />
+                          <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                          <Legend />
+                          <Bar dataKey="Rent" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="Interest-only mortgage" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="Other costs" fill="#22d3ee" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+          </div>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Buy-to-let planning tips
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Check lender stress criteria, EPC requirements, and limited company structuring before lining up a
+              property. Use the calculator output in your discussions with mortgage brokers so they can fast-track
+              suitable products.
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+
+          <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 md:flex-row">
+            <span>Browse more UK mortgage and property calculators.</span>
+            <Link
+              to="/calculators"
+              className="inline-flex items-center rounded-lg border border-sky-200 px-4 py-2 font-medium text-sky-700 transition hover:border-sky-400 hover:text-sky-900 dark:border-sky-800 dark:text-sky-300 dark:hover:border-sky-600 dark:hover:text-sky-100"
+            >
+              Browse calculator directory
+            </Link>
           </div>
         </div>
-        </CalculatorWrapper>
-
-        <section className="bg-slate-50 dark:bg-slate-900/40 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <Heading
-            as="h2"
-            size="h2"
-            weight="semibold"
-            className="text-slate-900 dark:text-slate-100"
-          >
-            Buy to Let Mortgage Stamp Duty Considerations
-          </Heading>
-          <p className="text-base text-slate-600 dark:text-slate-300">
-            Understanding buy to let mortgage stamp duty is essential before you exchange contracts.
-            The calculator applies the additional property surcharge so you can plan for the extra
-            cash outlay and avoid surprises at completion.
-          </p>
-          <Heading
-            as="h3"
-            size="h3"
-            weight="semibold"
-            className="text-slate-900 dark:text-slate-100"
-          >
-            Buy to Let Mortgage Calculator UK Insights
-          </Heading>
-          <p className="text-base text-slate-600 dark:text-slate-300">
-            UK lenders typically require a minimum interest coverage ratio of 125% for standard
-            taxpayers and 145% for higher-rate taxpayers. Use this buy to let mortgage calculator uk
-            to test different rental assumptions before approaching brokers.
-          </p>
-          <Heading
-            as="h3"
-            size="h3"
-            weight="semibold"
-            className="text-slate-900 dark:text-slate-100"
-          >
-            Planning Around Buy to Let Stamp Duty Costs
-          </Heading>
-          <p className="text-base text-slate-600 dark:text-slate-300">
-            Buy to let stamp duty takes a significant chunk out of your returns, especially on
-            higher-value properties. Budget for legal fees, surveys, and refurbishments alongside
-            the tax so you maintain enough reserves for voids and repairs once the tenants move in.
-          </p>
-        </div>
-        </section>
-
-        <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={faqItems} />
-        </div>
-        </section>
-      </div>
-    </>
+      </CalculatorWrapper>
+    </div>
   );
 }
+
