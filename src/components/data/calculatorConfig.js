@@ -314,6 +314,11 @@ const rawCategories = [
         'Generate amortisation schedules for personal, car, or secured loans.'
       ),
       createCalculatorEntry(
+        'Amortisation Calculator',
+        'AmortizationCalculator',
+        'Model monthly repayments and track interest versus principal across the loan term.'
+      ),
+      createCalculatorEntry(
         'Credit Card Payoff Planner',
         'CreditCardPayoffPlanner',
         'Build a plan to clear credit card balances faster with targeted payments.'

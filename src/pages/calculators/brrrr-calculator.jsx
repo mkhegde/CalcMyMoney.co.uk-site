@@ -1,5 +1,4 @@
 import React, { Suspense, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Calculator,
   Building2,
@@ -609,19 +608,8 @@ export default function BRRRRCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-
-          <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 md:flex-row">
-            <span>See more UK property investment calculators.</span>
-            <Link
-              to="/calculators"
-              className="inline-flex items-center rounded-lg border border-emerald-200 px-4 py-2 font-medium text-emerald-700 transition hover:border-emerald-400 hover:text-emerald-900 dark:border-emerald-800 dark:text-emerald-300 dark:hover:border-emerald-600 dark:hover:text-emerald-100"
-            >
-              Browse calculator directory
-            </Link>
-          </div>
         </div>
       </CalculatorWrapper>
     </div>
   );
 }
-

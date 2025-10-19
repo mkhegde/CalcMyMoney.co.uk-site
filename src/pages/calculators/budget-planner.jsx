@@ -1,5 +1,4 @@
 import React, { Suspense, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Calculator, Wallet, PiggyBank, PlusCircle, Quote, BookOpen } from 'lucide-react';
 
 import SeoHead from '@/components/seo/SeoHead';
@@ -441,19 +440,8 @@ export default function BudgetPlannerPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-
-          <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 md:flex-row">
-            <span>Discover more savings and budgeting calculators.</span>
-            <Link
-              to="/calculators"
-              className="inline-flex items-center rounded-lg border border-indigo-200 px-4 py-2 font-medium text-indigo-700 transition hover:border-indigo-400 hover:text-indigo-900 dark:border-indigo-800 dark:text-indigo-300 dark:hover:border-indigo-600 dark:hover:text-indigo-100"
-            >
-              Browse calculator directory
-            </Link>
-          </div>
         </div>
       </CalculatorWrapper>
     </div>
   );
 }
-

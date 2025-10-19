@@ -1,5 +1,4 @@
 import React, { Suspense, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Calculator, Scale, Percent, PieChart as PieChartIcon, Quote, BookOpen } from 'lucide-react';
 
 import SeoHead from '@/components/seo/SeoHead';
@@ -511,19 +510,8 @@ export default function CapitalGainsTaxCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-
-          <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 md:flex-row">
-            <span>Find more UK tax and investment calculators.</span>
-            <Link
-              to="/calculators"
-              className="inline-flex items-center rounded-lg border border-amber-200 px-4 py-2 font-medium text-amber-700 transition hover:border-amber-400 hover:text-amber-900 dark:border-amber-800 dark:text-amber-300 dark:hover:border-amber-600 dark:hover:text-amber-100"
-            >
-              Browse calculator directory
-            </Link>
-          </div>
         </div>
       </CalculatorWrapper>
     </div>
   );
 }
-

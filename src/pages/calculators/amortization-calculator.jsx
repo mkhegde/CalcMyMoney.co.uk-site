@@ -1,5 +1,4 @@
 import React, { Suspense, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Calculator, TrendingUp, Table as TableIcon, Quote, BookOpen } from 'lucide-react';
 
 import SeoHead from '@/components/seo/SeoHead';
@@ -486,16 +485,6 @@ export default function AmortizationCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-
-          <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 md:flex-row">
-            <span>Explore the full directory of our UK-first financial tools.</span>
-            <Link
-              to="/calculators"
-              className="inline-flex items-center rounded-lg border border-blue-200 px-4 py-2 font-medium text-blue-700 transition hover:border-blue-400 hover:text-blue-900 dark:border-blue-800 dark:text-blue-300 dark:hover:border-blue-600 dark:hover:text-blue-100"
-            >
-              Browse calculator directory
-            </Link>
-          </div>
         </div>
       </CalculatorWrapper>
     </div>

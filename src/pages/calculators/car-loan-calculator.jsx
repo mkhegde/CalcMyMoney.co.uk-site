@@ -1,5 +1,4 @@
 import React, { Suspense, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Calculator, CreditCard, TrendingUp, BarChart2, Quote, BookOpen } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -541,19 +540,8 @@ export default function CarLoanCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-
-          <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 md:flex-row">
-            <span>Plan every motoring expense with our transport calculators.</span>
-            <Link
-              to="/calculators"
-              className="inline-flex items-center rounded-lg border border-purple-200 px-4 py-2 font-medium text-purple-700 transition hover:border-purple-400 hover:text-purple-900 dark:border-purple-800 dark:text-purple-300 dark:hover:border-purple-600 dark:hover:text-purple-100"
-            >
-              Browse calculator directory
-            </Link>
-          </div>
         </div>
       </CalculatorWrapper>
     </div>
   );
 }
-
