@@ -1,56 +1,71 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Wallet, PieChart, PiggyBank } from 'lucide-react';
+import React, { Suspense, useMemo, useState } from 'react';
+import { Calculator, Wallet, PieChart, PiggyBank, Quote, BookOpen } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 
-const canonicalUrl = 'https://calcmymoney.co.uk/calculators/budget-calculator';
+const ResultBreakdownChart = React.lazy(() => import('@/components/calculators/ResultBreakdownChart.jsx'));
 
-const schemaKeywords = [
-  'Financial Planning',
-  'Income vs Expenses',
-  'Debt Repayment',
-  'Cash Flow',
-  'Money Management',
+const keywords = [
+  'budget calculator',
+  'monthly budget calculator',
+  'income vs expenses calculator',
+  'cash flow planner',
 ];
 
-const faqItems = [
-  {
-    question: 'How do I start building a monthly budget?',
-    answer:
-      'List every source of income, then categorise fixed and variable expenses. Track actual spending against your plan weekly to stay in control of cash flow.',
-  },
-  {
-    question: 'What percentage of income should go to savings goals?',
-    answer:
-      'Many planners suggest saving 20% of net income, but tailor the number to your debt repayment needs, emergency fund target, and lifestyle priorities.',
-  },
-  {
-    question: 'How can I make space for savings if my expenses are high?',
-    answer:
-      'Start by reviewing subscriptions and discretionary categories. Negotiating bills or consolidating debt can lower monthly spending and free up cash for your goals.',
-  },
-];
+const metaDescription =
+  'Build your UK monthly budget by balancing income, bills, savings, and debt repayments. See your cash surplus and savings rate instantly.';
+
+const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/budget-calculator';
+const pagePath = '/calculators/budget-calculator';
+const pageTitle = 'Budget Calculator | UK Monthly Cash-Flow Planner';
 
 const defaultIncomes = [
-  { id: 'income-1', label: 'Primary salary', amount: '3200' },
+  { id: 'income-1', label: 'Primary salary', amount: '3,200' },
   { id: 'income-2', label: 'Side hustle', amount: '400' },
 ];
 
 const defaultExpenses = [
-  { id: 'expense-1', label: 'Rent / Mortgage', amount: '1200' },
+  { id: 'expense-1', label: 'Rent / Mortgage', amount: '1,200' },
   { id: 'expense-2', label: 'Utilities & bills', amount: '220' },
   { id: 'expense-3', label: 'Groceries', amount: '360' },
 ];
 
-let idCounter = 10;
-const newId = (prefix) => `${prefix}-${idCounter++}`;
+const faqItems = [
+  {
+    question: 'How should I structure my monthly budget?',
+    answer:
+      'Start with income, then split expenses into essentials, financial goals, and lifestyle. Tracking each category helps you prioritise and adjust when costs shift.',
+  },
+  {
+    question: 'What savings rate should I aim for?',
+    answer:
+      'A 20% savings rate is a popular benchmark, but the right target depends on your debt repayments and financial goals. Use this calculator to test different scenarios.',
+  },
+  {
+    question: 'How can I free up cash for goals?',
+    answer:
+      'Review subscriptions, negotiate bills, and plan meals to trim discretionary costs. Any freed-up cash can go towards debt, savings, or investment targets.',
+  },
+];
+
+const emotionalMessage =
+  'Money confidence comes from seeing every pound working for you. Give each expense a job, and you will stay in control of your goals.';
+
+const emotionalQuote = {
+  text: 'A budget is more than just a series of numbers on a page; it is an embodiment of our values.',
+  author: 'Barack Obama',
+};
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -58,386 +73,387 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 2,
 });
 
-export default function BudgetCalculator() {
+const numberFormatter = new Intl.NumberFormat('en-GB', {
+  maximumFractionDigits: 2,
+});
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+let idCounter = 100;
+const newId = (prefix) => `${prefix}-${idCounter += 1}`;
+
+function calculateBudget({ incomes, expenses, savingsGoal, debtRepayment }) {
+  const totalIncome = incomes.reduce((sum, item) => sum + parseNumber(item.amount), 0);
+  const expenseTotal = expenses.reduce((sum, item) => sum + parseNumber(item.amount), 0);
+  const savings = parseNumber(savingsGoal);
+  const debt = parseNumber(debtRepayment);
+
+  const totalOutgoings = expenseTotal + savings + debt;
+  const balance = totalIncome - totalOutgoings;
+  const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
+  const essentialRate = totalIncome > 0 ? (expenseTotal / totalIncome) * 100 : 0;
+
+  return {
+    totalIncome,
+    expenseTotal,
+    savings,
+    debt,
+    totalOutgoings,
+    balance,
+    savingsRate,
+    essentialRate,
+  };
+}
+
+export default function BudgetCalculatorPage() {
   const [incomes, setIncomes] = useState(defaultIncomes);
   const [expenses, setExpenses] = useState(defaultExpenses);
   const [savingsGoal, setSavingsGoal] = useState('500');
   const [debtRepayment, setDebtRepayment] = useState('250');
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const handleIncomeChange = useCallback((id, field, value) => {
-    setIncomes((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
-    );
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const handleExpenseChange = useCallback((id, field, value) => {
-    setExpenses((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
-    );
-  }, []);
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Budget Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Budgeting & Planning Calculators', url: '/calculators#budgeting' },
+      { name: 'Budget Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
 
-  const removeIncome = useCallback((id) => {
-    setIncomes((prev) => prev.filter((item) => item.id !== id));
-  }, []);
+  const chartData = useMemo(() => {
+    if (!results || !hasCalculated) return [];
+    return [
+      { name: 'Living costs', value: results.expenseTotal, color: '#0ea5e9' },
+      { name: 'Savings goals', value: results.savings, color: '#22c55e' },
+      { name: 'Debt repayments', value: results.debt, color: '#f97316' },
+    ].filter((segment) => segment.value > 0);
+  }, [results, hasCalculated]);
 
-  const removeExpense = useCallback((id) => {
-    setExpenses((prev) => prev.filter((item) => item.id !== id));
-  }, []);
+  const updateItem = (setState) => (id, field, value) => {
+    setState((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
+  };
 
-  const addIncome = useCallback(() => {
-    setIncomes((prev) => [
+  const removeItem = (setState) => (id) => {
+    setState((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const addItem = (setState, prefix, defaultLabel) => () => {
+    setState((prev) => [
       ...prev,
-      { id: newId('income'), label: 'New income', amount: '0' },
+      { id: newId(prefix), label: defaultLabel, amount: '0' },
     ]);
-  }, []);
+  };
 
-  const addExpense = useCallback(() => {
-    setExpenses((prev) => [
-      ...prev,
-      { id: newId('expense'), label: 'New expense', amount: '0' },
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const computed = calculateBudget({ incomes, expenses, savingsGoal, debtRepayment });
+    setHasCalculated(true);
+    setResults(computed);
+
+    const header = ['Category', 'Amount (£)'];
+    const incomeRows = incomes.map((item) => [item.label, currencyFormatter.format(parseNumber(item.amount))]);
+    const expenseRows = expenses.map((item) => [item.label, currencyFormatter.format(parseNumber(item.amount))]);
+
+    setCsvData([
+      ['Monthly income'],
+      ...incomeRows,
+      [],
+      ['Monthly expenses'],
+      ...expenseRows,
+      [],
+      ['Savings goal', currencyFormatter.format(computed.savings)],
+      ['Debt repayments', currencyFormatter.format(computed.debt)],
+      ['Total income', currencyFormatter.format(computed.totalIncome)],
+      ['Total outgoings', currencyFormatter.format(computed.totalOutgoings)],
+      ['Monthly balance', currencyFormatter.format(computed.balance)],
+      ['Savings rate', `${numberFormatter.format(computed.savingsRate)}%`],
     ]);
-  }, []);
+  };
 
-  const reset = useCallback(() => {
+  const handleReset = () => {
     setIncomes(defaultIncomes);
     setExpenses(defaultExpenses);
     setSavingsGoal('500');
     setDebtRepayment('250');
-  }, []);
-
-  const overview = useMemo(() => {
-    const totalIncome = incomes.reduce(
-      (sum, item) => sum + (Number(item.amount) || 0),
-      0,
-    );
-    const totalExpenses = expenses.reduce(
-      (sum, item) => sum + (Number(item.amount) || 0),
-      0,
-    );
-    const savingsTarget = Number(savingsGoal) || 0;
-    const debtTarget = Number(debtRepayment) || 0;
-
-    const totalOutgoings = totalExpenses + savingsTarget + debtTarget;
-    const balance = totalIncome - totalOutgoings;
-    const savingsRate = totalIncome > 0 ? (savingsTarget / totalIncome) * 100 : 0;
-    const debtRatio = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
-
-    return {
-      totalIncome,
-      totalExpenses,
-      savingsTarget,
-      debtTarget,
-      totalOutgoings,
-      balance,
-      savingsRate,
-      debtRatio,
-    };
-  }, [incomes, expenses, savingsGoal, debtRepayment]);
-
-  const incomeAnalysis = useMemo(() => {
-    const topIncome = incomes.reduce(
-      (acc, item) =>
-        Number(item.amount) > Number(acc.amount || 0) ? item : acc,
-      { label: 'n/a', amount: '0' },
-    );
-    const topExpense = expenses.reduce(
-      (acc, item) =>
-        Number(item.amount) > Number(acc.amount || 0) ? item : acc,
-      { label: 'n/a', amount: '0' },
-    );
-    return { topIncome, topExpense };
-  }, [incomes, expenses]);
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Monthly Budget Planner &amp; Personal Finance Calculator</title>
-        <meta
-          name="description"
-          content="Monthly budget calculator for personal finance planning. Track income vs expenses, manage debt repayment, and monitor savings goals."
-        />
-        <meta
-          name="keywords"
-          content="Budget Calculator, Expense Tracker, Savings Goals"
-        />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FinancialProduct',
-              name: 'Budget Calculator',
-              description:
-                'Personal finance planner for income versus expenses, debt repayment scheduling, cash-flow monitoring, and money management.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Budget Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
-            Create budget plans, strengthen personal finance habits, and track monthly spending to stay aligned with savings goals.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Budget Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Build a monthly budget that balances bills, savings, and debt repayments. Adjust each
+              category to see how your surplus and savings rate respond.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Wallet className="h-5 w-5 text-emerald-500" />
-                Incomes
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {incomes.map((item) => (
-                <div key={item.id} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
-                  <Input
-                    value={item.label}
-                    onChange={(event) =>
-                      handleIncomeChange(item.id, 'label', event.target.value)
-                    }
-                    className="col-span-1"
-                  />
-                  <Input
-                    value={item.amount}
-                    inputMode="decimal"
-                    onChange={(event) =>
-                      handleIncomeChange(item.id, 'amount', event.target.value)
-                    }
-                    className="w-28"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => removeIncome(item.id)}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" variant="outline" onClick={addIncome}>
-                Add income
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-emerald-500" />
-                Expenses
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {expenses.map((item) => (
-                <div key={item.id} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
-                  <Input
-                    value={item.label}
-                    onChange={(event) =>
-                      handleExpenseChange(item.id, 'label', event.target.value)
-                    }
-                  />
-                  <Input
-                    value={item.amount}
-                    inputMode="decimal"
-                    onChange={(event) =>
-                      handleExpenseChange(item.id, 'amount', event.target.value)
-                    }
-                    className="w-28"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => removeExpense(item.id)}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
-              <Button type="button" variant="outline" onClick={addExpense}>
-                Add expense
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-8 grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <PiggyBank className="h-5 w-5 text-emerald-500" />
-                Goals &amp; Debt
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="text-sm font-medium" htmlFor="savingsGoal">
-                  Monthly savings goal (GBP)
-                </Label>
-                <Input
-                  id="savingsGoal"
-                  inputMode="decimal"
-                  value={savingsGoal}
-                  onChange={(event) => setSavingsGoal(event.target.value)}
-                />
+          <section className="rounded-xl border border-emerald-100 bg-white p-6 shadow-sm dark:border-emerald-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Give every £ a purpose
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
               </div>
-              <div>
-                <Label className="text-sm font-medium" htmlFor="debtRepayment">
-                  Monthly debt repayment (GBP)
-                </Label>
-                <Input
-                  id="debtRepayment"
-                  inputMode="decimal"
-                  value={debtRepayment}
-                  onChange={(event) => setDebtRepayment(event.target.value)}
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset budget
-              </Button>
-            </CardContent>
-          </Card>
+              <blockquote className="max-w-sm rounded-lg border border-emerald-200 bg-emerald-50/70 p-4 text-sm text-emerald-900 shadow-sm dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
+                </div>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
 
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <PieChart className="h-5 w-5 text-emerald-500" />
-                  Overview
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                  Income and spending
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Total monthly income</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(overview.totalIncome)}
-                    </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="space-y-4">
+                    <Heading as="h2" size="h4" className="text-slate-900 dark:text-slate-100 !mb-0">
+                      Monthly income
+                    </Heading>
+                    <div className="space-y-3">
+                      {incomes.map((item) => (
+                        <div key={item.id} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px_auto]">
+                          <Input
+                            value={item.label}
+                            onChange={(event) => updateItem(setIncomes)(item.id, 'label', event.target.value)}
+                            aria-label="Income source"
+                          />
+                          <Input
+                            inputMode="decimal"
+                            value={item.amount}
+                            onChange={(event) => updateItem(setIncomes)(item.id, 'amount', event.target.value)}
+                            aria-label="Income amount"
+                          />
+                          <Button type="button" variant="ghost" onClick={() => removeItem(setIncomes)(item.id)}>
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <Button type="button" variant="outline" onClick={addItem(setIncomes, 'income', 'Additional income')}>
+                      Add income
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Total monthly expenses</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(overview.totalExpenses)}
-                    </p>
+
+                  <div className="space-y-4">
+                    <Heading as="h2" size="h4" className="text-slate-900 dark:text-slate-100 !mb-0">
+                      Monthly expenses
+                    </Heading>
+                    <div className="space-y-3">
+                      {expenses.map((item) => (
+                        <div key={item.id} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px_auto]">
+                          <Input
+                            value={item.label}
+                            onChange={(event) => updateItem(setExpenses)(item.id, 'label', event.target.value)}
+                            aria-label="Expense category"
+                          />
+                          <Input
+                            inputMode="decimal"
+                            value={item.amount}
+                            onChange={(event) => updateItem(setExpenses)(item.id, 'amount', event.target.value)}
+                            aria-label="Expense amount"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => removeItem(setExpenses)(item.id)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <Button type="button" variant="outline" onClick={addItem(setExpenses, 'expense', 'Additional expense')}>
+                      Add expense
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Savings goal</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(overview.savingsTarget)}
-                    </p>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="savingsGoal">Monthly savings goal (£)</Label>
+                      <Input
+                        id="savingsGoal"
+                        inputMode="decimal"
+                        value={savingsGoal}
+                        onChange={(event) => setSavingsGoal(event.target.value)}
+                        placeholder="e.g. 500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="debtRepayment">Debt repayments (£)</Label>
+                      <Input
+                        id="debtRepayment"
+                        inputMode="decimal"
+                        value={debtRepayment}
+                        onChange={(event) => setDebtRepayment(event.target.value)}
+                        placeholder="e.g. 250"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Debt repayment</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(overview.debtTarget)}
-                    </p>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate budget
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Total outgoings</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(overview.totalOutgoings)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Balance</p>
-                    <p
-                      className={`text-lg font-semibold ${overview.balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
-                    >
-                      {currencyFormatter.format(overview.balance)}
-                    </p>
-                  </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Calculator className="h-5 w-5 text-emerald-500" />
-                  Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  Savings rate:{' '}
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
-                    {Number.isFinite(overview.savingsRate)
-                      ? `${overview.savingsRate.toFixed(1)}%`
-                      : '0%'}
-                  </span>
-                </p>
-                <p>
-                  Expense ratio:{' '}
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
-                    {Number.isFinite(overview.debtRatio)
-                      ? `${overview.debtRatio.toFixed(1)}%`
-                      : '0%'}
-                  </span>
-                </p>
-                <p>
-                  Highest income source:{' '}
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
-                    {incomeAnalysis.topIncome.label} (
-                    {currencyFormatter.format(Number(incomeAnalysis.topIncome.amount) || 0)})
-                  </span>
-                </p>
-                <p>
-                  Largest budget category:{' '}
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
-                    {incomeAnalysis.topExpense.label} (
-                    {currencyFormatter.format(Number(incomeAnalysis.topExpense.amount) || 0)})
-                  </span>
-                </p>
-                <p>
-                  Revisit budget categories quarterly to reflect changes in monthly spending and ensure ongoing financial health.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Add your monthly income and spending, then press{' '}
+                    <span className="font-semibold">Calculate budget</span> to reveal cash flow and
+                    savings rate.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-emerald-200 bg-white shadow-sm dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-emerald-600 dark:text-emerald-200" aria-hidden="true" />
+                        Budget summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Total income</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalIncome)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Total outgoings</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalOutgoings)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Monthly balance</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.balance)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Savings rate</p>
+                        <p className="text-2xl font-semibold">
+                          {numberFormatter.format(results.savingsRate)}%
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="budget-calculator-results"
+                          title="Budget calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PieChart className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                        Spending mix
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Budget allocation breakdown" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Stay on track each month
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Revisit the calculator at the start of every month, line up direct debits just after
+              payday, and choose one category to trim if your balance dips into the red.
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Create Budget Habits that Support Financial Health
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Reviewing monthly spending and income analysis keeps personal finance in balance. Use a
-            consistent schedule to reconcile accounts, update budget categories, and stay on track for
-            savings goals.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Monitor Monthly Spending by Budget Categories
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Group expenses into meaningful budget categories. This makes it easier to reduce overspend,
-            track debt repayment progress, and redirect surplus cash toward investment or emergency
-            funds.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Strengthen Financial Health with Income Analysis
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Understanding which income streams drive your cash flow helps you prioritise career
-            decisions, side hustles, or passive income strategies that bolster monthly budget
-            resilience.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );
 }
+

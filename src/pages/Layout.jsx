@@ -41,6 +41,12 @@ const FALLBACK_FOOTER_CATEGORIES = [
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
+  const normalisedPath = useMemo(() => {
+    if (!location?.pathname) return '/';
+    const trimmed = location.pathname.replace(/\/+$/, '');
+    return trimmed === '' ? '/' : trimmed;
+  }, [location?.pathname]);
+  const isHomePage = normalisedPath === '/';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openCategories, setOpenCategories] = useState({});
   const [seoOverrides, setSeoOverrides] = useState({});
@@ -888,33 +894,35 @@ export default function Layout({ children, currentPageName }) {
         </main>
 
         {/* NEW: Global collapsed calculator index to add strong internal linking */}
-        <Suspense
-          fallback={
-            <section className="bg-background border-t border-border non-printable">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="h-6 w-64 rounded bg-muted-foreground/30 animate-pulse" />
-                <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <div
-                      // eslint-disable-next-line react/no-array-index-key
-                      key={`index-skeleton-${index}`}
-                      className="rounded-lg border border-muted/60 bg-muted/30 p-4 animate-pulse"
-                    >
-                      <div className="h-4 w-32 rounded bg-muted-foreground/30" />
-                      <div className="mt-3 space-y-2">
-                        <div className="h-3 w-full rounded bg-muted-foreground/20" />
-                        <div className="h-3 w-5/6 rounded bg-muted-foreground/20" />
-                        <div className="h-3 w-3/4 rounded bg-muted-foreground/20" />
+        {!isHomePage && (
+          <Suspense
+            fallback={
+              <section className="bg-background border-t border-border non-printable">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                  <div className="h-6 w-64 rounded bg-muted-foreground/30 animate-pulse" />
+                  <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div
+                        // eslint-disable-next-line react/no-array-index-key
+                        key={`index-skeleton-${index}`}
+                        className="rounded-lg border border-muted/60 bg-muted/30 p-4 animate-pulse"
+                      >
+                        <div className="h-4 w-32 rounded bg-muted-foreground/30" />
+                        <div className="mt-3 space-y-2">
+                          <div className="h-3 w-full rounded bg-muted-foreground/20" />
+                          <div className="h-3 w-5/6 rounded bg-muted-foreground/20" />
+                          <div className="h-3 w-3/4 rounded bg-muted-foreground/20" />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </section>
-          }
-        >
-          <LazyCalculatorIndex />
-        </Suspense>
+              </section>
+            }
+          >
+            <LazyCalculatorIndex />
+          </Suspense>
+        )}
 
         {/* Footer */}
         <footer className="mt-16 border-t border-border bg-background non-printable">
