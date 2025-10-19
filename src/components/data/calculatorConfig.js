@@ -91,6 +91,16 @@ const rawCategories = [
         'Calculate gross and net rental yields to benchmark investment properties.'
       ),
       createCalculatorEntry(
+        'BRRRR Calculator',
+        'BrrrrCalculator',
+        'Plan buy, refurbish, rent, refinance strategies with UK rental and refinance assumptions.'
+      ),
+      createCalculatorEntry(
+        'Buy-to-Let Mortgage Calculator',
+        'BuyToLetMortgageCalculator',
+        'Check rent coverage, deposit requirements, and stress tests for buy-to-let mortgages.'
+      ),
+      createCalculatorEntry(
         'Equity Release Estimator',
         'EquityReleaseEstimator',
         'Estimate how much tax-free cash could be unlocked with equity release plans.'
@@ -218,6 +228,11 @@ const rawCategories = [
         'Defined Benefit Pension Calculator',
         'DefinedBenefitPensionCalculator',
         'Estimate retirement income from defined benefit pension arrangements.'
+      ),
+      createCalculatorEntry(
+        'Annuity Calculator',
+        'AnnuityCalculator',
+        'Compare level annuity payouts and total income using UK annuity rates.'
       ),
       createCalculatorEntry(
         'Annuity Income Estimator',
@@ -369,6 +384,11 @@ const rawCategories = [
         'Compare total costs of leasing a vehicle against buying with cash or finance.'
       ),
       createCalculatorEntry(
+        'Car Loan Calculator',
+        'CarLoanCalculator',
+        'Estimate monthly car finance payments, total interest, and payoff time with overpayments.'
+      ),
+      createCalculatorEntry(
         'Student Loan Payoff Accelerator',
         'StudentLoanPayoffAccelerator',
         'Test strategies to repay student loans faster and reduce total interest.'
@@ -414,6 +434,11 @@ const rawCategories = [
         'Subscription Clean-Up Calculator',
         'SubscriptionCleanUpCalculator',
         'Identify recurring subscriptions and quantify savings from cancelling unused ones.'
+      ),
+      createCalculatorEntry(
+        'Budget Planner',
+        'BudgetPlanner',
+        'Build a monthly budget that balances income, bills, and savings goals.'
       ),
       createCalculatorEntry(
         'Cost of Living Comparison Calculator',
@@ -520,6 +545,11 @@ const rawCategories = [
         'Estimate the cost of charging an EV at home, work, or public stations.'
       ),
       createCalculatorEntry(
+        'Car Cost Calculator',
+        'CarCostCalculator',
+        'Review the full monthly running cost of a car including fuel, insurance, and depreciation.'
+      ),
+      createCalculatorEntry(
         'Council Tax Band Checker',
         'CouncilTaxBandChecker',
         'Identify council tax bands and annual charges based on property value.'
@@ -577,6 +607,11 @@ const rawCategories = [
         'Estimate childcare costs and government support across different providers.'
       ),
       createCalculatorEntry(
+        'Childcare Cost Calculator',
+        'ChildcareCostCalculator',
+        'Project nursery, wraparound care, extras, and support to understand monthly childcare spend.'
+      ),
+      createCalculatorEntry(
         'Maternity Pay Calculator',
         'MaternityPayCalculator',
         'Work out statutory and enhanced maternity pay over the full leave period.'
@@ -605,6 +640,11 @@ const rawCategories = [
         'Cost of Raising a Child Calculator',
         'CostOfRaisingAChildCalculator',
         'Track lifetime costs of raising a child from birth through education milestones.'
+      ),
+      createCalculatorEntry(
+        'Child Benefit Calculator',
+        'ChildBenefitCalculator',
+        'Estimate weekly Child Benefit payments and any High Income Child Benefit Charge.'
       ),
       createCalculatorEntry(
         'Home Move Cost Calculator',
