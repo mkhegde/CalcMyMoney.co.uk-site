@@ -12,7 +12,6 @@ import {
 } from 'recharts';
 import { Calculator, Calendar, FileSpreadsheet, Percent } from 'lucide-react';
 
-import SeoHead from '@/components/seo/SeoHead';
 import { breadcrumbSchema } from '@/components/seo/JsonLd';
 import Heading from '@/components/common/Heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -242,19 +241,28 @@ export default function AmortizationCalculatorPage() {
         />
         <link rel="canonical" href="https://calcmymoney.co.uk/amortization-calculator" />
       </Helmet>
-      <SeoHead
-        title="Amortization Calculator | Loan Amortization"
-        description={metaDescription}
-        canonical={canonicalUrl}
-        ogTitle="Amortization Calculator | Loan Amortization"
-        ogDescription={metaDescription}
-        ogUrl={canonicalUrl}
-        ogType="website"
-        ogSiteName="Calc My Money"
-        twitterTitle="Amortization Calculator | Loan Amortization"
-        twitterDescription={metaDescription}
-        jsonLd={[breadcrumbJson, webpageSchema]}
-      />
+      <Helmet>
+        <title>Amortization Calculator | Loan Amortization</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={amortizationKeywords.join(', ')} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content="Amortization Calculator | Loan Amortization" />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Calc My Money" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Amortization Calculator | Loan Amortization" />
+        <meta name="twitter:description" content={metaDescription} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJson) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
+        />
+      </Helmet>
 
       <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">

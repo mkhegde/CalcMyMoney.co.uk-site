@@ -18,9 +18,8 @@ import {
 import ScrollToTop from '../components/general/ScrollToTop';
 import CookieConsentBanner from '../components/general/CookieConsentBanner';
 import { pageSeo, defaultOgImage, defaultOgAlt } from '../components/data/pageSeo';
-import SeoHead from '@/components/seo/SeoHead';
 import { SeoProvider } from '@/components/seo/SeoContext';
-import { HelmetProvider } from 'react-helmet-async';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 
 import Heading from '@/components/common/Heading';
 
@@ -266,6 +265,68 @@ export default function Layout({ children, currentPageName }) {
     () => ({ seo: mergedSeo, defaults: defaultSeo, overrides: seoOverrides, setSeo, resetSeo }),
     [mergedSeo, defaultSeo, seoOverrides, setSeo, resetSeo]
   );
+
+  const {
+    title: seoTitle,
+    description: seoDescription,
+    canonical: seoCanonical,
+    robots: seoRobots,
+    themeColor,
+    ogTitle,
+    ogDescription,
+    ogType,
+    ogUrl,
+    ogImage,
+    ogImageAlt,
+    ogSiteName,
+    ogLocale,
+    articlePublishedTime,
+    articleModifiedTime,
+    articleSection,
+    articleAuthor,
+    articleTags,
+    twitterCard,
+    twitterTitle,
+    twitterDescription,
+    twitterImage,
+    twitterImageAlt,
+    jsonLd: seoJsonLd,
+  } = mergedSeo;
+
+  const canonicalHref = useMemo(() => {
+    if (seoCanonical) return seoCanonical;
+    if (typeof window !== 'undefined' && window.location) {
+      try {
+        const url = new URL(window.location.pathname || '/', window.location.origin || '');
+        return url.toString();
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
+  }, [seoCanonical, location.pathname, location.search]);
+
+  const resolvedOgTitle = ogTitle || seoTitle;
+  const resolvedOgDescription = ogDescription || seoDescription;
+  const resolvedOgUrl = ogUrl || canonicalHref;
+  const resolvedOgImage = ogImage || defaultOgImage;
+  const resolvedTwitterTitle = twitterTitle || resolvedOgTitle || seoTitle;
+  const resolvedTwitterDescription =
+    twitterDescription || resolvedOgDescription || seoDescription;
+  const resolvedTwitterImage = twitterImage || ogImage || defaultOgImage;
+  const resolvedTwitterImageAlt = twitterImageAlt || ogImageAlt || defaultOgAlt;
+  const jsonLdArray = useMemo(() => {
+    if (Array.isArray(seoJsonLd)) {
+      return seoJsonLd.filter(Boolean);
+    }
+    return seoJsonLd ? [seoJsonLd] : [];
+  }, [seoJsonLd]);
+  const articleTagsArray = useMemo(() => {
+    if (Array.isArray(articleTags)) {
+      return articleTags.filter(Boolean);
+    }
+    return [];
+  }, [articleTags]);
 
   // Toggle category expansion in mobile menu
   const toggleCategory = (categorySlug) => {
@@ -533,7 +594,53 @@ export default function Layout({ children, currentPageName }) {
       <SeoProvider value={seoContextValue}>
         <div className="min-h-screen bg-background text-foreground">
           <ScrollToTop />
-          <SeoHead {...mergedSeo} />
+          <Helmet>
+            {seoTitle && <title>{seoTitle}</title>}
+            {seoDescription && <meta name="description" content={seoDescription} />}
+            {canonicalHref && <link rel="canonical" href={canonicalHref} />}
+            {seoRobots && <meta name="robots" content={seoRobots} />}
+            {themeColor && <meta name="theme-color" content={themeColor} />}
+            {articleAuthor && <meta name="author" content={articleAuthor} />}
+            {resolvedOgTitle && <meta property="og:title" content={resolvedOgTitle} />}
+            {resolvedOgDescription && (
+              <meta property="og:description" content={resolvedOgDescription} />
+            )}
+            {ogType && <meta property="og:type" content={ogType} />}
+            {resolvedOgUrl && <meta property="og:url" content={resolvedOgUrl} />}
+            {resolvedOgImage && <meta property="og:image" content={resolvedOgImage} />}
+            {ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            {ogSiteName && <meta property="og:site_name" content={ogSiteName} />}
+            {ogLocale && <meta property="og:locale" content={ogLocale} />}
+            {articlePublishedTime && (
+              <meta property="article:published_time" content={articlePublishedTime} />
+            )}
+            {articleModifiedTime && (
+              <meta property="article:modified_time" content={articleModifiedTime} />
+            )}
+            {articleSection && <meta property="article:section" content={articleSection} />}
+            {articleAuthor && <meta property="article:author" content={articleAuthor} />}
+            {articleTagsArray.map((tag, index) => (
+              <meta key={`article-tag-${index}`} property="article:tag" content={tag} />
+            ))}
+            {twitterCard && <meta name="twitter:card" content={twitterCard} />}
+            {resolvedTwitterTitle && <meta name="twitter:title" content={resolvedTwitterTitle} />}
+            {resolvedTwitterDescription && (
+              <meta name="twitter:description" content={resolvedTwitterDescription} />
+            )}
+            {resolvedTwitterImage && <meta name="twitter:image" content={resolvedTwitterImage} />}
+            {resolvedTwitterImageAlt && (
+              <meta name="twitter:image:alt" content={resolvedTwitterImageAlt} />
+            )}
+            {jsonLdArray.map((schema, index) => (
+              <script
+                key={`layout-jsonld-${index}`}
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+              />
+            ))}
+          </Helmet>
         <style jsx global>{`
           html {
             scroll-behavior: smooth;

@@ -1,9 +1,12 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import Heading from '@/components/common/Heading';
-import SeoHead from '@/components/seo/SeoHead';
 import { JsonLd } from '@/components/seo/JsonLd';
 
 const canonical = '/link-to-us';
+const defaultOgImage = 'https://www.calcmymoney.co.uk/og-image.png';
+const defaultRobots = 'index,follow,max-image-preview:large';
+const defaultTwitterCard = 'summary_large_image';
 
 export default function LinkToUs() {
   const breadcrumb = {
@@ -43,11 +46,32 @@ export default function LinkToUs() {
 
   return (
     <div className="bg-white dark:bg-gray-900">
-      <SeoHead
-        title="Embed Our Calculators | CalcMyMoney"
-        desc="Free, embeddable UK salary, mortgage and energy cap widgets with live data."
-        canonical={canonical}
-      />
+      <Helmet>
+        <title>Embed Our Calculators | CalcMyMoney</title>
+        <meta
+          name="description"
+          content="Free, embeddable UK salary, mortgage and energy cap widgets with live data."
+        />
+        <meta name="robots" content={defaultRobots} />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:title" content="Embed Our Calculators | CalcMyMoney" />
+        <meta
+          property="og:description"
+          content="Free, embeddable UK salary, mortgage and energy cap widgets with live data."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:image" content={defaultOgImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content={defaultTwitterCard} />
+        <meta name="twitter:title" content="Embed Our Calculators | CalcMyMoney" />
+        <meta
+          name="twitter:description"
+          content="Free, embeddable UK salary, mortgage and energy cap widgets with live data."
+        />
+        <meta name="twitter:image" content={defaultOgImage} />
+      </Helmet>
       <JsonLd data={breadcrumb} />
 
       <div className="bg-gray-50 dark:bg-gray-800/40 border-b border-gray-200 dark:border-gray-700">
@@ -144,4 +168,3 @@ export default function LinkToUs() {
     </div>
   );
 }
-

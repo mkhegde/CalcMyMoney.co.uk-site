@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Baby, Calculator, AlertCircle } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
@@ -8,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = [
   'child benefit calculator',
@@ -138,19 +138,30 @@ export default function ChildBenefitCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <SeoHead
-        title="Child Benefit Calculator | Child Benefit Calculator 2024"
-        description={metaDescription}
-        canonical={canonicalUrl}
-        ogTitle="Child Benefit Calculator | Child Benefit Calculator 2024"
-        ogDescription={metaDescription}
-        ogUrl={canonicalUrl}
-        ogType="website"
-        ogSiteName="Calc My Money"
-        twitterTitle="Child Benefit Calculator | Child Benefit Calculator 2024"
-        twitterDescription={metaDescription}
-        jsonLd={[webpageSchema]}
-      />
+      <Helmet>
+        <title>Child Benefit Calculator | Child Benefit Calculator 2024</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={keywords.join(', ')} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta
+          property="og:title"
+          content="Child Benefit Calculator | Child Benefit Calculator 2024"
+        />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Calc My Money" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Child Benefit Calculator | Child Benefit Calculator 2024"
+        />
+        <meta name="twitter:description" content={metaDescription} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
+        />
+      </Helmet>
 
       <section className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">

@@ -1,18 +1,37 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Calculator } from 'lucide-react';
-import SeoHead from '@/components/seo/SeoHead';
 import { JsonLd } from '@/components/seo/JsonLd';
 import Heading from '@/components/common/Heading';
 
 const canonical = 'https://www.calcmymoney.co.uk/blog/why-small-calculations-matter';
 const title = 'The Math Behind a Good Life: Why Small Money Calculations Change Big Outcomes';
 const description =
-  'We work hard for every pound. Here’s how tiny money calculations—salary, tax, mortgage, budgeting—create calm, confident decisions.';
+  'We work hard for every pound. Here's how tiny money calculations-salary, tax, mortgage, budgeting-create calm, confident decisions.';
+const defaultOgImage = 'https://www.calcmymoney.co.uk/og-image.png';
+const defaultRobots = 'index,follow,max-image-preview:large';
+const defaultTwitterCard = 'summary_large_image';
 
 export default function BlogWhyCalculationsMatter() {
   return (
     <div className="bg-white dark:bg-gray-900">
-      <SeoHead title="Why Small Money Calculations Matter | CalcMyMoney" desc={description} canonical={canonical} />
+      <Helmet>
+        <title>Why Small Money Calculations Matter | CalcMyMoney</title>
+        <meta name="description" content={description} />
+        <meta name="robots" content={defaultRobots} />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:title" content="Why Small Money Calculations Matter | CalcMyMoney" />
+        <meta property="og:description" content={description} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:image" content={defaultOgImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content={defaultTwitterCard} />
+        <meta name="twitter:title" content="Why Small Money Calculations Matter | CalcMyMoney" />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={defaultOgImage} />
+      </Helmet>
       <JsonLd
         data={{
           '@context': 'https://schema.org',
@@ -214,4 +233,3 @@ export default function BlogWhyCalculationsMatter() {
     </div>
   );
 }
-

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Baby, Calculator, PiggyBank } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -19,7 +20,6 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import SeoHead from '@/components/seo/SeoHead';
 
 const keywords = [
   'childcare cost calculator',
@@ -122,19 +122,24 @@ export default function ChildcareCostCalculatorPage() {
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <SeoHead
-        title="Childcare Cost Calculator | Childcare Calculator"
-        description={metaDescription}
-        canonical={canonicalUrl}
-        ogTitle="Childcare Cost Calculator | Childcare Calculator"
-        ogDescription={metaDescription}
-        ogUrl={canonicalUrl}
-        ogType="website"
-        ogSiteName="Calc My Money"
-        twitterTitle="Childcare Cost Calculator | Childcare Calculator"
-        twitterDescription={metaDescription}
-        jsonLd={[webpageSchema]}
-      />
+      <Helmet>
+        <title>Childcare Cost Calculator | Childcare Calculator</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={keywords.join(', ')} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content="Childcare Cost Calculator | Childcare Calculator" />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Calc My Money" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Childcare Cost Calculator | Childcare Calculator" />
+        <meta name="twitter:description" content={metaDescription} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
+        />
+      </Helmet>
 
       <section className="bg-gradient-to-r from-pink-900 via-rose-900 to-pink-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
