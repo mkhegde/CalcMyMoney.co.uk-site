@@ -1,325 +1,412 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, CreditCard, Percent, Gauge } from 'lucide-react';
+import React, { Suspense, useMemo, useState } from 'react';
+import { Calculator, CreditCard, Percent, Gauge, Quote, BookOpen } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+
+const ResultBreakdownChart = React.lazy(() => import('@/components/calculators/ResultBreakdownChart.jsx'));
 
 const keywords = [
   'car payment calculator',
   'auto payment calculator',
-  'car loan payment calculator',
   'monthly car payment calculator',
   'vehicle payment calculator',
+  'car loan payment calculator',
 ];
 
 const metaDescription =
-  'Use our car payment calculator and auto payment calculator to estimate car loan payment calculator results, monthly car payment calculator schedules, and total interest before buying.';
+  'Estimate monthly car loan payments, total interest, and affordability with the UK car payment calculator. See how deposit and term choices change the repayments.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/car-payment-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+const pagePath = '/calculators/car-payment-calculator';
+const pageTitle = 'Car Payment Calculator | UK Monthly Auto Repayments';
 
-const currencyFormatter = (value) =>
-  Number.isFinite(value)
-    ? value.toLocaleString('en-GB', {
-        style: 'currency',
-        currency: 'GBP',
-        minimumFractionDigits: 0,
-      })
-    : '£0';
-
-const carPaymentFaqs = [
+const faqItems = [
   {
-    question: 'How do I include optional extras or fees?',
+    question: 'What information do I need to use this calculator?',
     answer:
-      'Add them to the loan amount. The car loan payment calculator assumes the financed balance already includes administration fees, negative equity, or warranties you roll into the agreement.',
+      'Enter the total amount to finance, your deposit, the APR offered, and the number of months in the agreement. The calculator shows the monthly repayment and total interest.',
   },
   {
-    question: 'Can I see the interest breakdown?',
+    question: 'How can I reduce my monthly car payment?',
     answer:
-      'Yes. The results show total interest paid across the term. Shorter terms and lower APRs dramatically reduce the interest highlighted by the vehicle payment calculator.',
+      'Increase your deposit, extend the term, or secure a lower APR. Beware that longer terms increase total interest, so balance affordability against cost.',
   },
   {
-    question: 'What is a good debt-to-income ratio for car loans?',
+    question: 'Does the calculator account for fees?',
     answer:
-      'Most lenders prefer car payments below 15% of gross monthly income. Use the monthly car payment calculator to test affordability before you apply.',
+      'Add any fees to the financed amount before running the calculation. That way the monthly payment and total interest reflect the actual balance you owe.',
   },
 ];
 
-const calculateCarPayment = ({ loanAmount, deposit, apr, termMonths }) => {
-  const principal = Math.max(loanAmount - deposit, 0);
-  const months = Math.max(termMonths, 1);
-  const monthlyRate = Math.max(apr, 0) / 100 / 12;
+const emotionalMessage =
+  'Know the monthly hit to your cash flow before you fall in love with the car. Clarity today prevents stress tomorrow.';
 
-  let monthlyPayment = 0;
-  if (monthlyRate === 0) {
-    monthlyPayment = principal / months;
-  } else {
-    const factor = (1 + monthlyRate) ** months;
-    monthlyPayment = principal * (monthlyRate * factor) / (factor - 1);
-  }
+const emotionalQuote = {
+  text: 'The safe way to double your money is to fold it over once and put it in your pocket.',
+  author: 'Kin Hubbard',
+};
 
-  const totalPaid = monthlyPayment * months;
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 2,
+});
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+function calculateCarPayment({ loanAmount, deposit, apr, termMonths }) {
+  const amount = parseNumber(loanAmount);
+  const upfront = parseNumber(deposit);
+  const rate = parseNumber(apr) / 100;
+  const months = Math.max(parseNumber(termMonths), 1);
+
+  const principal = Math.max(amount - upfront, 0);
+  const monthlyRate = rate / 12;
+  const hasInterest = monthlyRate > 0;
+  const payment = hasInterest
+    ? (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months))
+    : principal / months;
+
+  const totalPaid = payment * months;
   const totalInterest = totalPaid - principal;
 
   return {
     principal,
-    monthlyPayment,
+    monthlyPayment: payment,
     totalPaid,
     totalInterest,
     monthlyRate,
+    months,
   };
-};
+}
 
 export default function CarPaymentCalculatorPage() {
   const [inputs, setInputs] = useState({
-    loanAmount: 18000,
-    deposit: 0,
-    apr: 6.5,
-    termMonths: 60,
+    loanAmount: '18,000',
+    deposit: '2,500',
+    apr: '8.9',
+    termMonths: '48',
+    monthlyIncome: '3,200',
+  });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
+
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Car Payment Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Transport & Motoring Calculators', url: '/calculators#transport' },
+      { name: 'Car Payment Calculator', url: pagePath },
+    ],
+    faq: faqItems,
   });
 
-  const results = useMemo(
-    () =>
-      calculateCarPayment({
-        loanAmount: Number(inputs.loanAmount) || 0,
-        deposit: Number(inputs.deposit) || 0,
-        apr: Number(inputs.apr) || 0,
-        termMonths: Number(inputs.termMonths) || 0,
-      }),
-    [inputs]
-  );
+  const affordability = useMemo(() => {
+    if (!results || !hasCalculated) return null;
+    const income = parseNumber(inputs.monthlyIncome);
+    if (income <= 0) return null;
+    const ratio = (results.monthlyPayment / income) * 100;
+    return ratio;
+  }, [results, hasCalculated, inputs.monthlyIncome]);
 
-  const resetAll = () =>
+  const chartData = useMemo(() => {
+    if (!results || !hasCalculated) return [];
+    return [
+      { name: 'Principal repaid', value: results.principal, color: '#2563eb' },
+      { name: 'Interest paid', value: results.totalInterest, color: '#f97316' },
+    ].filter((segment) => segment.value > 0);
+  }, [results, hasCalculated]);
+
+  const handleInputChange = (field) => (event) => {
+    const { value } = event.target;
+    setInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const computed = calculateCarPayment(inputs);
+    setHasCalculated(true);
+    setResults(computed);
+
+    setCsvData([
+      ['Loan amount', currencyFormatter.format(parseNumber(inputs.loanAmount))],
+      ['Deposit', currencyFormatter.format(parseNumber(inputs.deposit))],
+      ['APR', `${inputs.apr}%`],
+      ['Term (months)', computed.months],
+      ['Monthly payment', currencyFormatter.format(computed.monthlyPayment)],
+      ['Total interest', currencyFormatter.format(computed.totalInterest)],
+      ['Total paid', currencyFormatter.format(computed.totalPaid)],
+      ['Monthly income', currencyFormatter.format(parseNumber(inputs.monthlyIncome))],
+      ['Payment to income ratio', affordability !== null ? `${affordability.toFixed(1)}%` : 'n/a'],
+    ]);
+  };
+
+  const handleReset = () => {
     setInputs({
-      loanAmount: 18000,
-      deposit: 0,
-      apr: 6.5,
-      termMonths: 60,
+      loanAmount: '18,000',
+      deposit: '2,500',
+      apr: '8.9',
+      termMonths: '48',
+      monthlyIncome: '3,200',
     });
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Car Payment Calculator | Auto Payment Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Car Payment Calculator | Auto Payment Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Car Payment Calculator | Auto Payment Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Car Payment Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate payments with a car payment calculator',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
-
-      <section className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Car Payment Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
-            Convert loan offers into clear monthly repayments, compare APRs, and plan the impact on your
-            household budget before you buy.
-          </p>
-        </div>
-      </section>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
       <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-indigo-200 bg-white text-slate-900 shadow-md dark:border-indigo-900 dark:bg-slate-950 dark:text-slate-100">
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-violet-600/10 text-violet-700 dark:bg-violet-500/20 dark:text-violet-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Car Payment Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Estimate monthly repayments for UK car loans. Adjust deposit, APR, and term to test what
+              fits your income before you apply.
+            </p>
+          </header>
+
+          <section className="rounded-xl border border-violet-100 bg-white p-6 shadow-sm dark:border-violet-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Keep repayments within reach
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
+              </div>
+              <blockquote className="max-w-sm rounded-lg border border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-900 shadow-sm dark:border-violet-800/60 dark:bg-violet-950/40 dark:text-violet-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
+                </div>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <CreditCard className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CreditCard className="h-5 w-5 text-violet-600 dark:text-violet-300" aria-hidden="true" />
                   Loan inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="loanAmount">Loan amount (£)</Label>
-                  <Input
-                    id="loanAmount"
-                    type="number"
-                    min="0"
-                    step="100"
-                    inputMode="decimal"
-                    value={inputs.loanAmount}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        loanAmount: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="deposit">Deposit / Cash (£)</Label>
-                  <Input
-                    id="deposit"
-                    type="number"
-                    min="0"
-                    step="100"
-                    inputMode="decimal"
-                    value={inputs.deposit}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        deposit: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="loanAmount">Amount to finance (£)</Label>
+                      <Input
+                        id="loanAmount"
+                        inputMode="decimal"
+                        value={inputs.loanAmount}
+                        onChange={handleInputChange('loanAmount')}
+                        placeholder="e.g. 18,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deposit">Deposit (£)</Label>
+                      <Input
+                        id="deposit"
+                        inputMode="decimal"
+                        value={inputs.deposit}
+                        onChange={handleInputChange('deposit')}
+                        placeholder="e.g. 2,500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="apr">APR (% per year)</Label>
+                      <Input
+                        id="apr"
+                        inputMode="decimal"
+                        value={inputs.apr}
+                        onChange={handleInputChange('apr')}
+                        placeholder="e.g. 8.9"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="termMonths">Term (months)</Label>
+                      <Input
+                        id="termMonths"
+                        inputMode="numeric"
+                        value={inputs.termMonths}
+                        onChange={handleInputChange('termMonths')}
+                        placeholder="e.g. 48"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyIncome">Monthly household income (£)</Label>
+                      <Input
+                        id="monthlyIncome"
+                        inputMode="decimal"
+                        value={inputs.monthlyIncome}
+                        onChange={handleInputChange('monthlyIncome')}
+                        placeholder="e.g. 3,200"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate payment
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-indigo-200 bg-white text-slate-900 shadow-md dark:border-indigo-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Percent className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                  Finance terms
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="termMonths">Term (months)</Label>
-                  <Slider
-                    id="termMonths"
-                    className="mt-3"
-                    value={[Number(inputs.termMonths)]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        termMonths: Number(value[0].toFixed(0)),
-                      }))
-                    }
-                    min={12}
-                    max={84}
-                    step={1}
-                  />
-                  <div className="flex justify-between text-sm text-indigo-700 dark:text-indigo-200">
-                    <span>12</span>
-                    <span>{inputs.termMonths} months</span>
-                    <span>84</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="apr">APR (%)</Label>
-                  <Slider
-                    id="apr"
-                    className="mt-3"
-                    value={[Number(inputs.apr)]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        apr: Number(value[0].toFixed(1)),
-                      }))
-                    }
-                    min={0}
-                    max={20}
-                    step={0.1}
-                  />
-                  <div className="flex justify-between text-sm text-indigo-700 dark:text-indigo-200">
-                    <span>0%</span>
-                    <span>{inputs.apr.toFixed(1)}%</span>
-                    <span>20%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter the finance details and press{' '}
+                    <span className="font-semibold">Calculate payment</span> to see monthly costs and
+                    total interest.
+                  </CardContent>
+                </Card>
+              )}
 
-            <Button variant="outline" className="w-full" onClick={resetAll}>
-              Reset calculator
-            </Button>
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-violet-200 bg-white shadow-sm dark:border-violet-900 dark:bg-violet-900/30 dark:text-violet-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Percent className="h-5 w-5 text-violet-600 dark:text-violet-200" aria-hidden="true" />
+                        Payment summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-violet-900 dark:text-violet-200">Monthly payment</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.monthlyPayment)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-violet-900 dark:text-violet-200">Total interest</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalInterest)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-violet-900 dark:text-violet-200">Total repaid</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalPaid)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-violet-900 dark:text-violet-200">Debt-to-income ratio</p>
+                        <p className="text-2xl font-semibold">
+                          {affordability !== null ? `${affordability.toFixed(1)}%` : 'n/a'}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="car-payment-results"
+                          title="Car payment calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Gauge className="h-5 w-5 text-violet-600 dark:text-violet-300" aria-hidden="true" />
+                        Principal versus interest
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Car payment breakdown" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <Card className="border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Gauge className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                  Monthly car payment calculator results
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span>Financed principal</span>
-                  <span>{currencyFormatter(results.principal)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Monthly payment</span>
-                  <span>{currencyFormatter(results.monthlyPayment)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Total interest paid</span>
-                  <span>{currencyFormatter(results.totalInterest)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Total amount payable</span>
-                  <span>{currencyFormatter(results.totalPaid)}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Car loan payment calculator and monthly car payment calculator tips
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-violet-600 dark:text-violet-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Keep the car budget balanced
               </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Shorter terms mean higher monthly car payment calculator outputs but markedly less
-                interest. Experiment with deposits and APR to reach a comfortable payment.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Vehicle payment calculator comparisons
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Compare dealer finance, bank loans, and credit union offers by matching term and APR. The
-                vehicle payment calculator makes it easy to see which lender offers the best overall cost.
-              </p>
-            </section>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Combine this repayment view with insurance, maintenance, and running costs so you’re clear
+              on the full monthly commitment before upgrading your vehicle.
+            </p>
+          </section>
 
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <FAQSection faqs={carPaymentFaqs} />
-            </section>
-          </div>
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
       </CalculatorWrapper>
     </div>
   );
 }
+

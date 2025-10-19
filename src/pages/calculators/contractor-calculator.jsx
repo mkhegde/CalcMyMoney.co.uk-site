@@ -1,15 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, PiggyBank, Receipt } from 'lucide-react';
+import { Calculator, PiggyBank, Receipt, Quote, BookOpen } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart.jsx';
 
 const keywords = [
   'contractor calculator',
@@ -18,96 +22,103 @@ const keywords = [
 ];
 
 const metaDescription =
-  'Use our contractor calculator to compare take-home pay, model contractor take home pay calculator scenarios, and optimise with a limited company contractor calculator.';
+  'Estimate UK contractor take-home pay using day rate, salary, dividends, expenses, pension contributions, and company costs.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/contractor-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+const pagePath = '/calculators/contractor-calculator';
+const pageTitle = 'Contractor Calculator | UK Limited Company Take-Home Pay';
 
-const taxBands = [
-  { min: 0, max: 12570, rate: 0 },
-  { min: 12571, max: 50270, rate: 0.2 },
-  { min: 50271, max: 125140, rate: 0.4 },
-  { min: 125141, max: Infinity, rate: 0.45 },
+const faqItems = [
+  {
+    question: 'How does the calculator treat dividends?',
+    answer:
+      'It assumes you draw a small salary up to the personal allowance and distribute remaining profits as dividends after corporation tax. Dividend tax bands are then applied.',
+  },
+  {
+    question: 'Can I include pension contributions and allowances?',
+    answer:
+      'Yes. Pension contributions and allowable business expenses reduce company profit, lowering corporation tax and increasing net dividends.',
+  },
+  {
+    question: 'Does this calculator consider IR35?',
+    answer:
+      'It models outside IR35 engagements. If your contract is inside IR35 you will be taxed via PAYE, so the actual take-home pay will be lower.',
+  },
 ];
 
-const niBands = [
-  { min: 0, max: 12570, rate: 0 },
-  { min: 12571, max: 50270, rate: 0.12 },
-  { min: 50271, max: Infinity, rate: 0.02 },
-];
+const emotionalMessage =
+  'Understanding your pay structure keeps your contract worthwhile. Test different rates, expenses, and draws so every invoice translates into real income.';
 
-const dividendBands = [
-  { min: 0, max: 1000, rate: 0 },
-  { min: 1001, max: 37500, rate: 0.0875 },
-  { min: 37501, max: 125140, rate: 0.3375 },
-  { min: 125141, max: Infinity, rate: 0.3935 },
-];
-
-const defaultInputs = {
-  dayRate: 500,
-  workingDays: 220,
-  expenses: 6000,
-  pensionContribution: 8000,
-  salary: 12570,
-  businessCostsPercent: 10,
-  accountingFees: 1200,
+const emotionalQuote = {
+  text: 'Do not save what is left after spending; instead spend what is left after saving.',
+  author: 'Warren Buffett',
 };
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
 });
 
-const percentageFormatter = new Intl.NumberFormat('en-GB', {
-  maximumFractionDigits: 2,
-});
-
-const calculateTax = (income, bands) => {
-  let remaining = income;
-  let tax = 0;
-
-  for (const band of bands) {
-    if (remaining <= 0) break;
-    const bandUpper =
-      band.max === Infinity
-        ? remaining
-        : Math.min(remaining, band.max - band.min + (band.min === 0 ? 0 : 1));
-    const taxable = Math.max(bandUpper - (band.min === 0 ? 0 : 1), 0);
-    tax += taxable * band.rate;
-    remaining -= taxable;
-  }
-
-  return Math.max(tax, 0);
-};
-
-const contractorFaqs = [
-  {
-    question: 'How does this contractor calculator handle dividends?',
-    answer:
-      'The calculator assumes you take a modest salary up to the primary threshold, with the remainder paid as dividends after corporation tax. Dividend tax bands are applied to show the impact on your take-home pay.',
-  },
-  {
-    question: 'Can I model pension contributions and expenses?',
-    answer:
-      'Yes. Add annual pension contributions, business expenses, or professional fees. These reduce your taxable company profit, which in turn lowers corporation tax and increases available dividends.',
-  },
-  {
-    question: 'What about IR35 considerations?',
-    answer:
-      'This calculator focuses on outside IR35 contracts. If you are deemed inside IR35, you will be taxed like an employee via PAYE, so the take-home figure will be significantly lower. Always confirm IR35 status before relying on the estimates.',
-  },
+const taxBands = [
+  { min: 0, max: 12570, rate: 0 },
+  { min: 12570, max: 50270, rate: 0.2 },
+  { min: 50270, max: 125140, rate: 0.4 },
+  { min: 125140, max: Infinity, rate: 0.45 },
 ];
 
-const computeContractorTakeHome = (inputs) => {
-  const dayRate = Number(inputs.dayRate) || 0;
-  const workingDays = Number(inputs.workingDays) || 0;
-  const expenses = Number(inputs.expenses) || 0;
-  const pensionContribution = Number(inputs.pensionContribution) || 0;
-  const salary = Number(inputs.salary) || 0;
-  const businessCostsPercent = Number(inputs.businessCostsPercent) || 0;
-  const accountingFees = Number(inputs.accountingFees) || 0;
+const niBands = [
+  { min: 0, max: 12570, rate: 0 },
+  { min: 12570, max: 50270, rate: 0.12 },
+  { min: 50270, max: Infinity, rate: 0.02 },
+];
+
+const dividendBands = [
+  { min: 0, max: 1000, rate: 0 },
+  { min: 1000, max: 1000 + 37500, rate: 0.0875 },
+  { min: 1000 + 37500, max: 125140, rate: 0.3375 },
+  { min: 125140, max: Infinity, rate: 0.3935 },
+];
+
+const defaultInputs = {
+  dayRate: '500',
+  workingDays: '220',
+  expenses: '6,000',
+  pensionContribution: '8,000',
+  salary: '12,570',
+  businessCostsPercent: '10',
+  accountingFees: '1,200',
+};
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const calculateBandTax = (income, bands) => {
+  let tax = 0;
+  for (const band of bands) {
+    if (income > band.min) {
+      const upperLimit = Math.min(income, band.max);
+      const taxable = Math.max(upperLimit - band.min, 0);
+      tax += taxable * band.rate;
+    } else {
+      break;
+    }
+  }
+  return tax;
+};
+
+function computeContractorTakeHome(inputs) {
+  const dayRate = parseNumber(inputs.dayRate);
+  const workingDays = parseNumber(inputs.workingDays);
+  const expenses = parseNumber(inputs.expenses);
+  const pensionContribution = parseNumber(inputs.pensionContribution);
+  const salary = parseNumber(inputs.salary);
+  const businessCostsPercent = parseNumber(inputs.businessCostsPercent);
+  const accountingFees = parseNumber(inputs.accountingFees);
 
   const grossRevenue = dayRate * workingDays;
   const businessCosts = (grossRevenue * businessCostsPercent) / 100;
@@ -119,10 +130,9 @@ const computeContractorTakeHome = (inputs) => {
   const postTaxProfit = Math.max(companyProfitBeforeTax - corporationTax, 0);
 
   const dividends = Math.max(postTaxProfit, 0);
-
-  const incomeTax = calculateTax(salary, taxBands);
-  const nationalInsurance = calculateTax(salary, niBands);
-  const dividendTax = calculateTax(dividends, dividendBands);
+  const incomeTax = calculateBandTax(salary, taxBands);
+  const nationalInsurance = calculateBandTax(salary, niBands);
+  const dividendTax = calculateBandTax(dividends, dividendBands);
 
   const takeHome =
     salary + dividends - incomeTax - nationalInsurance - dividendTax - accountingFees - expenses;
@@ -142,305 +152,332 @@ const computeContractorTakeHome = (inputs) => {
     nationalInsurance,
     dividendTax,
     takeHome,
+    expenses,
+    accountingFees,
     effectiveRate,
   };
-};
+}
 
 export default function ContractorCalculatorPage() {
   const [inputs, setInputs] = useState(defaultInputs);
-  const results = useMemo(() => computeContractorTakeHome(inputs), [inputs]);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const resetInputs = () => setInputs(defaultInputs);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Contractor Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Business & Freelancing Calculators', url: '/calculators#business-freelancing' },
+      { name: 'Contractor Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
+
+  const chartData = useMemo(() => {
+    if (!results || !hasCalculated) return [];
+    const taxes = results.incomeTax + results.nationalInsurance + results.dividendTax + results.corporationTax;
+    const costs = results.expenses + results.accountingFees + results.businessCosts;
+    return [
+      { name: 'Net take-home', value: Math.max(results.takeHome, 0), color: '#10b981' },
+      { name: 'Total tax', value: Math.max(taxes, 0), color: '#f97316' },
+      { name: 'Business costs', value: Math.max(costs, 0), color: '#0ea5e9' },
+    ].filter((segment) => segment.value > 0);
+  }, [results, hasCalculated]);
+
+  const handleInputChange = (field) => (event) => {
+    const { value } = event.target;
+    setInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const computed = computeContractorTakeHome(inputs);
+    setHasCalculated(true);
+    setResults(computed);
+
+    setCsvData([
+      ['Day rate', currencyFormatter.format(parseNumber(inputs.dayRate))],
+      ['Working days per year', inputs.workingDays],
+      ['Gross revenue', currencyFormatter.format(computed.grossRevenue)],
+      ['Salary', currencyFormatter.format(computed.salary)],
+      ['Dividends', currencyFormatter.format(computed.dividends)],
+      ['Income tax', currencyFormatter.format(computed.incomeTax)],
+      ['National Insurance', currencyFormatter.format(computed.nationalInsurance)],
+      ['Dividend tax', currencyFormatter.format(computed.dividendTax)],
+      ['Corporation tax', currencyFormatter.format(computed.corporationTax)],
+      ['Business costs', currencyFormatter.format(computed.businessCosts)],
+      ['Expenses', currencyFormatter.format(computed.expenses)],
+      ['Accounting fees', currencyFormatter.format(computed.accountingFees)],
+      ['Net take-home', currencyFormatter.format(computed.takeHome)],
+      ['Effective take-home rate', `${computed.effectiveRate.toFixed(1)}%`],
+    ]);
+  };
+
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Contractor Calculator | Contractor Take Home Pay Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta
-          property="og:title"
-          content="Contractor Calculator | Contractor Take Home Pay Calculator"
-        />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:title"
-          content="Contractor Calculator | Contractor Take Home Pay Calculator"
-        />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Contractor Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate contractor take home pay',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Contractor Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
-            Compare day rates, salary, and dividends to understand your contractor take-home pay and
-            optimise your limited company setup.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Contractor Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Estimate day-rate income, corporation tax, salary, and dividends to see your take-home pay when working through a UK limited company.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
-          <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-emerald-500" />
-                Contract Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div>
-                <Label htmlFor="dayRate" className="text-sm font-medium">
-                  Day rate (£)
-                </Label>
-                <Input
-                  id="dayRate"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  value={inputs.dayRate}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, dayRate: Number(event.target.value) }))
-                  }
-                />
+          <section className="rounded-xl border border-emerald-100 bg-white p-6 shadow-sm dark:border-emerald-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Plan your contract income with clarity
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
               </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Working days per year
-                  <span className="text-emerald-600 font-semibold">{inputs.workingDays}</span>
-                </Label>
-                <Slider
-                  value={[inputs.workingDays]}
-                  onValueChange={(value) =>
-                    setInputs((prev) => ({ ...prev, workingDays: value[0] }))
-                  }
-                  min={100}
-                  max={260}
-                  step={5}
-                />
-              </div>
-              <div>
-                <Label htmlFor="expenses" className="text-sm font-medium">
-                  Allowable expenses (£/year)
-                </Label>
-                <Input
-                  id="expenses"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  value={inputs.expenses}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, expenses: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="pensionContribution" className="text-sm font-medium">
-                  Pension contribution (£/year)
-                </Label>
-                <Input
-                  id="pensionContribution"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  value={inputs.pensionContribution}
-                  onChange={(event) =>
-                    setInputs((prev) => ({
-                      ...prev,
-                      pensionContribution: Number(event.target.value),
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="salary" className="text-sm font-medium">
-                  Director salary (£/year)
-                </Label>
-                <Input
-                  id="salary"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  value={inputs.salary}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, salary: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Business costs (% of revenue)
-                  <span className="text-emerald-600 font-semibold">
-                    {percentageFormatter.format(inputs.businessCostsPercent)}%
-                  </span>
-                </Label>
-                <Slider
-                  value={[inputs.businessCostsPercent]}
-                  onValueChange={(value) =>
-                    setInputs((prev) => ({ ...prev, businessCostsPercent: value[0] }))
-                  }
-                  min={0}
-                  max={25}
-                  step={0.5}
-                />
-              </div>
-              <div>
-                <Label htmlFor="accountingFees" className="text-sm font-medium">
-                  Accounting & insurances (£/year)
-                </Label>
-                <Input
-                  id="accountingFees"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  value={inputs.accountingFees}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, accountingFees: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <Button onClick={resetInputs} variant="outline" className="w-full">
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+              <blockquote className="max-w-sm rounded-lg border border-emerald-200 bg-emerald-50/70 p-4 text-sm text-emerald-900 shadow-sm dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
+                </div>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
 
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/30">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
-                  <PiggyBank className="h-5 w-5" />
-                  Contractor Take-Home Summary
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Receipt className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                  Contract inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid md:grid-cols-4 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Gross revenue</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.grossRevenue)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Take-home pay</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.takeHome)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Effective rate</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {percentageFormatter.format(results.effectiveRate)}%
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Dividends</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.dividends)}
-                  </p>
-                </div>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="dayRate">Day rate (£)</Label>
+                      <Input
+                        id="dayRate"
+                        inputMode="decimal"
+                        value={inputs.dayRate}
+                        onChange={handleInputChange('dayRate')}
+                        placeholder="e.g. 500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="workingDays">Working days per year</Label>
+                      <Input
+                        id="workingDays"
+                        inputMode="numeric"
+                        value={inputs.workingDays}
+                        onChange={handleInputChange('workingDays')}
+                        placeholder="e.g. 220"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="expenses">Allowable expenses (£/year)</Label>
+                      <Input
+                        id="expenses"
+                        inputMode="decimal"
+                        value={inputs.expenses}
+                        onChange={handleInputChange('expenses')}
+                        placeholder="e.g. 6,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pensionContribution">Pension contribution (£/year)</Label>
+                      <Input
+                        id="pensionContribution"
+                        inputMode="decimal"
+                        value={inputs.pensionContribution}
+                        onChange={handleInputChange('pensionContribution')}
+                        placeholder="e.g. 8,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="salary">Director salary (£/year)</Label>
+                      <Input
+                        id="salary"
+                        inputMode="decimal"
+                        value={inputs.salary}
+                        onChange={handleInputChange('salary')}
+                        placeholder="e.g. 12,570"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="businessCostsPercent">Business costs (% of revenue)</Label>
+                      <Input
+                        id="businessCostsPercent"
+                        inputMode="decimal"
+                        value={inputs.businessCostsPercent}
+                        onChange={handleInputChange('businessCostsPercent')}
+                        placeholder="e.g. 10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="accountingFees">Accounting & insurances (£/year)</Label>
+                      <Input
+                        id="accountingFees"
+                        inputMode="decimal"
+                        value={inputs.accountingFees}
+                        onChange={handleInputChange('accountingFees')}
+                        placeholder="e.g. 1,200"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate take-home
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Receipt className="h-5 w-5 text-slate-600" />
-                  Tax Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-2">
-                    Income tax & NI
-                  </h3>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.incomeTax + results.nationalInsurance)}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
-                    Salary of {currencyFormatter.format(results.salary)} triggers{' '}
-                    {currencyFormatter.format(results.incomeTax)} income tax and{' '}
-                    {currencyFormatter.format(results.nationalInsurance)} National Insurance.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-2">
-                    Corporation & dividend tax
-                  </h3>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.corporationTax + results.dividendTax)}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
-                    Corporation tax of {currencyFormatter.format(results.corporationTax)} and
-                    dividend tax of {currencyFormatter.format(results.dividendTax)} apply after
-                    expenses and pension contributions.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter contract details and press{' '}
+                    <span className="font-semibold">Calculate take-home</span> to view contractor pay,
+                    taxes, and dividends.
+                  </CardContent>
+                </Card>
+              )}
 
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Contractor take home pay calculator scenarios
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Adjust expenses, salary, and pension contributions to see how the contractor take
-                home pay calculator impacts your net earnings. Running multiple scenarios helps you
-                decide whether to increase pension savings or tweak your salary/dividend split.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Limited company contractor calculator insights
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Enter updated day rates when negotiating contracts. The limited company contractor
-                calculator reveals how much revenue you need to reach target take-home pay after
-                corporation tax, dividend tax, and your chosen expenses.
-              </p>
-            </section>
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-emerald-200 bg-white shadow-sm dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-emerald-600 dark:text-emerald-200" aria-hidden="true" />
+                        Contractor summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Gross revenue</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.grossRevenue)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Net take-home pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.takeHome)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Effective take-home rate</p>
+                        <p className="text-2xl font-semibold">{results.effectiveRate.toFixed(1)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Corporation tax</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.corporationTax)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Income tax & NI</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.incomeTax + results.nationalInsurance)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Dividend tax</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.dividendTax)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="contractor-take-home"
+                          title="Contractor calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                        Cash flow breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResultBreakdownChart data={chartData} title="Contractor pay distribution" />
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Keep more of what you earn
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Review your salary and dividend mix each tax year, set aside corporation tax as you go,
+              and explore pension contributions to reduce your overall tax bill.
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
       </CalculatorWrapper>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={contractorFaqs} />
-        </div>
-      </section>
     </div>
   );
 }
+

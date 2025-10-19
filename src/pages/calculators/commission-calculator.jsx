@@ -1,413 +1,462 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Percent, Wallet } from 'lucide-react';
+import React, { Suspense, useMemo, useState } from 'react';
+import { Calculator, Percent, Wallet, Quote, BookOpen } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 
-const commissionKeywords = [
+const ResultBreakdownChart = React.lazy(() => import('@/components/calculators/ResultBreakdownChart.jsx'));
+
+const keywords = [
   'commission calculator',
   'sales commission calculator',
   'commission pay calculator',
+  'uk commission calculator',
 ];
 
 const metaDescription =
-  'Use our commission calculator to model earnings, compare sales commission calculator tiers, and plan each commission pay calculator scenario before proposal time.';
+  'Plan UK sales commissions with base and accelerator rates. Calculate commission draw recovery, team bonus, and total take-home pay.';
 
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/commission-calculator';
+const pagePath = '/calculators/commission-calculator';
+const pageTitle = 'Commission Calculator | UK Sales Earnings Planner';
 
 const faqItems = [
   {
-    question: 'How do accelerators affect sales commission?',
+    question: 'How do sales accelerators work?',
     answer:
-      'Accelerators increase the commission rate once performance passes a sales threshold. Enter your quota or stretch target and the higher accelerator rate to see how much extra earnings you generate above goal.',
+      'An accelerator increases the commission rate once you exceed a target or quota. Enter your threshold and higher rate to see how much extra you earn after hitting goal.',
   },
   {
-    question: 'What is a commission draw and how is it applied?',
+    question: 'What is a draw against commission?',
     answer:
-      'A draw is an advance paid at the start of the period. When commissions are calculated the draw is subtracted from earnings. Use the draw field to see the take-home pay after recovering the advance.',
+      'A draw is an advance paid at the start of the period. When commission is calculated, the draw is deducted from earnings. Add draws in the calculator to see your true take-home pay.',
   },
   {
-    question: 'How can I compare monthly vs annual commission?',
+    question: 'Can I model team bonuses?',
     answer:
-      'Toggle between monthly and annual sales figures to see the impact on cash flow. If you work on quarterly targets, multiply the monthly output and align it with your payroll schedule so tax planning stays accurate.',
+      'Yes. Add a team bonus percentage to reward group performance. It is applied to total sales after individual commission is calculated.',
   },
 ];
 
-const defaultInputs = {
-  salesValue: 85000,
-  commissionRate: 7,
-  acceleratorThreshold: 60000,
-  acceleratorRate: 12,
-  teamBonusRate: 1.5,
-  baseSalary: 2500,
-  commissionDraw: 500,
+const emotionalMessage =
+  'Know your commission upside before every pitch. When you can see exactly what each sale delivers, targets become more than numbers.';
+
+const emotionalQuote = {
+  text: 'Success usually comes to those who are too busy to be looking for it.',
+  author: 'Henry David Thoreau',
 };
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
 });
 
-const percentageFormatter = new Intl.NumberFormat('en-GB', {
+const percentFormatter = new Intl.NumberFormat('en-GB', {
   maximumFractionDigits: 2,
 });
 
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+function calculateCommission({
+  salesValue,
+  commissionRate,
+  acceleratorThreshold,
+  acceleratorRate,
+  teamBonusRate,
+  baseSalary,
+  commissionDraw,
+}) {
+  const sales = parseNumber(salesValue);
+  const baseRate = parseNumber(commissionRate) / 100;
+  const threshold = parseNumber(acceleratorThreshold);
+  const accelRate = parseNumber(acceleratorRate) / 100;
+  const teamRate = parseNumber(teamBonusRate) / 100;
+  const salary = parseNumber(baseSalary);
+  const draw = parseNumber(commissionDraw);
+
+  const cappedSales = Math.min(sales, threshold);
+  const acceleratedSales = Math.max(sales - threshold, 0);
+
+  const baseCommission = cappedSales * baseRate;
+  const acceleratedCommission = acceleratedSales * Math.max(accelRate, baseRate);
+  const totalCommission = baseCommission + acceleratedCommission;
+  const teamBonus = sales * teamRate;
+  const grossPay = salary + totalCommission + teamBonus;
+  const netPay = Math.max(grossPay - draw, 0);
+
+  return {
+    baseCommission,
+    acceleratedCommission,
+    totalCommission,
+    teamBonus,
+    salary,
+    draw,
+    grossPay,
+    netPay,
+    sales,
+  };
+}
+
 export default function CommissionCalculatorPage() {
-  const [inputs, setInputs] = useState(defaultInputs);
+  const [inputs, setInputs] = useState({
+    salesValue: '85,000',
+    commissionRate: '7',
+    acceleratorThreshold: '60,000',
+    acceleratorRate: '12',
+    teamBonusRate: '1.5',
+    baseSalary: '2,500',
+    commissionDraw: '500',
+  });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const results = useMemo(() => {
-    const salesValue = Number(inputs.salesValue) || 0;
-    const commissionRate = Number(inputs.commissionRate) || 0;
-    const acceleratorThreshold = Number(inputs.acceleratorThreshold) || 0;
-    const acceleratorRate = Number(inputs.acceleratorRate) || 0;
-    const teamBonusRate = Number(inputs.teamBonusRate) || 0;
-    const baseSalary = Number(inputs.baseSalary) || 0;
-    const commissionDraw = Number(inputs.commissionDraw) || 0;
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-    const cappedSales = Math.min(salesValue, acceleratorThreshold);
-    const acceleratedSales = Math.max(salesValue - acceleratorThreshold, 0);
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Commission Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Business & Freelancing Calculators', url: '/calculators#business-freelancing' },
+      { name: 'Commission Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
 
-    const baseCommission = (cappedSales * commissionRate) / 100;
-    const acceleratedCommission = (acceleratedSales * acceleratorRate) / 100;
-    const grossCommission = baseCommission + acceleratedCommission;
+  const chartData = useMemo(() => {
+    if (!results || !hasCalculated) return [];
+    return [
+      { name: 'Base commission', value: results.baseCommission, color: '#2563eb' },
+      { name: 'Accelerated commission', value: results.acceleratedCommission, color: '#22c55e' },
+      { name: 'Team bonus', value: results.teamBonus, color: '#f97316' },
+      { name: 'Salary', value: results.salary, color: '#0ea5e9' },
+    ].filter((segment) => segment.value > 0);
+  }, [results, hasCalculated]);
 
-    const teamBonus = (salesValue * teamBonusRate) / 100;
-    const netCommission = Math.max(grossCommission - commissionDraw, 0);
-    const totalEarnings = netCommission + teamBonus + baseSalary;
-    const effectiveRate = salesValue > 0 ? (grossCommission / salesValue) * 100 : 0;
-
-    return {
-      salesValue,
-      baseCommission,
-      acceleratedCommission,
-      grossCommission,
-      commissionDraw,
-      netCommission,
-      teamBonus,
-      baseSalary,
-      totalEarnings,
-      effectiveRate,
-    };
-  }, [inputs]);
-
-  const updateInput = (field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = (field) => (event) => {
+    const { value } = event.target;
+    setInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const resetInputs = () => setInputs(defaultInputs);
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const computed = calculateCommission(inputs);
+    setHasCalculated(true);
+    setResults(computed);
+
+    setCsvData([
+      ['Sales achieved', currencyFormatter.format(computed.sales)],
+      ['Base commission rate', `${percentFormatter.format(parseNumber(inputs.commissionRate))}%`],
+      ['Accelerator threshold', currencyFormatter.format(parseNumber(inputs.acceleratorThreshold))],
+      ['Accelerator rate', `${percentFormatter.format(parseNumber(inputs.acceleratorRate))}%`],
+      ['Team bonus rate', `${percentFormatter.format(parseNumber(inputs.teamBonusRate))}%`],
+      ['Base commission', currencyFormatter.format(computed.baseCommission)],
+      ['Accelerated commission', currencyFormatter.format(computed.acceleratedCommission)],
+      ['Team bonus', currencyFormatter.format(computed.teamBonus)],
+      ['Base salary', currencyFormatter.format(computed.salary)],
+      ['Commission draw deducted', currencyFormatter.format(computed.draw)],
+      ['Gross pay', currencyFormatter.format(computed.grossPay)],
+      ['Net pay after draw', currencyFormatter.format(computed.netPay)],
+    ]);
+  };
+
+  const handleReset = () => {
+    setInputs({
+      salesValue: '85,000',
+      commissionRate: '7',
+      acceleratorThreshold: '60,000',
+      acceleratorRate: '12',
+      teamBonusRate: '1.5',
+      baseSalary: '2,500',
+      commissionDraw: '500',
+    });
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Commission Calculator | Sales Commission Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Commission Calculator | Sales Commission Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Commission Calculator | Sales Commission Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Commission Calculator',
-              description: metaDescription,
-              keywords: commissionKeywords,
-              url: canonicalUrl,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate sales commission',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Commission Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
-            Forecast commission earnings, accelerators, and bonuses with a flexible sales commission
-            calculator that keeps you on target.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Commission Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Model commission earnings for UK sales roles with base rates, accelerators, team bonuses,
+              and draws. See your expected take-home pay for any sales scenario.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-emerald-500" />
-                Sales Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div>
-                <Label htmlFor="salesValue" className="text-sm font-medium">
-                  Revenue this period (£)
-                </Label>
-                <Input
-                  id="salesValue"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  value={inputs.salesValue}
-                  onChange={(event) => updateInput('salesValue', Number(event.target.value))}
-                />
+          <section className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm dark:border-blue-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  Connect effort to earnings
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
               </div>
+              <blockquote className="max-w-sm rounded-lg border border-blue-200 bg-blue-50/70 p-4 text-sm text-blue-900 shadow-sm dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-blue-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
+                </div>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-blue-700 dark:text-blue-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Commission rate
-                    <span className="text-emerald-600 font-semibold">
-                      {percentageFormatter.format(inputs.commissionRate)}%
-                    </span>
-                  </Label>
-                  <Slider
-                    value={[inputs.commissionRate]}
-                    onValueChange={(value) => updateInput('commissionRate', value[0])}
-                    min={0}
-                    max={40}
-                    step={0.25}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="acceleratorThreshold" className="text-sm font-medium">
-                    Accelerator threshold (£)
-                  </Label>
-                  <Input
-                    id="acceleratorThreshold"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    value={inputs.acceleratorThreshold}
-                    onChange={(event) =>
-                      updateInput('acceleratorThreshold', Number(event.target.value))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Accelerator rate
-                    <span className="text-emerald-600 font-semibold">
-                      {percentageFormatter.format(inputs.acceleratorRate)}%
-                    </span>
-                  </Label>
-                  <Slider
-                    value={[inputs.acceleratorRate]}
-                    onValueChange={(value) => updateInput('acceleratorRate', value[0])}
-                    min={0}
-                    max={50}
-                    step={0.5}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Team bonus rate
-                    <span className="text-emerald-600 font-semibold">
-                      {percentageFormatter.format(inputs.teamBonusRate)}%
-                    </span>
-                  </Label>
-                  <Slider
-                    value={[inputs.teamBonusRate]}
-                    onValueChange={(value) => updateInput('teamBonusRate', value[0])}
-                    min={0}
-                    max={10}
-                    step={0.25}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="commissionDraw" className="text-sm font-medium">
-                    Recoverable draw (£)
-                  </Label>
-                  <Input
-                    id="commissionDraw"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    value={inputs.commissionDraw}
-                    onChange={(event) => updateInput('commissionDraw', Number(event.target.value))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="baseSalary" className="text-sm font-medium">
-                    Base salary this period (£)
-                  </Label>
-                  <Input
-                    id="baseSalary"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    value={inputs.baseSalary}
-                    onChange={(event) => updateInput('baseSalary', Number(event.target.value))}
-                  />
-                </div>
-              </div>
-
-              <Button onClick={resetInputs} variant="outline" className="w-full">
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/30">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
-                  <Wallet className="h-5 w-5" />
-                  Commission Snapshot
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Percent className="h-5 w-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+                  Commission structure
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid md:grid-cols-4 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Gross commission</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.grossCommission)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Net commission</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.netCommission)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Effective rate</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {percentageFormatter.format(results.effectiveRate)}%
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Total earnings</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.totalEarnings)}
-                  </p>
-                </div>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="salesValue">Sales achieved (£)</Label>
+                      <Input
+                        id="salesValue"
+                        inputMode="decimal"
+                        value={inputs.salesValue}
+                        onChange={handleInputChange('salesValue')}
+                        placeholder="e.g. 85,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="commissionRate">Commission rate (%)</Label>
+                      <Input
+                        id="commissionRate"
+                        inputMode="decimal"
+                        value={inputs.commissionRate}
+                        onChange={handleInputChange('commissionRate')}
+                        placeholder="e.g. 7"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="acceleratorThreshold">Accelerator threshold (£)</Label>
+                      <Input
+                        id="acceleratorThreshold"
+                        inputMode="decimal"
+                        value={inputs.acceleratorThreshold}
+                        onChange={handleInputChange('acceleratorThreshold')}
+                        placeholder="e.g. 60,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="acceleratorRate">Accelerator rate (%)</Label>
+                      <Input
+                        id="acceleratorRate"
+                        inputMode="decimal"
+                        value={inputs.acceleratorRate}
+                        onChange={handleInputChange('acceleratorRate')}
+                        placeholder="e.g. 12"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="teamBonusRate">Team bonus rate (%)</Label>
+                      <Input
+                        id="teamBonusRate"
+                        inputMode="decimal"
+                        value={inputs.teamBonusRate}
+                        onChange={handleInputChange('teamBonusRate')}
+                        placeholder="e.g. 1.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="baseSalary">Base salary (£)</Label>
+                      <Input
+                        id="baseSalary"
+                        inputMode="decimal"
+                        value={inputs.baseSalary}
+                        onChange={handleInputChange('baseSalary')}
+                        placeholder="e.g. 2,500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="commissionDraw">Commission draw (£)</Label>
+                      <Input
+                        id="commissionDraw"
+                        inputMode="decimal"
+                        value={inputs.commissionDraw}
+                        onChange={handleInputChange('commissionDraw')}
+                        placeholder="e.g. 500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate commission
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Percent className="h-5 w-5 text-slate-600" />
-                  Commission Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-2">
-                    Base tier
-                  </h3>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.baseCommission)}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
-                    Earned at {percentageFormatter.format(inputs.commissionRate)}% on the first £
-                    {inputs.acceleratorThreshold.toLocaleString('en-GB') || 0}.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-2">
-                    Accelerator
-                  </h3>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.acceleratedCommission)}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
-                    Applied at {percentageFormatter.format(inputs.acceleratorRate)}% above your
-                    threshold, rewarding over-performance.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-2">
-                    Bonuses
-                  </h3>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.teamBonus)}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
-                    Team bonus converts to {percentageFormatter.format(inputs.teamBonusRate)}% of
-                    revenue for collaborative wins.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-2">
-                    Draw recovery
-                  </h3>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    -{currencyFormatter.format(results.commissionDraw)}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
-                    Recoverable draw deducted to keep net commission realistic for payday planning.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter sales performance and commission structure, then press{' '}
+                    <span className="font-semibold">Calculate commission</span> to view your earnings
+                    breakdown.
+                  </CardContent>
+                </Card>
+              )}
 
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Sales commission calculator strategies for every plan
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Test different rates, thresholds, and draws to mirror your compensation plan. The
-                sales commission calculator highlights how accelerators and bonuses influence each
-                paycheque.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Turning insights into a commission pay calculator
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Share the results with finance or leadership to confirm targets. The commission pay
-                calculator makes it simple to model promotions, adjust for seasonal peaks, or check
-                that your draw policy supports healthy cash flow.
-              </p>
-            </section>
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-blue-200 bg-white shadow-sm dark:border-blue-900 dark:bg-blue-900/30 dark:text-blue-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-200" aria-hidden="true" />
+                        Earnings summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Base commission</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.baseCommission)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Accelerated commission</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.acceleratedCommission)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Team bonus</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.teamBonus)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Gross pay (inc. salary)</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.grossPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Draw deducted</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.draw)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Net pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.netPay)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="commission-calculator-results"
+                          title="Commission calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+                        Earnings breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Commission component mix" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Fine-tune your commission plan
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Use these figures in negotiations, agree fair accelerators, and align team bonuses with
+              company objectives so everyone benefits from growth.
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
       </CalculatorWrapper>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={faqItems} />
-        </div>
-      </section>
     </div>
   );
 }
+

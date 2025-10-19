@@ -1,11 +1,17 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Car, Train, Bus, Bike, Fuel, PiggyBank } from 'lucide-react';
+import React, { Suspense, useMemo, useState } from 'react';
+import { Calculator, Car, Train, Bus, Bike, Fuel, PiggyBank, Quote, BookOpen } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -13,553 +19,570 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 
-const commuteKeywords = ['commute cost calculator'];
+const ResultBreakdownChart = React.lazy(() => import('@/components/calculators/ResultBreakdownChart.jsx'));
+
+const keywords = ['commute cost calculator'];
+
 const metaDescription =
-  'Use our commute cost calculator to estimate how much your commute costs each week, track petrol, tickets, and parking, and compare travel choices before switching routes.';
+  'Estimate your UK commute cost by car, train, bus, or bike. Compare daily, monthly, and yearly travel expenses including parking, fuel, and extras.';
+
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/commute-cost-calculator';
+const pagePath = '/calculators/commute-cost-calculator';
+const pageTitle = 'Commute Cost Calculator | UK Travel Expense Planner';
 
 const faqItems = [
   {
-    question: 'Which expenses should I include in commute budgeting?',
+    question: 'What costs should I include for driving?',
     answer:
-      'Include fuel, parking, congestion or clean air charges, public transport tickets, cycling maintenance, and any tolls. For accuracy, factor in seasonal price changes and the value of occasional remote-working days.',
+      'Add fuel, parking, tolls, congestion charges, and maintenance. Enter the round-trip distance and MPG so the calculator can estimate fuel accurately.',
   },
   {
-    question: 'How do I compare public transport against driving?',
+    question: 'How do I compare public transport with driving?',
     answer:
-      'Model each option separately in the commute cost calculator by changing the travel mode. Adjust days in the office, monthly passes, and parking so you can see the annual impact of taking the train, bus, or car.',
+      'Run the calculation for each travel mode. For public transport you can enter daily ticket prices or a monthly pass. Comparing the annual totals helps you choose the best option.',
   },
   {
-    question: 'Can I add remote working or car sharing?',
+    question: 'Can I factor in remote working or car sharing?',
     answer:
-      'Yes. Reduce the number of commute days per week to reflect work-from-home patterns, or split daily fuel/parking costs when car sharing. The calculator updates instantly so you can experiment with different scenarios.',
+      'Yes. Reduce the commuting days per week to reflect remote working and divide parking or fuel in the parking/fuel inputs if costs are shared.',
   },
 ];
+
+const emotionalMessage =
+  'Your commute is part of your real salary. Keep the maths on your side so you can decide whether a new job, remote day, or travel pass actually pays off.';
+
+const emotionalQuote = {
+  text: 'The secret of getting ahead is getting started.',
+  author: 'Mark Twain',
+};
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 2,
+});
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
 
 const GALLON_TO_LITRE = 4.546;
 
-const defaultState = {
-  mode: 'car',
-  daysPerWeek: 4,
-  weeksPerYear: 46,
-  carDistance: 24,
-  mpg: 38,
-  fuelPrice: 1.62,
-  maintenancePerMile: 0.12,
-  parkingPerDay: 8,
-  ticketPerDay: 15,
-  monthlyPass: 280,
-  monthlyExtras: 25,
-  remoteDays: 1,
-};
-
 const modeOptions = [
-  { value: 'car', label: 'Car', icon: <Car className="h-4 w-4" /> },
-  { value: 'train', label: 'Train', icon: <Train className="h-4 w-4" /> },
-  { value: 'bus', label: 'Bus', icon: <Bus className="h-4 w-4" /> },
-  { value: 'bike', label: 'Bike', icon: <Bike className="h-4 w-4" /> },
+  { value: 'car', label: 'Car', icon: Car },
+  { value: 'train', label: 'Train', icon: Train },
+  { value: 'bus', label: 'Bus', icon: Bus },
+  { value: 'bike', label: 'Bike', icon: Bike },
 ];
 
-const calculateCarCosts = ({ carDistance, mpg, fuelPrice, maintenancePerMile, parkingPerDay }) => {
-  const fuelCostPerMile = mpg > 0 ? (fuelPrice * GALLON_TO_LITRE) / mpg : 0;
-  const variableCostPerMile = fuelCostPerMile + maintenancePerMile;
-  const dailyFuelCost = carDistance * variableCostPerMile;
-  const dailyParking = parkingPerDay;
-  const dailyTotal = dailyFuelCost + dailyParking;
-
-  return {
-    dailyTotal,
-    dailyFuelCost,
-    dailyParking,
-    costPerMile: variableCostPerMile,
-  };
+const defaultInputs = {
+  mode: 'car',
+  daysPerWeek: '4',
+  remoteDays: '1',
+  weeksPerYear: '46',
+  // Car specific
+  roundTripMiles: '24',
+  mpg: '38',
+  fuelPrice: '1.62',
+  maintenancePerMile: '0.12',
+  parkingPerDay: '8',
+  // Public transport
+  ticketPerDay: '15',
+  monthlyPass: '280',
+  // Bike
+  bikeMaintenancePerMonth: '25',
+  // Extras
+  monthlyExtras: '25',
 };
 
-const calculateTransitCosts = ({ ticketPerDay, monthlyPass, daysWorkingPerMonth }) => {
-  const monthlyTicketCost = monthlyPass > 0 ? monthlyPass : ticketPerDay * daysWorkingPerMonth;
-  const dailyCost =
-    daysWorkingPerMonth > 0 ? monthlyTicketCost / daysWorkingPerMonth : ticketPerDay;
+function calculateCommute(inputs) {
+  const mode = inputs.mode;
+  const daysPerWeek = Math.max(parseNumber(inputs.daysPerWeek), 0);
+  const remoteDays = Math.min(Math.max(parseNumber(inputs.remoteDays), 0), daysPerWeek);
+  const weeksPerYear = Math.max(parseNumber(inputs.weeksPerYear), 0);
+
+  const commuteDaysPerWeek = Math.max(daysPerWeek - remoteDays, 0);
+  const commuteDaysPerYear = commuteDaysPerWeek * weeksPerYear;
+  const commuteDaysPerMonth = commuteDaysPerYear / 12 || 0;
+
+  let baseDailyCost = 0;
+  const breakdown = {};
+
+  if (mode === 'car') {
+    const miles = Math.max(parseNumber(inputs.roundTripMiles), 0);
+    const mpg = Math.max(parseNumber(inputs.mpg), 1);
+    const fuelPrice = Math.max(parseNumber(inputs.fuelPrice), 0);
+    const maintenancePerMile = Math.max(parseNumber(inputs.maintenancePerMile), 0);
+    const parkingPerDay = Math.max(parseNumber(inputs.parkingPerDay), 0);
+
+    const fuelCostPerMile = (fuelPrice * GALLON_TO_LITRE) / mpg;
+    const fuelCostPerDay = fuelCostPerMile * miles;
+    const maintenanceCostPerDay = maintenancePerMile * miles;
+    baseDailyCost = fuelCostPerDay + maintenanceCostPerDay + parkingPerDay;
+    breakdown.fuel = fuelCostPerDay;
+    breakdown.maintenance = maintenanceCostPerDay;
+    breakdown.parking = parkingPerDay;
+  } else if (mode === 'train' || mode === 'bus') {
+    const ticketPerDay = Math.max(parseNumber(inputs.ticketPerDay), 0);
+    const monthlyPass = Math.max(parseNumber(inputs.monthlyPass), 0);
+    const days = Math.max(commuteDaysPerMonth, 1);
+    const passDailyCost = monthlyPass > 0 ? monthlyPass / days : Infinity;
+    baseDailyCost = Math.min(ticketPerDay, passDailyCost);
+    breakdown.tickets = ticketPerDay;
+    breakdown.monthlyPass = passDailyCost === Infinity ? 0 : passDailyCost;
+  } else if (mode === 'bike') {
+    const bikeMaintenancePerMonth = Math.max(parseNumber(inputs.bikeMaintenancePerMonth), 0);
+    const days = Math.max(commuteDaysPerMonth, 1);
+    baseDailyCost = bikeMaintenancePerMonth / days;
+    breakdown.maintenance = baseDailyCost;
+  }
+
+  const monthlyExtras = Math.max(parseNumber(inputs.monthlyExtras), 0);
+  const extrasPerDay = commuteDaysPerMonth > 0 ? monthlyExtras / commuteDaysPerMonth : 0;
+  breakdown.extras = extrasPerDay;
+
+  const totalDailyCost = baseDailyCost + extrasPerDay;
+  const weeklyCost = totalDailyCost * commuteDaysPerWeek;
+  const monthlyCost = commuteDaysPerMonth > 0 ? totalDailyCost * commuteDaysPerMonth : weeklyCost * 4;
+  const annualCost = totalDailyCost * commuteDaysPerYear;
 
   return {
-    dailyCost,
-    monthlyTicketCost,
+    mode,
+    totalDailyCost,
+    weeklyCost,
+    monthlyCost,
+    annualCost,
+    commuteDaysPerWeek,
+    commuteDaysPerYear,
+    breakdown,
   };
-};
+}
 
 export default function CommuteCostCalculatorPage() {
-  const [state, setState] = useState(defaultState);
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const effectiveDaysPerWeek = Math.max(state.daysPerWeek - state.remoteDays, 0);
-  const daysPerYear = effectiveDaysPerWeek * state.weeksPerYear;
-  const daysPerMonth = daysPerYear / 12;
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const carCosts = useMemo(
-    () =>
-      calculateCarCosts({
-        carDistance: state.carDistance,
-        mpg: state.mpg,
-        fuelPrice: state.fuelPrice,
-        maintenancePerMile: state.maintenancePerMile,
-        parkingPerDay: state.parkingPerDay,
-      }),
-    [state.carDistance, state.mpg, state.fuelPrice, state.maintenancePerMile, state.parkingPerDay]
-  );
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Commute Cost Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Transport & Motoring Calculators', url: '/calculators#transport' },
+      { name: 'Commute Cost Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
 
-  const transitCosts = useMemo(
-    () =>
-      calculateTransitCosts({
-        ticketPerDay: state.ticketPerDay,
-        monthlyPass: state.monthlyPass,
-        daysWorkingPerMonth: daysPerMonth,
-      }),
-    [state.ticketPerDay, state.monthlyPass, daysPerMonth]
-  );
+  const chartData = useMemo(() => {
+    if (!results || !hasCalculated) return [];
+    return Object.entries(results.breakdown)
+      .filter(([, value]) => value > 0)
+      .map(([name, value]) => ({
+        name: name.replace(/^\w/, (c) => c.toUpperCase()),
+        value,
+      }));
+  }, [results, hasCalculated]);
 
-  const results = useMemo(() => {
-    const baseDailyCost =
-      state.mode === 'car'
-        ? carCosts.dailyTotal
-        : state.mode === 'bike'
-          ? (state.ticketPerDay || 0) + state.monthlyExtras / Math.max(daysPerMonth, 1)
-          : transitCosts.dailyCost;
-
-    const dailyExtras =
-      state.mode === 'car'
-        ? state.monthlyExtras / Math.max(daysPerMonth, 1)
-        : state.monthlyExtras / Math.max(daysPerMonth, 1);
-
-    const totalDailyCost = baseDailyCost + dailyExtras;
-    const weeklyCost = totalDailyCost * effectiveDaysPerWeek;
-    const monthlyCost = weeklyCost * (state.weeksPerYear / 12);
-    const annualCost = totalDailyCost * daysPerYear;
-
-    return {
-      totalDailyCost,
-      weeklyCost,
-      monthlyCost,
-      annualCost,
-      baseDailyCost,
-      dailyExtras,
-      carBreakdown: carCosts,
-      transitBreakdown: transitCosts,
-    };
-  }, [
-    state.mode,
-    state.ticketPerDay,
-    carCosts,
-    transitCosts,
-    state.monthlyExtras,
-    daysPerMonth,
-    effectiveDaysPerWeek,
-    state.weeksPerYear,
-    daysPerYear,
-  ]);
-
-  const updateState = (field, value) => {
-    setState((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = (field) => (event) => {
+    const { value } = event.target;
+    setInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const resetState = () => setState(defaultState);
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const computed = calculateCommute(inputs);
+    setHasCalculated(true);
+    setResults(computed);
+
+    setCsvData([
+      ['Commute mode', computed.mode],
+      ['Commute days per week', computed.commuteDaysPerWeek],
+      ['Commute days per year', computed.commuteDaysPerYear],
+      ['Daily cost', currencyFormatter.format(computed.totalDailyCost)],
+      ['Weekly cost', currencyFormatter.format(computed.weeklyCost)],
+      ['Monthly cost', currencyFormatter.format(computed.monthlyCost)],
+      ['Annual cost', currencyFormatter.format(computed.annualCost)],
+      [],
+      ['Cost component', 'Daily amount (£)'],
+      ...Object.entries(computed.breakdown).map(([key, value]) => [
+        key.replace(/^\w/, (c) => c.toUpperCase()),
+        currencyFormatter.format(value),
+      ]),
+    ]);
+  };
+
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Commute Cost Calculator | Commute Cost Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Commute Cost Calculator | Commute Cost Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Commute Cost Calculator | Commute Cost Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Commute Cost Calculator',
-              description: metaDescription,
-              keywords: commuteKeywords,
-              url: canonicalUrl,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate commute costs',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Commute Cost Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-slate-200">
-            Discover your true commuting costs with instant projections for daily, monthly, and
-            annual spending across car, train, bus, or bike travel.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Commute Cost Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Compare the real cost of getting to work by car, train, bus, or bike. Adjust commute days,
+              ticket prices, parking, and extras to see how the total changes over the year.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-blue-500" />
-                Commute Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Travel mode</Label>
-                <Select value={state.mode} onValueChange={(value) => updateState('mode', value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {modeOptions.map((mode) => (
-                      <SelectItem key={mode.value} value={mode.value}>
-                        <span className="flex items-center gap-2">
-                          {mode.icon}
-                          {mode.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <section className="rounded-xl border border-blue-100 bg-white p-6 shadow-sm dark:border-blue-900/40 dark:bg-slate-950/40">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2 max-w-2xl">
+                <Heading as="h2" size="h3" className="text-slate-900 dark:text-slate-100 !mb-0">
+                  See the cost of every commute
+                </Heading>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{emotionalMessage}</p>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Days in office per week
-                    <span className="text-blue-600 font-semibold">{state.daysPerWeek}</span>
-                  </Label>
-                  <Slider
-                    value={[state.daysPerWeek]}
-                    onValueChange={(value) => updateState('daysPerWeek', value[0])}
-                    min={0}
-                    max={7}
-                    step={1}
-                  />
+              <blockquote className="max-w-sm rounded-lg border border-blue-200 bg-blue-50/70 p-4 text-sm text-blue-900 shadow-sm dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-blue-100">
+                <div className="flex items-start gap-2">
+                  <Quote className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <p className="italic leading-relaxed">“{emotionalQuote.text}”</p>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Remote days per week
-                    <span className="text-blue-600 font-semibold">{state.remoteDays}</span>
-                  </Label>
-                  <Slider
-                    value={[state.remoteDays]}
-                    onValueChange={(value) => updateState('remoteDays', value[0])}
-                    min={0}
-                    max={state.daysPerWeek}
-                    step={1}
-                  />
-                </div>
-              </div>
+                <footer className="mt-3 text-right text-xs font-medium uppercase tracking-wide text-blue-700 dark:text-blue-300">
+                  — {emotionalQuote.author}
+                </footer>
+              </blockquote>
+            </div>
+          </section>
 
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Working weeks per year
-                  <span className="text-blue-600 font-semibold">{state.weeksPerYear}</span>
-                </Label>
-                <Slider
-                  value={[state.weeksPerYear]}
-                  onValueChange={(value) => updateState('weeksPerYear', value[0])}
-                  min={10}
-                  max={52}
-                  step={1}
-                />
-              </div>
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Fuel className="h-5 w-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+                  Commute inputs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="space-y-2">
+                    <Label>Travel mode</Label>
+                    <Select value={inputs.mode} onValueChange={(value) => setInputs((prev) => ({ ...prev, mode: value }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select travel mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {modeOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <span className="flex items-center gap-2">
+                              <option.icon className="h-4 w-4" />
+                              {option.label}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {state.mode === 'car' ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="carDistance" className="text-sm font-medium">
-                        Daily round trip (miles)
-                      </Label>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="daysPerWeek">Days in office per week</Label>
                       <Input
-                        id="carDistance"
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        value={state.carDistance}
-                        onChange={(event) => updateState('carDistance', Number(event.target.value))}
+                        id="daysPerWeek"
+                        inputMode="numeric"
+                        value={inputs.daysPerWeek}
+                        onChange={handleInputChange('daysPerWeek')}
+                        placeholder="e.g. 4"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="mpg" className="text-sm font-medium">
-                        Vehicle MPG (UK)
-                      </Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="remoteDays">Remote days per week</Label>
                       <Input
-                        id="mpg"
-                        type="number"
-                        inputMode="decimal"
-                        min={1}
-                        value={state.mpg}
-                        onChange={(event) => updateState('mpg', Number(event.target.value))}
+                        id="remoteDays"
+                        inputMode="numeric"
+                        value={inputs.remoteDays}
+                        onChange={handleInputChange('remoteDays')}
+                        placeholder="e.g. 1"
                       />
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="fuelPrice" className="text-sm font-medium">
-                        Fuel price (£/litre)
-                      </Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="weeksPerYear">Working weeks per year</Label>
                       <Input
-                        id="fuelPrice"
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        step="0.01"
-                        value={state.fuelPrice}
-                        onChange={(event) => updateState('fuelPrice', Number(event.target.value))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="maintenancePerMile" className="text-sm font-medium">
-                        Maintenance (£/mile)
-                      </Label>
-                      <Input
-                        id="maintenancePerMile"
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        step="0.01"
-                        value={state.maintenancePerMile}
-                        onChange={(event) =>
-                          updateState('maintenancePerMile', Number(event.target.value))
-                        }
+                        id="weeksPerYear"
+                        inputMode="numeric"
+                        value={inputs.weeksPerYear}
+                        onChange={handleInputChange('weeksPerYear')}
+                        placeholder="e.g. 46"
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="parkingPerDay" className="text-sm font-medium">
-                        Parking (£/day)
-                      </Label>
-                      <Input
-                        id="parkingPerDay"
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        value={state.parkingPerDay}
-                        onChange={(event) =>
-                          updateState('parkingPerDay', Number(event.target.value))
-                        }
-                      />
+
+                  {inputs.mode === 'car' && (
+                    <div className="space-y-4">
+                      <Heading as="h3" size="h4" className="text-slate-900 dark:text-slate-100 !mb-0">
+                        Driving costs
+                      </Heading>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="roundTripMiles">Daily round trip (miles)</Label>
+                          <Input
+                            id="roundTripMiles"
+                            inputMode="decimal"
+                            value={inputs.roundTripMiles}
+                            onChange={handleInputChange('roundTripMiles')}
+                            placeholder="e.g. 24"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="mpg">Vehicle MPG (UK)</Label>
+                          <Input
+                            id="mpg"
+                            inputMode="decimal"
+                            value={inputs.mpg}
+                            onChange={handleInputChange('mpg')}
+                            placeholder="e.g. 38"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="fuelPrice">Fuel price (£ per litre)</Label>
+                          <Input
+                            id="fuelPrice"
+                            inputMode="decimal"
+                            value={inputs.fuelPrice}
+                            onChange={handleInputChange('fuelPrice')}
+                            placeholder="e.g. 1.62"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="maintenancePerMile">Maintenance per mile (£)</Label>
+                          <Input
+                            id="maintenancePerMile"
+                            inputMode="decimal"
+                            value={inputs.maintenancePerMile}
+                            onChange={handleInputChange('maintenancePerMile')}
+                            placeholder="e.g. 0.12"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="parkingPerDay">Parking per day (£)</Label>
+                          <Input
+                            id="parkingPerDay"
+                            inputMode="decimal"
+                            value={inputs.parkingPerDay}
+                            onChange={handleInputChange('parkingPerDay')}
+                            placeholder="e.g. 8"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="monthlyExtras" className="text-sm font-medium">
-                        Other commute extras (£/month)
-                      </Label>
-                      <Input
-                        id="monthlyExtras"
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        value={state.monthlyExtras}
-                        onChange={(event) =>
-                          updateState('monthlyExtras', Number(event.target.value))
-                        }
-                      />
+                  )}
+
+                  {(inputs.mode === 'train' || inputs.mode === 'bus') && (
+                    <div className="space-y-4">
+                      <Heading as="h3" size="h4" className="text-slate-900 dark:text-slate-100 !mb-0">
+                        Public transport costs
+                      </Heading>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="ticketPerDay">Ticket per day (£)</Label>
+                          <Input
+                            id="ticketPerDay"
+                            inputMode="decimal"
+                            value={inputs.ticketPerDay}
+                            onChange={handleInputChange('ticketPerDay')}
+                            placeholder="e.g. 15"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="monthlyPass">Monthly pass (£)</Label>
+                          <Input
+                            id="monthlyPass"
+                            inputMode="decimal"
+                            value={inputs.monthlyPass}
+                            onChange={handleInputChange('monthlyPass')}
+                            placeholder="e.g. 280"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="ticketPerDay" className="text-sm font-medium">
-                        Ticket cost (£/day)
-                      </Label>
-                      <Input
-                        id="ticketPerDay"
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        value={state.ticketPerDay}
-                        onChange={(event) =>
-                          updateState('ticketPerDay', Number(event.target.value))
-                        }
-                      />
+                  )}
+
+                  {inputs.mode === 'bike' && (
+                    <div className="space-y-4">
+                      <Heading as="h3" size="h4" className="text-slate-900 dark:text-slate-100 !mb-0">
+                        Cycling costs
+                      </Heading>
+                      <div className="space-y-2">
+                        <Label htmlFor="bikeMaintenancePerMonth">Bike maintenance per month (£)</Label>
+                        <Input
+                          id="bikeMaintenancePerMonth"
+                          inputMode="decimal"
+                          value={inputs.bikeMaintenancePerMonth}
+                          onChange={handleInputChange('bikeMaintenancePerMonth')}
+                          placeholder="e.g. 25"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="monthlyPass" className="text-sm font-medium">
-                        Monthly pass (£)
-                      </Label>
-                      <Input
-                        id="monthlyPass"
-                        type="number"
-                        inputMode="decimal"
-                        min={0}
-                        value={state.monthlyPass}
-                        onChange={(event) => updateState('monthlyPass', Number(event.target.value))}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="monthlyExtrasAlt" className="text-sm font-medium">
-                      Additional extras (£/month)
-                    </Label>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="monthlyExtras">Monthly extras (£)</Label>
                     <Input
-                      id="monthlyExtrasAlt"
-                      type="number"
+                      id="monthlyExtras"
                       inputMode="decimal"
-                      min={0}
-                      value={state.monthlyExtras}
-                      onChange={(event) => updateState('monthlyExtras', Number(event.target.value))}
+                      value={inputs.monthlyExtras}
+                      onChange={handleInputChange('monthlyExtras')}
+                      placeholder="e.g. 25"
                     />
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Coffee, tolls, congestion charges, or other regular commute extras.
+                    </p>
                   </div>
-                </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate commute costs
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your commute details and press <span className="font-semibold">Calculate commute costs</span>{' '}
+                    to see daily, monthly, and annual totals for your travel.
+                  </CardContent>
+                </Card>
               )}
 
-              <Button onClick={resetState} variant="outline" className="w-full">
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-blue-200 bg-white shadow-sm dark:border-blue-900 dark:bg-blue-900/30 dark:text-blue-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-blue-600 dark:text-blue-200" aria-hidden="true" />
+                        Commute summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Daily cost</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalDailyCost)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Weekly cost</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.weeklyCost)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Monthly cost</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.monthlyCost)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-900 dark:text-blue-200">Annual cost</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.annualCost)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="commute-cost-results"
+                          title="Commute cost calculator results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-          <div className="space-y-6">
-            <Card className="border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-blue-900 dark:text-blue-100">
-                  <PiggyBank className="h-5 w-5" />
-                  Commute Cost Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-4 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-blue-900/60 p-4 border border-blue-100 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-200">Daily</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    £{results.totalDailyCost.toFixed(2)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-blue-900/60 p-4 border border-blue-100 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-200">Weekly</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    £{results.weeklyCost.toFixed(2)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-blue-900/60 p-4 border border-blue-100 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-200">Monthly</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    £{results.monthlyCost.toFixed(2)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-blue-900/60 p-4 border border-blue-100 dark:border-blue-800">
-                  <p className="text-sm text-blue-700 dark:text-blue-200">Annual</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    £{results.annualCost.toFixed(2)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Fuel className="h-5 w-5 text-slate-600" />
-                  Cost Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-2">
-                    Base commute
-                  </h3>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    £{results.baseDailyCost.toFixed(2)}{' '}
-                    <span className="text-base text-slate-500">per day</span>
-                  </p>
-                  {state.mode === 'car' ? (
-                    <ul className="mt-3 text-sm text-slate-600 dark:text-slate-300 space-y-2">
-                      <li>
-                        Fuel: £{results.carBreakdown.dailyFuelCost.toFixed(2)}{' '}
-                        <span className="text-xs">
-                          (£{results.carBreakdown.costPerMile.toFixed(2)} per mile)
-                        </span>
-                      </li>
-                      <li>Parking: £{results.carBreakdown.dailyParking.toFixed(2)}</li>
-                    </ul>
-                  ) : (
-                    <ul className="mt-3 text-sm text-slate-600 dark:text-slate-300 space-y-2">
-                      <li>
-                        Ticket cost: £{results.transitBreakdown.dailyCost.toFixed(2)} per office day
-                      </li>
-                      <li>
-                        Monthly ticket: £{results.transitBreakdown.monthlyTicketCost.toFixed(2)}
-                      </li>
-                    </ul>
+                  {chartData.length > 0 && (
+                    <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <Fuel className="h-5 w-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+                          Daily cost breakdown
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Suspense
+                          fallback={
+                            <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                              Loading chart…
+                            </div>
+                          }
+                        >
+                          <ResultBreakdownChart data={chartData} title="Commute cost breakdown" />
+                        </Suspense>
+                      </CardContent>
+                    </Card>
                   )}
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-2">
-                    Extras
-                  </h3>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    £{results.dailyExtras.toFixed(2)}{' '}
-                    <span className="text-base text-slate-500">per day</span>
-                  </p>
-                  <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-                    Includes monthly extras of £{state.monthlyExtras.toFixed(2)} spread across your
-                    commuting days. Track coffees, tolls, or bike servicing here.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Using the Commute Cost Calculator to optimise spending
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Adjust office days, fuel prices, or ticket costs to see how quickly commute expenses
-                add up. Even small changes like a cheaper parking space or an extra remote day can
-                reduce annual costs by hundreds of pounds.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Scenario planning inside the commute cost calculator
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Compare driving with public transport or cycling by switching travel modes. Record
-                your assumptions so you can revisit the commute cost calculator when fuel prices or
-                ticket offers change.
-              </p>
-            </section>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+              <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+              <Heading as="h2" size="h3" className="!mb-0">
+                Optimise your commute budget
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Check if hybrid working, cycling part of the route, or switching to a season ticket cuts
+              your annual cost. Revisit the calculator whenever prices rise or your travel pattern
+              changes.
+            </p>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
       </CalculatorWrapper>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={faqItems} />
-        </div>
-      </section>
     </div>
   );
 }
+

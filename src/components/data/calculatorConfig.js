@@ -359,9 +359,14 @@ const rawCategories = [
         'Compare consolidation offers to estimate reduced payments and interest.'
       ),
       createCalculatorEntry(
-        'Car Finance Payment Calculator',
-        'CarFinancePaymentCalculator',
-        'Estimate monthly payments for PCP, HP, or personal car finance agreements.'
+        'Car Finance Calculator',
+        'CarFinanceCalculator',
+        'Plan PCP or HP repayments, balloons, and total car finance cost.'
+      ),
+      createCalculatorEntry(
+        'Car Payment Calculator',
+        'CarPaymentCalculator',
+        'Estimate monthly car payments, total interest, and affordability before buying.'
       ),
       createCalculatorEntry(
         'Payday Loan Cost Calculator',
@@ -436,6 +441,11 @@ const rawCategories = [
         'Identify recurring subscriptions and quantify savings from cancelling unused ones.'
       ),
       createCalculatorEntry(
+        'Budget Calculator',
+        'BudgetCalculator',
+        'Balance income, expenses, savings, and debt payments in a monthly budget.'
+      ),
+      createCalculatorEntry(
         'Budget Planner',
         'BudgetPlanner',
         'Build a monthly budget that balances income, bills, and savings goals.'
@@ -508,9 +518,9 @@ const rawCategories = [
         'Model retainer packages with utilisation assumptions and profit targets.'
       ),
       createCalculatorEntry(
-        'Contractor Take-Home Pay Calculator',
-        'ContractorTakeHomePayCalculator',
-        'Compare umbrella and limited company take-home pay after all deductions.'
+        'Contractor Calculator',
+        'ContractorCalculator',
+        'Estimate UK contractor take-home pay from day rate, salary, dividends, and company costs.'
       ),
       createCalculatorEntry(
         'IR35 Risk Checker',
@@ -521,6 +531,11 @@ const rawCategories = [
         'Business Mileage Expense Calculator',
         'BusinessMileageExpenseCalculator',
         'Track mileage claims and calculate HMRC-approved reimbursement amounts.'
+      ),
+      createCalculatorEntry(
+        'Commission Calculator',
+        'CommissionCalculator',
+        'Model sales commission, accelerators, bonuses, and draws to forecast take-home pay.'
       ),
       createCalculatorEntry(
         'Quarterly Cash Flow Planner',
@@ -565,9 +580,9 @@ const rawCategories = [
         'Compare broadband packages and total contract costs including promotional rates.'
       ),
       createCalculatorEntry(
-        'Commuter Travel Cost Calculator',
-        'CommuterTravelCostCalculator',
-        'Work out commuting costs across rail, bus, cycling, or driving options.'
+        'Commute Cost Calculator',
+        'CommuteCostCalculator',
+        'Compare daily, monthly, and annual commute costs across car, public transport, and cycling.'
       ),
       createCalculatorEntry(
         'Fuel Cost Splitter',
