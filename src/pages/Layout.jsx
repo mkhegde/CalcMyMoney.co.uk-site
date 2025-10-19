@@ -51,7 +51,6 @@ export default function Layout({ children, currentPageName }) {
   const [openCategories, setOpenCategories] = useState({});
   const [seoOverrides, setSeoOverrides] = useState({});
   const [calculatorCategories, setCalculatorCategories] = useState([]);
-  const isHomePage = location.pathname === createPageUrl('Home');
   const loadingCalculatorCategories = calculatorCategories.length === 0;
   const showRelatedAutoSection = useMemo(
     () => /Calculator/i.test(currentPageName || ''),
