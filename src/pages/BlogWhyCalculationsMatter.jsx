@@ -6,8 +6,7 @@ import Heading from '@/components/common/Heading';
 
 const canonical = 'https://www.calcmymoney.co.uk/blog/why-small-calculations-matter';
 const title = 'The Math Behind a Good Life: Why Small Money Calculations Change Big Outcomes';
-const description =
-  'We work hard for every pound. Here's how tiny money calculations-salary, tax, mortgage, budgeting-create calm, confident decisions.';
+const description = `We work hard for every pound. Here's how tiny money calculations-salary, tax, mortgage, budgeting-create calm, confident decisions.`;
 const defaultOgImage = 'https://www.calcmymoney.co.uk/og-image.png';
 const defaultRobots = 'index,follow,max-image-preview:large';
 const defaultTwitterCard = 'summary_large_image';
