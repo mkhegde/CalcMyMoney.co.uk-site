@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-} from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 const DEFAULT_COLOURS = ['#1d4ed8', '#0ea5e9', '#0369a1', '#22d3ee', '#bae6fd'];
 
@@ -65,4 +58,3 @@ export default function ResultBreakdownChart({ data = [], title }) {
     </div>
   );
 }
-

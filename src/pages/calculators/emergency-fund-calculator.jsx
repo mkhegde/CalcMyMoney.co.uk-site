@@ -1,24 +1,30 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Calculator, LifeBuoy, Shield, PiggyBank } from 'lucide-react';
+import { Calculator, LifeBuoy, Shield, PiggyBank, Trash2 } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import ExportActions from '@/components/calculators/ExportActions';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
+import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
+import { createCalculatorWebPageSchema, createCalculatorBreadcrumbs } from '@/utils/calculatorSchema.js';
+import { sanitiseNumber } from '@/utils/sanitiseNumber.js';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/emergency-fund-calculator';
+const CALCULATOR_NAME = 'Emergency Fund Calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/emergency-fund-calculator';
+const keywords = getCalculatorKeywords('Emergency Fund Calculator');
 
-const schemaKeywords = [
-  'Financial Cushion',
-  'Monthly Expenditure',
-  'Job Loss Protection',
-  'Risk Management',
-  'Financial Security',
-];
+const metaDescription =
+  'Calculate your UK emergency fund target based on essential monthly expenses, savings progress, and planned contributions. Build a resilient buffer before life throws a curve ball.';
 
 const defaultExpenses = [
   { id: 'housing', label: 'Housing & utilities', amount: '950' },
@@ -30,111 +36,245 @@ const defaultExpenses = [
 let idCounter = 30;
 const newId = () => `expense-${idCounter++}`;
 
-const FAQS = [
+const defaultInputs = {
+  monthsCover: '6',
+  currentSavings: '2,500',
+  monthlyContribution: '300',
+};
+
+const faqItems = [
   {
-    question: 'How many months of expenses should my emergency fund cover?',
+    question: 'How much should I keep in an emergency fund?',
     answer:
-      'Most planners recommend three to six months of essential living expenses. Increase to nine or twelve months if your job security is low or you have dependants.',
+      'Aim for three to six months of essential living costs. Increase to nine or twelve months if you have dependants, variable income, or would take longer to find a new role.',
   },
   {
-    question: 'What counts as an emergency fund expense?',
+    question: 'What counts as an essential expense?',
     answer:
-      'Include only essential living costs—housing, food, utilities, insurance, debts, and necessary transport. Exclude discretionary spending like holidays or luxury purchases.',
+      'Include housing, utilities, food, transport, insurance, debt repayments, childcare, and any non-negotiable bills. Exclude holidays, memberships, and discretionary spending.',
   },
   {
-    question: 'Where should I keep my emergency savings?',
+    question: 'Where should I store my emergency fund?',
     answer:
-      'Choose easy-access savings accounts with competitive interest rates. Safety and liquidity matter more than high returns for a financial buffer.',
+      'Use a secure, easy-access savings account. Competitive interest is helpful, but capital safety and quick access matter most in an emergency.',
   },
 ];
+
+const directoryLinks = [
+  {
+    label: 'Browse the full calculator directory',
+    url: '/#calculator-directory',
+    description: 'Discover every UK calculator to support your financial wellbeing.',
+  },
+  {
+    label: 'Budgeting & planning tools',
+    url: '/#budgeting-planning',
+    description: 'Keep spending aligned with your emergency fund goals.',
+  },
+  {
+    label: 'Savings & investments hub',
+    url: '/#savings-investments',
+    description: 'Grow long-term reserves once your emergency buffer is secure.',
+  },
+];
+
+const relatedCalculators = [
+  {
+    name: 'Budget Calculator',
+    url: '/budget-calculator',
+    description: 'Identify savings to fast-track your emergency fund.',
+  },
+  {
+    name: 'Savings Goal Calculator',
+    url: '/savings-goal-calculator',
+    description: 'Turn your target fund into monthly milestones.',
+  },
+  {
+    name: 'Take-Home Pay Calculator',
+    url: '/take-home-pay-calculator',
+    description: 'Work out how much income you can channel into savings each month.',
+  },
+];
+
+const schemaKeywords = [
+  'Emergency fund calculator',
+  'Financial cushion',
+  'UK savings buffer',
+  'Monthly essential expenses',
+];
+
+const webPageSchema = createCalculatorWebPageSchema({
+  name: CALCULATOR_NAME,
+  description: metaDescription,
+  url: canonicalUrl,
+  keywords,
+});
+
+const breadcrumbSchema = createCalculatorBreadcrumbs({
+  name: CALCULATOR_NAME,
+  url: canonicalUrl,
+});
+
+const faqStructuredData = faqSchema(faqItems);
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
   minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
-export default function EmergencyFundCalculator() {
+const formatDuration = (months) => {
+  if (!Number.isFinite(months) || months === Infinity) return 'Not reached with current plan';
+  if (months <= 0) return 'Already funded';
+  const totalMonths = Math.ceil(months);
+  const years = Math.floor(totalMonths / 12);
+  const remainingMonths = totalMonths % 12;
+  if (years === 0) return `${totalMonths} month${totalMonths === 1 ? '' : 's'}`;
+  if (remainingMonths === 0) return `${years} year${years === 1 ? '' : 's'}`;
+  return `${years} yr ${remainingMonths} mo`;
+};
+
+const calculateEmergencyFund = ({ expenses, monthsCover, currentSavings, monthlyContribution }) => {
+  const parsedExpenses = expenses.map((item) => ({
+    ...item,
+    amount: Math.max(item.amount, 0),
+  }));
+
+  const monthlyEssentialSpend = parsedExpenses.reduce((sum, item) => sum + item.amount, 0);
+
+  if (monthlyEssentialSpend <= 0) {
+    return {
+      valid: false,
+      message: 'Add at least one essential monthly expense to calculate your emergency fund target.',
+    };
+  }
+
+  const months = Math.max(monthsCover, 0);
+  const targetFund = monthlyEssentialSpend * months;
+  const shortfall = Math.max(0, targetFund - currentSavings);
+  const monthsToTarget =
+    monthlyContribution > 0 ? Math.ceil(shortfall / monthlyContribution) : Infinity;
+
+  return {
+    valid: true,
+    expenses: parsedExpenses,
+    monthlyEssentialSpend,
+    monthsCover: months,
+    targetFund,
+    currentSavings,
+    monthlyContribution,
+    shortfall,
+    monthsToTarget,
+    coverageAchieved: targetFund > 0 ? (currentSavings / targetFund) * 100 : 0,
+    weeklyContributionNeeded:
+      monthsToTarget === Infinity || monthsToTarget <= 0
+        ? 0
+        : Math.max(shortfall / (monthsToTarget * 4.345), 0),
+  };
+};
+
+export default function EmergencyFundCalculatorPage() {
   const [expenses, setExpenses] = useState(defaultExpenses);
-  const [monthsCover, setMonthsCover] = useState('6');
-  const [currentSavings, setCurrentSavings] = useState('2500');
-  const [savePerMonth, setSavePerMonth] = useState('300');
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [results, setResults] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-  const updateExpense = useCallback((id, field, value) => {
-    setExpenses((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
-    );
-  }, []);
+  const handleExpenseChange = (id, field) => (event) => {
+    const { value } = event.target;
+    setExpenses((prev) => prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
+  };
 
-  const removeExpense = useCallback((id) => {
+  const removeExpense = (id) => {
     setExpenses((prev) => prev.filter((item) => item.id !== id));
-  }, []);
+  };
 
-  const addExpense = useCallback(() => {
+  const addExpense = () => {
     setExpenses((prev) => [
       ...prev,
       { id: newId(), label: 'New essential expense', amount: '0' },
     ]);
-  }, []);
+  };
 
-  const reset = useCallback(() => {
+  const handleInputChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
+
+  const handleReset = () => {
     setExpenses(defaultExpenses);
-    setMonthsCover('6');
-    setCurrentSavings('2500');
-    setSavePerMonth('300');
-  }, []);
+    setInputs(defaultInputs);
+    setResults(null);
+    setHasCalculated(false);
+  };
 
-  const summary = useMemo(() => {
-    const monthlyEssentialSpend = expenses.reduce(
-      (sum, item) => sum + (Number(item.amount) || 0),
-      0,
-    );
-    const months = Math.max(Number(monthsCover) || 0, 0);
-    const targetFund = monthlyEssentialSpend * months;
-    const currentBuffer = Number(currentSavings) || 0;
-    const monthlyContribution = Math.max(Number(savePerMonth) || 0, 0);
-    const shortfall = Math.max(0, targetFund - currentBuffer);
-    const monthsToTarget =
-      monthlyContribution > 0 ? Math.ceil(shortfall / monthlyContribution) : Infinity;
+  const handleCalculate = (event) => {
+    event.preventDefault();
+    const parsedExpenses = expenses.map((item) => ({
+      id: item.id,
+      label: item.label || 'Essential expense',
+      amount: sanitiseNumber(item.amount),
+    }));
 
-    return {
-      monthlyEssentialSpend,
-      targetFund,
-      currentBuffer,
-      monthlyContribution,
-      shortfall,
-      monthsToTarget,
+    const payload = {
+      expenses: parsedExpenses,
+      monthsCover: sanitiseNumber(inputs.monthsCover),
+      currentSavings: sanitiseNumber(inputs.currentSavings),
+      monthlyContribution: sanitiseNumber(inputs.monthlyContribution),
     };
-  }, [expenses, monthsCover, currentSavings, savePerMonth]);
+
+    const outcome = calculateEmergencyFund(payload);
+    setResults(outcome);
+    setHasCalculated(true);
+  };
+
+  const chartData = useMemo(() => {
+    if (!results?.valid) return [];
+    return results.expenses
+      .filter((item) => item.amount > 0)
+      .map((item) => ({
+        name: item.label,
+        value: item.amount,
+      }));
+  }, [results]);
+
+  const csvData = useMemo(() => {
+    if (!results?.valid) return null;
+    const expenseRows = results.expenses.map((item) => [
+      item.label,
+      item.amount.toFixed(2),
+    ]);
+    return [
+      ['Expense category', 'Monthly amount (£)'],
+      ...expenseRows,
+      [],
+      ['Metric', 'Value'],
+      ['Monthly essential spend (£)', results.monthlyEssentialSpend.toFixed(2)],
+      ['Months of cover', results.monthsCover],
+      ['Emergency fund target (£)', results.targetFund.toFixed(2)],
+      ['Current savings (£)', results.currentSavings.toFixed(2)],
+      ['Monthly contribution (£)', results.monthlyContribution.toFixed(2)],
+      ['Shortfall (£)', results.shortfall.toFixed(2)],
+      ['Coverage achieved (%)', results.coverageAchieved.toFixed(2)],
+      ['Months to target', Number.isFinite(results.monthsToTarget) ? results.monthsToTarget : 'Not reached'],
+    ];
+  }, [results]);
+
+  const showResults = hasCalculated && results?.valid;
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>Emergency Fund Planner &amp; Savings Goal Calculator</title>
-        <meta
-          name="description"
-          content="Emergency Fund Calculator to build a savings goal based on living expenses. Plan your financial cushion for job loss protection and risk management."
-        />
-        <meta
-          name="keywords"
-          content="Emergency Fund Calculator, Living Expenses, Savings Target"
-        />
+        <title>{`${CALCULATOR_NAME} | Build Your Safety Net`}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={schemaKeywords.join(', ')} />
         <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FinancialProduct',
-              name: 'Emergency Fund Calculator',
-              description:
-                'Savings planner helping households determine financial cushions, monthly expenditure coverage, and job loss protection strategies.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-            }),
-          }}
-        />
       </Helmet>
+      <JsonLd data={webPageSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={faqStructuredData} />
 
       <section className="bg-gradient-to-r from-slate-900 via-teal-900 to-slate-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
@@ -142,36 +282,56 @@ export default function EmergencyFundCalculator() {
             Emergency Fund Calculator
           </Heading>
           <p className="text-lg md:text-xl text-teal-100">
-            Calculate fund target, build a savings plan, and secure a financial buffer covering three
-            months expenses to avoid debt reliance.
+            Build a resilient financial cushion that keeps the lights on when life suddenly changes.
           </p>
         </div>
       </section>
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <EmotionalHook
+          title="Security creates space to breathe"
+          message="An emergency fund turns shocks into inconveniences. Every pound saved here is a promise to your future self that you will handle whatever comes next."
+          quote="Do not save what is left after spending, but spend what is left after saving."
+          author="Warren Buffett"
+        />
+      </div>
+
       <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <Card className="border border-teal-200 dark:border-teal-900 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-semibold">
                 <Calculator className="h-5 w-5 text-teal-500" />
-                Essential Expenses
+                Essential expenses
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {expenses.map((item) => (
-                <div key={item.id} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center">
+                <div
+                  key={item.id}
+                  className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center border border-teal-100 dark:border-teal-900 rounded-md p-3 bg-white dark:bg-slate-900"
+                >
                   <Input
                     value={item.label}
-                    onChange={(event) => updateExpense(item.id, 'label', event.target.value)}
+                    onChange={handleExpenseChange(item.id, 'label')}
+                    placeholder="e.g., Housing & utilities"
                   />
                   <Input
                     value={item.amount}
                     inputMode="decimal"
-                    onChange={(event) => updateExpense(item.id, 'amount', event.target.value)}
-                    className="w-28"
+                    onChange={handleExpenseChange(item.id, 'amount')}
+                    className="md:w-28"
+                    placeholder="e.g., 950"
                   />
-                  <Button type="button" variant="ghost" onClick={() => removeExpense(item.id)}>
-                    Remove
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeExpense(item.id)}
+                    aria-label="Remove expense"
+                    className="justify-self-end text-teal-600 hover:text-teal-700 dark:text-teal-300"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               ))}
@@ -181,162 +341,186 @@ export default function EmergencyFundCalculator() {
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
-            <Card className="border border-teal-200 dark:border-teal-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <LifeBuoy className="h-5 w-5 text-teal-500" />
-                  Fund Parameters
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+          <Card className="border border-teal-200 dark:border-teal-900 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <LifeBuoy className="h-5 w-5 text-teal-500" />
+                Fund parameters
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-5" onSubmit={handleCalculate}>
                 <div>
                   <Label htmlFor="monthsCover" className="text-sm font-medium">
                     Months of cover
                   </Label>
                   <Input
                     id="monthsCover"
+                    type="number"
                     inputMode="decimal"
-                    value={monthsCover}
-                    onChange={(event) => setMonthsCover(event.target.value)}
+                    min="0"
+                    step="0.5"
+                    value={inputs.monthsCover}
+                    onChange={handleInputChange('monthsCover')}
+                    placeholder="e.g., 6"
                   />
                 </div>
                 <div>
                   <Label htmlFor="currentSavings" className="text-sm font-medium">
-                    Current emergency savings (GBP)
+                    Current emergency savings (£)
                   </Label>
                   <Input
                     id="currentSavings"
+                    type="number"
                     inputMode="decimal"
-                    value={currentSavings}
-                    onChange={(event) => setCurrentSavings(event.target.value)}
+                    min="0"
+                    step="10"
+                    value={inputs.currentSavings}
+                    onChange={handleInputChange('currentSavings')}
+                    placeholder="e.g., 2,500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="savePerMonth" className="text-sm font-medium">
-                    Planned monthly saving (GBP)
+                  <Label htmlFor="monthlyContribution" className="text-sm font-medium">
+                    Planned monthly contribution (£)
                   </Label>
                   <Input
-                    id="savePerMonth"
+                    id="monthlyContribution"
+                    type="number"
                     inputMode="decimal"
-                    value={savePerMonth}
-                    onChange={(event) => setSavePerMonth(event.target.value)}
+                    min="0"
+                    step="10"
+                    value={inputs.monthlyContribution}
+                    onChange={handleInputChange('monthlyContribution')}
+                    placeholder="e.g., 300"
                   />
                 </div>
-                <Button type="button" variant="outline" onClick={reset}>
-                  Reset inputs
-                </Button>
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1">
+                    Calculate
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleReset}>
+                    Reset
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </CalculatorWrapper>
+
+      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        {showResults ? (
+          <div className="space-y-6">
+            <Card className="border border-teal-200 dark:border-teal-900 bg-teal-50 dark:bg-teal-900/20 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-teal-900 dark:text-teal-100">
+                  <Shield className="h-5 w-5" />
+                  Emergency fund summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-md bg-white/80 dark:bg-teal-900/40 p-4 border border-teal-100 dark:border-teal-800">
+                    <p className="text-xs uppercase tracking-wide text-teal-700 dark:text-teal-200">
+                      Monthly essentials
+                    </p>
+                    <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                      {currencyFormatter.format(results.monthlyEssentialSpend)}
+                    </p>
+                  </div>
+                  <div className="rounded-md bg-white/80 dark:bg-teal-900/40 p-4 border border-teal-100 dark:border-teal-800">
+                    <p className="text-xs uppercase tracking-wide text-teal-700 dark:text-teal-200">
+                      Fund target ({results.monthsCover} months)
+                    </p>
+                    <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                      {currencyFormatter.format(results.targetFund)}
+                    </p>
+                  </div>
+                  <div className="rounded-md bg-white/80 dark:bg-teal-900/40 p-4 border border-teal-100 dark:border-teal-800">
+                    <p className="text-xs uppercase tracking-wide text-teal-700 dark:text-teal-200">
+                      Current savings
+                    </p>
+                    <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                      {currencyFormatter.format(results.currentSavings)}
+                    </p>
+                  </div>
+                  <div className="rounded-md bg-white/80 dark:bg-teal-900/40 p-4 border border-teal-100 dark:border-teal-800">
+                    <p className="text-xs uppercase tracking-wide text-teal-700 dark:text-teal-200">
+                      Buffer funded
+                    </p>
+                    <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                      {percentageFormatter.format(Math.min(results.coverageAchieved, 999))}%
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-md bg-white/80 dark:bg-teal-900/40 p-4 border border-teal-100 dark:border-teal-800">
+                    <p className="text-xs uppercase tracking-wide text-teal-700 dark:text-teal-200">
+                      Shortfall
+                    </p>
+                    <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                      {currencyFormatter.format(results.shortfall)}
+                    </p>
+                  </div>
+                  <div className="rounded-md bg-white/80 dark:bg-teal-900/40 p-4 border border-teal-100 dark:border-teal-800">
+                    <p className="text-xs uppercase tracking-wide text-teal-700 dark:text-teal-200">
+                      Time to target
+                    </p>
+                    <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                      {formatDuration(results.monthsToTarget)}
+                    </p>
+                    <p className="text-xs text-teal-700 dark:text-teal-200">
+                      Based on a £{results.monthlyContribution.toFixed(0)} monthly contribution.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-md bg-white dark:bg-slate-900 border border-teal-100 dark:border-teal-900 p-4">
+                  <h3 className="text-base font-semibold text-teal-900 dark:text-teal-100 mb-4">
+                    Monthly expense breakdown
+                  </h3>
+                  <ResultBreakdownChart data={chartData} title="Emergency fund expense split" />
+                </div>
+
+                <ExportActions
+                  csvData={csvData}
+                  fileName="emergency-fund-calculator-results"
+                  title="Emergency fund summary"
+                />
               </CardContent>
             </Card>
           </div>
-        </div>
-
-        <div className="mt-8 grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-teal-200 dark:border-teal-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Shield className="h-5 w-5 text-teal-500" />
-                Emergency Fund Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-muted-foreground">Monthly essential spend</p>
-                  <p className="text-lg font-semibold text-teal-600">
-                    {currencyFormatter.format(summary.monthlyEssentialSpend)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Fund target</p>
-                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(summary.targetFund)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Current buffer</p>
-                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(summary.currentBuffer)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Savings shortfall</p>
-                  <p className="text-lg font-semibold text-rose-600">
-                    {currencyFormatter.format(summary.shortfall)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Monthly contribution</p>
-                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(summary.monthlyContribution)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Months to target</p>
-                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    {Number.isFinite(summary.monthsToTarget)
-                      ? summary.monthsToTarget
-                      : 'Not reachable'}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-teal-200 dark:border-teal-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <PiggyBank className="h-5 w-5 text-teal-500" />
-                Savings Plan Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>
-                Automate transfers on payday to keep the financial cushion growing before discretionary
-                spending erodes progress.
-              </p>
-              <p>
-                Review essential expenses annually; as living costs rise, recalibrate the emergency
-                fund to maintain adequate financial security.
-              </p>
-              <p>
-                Avoid dipping into the fund for non-emergencies. Replenish withdrawals quickly to
-                maintain job loss protection and risk management resilience.
+        ) : (
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
+            <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
+              <PiggyBank className="h-5 w-5 text-teal-500" aria-hidden="true" />
+              <p className="text-sm">
+                {hasCalculated && results?.message ? (
+                  results.message
+                ) : (
+                  <>
+                    List your essential monthly costs, choose how many months of cover you want, then press{' '}
+                    <strong>Calculate</strong> to get a savings roadmap.
+                  </>
+                )}
               </p>
             </CardContent>
           </Card>
-        </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Fund Target for a Robust Financial Buffer
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Use this tool to determine the right emergency fund size and create a savings plan that
-            protects against unexpected income shocks without resorting to debt.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Three Months Expenses as a Starting Point
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Many households target three to six months of living expenses. Increase the goal if your
-            income varies seasonally or you have high-risk employment.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Savings Plan Prevents Debt Avoidance Setbacks
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Building a dedicated emergency fund minimises reliance on credit cards or loans during
-            emergencies, preserving long-term financial security.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={FAQS} />
-        </section>
+        )}
       </CalculatorWrapper>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={faqItems} />
+        </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
+        <DirectoryLinks links={directoryLinks} />
+        <RelatedCalculators calculators={relatedCalculators} />
+      </div>
     </div>
   );
 }

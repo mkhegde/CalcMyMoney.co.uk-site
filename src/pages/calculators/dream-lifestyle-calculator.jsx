@@ -6,52 +6,116 @@ import Heading from '@/components/common/Heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import ExportActions from '@/components/calculators/ExportActions';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
+import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
+import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
+import { createCalculatorWebPageSchema, createCalculatorBreadcrumbs } from '@/utils/calculatorSchema.js';
+import { sanitiseNumber } from '@/utils/sanitiseNumber.js';
 
-const keywords = ['dream lifestyle calculator'];
+const CALCULATOR_NAME = 'Dream Lifestyle Calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/dream-lifestyle-calculator';
+const keywords = getCalculatorKeywords('Dream Lifestyle Calculator');
 
 const metaDescription =
-  'Use our dream lifestyle calculator to price your ideal life, align income goals, and map actionable steps toward the dream lifestyle you are designing.';
+  'Put a realistic price tag on your dream lifestyle. Estimate monthly spending, build in savings buffers, and set the pre-tax income you need to live life on your terms.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/dream-lifestyle-calculator';
-const schemaKeywords = keywords;
-
-const dreamLifestyleFaqs = [
-  {
-    question: 'How do I estimate lifestyle costs accurately?',
-    answer:
-      'Break your dream lifestyle into categories such as housing, travel, hobbies, and savings. Adjust each input based on research and add a buffer for spontaneity or price fluctuations.',
-  },
-  {
-    question: 'How often should I revisit this dream lifestyle calculator?',
-    answer:
-      'Review your plan quarterly or after major life events. As your goals evolve, updating the calculator keeps your income targets realistic and motivating.',
-  },
-  {
-    question: 'Can I use this to plan early retirement or mini-retirements?',
-    answer:
-      'Yes. Combine the annual figure with your investment projections. Knowing the cost of your dream lifestyle makes it easier to plan sabbaticals, location-independent living, or early retirement.',
-  },
-];
+const defaultInputs = {
+  housing: '2,200',
+  travel: '600',
+  experiences: '400',
+  savingsGoal: '800',
+  emergencyBuffer: '12,000',
+  taxMultiplier: '1.3',
+};
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
-const calculateDreamLifestyle = ({
-  housing,
-  travel,
-  experiences,
-  savingsGoal,
-  emergencyBuffer,
-  taxMultiplier,
-}) => {
+const percentageFormatter = new Intl.NumberFormat('en-GB', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+const dreamLifestyleFaqs = [
+  {
+    question: 'How can I create a realistic dream lifestyle budget?',
+    answer:
+      'Start with your non-negotiables: housing, travel, hobbies, self-care, and savings. Research actual prices and build in a 10% buffer for spontaneity and inflation so the plan feels expansive and achievable.',
+  },
+  {
+    question: 'Should I include taxes in my lifestyle income target?',
+    answer:
+      'Yes. Use the tax multiplier to estimate the gross income you need after HMRC deductions. Many UK earners work with 1.2 to 1.4 to cover tax, National Insurance, and pension contributions.',
+  },
+  {
+    question: 'How often should I revisit my dream lifestyle numbers?',
+    answer:
+      'Review every six months or after major life changes. As your goals evolve, refreshing the calculator keeps your income targets inspiring rather than outdated.',
+  },
+];
+
+const directoryLinks = [
+  {
+    label: 'Browse the full calculator directory',
+    url: '/#calculator-directory',
+    description: 'Explore every UK calculator to keep your money goals on track.',
+  },
+  {
+    label: 'Budgeting & planning tools',
+    url: '/#budgeting-planning',
+    description: 'Balance everyday spending with future aspirations.',
+  },
+  {
+    label: 'Savings & investments hub',
+    url: '/#savings-investments',
+    description: 'Grow the funds that make your dream lifestyle sustainable.',
+  },
+];
+
+const relatedCalculators = [
+  {
+    name: 'Budget Calculator',
+    url: '/budget-calculator',
+    description: 'Align your current spending with your ideal lifestyle blueprint.',
+  },
+  {
+    name: 'Travel Budget Calculator',
+    url: '/travel-budget-calculator',
+    description: 'Plan experiences without derailing your monthly targets.',
+  },
+  {
+    name: 'Savings Goal Calculator',
+    url: '/savings-goal-calculator',
+    description: 'Turn lifestyle dreams into a step-by-step savings plan.',
+  },
+];
+
+const webPageSchema = createCalculatorWebPageSchema({
+  name: CALCULATOR_NAME,
+  description: metaDescription,
+  url: canonicalUrl,
+  keywords,
+});
+
+const breadcrumbSchema = createCalculatorBreadcrumbs({
+  name: CALCULATOR_NAME,
+  url: canonicalUrl,
+});
+
+const faqStructuredData = faqSchema(dreamLifestyleFaqs);
+
+const buildLifestylePlan = ({ housing, travel, experiences, savingsGoal, emergencyBuffer, taxMultiplier }) => {
   const monthlyLifestyleCost = housing + travel + experiences + savingsGoal;
   const annualLifestyleCost = monthlyLifestyleCost * 12;
   const annualTotal = annualLifestyleCost + emergencyBuffer;
@@ -60,68 +124,127 @@ const calculateDreamLifestyle = ({
   return {
     monthlyLifestyleCost,
     annualLifestyleCost,
-    emergencyBuffer,
     annualTotal,
     incomeTarget,
+    monthlyIncomeTarget: incomeTarget / 12,
+    emergencyBuffer,
   };
 };
 
 export default function DreamLifestyleCalculatorPage() {
-  const [inputs, setInputs] = useState({
-    housing: 2200,
-    travel: 600,
-    experiences: 400,
-    savingsGoal: 800,
-    emergencyBuffer: 12000,
-    taxMultiplier: 1.3,
-  });
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [results, setResults] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-  const results = useMemo(() => calculateDreamLifestyle(inputs), [inputs]);
+  const handleInputChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
 
-  const resetInputs = () =>
-    setInputs({
-      housing: 2200,
-      travel: 600,
-      experiences: 400,
-      savingsGoal: 800,
-      emergencyBuffer: 12000,
-      taxMultiplier: 1.3,
-    });
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setResults(null);
+    setHasCalculated(false);
+  };
+
+  const handleCalculate = (event) => {
+    event.preventDefault();
+    const payload = {
+      housing: sanitiseNumber(inputs.housing),
+      travel: sanitiseNumber(inputs.travel),
+      experiences: sanitiseNumber(inputs.experiences),
+      savingsGoal: sanitiseNumber(inputs.savingsGoal),
+      emergencyBuffer: sanitiseNumber(inputs.emergencyBuffer),
+      taxMultiplier: Math.max(sanitiseNumber(inputs.taxMultiplier), 1),
+    };
+
+    if (
+      payload.housing <= 0 &&
+      payload.travel <= 0 &&
+      payload.experiences <= 0 &&
+      payload.savingsGoal <= 0
+    ) {
+      setResults({ valid: false, message: 'Add at least one lifestyle cost to estimate your income target.' });
+      setHasCalculated(true);
+      return;
+    }
+
+    const outcome = buildLifestylePlan(payload);
+    setResults({ valid: true, ...outcome, payload });
+    setHasCalculated(true);
+  };
+
+  const chartData = useMemo(() => {
+    if (!results?.valid) return [];
+    const { payload } = results;
+    return [
+      {
+        name: 'Dream housing',
+        value: payload.housing,
+        color: '#8b5cf6',
+      },
+      {
+        name: 'Travel & adventures',
+        value: payload.travel,
+        color: '#ec4899',
+      },
+      {
+        name: 'Experiences & hobbies',
+        value: payload.experiences,
+        color: '#f97316',
+      },
+      {
+        name: 'Savings & wealth',
+        value: payload.savingsGoal,
+        color: '#22c55e',
+      },
+    ];
+  }, [results]);
+
+  const csvData = useMemo(() => {
+    if (!results?.valid) return null;
+    const { payload } = results;
+    return [
+      ['Expense category', 'Monthly amount (£)'],
+      ['Dream housing', payload.housing.toFixed(2)],
+      ['Travel & adventures', payload.travel.toFixed(2)],
+      ['Experiences & hobbies', payload.experiences.toFixed(2)],
+      ['Savings & wealth-building', payload.savingsGoal.toFixed(2)],
+      [],
+      ['Metric', 'Value'],
+      ['Monthly lifestyle cost (£)', results.monthlyLifestyleCost.toFixed(2)],
+      ['Annual lifestyle cost (£)', results.annualLifestyleCost.toFixed(2)],
+      ['Emergency buffer (£)', results.emergencyBuffer.toFixed(2)],
+      ['Annual total (£)', results.annualTotal.toFixed(2)],
+      ['Pre-tax income required (£)', results.incomeTarget.toFixed(2)],
+      ['Monthly pre-tax income target (£)', results.monthlyIncomeTarget.toFixed(2)],
+      ['Tax multiplier used', payload.taxMultiplier.toFixed(2)],
+    ];
+  }, [results]);
+
+  const showResults = hasCalculated && results?.valid;
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>Dream Lifestyle Calculator | Dream Lifestyle</title>
+        <title>{`${CALCULATOR_NAME} | Price Your Ideal Life`}</title>
         <meta name="description" content={metaDescription} />
         <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Dream Lifestyle Calculator | Dream Lifestyle" />
+        <meta property="og:title" content={`${CALCULATOR_NAME} | Price Your Ideal Life`} />
         <meta property="og:description" content={metaDescription} />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Calc My Money" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Dream Lifestyle Calculator | Dream Lifestyle" />
+        <meta name="twitter:title" content={`${CALCULATOR_NAME} | Price Your Ideal Life`} />
         <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Dream Lifestyle Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Design dream lifestyle budget',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
+        {keywords.length > 0 ? <meta name="keywords" content={keywords.join(', ')} /> : null}
       </Helmet>
+      <JsonLd data={webPageSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={faqStructuredData} />
 
       <section className="bg-gradient-to-r from-purple-900 via-pink-900 to-purple-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
@@ -129,233 +252,221 @@ export default function DreamLifestyleCalculatorPage() {
             Dream Lifestyle Calculator
           </Heading>
           <p className="text-lg md:text-xl text-purple-100">
-            Put numbers behind the life you want. Set income targets, savings commitments, and a
-            plan to make your dream lifestyle your default lifestyle.
+            Put numbers behind the life you want. Set income targets, savings commitments, and a plan to make your dream lifestyle your everyday reality.
           </p>
         </div>
       </section>
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <EmotionalHook
+          title="Design the life you cannot wait to wake up to"
+          message="Once you know the price tag of your dream life you can reverse-engineer the income, assets, and habits needed to sustain it."
+          quote="The future belongs to those who believe in the beauty of their dreams."
+          author="Eleanor Roosevelt"
+        />
+      </div>
+
       <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
+        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
           <Card className="border border-purple-200 dark:border-purple-900 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-semibold">
                 <Calculator className="h-5 w-5 text-purple-500" />
-                Lifestyle Inputs
+                Lifestyle inputs
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div>
-                <Label htmlFor="housing" className="text-sm font-medium flex items-center gap-2">
-                  <Home className="h-4 w-4 text-purple-500" />
-                  Dream housing (£/month)
-                </Label>
-                <Input
-                  id="housing"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.housing}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, housing: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="travel" className="text-sm font-medium flex items-center gap-2">
-                  <Plane className="h-4 w-4 text-purple-500" />
-                  Travel & adventures (£/month)
-                </Label>
-                <Input
-                  id="travel"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.travel}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, travel: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label
-                  htmlFor="experiences"
-                  className="text-sm font-medium flex items-center gap-2"
-                >
-                  <Sparkles className="h-4 w-4 text-purple-500" />
-                  Experiences & hobbies (£/month)
-                </Label>
-                <Input
-                  id="experiences"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.experiences}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, experiences: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label
-                  htmlFor="savingsGoal"
-                  className="text-sm font-medium flex items-center gap-2"
-                >
-                  <PiggyBank className="h-4 w-4 text-purple-500" />
-                  Future-you savings (£/month)
-                </Label>
-                <Input
-                  id="savingsGoal"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.savingsGoal}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, savingsGoal: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Annual buffer / contingency
-                  <span className="text-purple-600 font-semibold">
-                    £{inputs.emergencyBuffer.toLocaleString('en-GB')}
-                  </span>
-                </Label>
-                <Slider
-                  value={[inputs.emergencyBuffer]}
-                  onValueChange={(value) =>
-                    setInputs((prev) => ({ ...prev, emergencyBuffer: value[0] }))
-                  }
-                  min={0}
-                  max={25000}
-                  step={1000}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Tax & lifestyle multiplier
-                  <span className="text-purple-600 font-semibold">
-                    {inputs.taxMultiplier.toFixed(2)}x
-                  </span>
-                </Label>
-                <Slider
-                  value={[inputs.taxMultiplier]}
-                  onValueChange={(value) =>
-                    setInputs((prev) => ({ ...prev, taxMultiplier: Number(value[0].toFixed(2)) }))
-                  }
-                  min={1.0}
-                  max={1.6}
-                  step={0.05}
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  Multiplies your annual cost to cover taxes, pensions, and investment top ups.
-                </p>
-              </div>
-
-              <Button variant="outline" onClick={resetInputs} className="w-full">
-                Reset inputs
-              </Button>
+            <CardContent>
+              <form className="space-y-5" onSubmit={handleCalculate}>
+                <div>
+                  <Label htmlFor="housing" className="text-sm font-medium flex items-center gap-2">
+                    <Home className="h-4 w-4 text-purple-500" />
+                    Dream housing (£/month)
+                  </Label>
+                  <Input
+                    id="housing"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="1"
+                    value={inputs.housing}
+                    onChange={handleInputChange('housing')}
+                    placeholder="e.g., 2,200"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="travel" className="text-sm font-medium flex items-center gap-2">
+                    <Plane className="h-4 w-4 text-purple-500" />
+                    Travel & adventures (£/month)
+                  </Label>
+                  <Input
+                    id="travel"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="1"
+                    value={inputs.travel}
+                    onChange={handleInputChange('travel')}
+                    placeholder="e.g., 600"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="experiences" className="text-sm font-medium flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                    Experiences & hobbies (£/month)
+                  </Label>
+                  <Input
+                    id="experiences"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="1"
+                    value={inputs.experiences}
+                    onChange={handleInputChange('experiences')}
+                    placeholder="e.g., 400"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="savingsGoal" className="text-sm font-medium flex items-center gap-2">
+                    <PiggyBank className="h-4 w-4 text-purple-500" />
+                    Savings & wealth-building (£/month)
+                  </Label>
+                  <Input
+                    id="savingsGoal"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="1"
+                    value={inputs.savingsGoal}
+                    onChange={handleInputChange('savingsGoal')}
+                    placeholder="e.g., 800"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="emergencyBuffer" className="text-sm font-medium">
+                    Annual experiences fund / emergency buffer (£)
+                  </Label>
+                  <Input
+                    id="emergencyBuffer"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="100"
+                    value={inputs.emergencyBuffer}
+                    onChange={handleInputChange('emergencyBuffer')}
+                    placeholder="e.g., 12,000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="taxMultiplier" className="text-sm font-medium">
+                    Tax & NI multiplier
+                  </Label>
+                  <Input
+                    id="taxMultiplier"
+                    type="number"
+                    inputMode="decimal"
+                    min="1"
+                    step="0.05"
+                    value={inputs.taxMultiplier}
+                    onChange={handleInputChange('taxMultiplier')}
+                    placeholder="e.g., 1.30"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Multiply your annual lifestyle cost to cover UK tax, National Insurance, and pension contributions.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1">
+                    Calculate
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleReset}>
+                    Reset
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
-            <Card className="border border-purple-200 dark:border-purple-900 bg-purple-50 dark:bg-purple-900/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-100">
-                  <PiggyBank className="h-5 w-5" />
-                  Dream Lifestyle Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-4 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-purple-900/60 p-4 border border-purple-100 dark:border-purple-800">
-                  <p className="text-sm text-purple-700 dark:text-purple-200">Monthly lifestyle</p>
-                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                    {currencyFormatter.format(results.monthlyLifestyleCost)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-purple-900/60 p-4 border border-purple-100 dark:border-purple-800">
-                  <p className="text-sm text-purple-700 dark:text-purple-200">Annual lifestyle</p>
-                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                    {currencyFormatter.format(results.annualLifestyleCost)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-purple-900/60 p-4 border border-purple-100 dark:border-purple-800">
-                  <p className="text-sm text-purple-700 dark:text-purple-200">
-                    Annual total + buffer
-                  </p>
-                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                    {currencyFormatter.format(results.annualTotal)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-purple-900/60 p-4 border border-purple-100 dark:border-purple-800">
-                  <p className="text-sm text-purple-700 dark:text-purple-200">Income target</p>
-                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                    {currencyFormatter.format(results.incomeTarget)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          {showResults ? (
+            <div className="space-y-6">
+              <Card className="border border-purple-200 dark:border-purple-900 bg-purple-50 dark:bg-purple-900/20 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold text-purple-900 dark:text-purple-100">
+                    <Sparkles className="h-5 w-5" />
+                    Lifestyle summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-md bg-white/80 dark:bg-purple-900/40 p-4 border border-purple-100 dark:border-purple-800">
+                      <p className="text-xs uppercase tracking-wide text-purple-700 dark:text-purple-200">
+                        Monthly lifestyle cost
+                      </p>
+                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                        {currencyFormatter.format(results.monthlyLifestyleCost)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-purple-900/40 p-4 border border-purple-100 dark:border-purple-800">
+                      <p className="text-xs uppercase tracking-wide text-purple-700 dark:text-purple-200">
+                        Annual lifestyle cost
+                      </p>
+                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                        {currencyFormatter.format(results.annualLifestyleCost)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-purple-900/40 p-4 border border-purple-100 dark:border-purple-800">
+                      <p className="text-xs uppercase tracking-wide text-purple-700 dark:text-purple-200">
+                        Annual total incl. buffer
+                      </p>
+                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                        {currencyFormatter.format(results.annualTotal)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-purple-900/40 p-4 border border-purple-100 dark:border-purple-800">
+                      <p className="text-xs uppercase tracking-wide text-purple-700 dark:text-purple-200">
+                        Pre-tax income target
+                      </p>
+                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                        {currencyFormatter.format(results.incomeTarget)}
+                      </p>
+                      <p className="text-xs text-purple-700 dark:text-purple-200">
+                        ≈ {currencyFormatter.format(results.monthlyIncomeTarget)} per month before tax.
+                      </p>
+                    </div>
+                  </div>
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  Lifestyle Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span>Housing & living</span>
-                  <span>{currencyFormatter.format(inputs.housing * 12)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Travel & adventures</span>
-                  <span>{currencyFormatter.format(inputs.travel * 12)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Experiences & hobbies</span>
-                  <span>{currencyFormatter.format(inputs.experiences * 12)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Future-you savings</span>
-                  <span>{currencyFormatter.format(inputs.savingsGoal * 12)}</span>
-                </div>
-                <div className="flex items-center justify-between font-semibold text-slate-700 dark:text-slate-200">
-                  <span>Emergency / flexibility fund</span>
-                  <span>{currencyFormatter.format(inputs.emergencyBuffer)}</span>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="rounded-md bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-900 p-4">
+                    <h3 className="text-base font-semibold text-purple-900 dark:text-purple-100 mb-4">
+                      Budget split
+                    </h3>
+                    <ResultBreakdownChart data={chartData} title="Dream lifestyle budget split" />
+                  </div>
 
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Using the dream lifestyle calculator for goal setting
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Translate your dream lifestyle calculator results into monthly income targets. Pair
-                the numbers with timeline milestones so you know exactly when you can sustain your
-                ideal life without burning out.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Keeping the dream lifestyle calculator up to date
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Revisit the figures whenever your goals evolve—new cities, additional family
-                members, or a bigger philanthropic footprint. Updating the dream lifestyle
-                calculator keeps your vision grounded in the numbers that make it possible.
-              </p>
-            </section>
-          </div>
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="dream-lifestyle-calculator-results"
+                    title="Dream lifestyle calculation"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
+                <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
+                  <Sparkles className="h-5 w-5 text-purple-500" aria-hidden="true" />
+                  <p className="text-sm">
+                    {hasCalculated && results?.message ? (
+                      results.message
+                    ) : (
+                      <>
+                        Add monthly lifestyle categories and press <strong>Calculate</strong> to uncover the income that powers your dream life.
+                      </>
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </CalculatorWrapper>
 
@@ -364,6 +475,11 @@ export default function DreamLifestyleCalculatorPage() {
           <FAQSection faqs={dreamLifestyleFaqs} />
         </div>
       </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
+        <DirectoryLinks links={directoryLinks} />
+        <RelatedCalculators calculators={relatedCalculators} />
+      </div>
     </div>
   );
 }
