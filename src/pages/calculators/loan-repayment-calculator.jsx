@@ -1,41 +1,79 @@
-// src/pages/calculators/loan-repayment-calculator.jsx
-import React, { useState, useMemo, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Layers, TrendingUp, PiggyBank } from 'lucide-react';
+import React, { Suspense, useCallback, useMemo, useState } from 'react';
+import { Calculator, Layers, PiggyBank, Quote, TrendingUp } from 'lucide-react';
 
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/loan-repayment-calculator';
+const ResultBreakdownChart = React.lazy(() =>
+  import('@/components/calculators/ResultBreakdownChart.jsx'),
+);
 
-const schemaKeywords = [
-  'Loan Amount',
-  'Interest Rate',
-  'Repayment Term',
-  'Total Cost',
-  'Personal Loans',
-];
+const pagePath = '/calculators/loan-repayment-calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/loan-repayment-calculator';
+const pageTitle = 'Loan Repayment Calculator UK | Plan Monthly Payments';
+const metaDescription =
+  'Use the UK loan repayment calculator to model monthly payments, total interest, and payoff dates. Add extra payments to see how quickly you can clear personal, car, or consolidation loans.';
+const keywords = getMappedKeywords('Loan Repayment Calculator');
+
+const defaultInputs = {
+  loanAmount: '25,000',
+  annualRate: '6.5',
+  termYears: '5',
+  extraMonthly: '0',
+};
+
+const emotionalMessage =
+  'Having a clear payoff date turns every repayment into motivation. Run the numbers, adjust the plan, and watch the balance fall faster.';
+const emotionalQuote = {
+  text: 'Debt is the worst poverty.',
+  author: 'Thomas Fuller',
+};
 
 const faqItems = [
   {
     question: 'How is my monthly loan repayment calculated?',
     answer:
-      'We apply the standard amortisation formula using your loan amount, annual interest rate, and repayment term. The calculation assumes fixed monthly payments over the term selected.',
+      'We apply the standard amortisation formula using your loan amount, annual interest rate, and repayment term. The calculation assumes fixed monthly payments over the selected term.',
   },
   {
     question: 'How can I reduce the total interest paid on a loan?',
     answer:
-      'Make extra payments towards the principal, refinance at a lower rate, or shorten the loan term. Even small additional monthly contributions can shave years off a mortgage or personal loan.',
+      'Make extra payments toward the principal, refinance at a lower rate, or shorten the loan term. Even small monthly overpayments can shave years off a UK personal or car loan.',
   },
   {
     question: 'What does the amortisation schedule show?',
     answer:
-      'Each line of the schedule breaks your payment into interest and principal, showing how much of the balance remains after every instalment. Early payments are interest-heavy, but the principal share grows over time.',
+      'Each row splits the payment into interest and principal, showing how much balance remains after every instalment. Early payments are interest-heavy, but the principal share quickly grows.',
+  },
+];
+
+const directoryLinks = [
+  {
+    url: '/#debt-loans',
+    label: 'Debt & loan calculators directory',
+    description: 'Compare consolidation plans, repayment strategies, and interest-saving tactics.',
+  },
+  {
+    url: '/loan-comparison-calculator',
+    label: 'Compare two personal loans',
+    description: 'Check total repayments, APR-style costs, and fees side-by-side before applying.',
+  },
+  {
+    url: '/budget-planner',
+    label: 'Build a monthly budget that funds repayments',
+    description: 'Track household cash flow so extra loan payments stay realistic.',
   },
 ];
 
@@ -45,293 +83,483 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 2,
 });
 
+function parseNumber(value) {
+  if (value == null) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 function computeMonthlyPayment(principal, annualRatePercent, termYears) {
   const monthlyRate = annualRatePercent / 100 / 12;
   const totalMonths = termYears * 12;
-
   if (principal <= 0 || totalMonths <= 0) return 0;
   if (monthlyRate === 0) return principal / totalMonths;
-
   const factor = Math.pow(1 + monthlyRate, totalMonths);
   return (principal * monthlyRate * factor) / (factor - 1);
 }
 
 function buildAmortisationSchedule(principal, annualRatePercent, termYears, extraPayment) {
-  const monthlyPaymentBase = computeMonthlyPayment(principal, annualRatePercent, termYears);
-  const monthlyPayment = monthlyPaymentBase + extraPayment;
   const monthlyRate = annualRatePercent / 100 / 12;
   const totalMonths = termYears * 12;
+  const basePayment = computeMonthlyPayment(principal, annualRatePercent, termYears);
+  const monthlyPayment = basePayment + extraPayment;
 
   let balance = principal;
+  let month = 0;
+  let totalInterest = 0;
   const schedule = [];
-  for (let month = 1; month <= totalMonths && balance > 0; month += 1) {
-    const interest = balance * monthlyRate;
-    const principalPaid = Math.min(monthlyPayment - interest, balance);
-    balance = Math.max(balance - principalPaid, 0);
 
+  while (balance > 0 && month < totalMonths + 120) {
+    month += 1;
+    const interest = balance * monthlyRate;
+    let principalPaid = monthlyPayment - interest;
+    if (principalPaid <= 0) {
+      principalPaid = 0;
+    }
+    if (principalPaid > balance) {
+      principalPaid = balance;
+    }
+    const payment = principalPaid + interest;
+    balance = Math.max(balance - principalPaid, 0);
+    totalInterest += interest;
     schedule.push({
       month,
-      payment: monthlyPayment,
+      payment,
       interest,
       principal: principalPaid,
       balance,
     });
-
     if (balance <= 0) break;
   }
 
-  return schedule;
+  const totalPaid = schedule.reduce((sum, row) => sum + row.payment, 0);
+  return {
+    schedule,
+    totalInterest,
+    totalPaid,
+    monthsToClear: schedule.length,
+    monthlyPayment,
+    baseMonthlyPayment: basePayment,
+  };
 }
 
-export default function LoanRepaymentCalculator() {
-  const [inputs, setInputs] = useState({
-    loanAmount: '25000',
-    annualRate: '6.5',
-    termYears: '5',
-    extraMonthly: '0',
+function calculateLoanRepayment(inputs) {
+  const loanAmount = parseNumber(inputs?.loanAmount);
+  const annualRate = parseNumber(inputs?.annualRate);
+  const termYears = parseNumber(inputs?.termYears);
+  const extraMonthly = Math.max(0, parseNumber(inputs?.extraMonthly));
+
+  const isValid = loanAmount > 0 && termYears > 0 && annualRate >= 0;
+  if (!isValid) {
+    return { isValid: false, loanAmount, annualRate, termYears, extraMonthly };
+  }
+
+  const amortisation = buildAmortisationSchedule(loanAmount, annualRate, termYears, extraMonthly);
+  const principalRepaid = loanAmount;
+  const effectiveExtra = Math.max(amortisation.monthlyPayment - amortisation.baseMonthlyPayment, 0);
+
+  return {
+    isValid: true,
+    loanAmount,
+    annualRate,
+    termYears,
+    extraMonthly,
+    ...amortisation,
+    principalRepaid,
+    effectiveExtra,
+  };
+}
+
+function buildCsvData(result) {
+  if (!result?.isValid) return null;
+  const rows = [
+    ['Metric', 'Value'],
+    ['Loan amount (£)', currencyFormatter.format(result.loanAmount)],
+    ['Interest rate (%)', `${result.annualRate.toFixed(2)}%`],
+    ['Term (years)', result.termYears],
+    ['Monthly repayment (£)', currencyFormatter.format(result.monthlyPayment)],
+    ['Total interest (£)', currencyFormatter.format(result.totalInterest)],
+    ['Total repaid (£)', currencyFormatter.format(result.totalPaid)],
+    ['Months to clear', result.monthsToClear],
+    [],
+    ['Month', 'Payment (£)', 'Principal (£)', 'Interest (£)', 'Balance (£)'],
+  ];
+  result.schedule.forEach((row) => {
+    rows.push([
+      row.month,
+      currencyFormatter.format(row.payment),
+      currencyFormatter.format(row.principal),
+      currencyFormatter.format(row.interest),
+      currencyFormatter.format(row.balance),
+    ]);
+  });
+  return rows;
+}
+
+function buildChartData(result) {
+  if (!result?.isValid) return [];
+  return [
+    { name: 'Principal repaid', value: result.principalRepaid, color: '#2563eb' },
+    { name: 'Total interest', value: result.totalInterest, color: '#f97316' },
+  ];
+}
+
+export default function LoanRepaymentCalculatorPage() {
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [result, setResult] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [csvData, setCsvData] = useState(null);
+
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Loan Repayment Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Debt & Loans', url: '/#debt-loans' },
+      { name: 'Loan Repayment Calculator', url: pagePath },
+    ],
+    faq: faqItems,
   });
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    [],
+  );
+
+  const handleReset = useCallback(() => {
+    setInputs(defaultInputs);
+    setResult(null);
+    setCsvData(null);
+    setHasCalculated(false);
   }, []);
 
-  const results = useMemo(() => {
-    const loanAmount = Number(inputs.loanAmount) || 0;
-    const annualRate = Number(inputs.annualRate) || 0;
-    const termYears = Number(inputs.termYears) || 0;
-    const extraMonthly = Number(inputs.extraMonthly) || 0;
+  const handleCalculate = useCallback(
+    (event) => {
+      event.preventDefault();
+      const nextResult = calculateLoanRepayment(inputs);
+      setResult(nextResult);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(nextResult));
+    },
+    [inputs],
+  );
 
-    const baseMonthlyPayment = computeMonthlyPayment(loanAmount, annualRate, termYears);
-    const schedule = buildAmortisationSchedule(loanAmount, annualRate, termYears, extraMonthly);
-    const actualMonths = schedule.length;
-
-    const totalPaid = schedule.reduce((sum, row) => sum + row.payment, 0);
-    const totalInterest = totalPaid - loanAmount;
-
-    return {
-      baseMonthlyPayment,
-      schedule,
-      totalPaid,
-      totalInterest,
-      actualMonths,
-      monthlyPaymentWithExtra: baseMonthlyPayment + extraMonthly,
-    };
-  }, [inputs]);
-
-  const reset = useCallback(() => {
-    setInputs({
-      loanAmount: '25000',
-      annualRate: '6.5',
-      termYears: '5',
-      extraMonthly: '0',
-    });
-  }, []);
+  const chartData = useMemo(() => buildChartData(result), [result]);
 
   return (
     <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Loan Repayment & Amortisation Schedule Calculator</title>
-        <meta
-          name="description"
-          content="Plan loan repayments, explore amortisation schedules, and estimate total interest with our loan repayment calculator."
-        />
-        <meta name="keywords" content="Loan Calculator, Monthly Payments, Interest Paid" />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FinancialProduct',
-              name: 'Loan Repayment Calculator',
-              description:
-                'Calculate monthly repayments, view amortisation schedules, and plan debt payoff for personal loans, car loans, or mortgages.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Calculate loan repayments',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="Calc My Money"
+        keywords={keywords}
+        articleTags={keywords}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Loan Repayment Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-blue-100">
-            Calculate repayments, map an amortisation schedule, and plan debt payoff with confidence.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-12">
+          <section className="space-y-4 text-center">
+            <Heading as="h1" size="h1" weight="bold" className="text-slate-900adle dark:text-slate-100">
+              Loan Repayment Calculator
+            </Heading>
+            <p className="mx-auto max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Discover the monthly payment, total interest, and payoff time for any UK personal
+              loan. Add extra monthly contributions to see how quickly the balance disappears.
+              Results appear only after you press <strong>Calculate loan repayments</strong>.
+            </p>
+          </section>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-blue-200 dark:border-blue-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-blue-500" />
-                Loan Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="loanAmount" className="text-sm font-medium">
-                  Loan amount (£)
-                </Label>
-                <Input
-                  id="loanAmount"
-                  inputMode="decimal"
-                  value={inputs.loanAmount}
-                  onChange={(event) => handleChange('loanAmount', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="annualRate" className="text-sm font-medium">
-                  Annual interest rate (%)
-                </Label>
-                <Input
-                  id="annualRate"
-                  inputMode="decimal"
-                  value={inputs.annualRate}
-                  onChange={(event) => handleChange('annualRate', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="termYears" className="text-sm font-medium">
-                  Term (years)
-                </Label>
-                <Input
-                  id="termYears"
-                  inputMode="decimal"
-                  value={inputs.termYears}
-                  onChange={(event) => handleChange('termYears', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="extraMonthly" className="text-sm font-medium">
-                  Extra monthly payment (£)
-                </Label>
-                <Input
-                  id="extraMonthly"
-                  inputMode="decimal"
-                  value={inputs.extraMonthly}
-                  onChange={(event) => handleChange('extraMonthly', event.target.value)}
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="border border-blue-200 dark:border-blue-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <PiggyBank className="h-5 w-5 text-blue-500" />
-                  Repayment Summary
+          <section className="space-y-8">
+            <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <CardHeader className="space-y-2">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  <Calculator className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                  Enter your loan details
                 </CardTitle>
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  Figures reflect fixed monthly repayments using standard UK amortisation. Extra
+                  payments reduce the balance each month, shortening the term and cutting interest.
+                </p>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Monthly payment</p>
-                    <p className="text-lg font-semibold text-blue-600">
-                      {currencyFormatter.format(results.monthlyPaymentWithExtra)}
-                    </p>
-                    <p className="caption text-muted-foreground">
-                      Includes base payment plus extra contribution
-                    </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleCalculate}>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="loanAmount" className="text-sm font-medium">
+                          Loan amount (£)
+                        </Label>
+                        <Input
+                          id="loanAmount"
+                          value={inputs.loanAmount}
+                          onChange={handleInputChange('loanAmount')}
+                          inputMode="decimal"
+                          placeholder="e.g. 25,000"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="annualRate" className="text-sm font-medium">
+                          Interest rate (% APR)
+                        </Label>
+                        <Input
+                          id="annualRate"
+                          value={inputs.annualRate}
+                          onChange={handleInputChange('annualRate')}
+                          inputMode="decimal"
+                          placeholder="e.g. 6.5"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="termYears" className="text-sm font-medium">
+                          Term length (years)
+                        </Label>
+                        <Input
+                          id="termYears"
+                          value={inputs.termYears}
+                          onChange={handleInputChange('termYears')}
+                          inputMode="decimal"
+                          placeholder="e.g. 5"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="extraMonthly" className="text-sm font-medium">
+                          Extra monthly payment (£)
+                        </Label>
+                        <Input
+                          id="extraMonthly"
+                          value={inputs.extraMonthly}
+                          onChange={handleInputChange('extraMonthly')}
+                          inputMode="decimal"
+                          placeholder="e.g. 100"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Total interest</p>
-                    <p className="text-lg font-semibold text-rose-600">
-                      {currencyFormatter.format(results.totalInterest)}
-                    </p>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate loan repayments
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                      Reset inputs
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Total repaid</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.totalPaid)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Months to clear</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {results.actualMonths}
-                    </p>
-                  </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-blue-200 dark:border-blue-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Layers className="h-5 w-5 text-blue-500" />
-                  Amortisation Snapshot
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                {results.schedule.slice(0, 6).map((row) => (
-                  <div
-                    key={row.month}
-                    className="flex flex-wrap justify-between rounded border border-muted-foreground/10 px-3 py-2"
+            {!hasCalculated && (
+              <Card className="border border-dashed border-slate-300 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
+                <CardContent className="py-10 text-center text-sm leading-relaxed">
+                  Enter your loan amount, interest rate, and term, then press{' '}
+                  <strong>Calculate loan repayments</strong>. The calculator keeps results hidden
+                  until you ask for them, so you can adjust the inputs without distractions.
+                </CardContent>
+              </Card>
+            )}
+
+            {hasCalculated && result && !result.isValid && (
+              <Card className="border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                <CardContent className="py-6 text-sm leading-relaxed">
+                  Please review the figures. The calculator needs a loan amount above £0, a term
+                  greater than zero, and a non-negative interest rate. Adjust the inputs and
+                  calculate again to see the repayment plan.
+                </CardContent>
+              </Card>
+            )}
+
+            {hasCalculated && result?.isValid && (
+              <div className="space-y-6">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <Heading
+                    as="h2"
+                    size="h2"
+                    weight="semibold"
+                    className="text-slate-900 dark:text-slate-100"
                   >
-                    <span className="font-medium text-foreground">Month {row.month}</span>
-                    <span>Payment: {currencyFormatter.format(row.payment)}</span>
-                    <span>Interest: {currencyFormatter.format(row.interest)}</span>
-                    <span>Principal: {currencyFormatter.format(row.principal)}</span>
-                    <span>Balance: {currencyFormatter.format(row.balance)}</span>
-                  </div>
-                ))}
-                {results.schedule.length > 6 && (
-                  <p className="caption text-muted-foreground">
-                    Showing first six payments. Continue exporting for full amortisation details.
-                  </p>
-                )}
+                    Loan repayment summary
+                  </Heading>
+                  <ExportActions
+                    csvData={csvData}
+                    fileName='loan-repayment-calculator'
+                    title="Loan Repayment Calculator Results"
+                  />
+                </div>
+
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+                        <PiggyBank className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                        Key repayment figures
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 md:grid-cols-2">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/50">
+                        <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          Monthly repayment
+                        </p>
+                        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {currencyFormatter.format(result.monthlyPayment)}
+                        </p>
+                        {result.effectiveExtra > 0 && (
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            Includes {currencyFormatter.format(result.effectiveExtra)} extra each month
+                          </p>
+                        )}
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/50">
+                        <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          Total interest
+                        </p>
+                        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {currencyFormatter.format(result.totalInterest)}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          Repaying £{result.loanAmount.toLocaleString('en-GB')}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/50">
+                        <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          Total repaid
+                        </p>
+                        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {currencyFormatter.format(result.totalPaid)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/50">
+                        <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          Months to clear
+                        </p>
+                        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                          {result.monthsToClear}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+                        <Layers className="h-5 w-5 text-sky-600" aria-hidden="true" />
+                        First year snapshot
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-slate-100 text-xs uppercase tracking-wide text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                          <tr>
+                            <th className="px-4 py-2">Month</th>
+                            <th className="px-4 py-2">Payment</th>
+                            <th className="px-4 py-2">Principal</th>
+                            <th className="px-4 py-2">Interest</th>
+                            <th className="px-4 py-2">Balance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {result.schedule.slice(0, 12).map((row) => (
+                            <tr
+                              key={row.month}
+                              className="border-b border-slate-100 text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900/40"
+                            >
+                              <td className="px-4 py-2 font-medium">{row.month}</td>
+                              <td className="px-4 py-2">{currencyFormatter.format(row.payment)}</td>
+                              <td className="px-4 py-2">{currencyFormatter.format(row.principal)}</td>
+                              <td className="px-4 py-2 text-rose-600 dark:text-rose-300">
+                                {currencyFormatter.format(row.interest)}
+                              </td>
+                              <td className="px-4 py-2">{currencyFormatter.format(row.balance)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {result.schedule.length > 12 && (
+                        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                          Export the CSV to review the full amortisation schedule and track every
+                          repayment until the balance reaches zero.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+                      <TrendingUp className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                      Principal vs interest breakdown
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Suspense
+                      fallback={
+                        <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                          Loading repayment chart…
+                        </div>
+                      }
+                    >
+                      <ResultBreakdownChart data={chartData} title="Loan repayment breakdown" />
+                    </Suspense>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </section>
+
+          <section className="grid gap-6 lg:grid-cols-2">
+            <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Staying motivated
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <p>{emotionalMessage}</p>
+                <p className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50/70 p-3 text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
+                  <Quote className="h-5 w-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                  <span>
+                    “{emotionalQuote.text}” — <em>{emotionalQuote.author}</em>
+                  </span>
+                </p>
               </CardContent>
             </Card>
-          </div>
+
+            <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Continue planning
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DirectoryLinks links={directoryLinks} />
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Repayments and Plan Debt Strategically
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Understanding the breakdown of principal and interest is critical to debt planning. Use
-            this calculator to model monthly obligations and test how extra payments reduce total
-            interest paid.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Loan Terminology, Principal, and Interest
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Principal represents the amount borrowed, while interest compensates the lender over the
-            term. The amortisation schedule shows how each payment reduces the principal and how
-            much interest you pay across the life of the loan.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Debt Planning Through Extra Payments
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Even modest extra monthly payments can save thousands in interest and shorten the term.
-            Experiment with different contributions to identify the most efficient payoff strategy.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );
 }
+

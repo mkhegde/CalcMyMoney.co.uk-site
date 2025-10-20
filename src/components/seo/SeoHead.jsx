@@ -11,6 +11,7 @@ export default function SeoHead({
   canonical,
   robots = DEFAULT_ROBOTS,
   themeColor,
+  keywords,
   ogTitle,
   ogDescription,
   ogType = 'website',
@@ -52,12 +53,18 @@ export default function SeoHead({
   const resolvedTwitterImageAlt = twitterImageAlt || ogImageAlt;
 
   const jsonLdArray = Array.isArray(jsonLd) ? jsonLd.filter(Boolean) : [];
+  const keywordContent = Array.isArray(keywords)
+    ? keywords.filter(Boolean).join(', ')
+    : typeof keywords === 'string'
+      ? keywords
+      : undefined;
   const articleTagsArray = Array.isArray(articleTags) ? articleTags.filter(Boolean) : [];
 
   return (
     <Helmet>
       {title && <title>{title}</title>}
       {description && <meta name="description" content={description} />}
+      {keywordContent && <meta name="keywords" content={keywordContent} />}
       {canonicalHref && <link rel="canonical" href={canonicalHref} />}
       {robots && <meta name="robots" content={robots} />}
       {themeColor && <meta name="theme-color" content={themeColor} />}
