@@ -1,62 +1,130 @@
 import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { LineChart, BarChart3, Rocket, Calculator, TrendingUp } from 'lucide-react';
+import { Calculator, TrendingUp, BarChart3 } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import ExportActions from '@/components/calculators/ExportActions';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
+import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
+import { createCalculatorWebPageSchema, createCalculatorBreadcrumbs } from '@/utils/calculatorSchema.js';
+import { sanitiseNumber } from '@/utils/sanitiseNumber.js';
 
-const keywords = [
-  'investment calculator',
-  'future value calculator',
-  'compound interest calculator',
-  'cagr calculator',
-  'rate of return calculator',
-];
+const CALCULATOR_NAME = 'Investment Calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/investment-calculator';
+const keywords = getCalculatorKeywords(CALCULATOR_NAME);
 
 const metaDescription =
-  'Model your investment calculator journey with future value calculator projections, compound interest calculator growth, and automated contribution increases.';
-
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/investment-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+  'Project the future value of UK investments with compound growth, contribution increases, and annual top-ups.';
 
 const compoundingOptions = [
   { value: 1, label: 'Annually' },
   { value: 4, label: 'Quarterly' },
   { value: 12, label: 'Monthly' },
-  { value: 365, label: 'Daily' },
+  { value: 365, label: 'Daily (approx.)' },
 ];
 
-const investmentFaqs = [
-  {
-    question: 'How does compounding frequency affect returns?',
-    answer:
-      'More frequent compounding applies interest to your balance more often. Switching from annual to monthly or daily compounding slightly accelerates growth, especially over long time frames.',
-  },
-  {
-    question: 'Can I model annual contribution increases?',
-    answer:
-      'Yes. Use the contribution growth slider to mimic pay rises or bonus sweeps. The investment calculator automatically scales future deposits by your chosen percentage.',
-  },
-  {
-    question: 'What does CAGR represent?',
-    answer:
-      'CAGR (compound annual growth rate) shows the smoothed annual return needed to move from your starting value to the final projection. It helps you compare scenarios on an apples-to-apples basis.',
-  },
-];
-
-const calculateMonthlyRate = (annualReturn, periodsPerYear) => {
-  const rate = Math.max(Number(annualReturn) || 0, 0) / 100;
-  const perYear = Math.max(Number(periodsPerYear) || 1, 1);
-  return Math.pow(1 + rate / perYear, perYear / 12) - 1;
+const defaultInputs = {
+  initialInvestment: '10,000',
+  monthlyContribution: '400',
+  annualContributionGrowth: '3',
+  annualReturn: '7',
+  compoundingFrequency: '12',
+  years: '20',
+  annualTopUp: '1,000',
 };
 
-const generateInvestmentProjection = ({
+const faqItems = [
+  {
+    question: 'How does compounding frequency influence returns?',
+    answer:
+      'More frequent compounding credits growth to your balance more often. Switching from annual to monthly compounding slightly increases long-term gains.',
+  },
+  {
+    question: 'Can I simulate annual pay rises or contribution increases?',
+    answer:
+      'Yes. Enter a contribution growth rate to automatically scale monthly deposits each year. Add an optional annual top-up for bonuses or lump sums.',
+  },
+  {
+    question: 'Do the calculations allow for charges or inflation?',
+    answer:
+      'This calculator models growth before fees and inflation. Run scenarios with lower returns to reflect platform charges or rising costs.',
+  },
+];
+
+const directoryLinks = [
+  {
+    label: 'Browse the full calculator directory',
+    url: '/#calculator-directory',
+    description: 'Access every ISA, pension, and budgeting calculator we provide.',
+  },
+  {
+    label: 'Savings & investments tools',
+    url: '/#savings-investments',
+    description: 'Fine-tune your compounding strategy alongside ISA and pension planners.',
+  },
+  {
+    label: 'Future Value Calculator',
+    url: '/future-value-calculator',
+    description: 'See how simple compound interest compares with more detailed projections.',
+  },
+];
+
+const relatedCalculators = [
+  {
+    name: 'ISA Calculator',
+    url: '/isa-calculator',
+    description: 'Plan tax-free contributions and government bonuses for ISAs.',
+  },
+  {
+    name: 'Retirement Savings Calculator',
+    url: '/retirement-savings-calculator',
+    description: 'Map retirement pot growth across multiple investment accounts.',
+  },
+  {
+    name: 'Savings Goal Calculator',
+    url: '/savings-goal-calculator',
+    description: 'Break investment targets into manageable monthly savings.',
+  },
+];
+
+const webPageSchema = createCalculatorWebPageSchema({
+  name: CALCULATOR_NAME,
+  description: metaDescription,
+  url: canonicalUrl,
+  keywords,
+});
+
+const breadcrumbSchema = createCalculatorBreadcrumbs({
+  name: CALCULATOR_NAME,
+  url: canonicalUrl,
+});
+
+const faqStructuredData = faqSchema(faqItems);
+
+const currencyFormatter = (value) =>
+  value.toLocaleString('en-GB', {
+    style: 'currency',
+    currency: 'GBP',
+    minimumFractionDigits: 2,
+  });
+
+const calculateMonthlyRate = (annualReturn, compoundingFrequency) => {
+  const annualRate = Math.max(annualReturn, 0) / 100;
+  const periodsPerYear = Math.max(compoundingFrequency, 1);
+  return Math.pow(1 + annualRate / periodsPerYear, periodsPerYear / 12) - 1;
+};
+
+const projectInvestment = ({
   initialInvestment,
   monthlyContribution,
   annualContributionGrowth,
@@ -65,25 +133,29 @@ const generateInvestmentProjection = ({
   years,
   annualTopUp,
 }) => {
-  const months = Math.max(Math.round(Number(years) * 12) || 0, 0);
-  const monthlyRate = calculateMonthlyRate(annualReturn, compoundingFrequency);
-  const contributionGrowthRate = Math.max(Number(annualContributionGrowth) || 0, 0) / 100;
-  const topUp = Math.max(Number(annualTopUp) || 0, 0);
+  if (years <= 0) {
+    return { valid: false, message: 'Enter a time horizon greater than zero years.' };
+  }
 
-  let balance = Math.max(Number(initialInvestment) || 0, 0);
+  const months = Math.round(years * 12);
+  const monthlyRate = calculateMonthlyRate(annualReturn, compoundingFrequency);
+  const contributionGrowthRate = Math.max(annualContributionGrowth, 0) / 100;
+  const topUp = Math.max(annualTopUp, 0);
+
+  let balance = Math.max(initialInvestment, 0);
   let totalContributions = balance;
 
   const snapshots = [];
 
   for (let month = 1; month <= months; month += 1) {
     const yearIndex = Math.floor((month - 1) / 12);
-    const grownContribution =
-      Math.max(Number(monthlyContribution) || 0, 0) * Math.pow(1 + contributionGrowthRate, yearIndex);
+    const adjustedContribution =
+      Math.max(monthlyContribution, 0) * Math.pow(1 + contributionGrowthRate, yearIndex);
 
-    balance += grownContribution;
-    totalContributions += grownContribution;
+    balance += adjustedContribution;
+    totalContributions += adjustedContribution;
 
-    if (month % 12 === 1 && month !== 1) {
+    if (month % 12 === 0) {
       balance += topUp;
       totalContributions += topUp;
     }
@@ -103,276 +175,269 @@ const generateInvestmentProjection = ({
     }
   }
 
+  const growth = balance - totalContributions;
   return {
+    valid: true,
     finalBalance: balance,
     totalContributions,
-    growth: balance - totalContributions,
+    growth,
     snapshots,
   };
 };
 
-const calculateCagr = ({ initialInvestment, finalBalance, years, totalContributions }) => {
-  const safeYears = Math.max(Number(years) || 0, 0);
-  if (safeYears === 0 || finalBalance <= 0) {
-    return 0;
-  }
+const calculateCagr = ({ initialInvestment, totalContributions, finalBalance, years }) => {
+  if (years <= 0 || finalBalance <= 0) return 0;
+  const initial = Math.max(initialInvestment, 0);
+  const contributions = Math.max(totalContributions, 0);
+  if (contributions === 0) return 0;
 
-  const initialValue = Math.max(Number(initialInvestment) || 0, 0);
-
-  if (initialValue > 0 && Math.max(Number(totalContributions) || 0, 0) === initialValue) {
-    return Math.pow(finalBalance / initialValue, 1 / safeYears) - 1;
-  }
-
-  // Approximate CAGR using average invested capital when there are contributions
-  const averageInvested = (initialValue + Math.max(Number(totalContributions) || 0, 0)) / 2 || 1;
-  return Math.pow(finalBalance / averageInvested, 1 / safeYears) - 1;
+  const averageInvested = (initial + contributions) / 2 || 1;
+  return Math.pow(finalBalance / averageInvested, 1 / years) - 1;
 };
 
 export default function InvestmentCalculatorPage() {
-  const [inputs, setInputs] = useState({
-    initialInvestment: 10000,
-    monthlyContribution: 400,
-    annualContributionGrowth: 3,
-    annualReturn: 7,
-    compoundingFrequency: 12,
-    years: 20,
-    annualTopUp: 1000,
-  });
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [results, setResults] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-  const projection = useMemo(
-    () =>
-      generateInvestmentProjection({
-        initialInvestment: inputs.initialInvestment,
-        monthlyContribution: inputs.monthlyContribution,
-        annualContributionGrowth: inputs.annualContributionGrowth,
-        annualReturn: inputs.annualReturn,
-        compoundingFrequency: inputs.compoundingFrequency,
-        years: inputs.years,
-        annualTopUp: inputs.annualTopUp,
-      }),
-    [inputs]
-  );
+  const handleInputChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
 
-  const cagr = useMemo(
-    () =>
-      calculateCagr({
-        initialInvestment: inputs.initialInvestment,
-        finalBalance: projection.finalBalance,
-        years: inputs.years,
-        totalContributions: projection.totalContributions,
-      }),
-    [inputs, projection.finalBalance, projection.totalContributions]
-  );
+  const handleSelectChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
 
-  const resetAll = () =>
-    setInputs({
-      initialInvestment: 10000,
-      monthlyContribution: 400,
-      annualContributionGrowth: 3,
-      annualReturn: 7,
-      compoundingFrequency: 12,
-      years: 20,
-      annualTopUp: 1000,
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setResults(null);
+    setHasCalculated(false);
+  };
+
+  const handleCalculate = (event) => {
+    event.preventDefault();
+    const payload = {
+      initialInvestment: sanitiseNumber(inputs.initialInvestment),
+      monthlyContribution: sanitiseNumber(inputs.monthlyContribution),
+      annualContributionGrowth: sanitiseNumber(inputs.annualContributionGrowth),
+      annualReturn: sanitiseNumber(inputs.annualReturn),
+      compoundingFrequency: Number(inputs.compoundingFrequency),
+      years: sanitiseNumber(inputs.years),
+      annualTopUp: sanitiseNumber(inputs.annualTopUp),
+    };
+    const projection = projectInvestment(payload);
+    if (!projection.valid) {
+      setResults(projection);
+      setHasCalculated(true);
+      return;
+    }
+
+    const cagr = calculateCagr({
+      initialInvestment: payload.initialInvestment,
+      totalContributions: projection.totalContributions,
+      finalBalance: projection.finalBalance,
+      years: payload.years,
     });
+
+    setResults({
+      ...projection,
+      cagr,
+      payload,
+    });
+    setHasCalculated(true);
+  };
+
+  const chartData = useMemo(() => {
+    if (!results?.valid) return [];
+    return [
+      { name: 'Total contributions', value: results.totalContributions, color: '#0ea5e9' },
+      { name: 'Investment growth', value: results.growth, color: '#22c55e' },
+    ];
+  }, [results]);
+
+  const csvData = useMemo(() => {
+    if (!results?.valid || !results.snapshots) return null;
+    const rows = [
+      ['Metric', 'Value'],
+      ['Initial investment (£)', results.payload.initialInvestment.toFixed(2)],
+      ['Monthly contribution (£)', results.payload.monthlyContribution.toFixed(2)],
+      ['Contribution growth (%)', results.payload.annualContributionGrowth.toFixed(2)],
+      ['Annual top-up (£)', results.payload.annualTopUp.toFixed(2)],
+      ['Annual return (%)', results.payload.annualReturn.toFixed(2)],
+      ['Years invested', results.payload.years.toFixed(1)],
+      ['Compounding frequency (per year)', results.payload.compoundingFrequency],
+      ['Total contributions (£)', results.totalContributions.toFixed(2)],
+      ['Investment growth (£)', results.growth.toFixed(2)],
+      ['Final balance (£)', results.finalBalance.toFixed(2)],
+      ['Approximate CAGR (%)', (results.cagr * 100).toFixed(2)],
+      [],
+      ['Year', 'Balance (£)', 'Cumulative contributions (£)', 'Growth (£)'],
+    ];
+    results.snapshots.slice(0, 20).forEach((snapshot) => {
+      rows.push([
+        snapshot.year,
+        snapshot.balance.toFixed(2),
+        snapshot.contributions.toFixed(2),
+        snapshot.growth.toFixed(2),
+      ]);
+    });
+    return rows;
+  }, [results]);
+
+  const showResults = hasCalculated && results?.valid;
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>Investment Calculator | Future Value Calculator</title>
+        <title>{`${CALCULATOR_NAME} | Compound Growth Planner`}</title>
         <meta name="description" content={metaDescription} />
+        {keywords.length ? <meta name="keywords" content={keywords.join(', ')} /> : null}
         <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Investment Calculator | Future Value Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Investment Calculator | Future Value Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Investment Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Project savings with an investment calculator',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
       </Helmet>
+      <JsonLd data={webPageSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Heading as="h1" size="h1" weight="bold" className="text-white">
             Investment Calculator
           </Heading>
-          <p className="text-lg text-emerald-100 md:text-xl">
-            Forecast the future value of your investments with adjustable contribution growth, annual
-            top-ups, and flexible compounding frequencies.
+          <p className="text-lg md:text-xl text-indigo-100">
+            Forecast your portfolio growth with compound interest, contribution increases, and annual top-ups.
           </p>
         </div>
       </section>
 
-      <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 bg-white text-slate-900 shadow-md dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Rocket className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Contribution plan
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="initialInvestment">Initial investment (£)</Label>
-                    <Input
-                      id="initialInvestment"
-                      type="number"
-                      min="0"
-                      step="100"
-                      value={inputs.initialInvestment}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          initialInvestment: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="monthlyContribution">Monthly contribution (£)</Label>
-                    <Input
-                      id="monthlyContribution"
-                      type="number"
-                      min="0"
-                      step="25"
-                      value={inputs.monthlyContribution}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          monthlyContribution: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <EmotionalHook
+          title="Let compounding carry more of the load"
+          message="When you understand how contributions and growth work together, it’s easier to stay invested through market noise and delayed gratification."
+          quote="The stock market is a device for transferring money from the impatient to the patient."
+          author="Warren Buffett"
+        />
+      </div>
+
+      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+          <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <Calculator className="h-5 w-5 text-indigo-500" />
+                Investment inputs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-5" onSubmit={handleCalculate}>
+                <div>
+                  <Label htmlFor="initialInvestment" className="text-sm font-medium">
+                    Initial investment (£)
+                  </Label>
+                  <Input
+                    id="initialInvestment"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="100"
+                    value={inputs.initialInvestment}
+                    onChange={handleInputChange('initialInvestment')}
+                    placeholder="e.g., 10,000"
+                  />
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="annualContributionGrowth">Contribution increase per year (%)</Label>
-                    <Slider
+                <div>
+                  <Label htmlFor="monthlyContribution" className="text-sm font-medium">
+                    Monthly contribution (£)
+                  </Label>
+                  <Input
+                    id="monthlyContribution"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="10"
+                    value={inputs.monthlyContribution}
+                    onChange={handleInputChange('monthlyContribution')}
+                    placeholder="e.g., 400"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="annualContributionGrowth" className="text-sm font-medium">
+                      Contribution growth (% p.a.)
+                    </Label>
+                    <Input
                       id="annualContributionGrowth"
-                      className="mt-3"
-                      value={[Number(inputs.annualContributionGrowth)]}
-                      min={0}
-                      max={15}
-                      step={0.5}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          annualContributionGrowth: Number(value[0].toFixed(1)),
-                        }))
-                      }
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.5"
+                      value={inputs.annualContributionGrowth}
+                      onChange={handleInputChange('annualContributionGrowth')}
+                      placeholder="e.g., 3"
                     />
-                    <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                      <span>0%</span>
-                      <span>{inputs.annualContributionGrowth.toFixed(1)}%</span>
-                      <span>15%</span>
-                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="annualTopUp">Annual top-up (£)</Label>
+                  <div>
+                    <Label htmlFor="annualTopUp" className="text-sm font-medium">
+                      Annual top-up (£)
+                    </Label>
                     <Input
                       id="annualTopUp"
                       type="number"
+                      inputMode="decimal"
                       min="0"
                       step="100"
                       value={inputs.annualTopUp}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          annualTopUp: Number(event.target.value) || 0,
-                        }))
-                      }
+                      onChange={handleInputChange('annualTopUp')}
+                      placeholder="e.g., 1,000"
                     />
                   </div>
                 </div>
-                <Button variant="outline" onClick={resetAll} className="w-full">
-                  Reset to example plan
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-emerald-200 bg-white text-slate-900 shadow-md dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <LineChart className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Growth settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="annualReturn">Expected annual return (%)</Label>
-                    <Slider
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="annualReturn" className="text-sm font-medium">
+                      Expected return (% p.a.)
+                    </Label>
+                    <Input
                       id="annualReturn"
-                      className="mt-3"
-                      value={[Number(inputs.annualReturn)]}
-                      min={0}
-                      max={15}
-                      step={0.25}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          annualReturn: Number(value[0].toFixed(2)),
-                        }))
-                      }
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.1"
+                      value={inputs.annualReturn}
+                      onChange={handleInputChange('annualReturn')}
+                      placeholder="e.g., 7"
                     />
-                    <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                      <span>0%</span>
-                      <span>{inputs.annualReturn.toFixed(2)}%</span>
-                      <span>15%</span>
-                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="years">Investment length (years)</Label>
+                  <div>
+                    <Label htmlFor="years" className="text-sm font-medium">
+                      Years invested
+                    </Label>
                     <Input
                       id="years"
                       type="number"
+                      inputMode="decimal"
                       min="1"
                       step="1"
                       value={inputs.years}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          years: Number(event.target.value) || 0,
-                        }))
-                      }
+                      onChange={handleInputChange('years')}
+                      placeholder="e.g., 20"
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="compoundingFrequency">Compounding frequency</Label>
+                <div>
+                  <Label htmlFor="compoundingFrequency" className="text-sm font-medium">
+                    Compounding frequency
+                  </Label>
                   <select
                     id="compoundingFrequency"
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                     value={inputs.compoundingFrequency}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        compoundingFrequency: Number(event.target.value) || 1,
-                      }))
-                    }
+                    onChange={handleSelectChange('compoundingFrequency')}
+                    className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                   >
                     {compoundingOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -381,100 +446,110 @@ export default function InvestmentCalculatorPage() {
                     ))}
                   </select>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1">
+                    Calculate
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleReset}>
+                    Reset
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
 
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 bg-emerald-50 text-slate-900 shadow-md dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calculator className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
-                  Projection summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span>Final value</span>
-                  <span>£{projection.finalBalance.toFixed(0)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Total contributions</span>
-                  <span>£{projection.totalContributions.toFixed(0)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Growth generated</span>
-                  <span>£{projection.growth.toFixed(0)}</span>
-                </div>
-                <div className="flex items-center justify-between text-base font-semibold">
-                  <span>CAGR (approx.)</span>
-                  <span>{(cagr * 100).toFixed(2)}%</span>
-                </div>
-                <p className="text-xs text-emerald-800 dark:text-emerald-200">
-                  CAGR is approximated for illustration. Real-world returns vary, especially when you
-                  add money over time.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 bg-white text-slate-900 shadow-md dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <BarChart3 className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Compound interest calculator timeline
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {projection.snapshots.length === 0 && (
-                  <p className="text-center text-slate-600 dark:text-slate-300">
-                    Extend the investment length to view annual snapshots.
-                  </p>
-                )}
-                {projection.snapshots.map((snapshot) => (
-                  <div
-                    key={snapshot.year}
-                    className="grid grid-cols-4 gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800"
-                  >
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">
-                      Year {snapshot.year}
-                    </span>
-                    <span className="text-right text-slate-600 dark:text-slate-300">
-                      £{snapshot.balance.toFixed(0)}
-                    </span>
-                    <span className="text-right text-slate-600 dark:text-slate-300">
-                      Paid £{snapshot.contributions.toFixed(0)}
-                    </span>
-                    <span className="text-right text-slate-600 dark:text-slate-300">
-                      Growth £{snapshot.growth.toFixed(0)}
-                    </span>
+          {showResults ? (
+            <div className="space-y-6">
+              <Card className="border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-900/20 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold text-indigo-900 dark:text-indigo-100">
+                    <TrendingUp className="h-5 w-5" />
+                    Projection summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-md bg-white/80 dark:bg-indigo-900/40 p-4 border border-indigo-100 dark:border-indigo-800">
+                      <p className="text-xs uppercase tracking-wide text-indigo-700 dark:text-indigo-200">
+                        Final balance
+                      </p>
+                      <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
+                        {currencyFormatter(results.finalBalance)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-indigo-900/40 p-4 border border-indigo-100 dark:border-indigo-800">
+                      <p className="text-xs uppercase tracking-wide text-indigo-700 dark:text-indigo-200">
+                        Total contributions
+                      </p>
+                      <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
+                        {currencyFormatter(results.totalContributions)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-indigo-900/40 p-4 border border-indigo-100 dark:border-indigo-800">
+                      <p className="text-xs uppercase tracking-wide text-indigo-700 dark:text-indigo-200">
+                        Investment growth
+                      </p>
+                      <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
+                        {currencyFormatter(results.growth)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-indigo-900/40 p-4 border border-indigo-100 dark:border-indigo-800">
+                      <p className="text-xs uppercase tracking-wide text-indigo-700 dark:text-indigo-200">
+                        Approximate CAGR
+                      </p>
+                      <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
+                        {(results.cagr * 100).toFixed(2)}%
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
 
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading as="h2" size="h2" weight="semibold" className="text-slate-900 dark:text-slate-100">
-                Compound interest calculator and CAGR insights
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Layer this compound interest calculator projection next to your pension and ISA goals.
-                Adjust the annual return to reflect different asset mixes and stress-test the plan.
-              </p>
-              <Heading as="h3" size="h3" weight="semibold" className="text-slate-900 dark:text-slate-100">
-                Rate of return calculator best practices
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Review the rate of return calculator results yearly. If markets outperform, bank part of
-                the gains; if they lag, consider boosting contributions to stay aligned with your goals.
-              </p>
-            </section>
+                  <div className="rounded-md bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900 p-4">
+                    <h3 className="text-base font-semibold text-indigo-900 dark:text-indigo-100 mb-4">
+                      Contributions vs growth
+                    </h3>
+                    <ResultBreakdownChart data={chartData} title="Investment breakdown" />
+                  </div>
 
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <FAQSection faqs={investmentFaqs} />
-            </section>
-          </div>
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="investment-calculator-results"
+                    title="Investment projection summary"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
+                  <BarChart3 className="h-5 w-5 text-indigo-500" aria-hidden="true" />
+                  <p className="text-sm">
+                    {hasCalculated && results?.message ? (
+                      results.message
+                    ) : (
+                      <>
+                        Enter your contributions, returns, and timeframe, then press{' '}
+                        <strong>Calculate</strong> to see how your portfolio could grow.
+                      </>
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </CalculatorWrapper>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={faqItems} />
+        </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
+        <DirectoryLinks links={directoryLinks} />
+        <RelatedCalculators calculators={relatedCalculators} />
+      </div>
     </div>
   );
 }

@@ -1,80 +1,164 @@
 import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Calculator, PiggyBank, TrendingUp } from 'lucide-react';
+import { Calculator, PiggyBank, Sparkles } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import ExportActions from '@/components/calculators/ExportActions';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
+import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
+import { createCalculatorWebPageSchema, createCalculatorBreadcrumbs } from '@/utils/calculatorSchema.js';
+import { sanitiseNumber } from '@/utils/sanitiseNumber.js';
 
-const keywords = [
-  'isa calculator',
-  'lifetime isa calculator',
-  'cash isa calculator',
-  'stocks and shares isa calculator',
-];
+const CALCULATOR_NAME = 'ISA Calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/isa-calculator';
+const keywords = getCalculatorKeywords(CALCULATOR_NAME);
 
 const metaDescription =
-  'Use our ISA calculator to track contributions, compare lifetime ISA calculator bonuses, and project tax-free growth in a cash ISA calculator or stocks and shares ISA calculator.';
-
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/isa-calculator';
-const schemaKeywords = keywords;
+  'Plan ISA contributions, Lifetime ISA bonuses, and tax-free investment growth using the latest UK allowances.';
 
 const ISA_ANNUAL_ALLOWANCE = 20000;
 const LIFETIME_ISA_BONUS_RATE = 0.25;
-const LIFETIME_ISA_BONUS_CAP = 4000;
+const LIFETIME_ISA_CAP = 4000;
 
-const currencyFormatter = new Intl.NumberFormat('en-GB', {
-  style: 'currency',
-  currency: 'GBP',
-  minimumFractionDigits: 0,
-});
+const defaultInputs = {
+  initialBalance: '5,000',
+  monthlyContribution: '600',
+  annualReturn: '5',
+  years: '10',
+  includeLifetimeIsa: 'no',
+};
 
-const isaFaqs = [
+const faqItems = [
   {
     question: 'What is the current ISA allowance?',
     answer:
-      'For the 2025/26 tax year the overall ISA allowance is £20,000. You can spread this across Cash, Stocks & Shares, Innovative Finance, and Lifetime ISAs, subject to specific product limits.',
+      'For the 2025/26 tax year you can invest up to £20,000 across all your ISAs. The calculator warns you if planned contributions exceed this limit.',
   },
   {
     question: 'How does the Lifetime ISA bonus work?',
     answer:
-      'The government adds 25% on top of your Lifetime ISA contributions up to £4,000 per tax year. The bonus is paid monthly and added to the account balance.',
+      'The government adds 25% on the first £4,000 per tax year into a Lifetime ISA. The calculator adds this bonus monthly so you can see the boost to tax-free growth.',
   },
   {
-    question: 'Can I combine Cash and Stocks & Shares ISAs?',
+    question: 'Can I use this for Stocks & Shares ISAs?',
     answer:
-      'Yes. You can open or contribute to one of each ISA type per tax year as long as you stay within the overall £20,000 allowance.',
+      'Yes. Adjust the annual return to reflect your expected investment performance, net of platform charges.',
   },
 ];
+
+const directoryLinks = [
+  {
+    label: 'Browse the full calculator directory',
+    url: '/#calculator-directory',
+    description: 'Compare every tax-free savings and investment tool we provide.',
+  },
+  {
+    label: 'Savings & investments tools',
+    url: '/#savings-investments',
+    description: 'Optimise ISAs alongside pensions, LISAs, and general investment accounts.',
+  },
+  {
+    label: 'Lifetime ISA bonus rules',
+    url: '/resources',
+    description: 'Read our guide to Lifetime ISA eligibility and withdrawal restrictions.',
+  },
+];
+
+const relatedCalculators = [
+  {
+    name: 'Investment Calculator',
+    url: '/investment-calculator',
+    description: 'Project detailed investment growth using contributions and top-ups.',
+  },
+  {
+    name: 'Savings Goal Calculator',
+    url: '/savings-goal-calculator',
+    description: 'Translate ISA targets into manageable monthly savings.',
+  },
+  {
+    name: 'Future Value Calculator',
+    url: '/future-value-calculator',
+    description: 'See how compound interest works outside an ISA wrapper.',
+  },
+];
+
+const webPageSchema = createCalculatorWebPageSchema({
+  name: CALCULATOR_NAME,
+  description: metaDescription,
+  url: canonicalUrl,
+  keywords,
+});
+
+const breadcrumbSchema = createCalculatorBreadcrumbs({
+  name: CALCULATOR_NAME,
+  url: canonicalUrl,
+});
+
+const faqStructuredData = faqSchema(faqItems);
+
+const currencyFormatter = (value) =>
+  value.toLocaleString('en-GB', {
+    style: 'currency',
+    currency: 'GBP',
+    minimumFractionDigits: 2,
+  });
 
 const calculateIsaGrowth = ({
   initialBalance,
   monthlyContribution,
-  years,
   annualReturn,
+  years,
   includeLifetimeIsa,
 }) => {
-  const periods = years * 12;
-  const monthlyRate = annualReturn / 100 / 12;
-  let balance = initialBalance;
-  let totalContributions = initialBalance;
-  let lifetimeBonusTotal = 0;
+  if (years <= 0) {
+    return { valid: false, message: 'Enter an investment timeframe greater than zero years.' };
+  }
 
-  for (let month = 1; month <= periods; month += 1) {
-    const contribution = monthlyContribution;
+  const months = Math.round(years * 12);
+  const monthlyRate = Math.max(annualReturn, 0) / 100 / 12;
+  let balance = Math.max(initialBalance, 0);
+  let totalContributions = balance;
+  let lifetimeBonus = 0;
+  const warnings = [];
+
+  const annualContribution = monthlyContribution * 12;
+  if (annualContribution > ISA_ANNUAL_ALLOWANCE) {
+    warnings.push(
+      `You plan to contribute £${annualContribution.toLocaleString(
+        'en-GB'
+      )} per year, which exceeds the £${ISA_ANNUAL_ALLOWANCE.toLocaleString('en-GB')} ISA allowance.`
+    );
+  }
+  if (includeLifetimeIsa === 'yes' && annualContribution > LIFETIME_ISA_CAP) {
+    warnings.push(
+      `Lifetime ISA bonuses apply to the first £${LIFETIME_ISA_CAP.toLocaleString(
+        'en-GB'
+      )} of contributions per tax year. Contributions above this amount will not receive the 25% bonus.`
+    );
+  }
+
+  for (let month = 1; month <= months; month += 1) {
+    const contribution = Math.max(monthlyContribution, 0);
     balance += contribution;
     totalContributions += contribution;
 
-    if (includeLifetimeIsa) {
-      const bonusEligibleContribution = Math.min(contribution, LIFETIME_ISA_BONUS_CAP / 12);
-      const bonus = bonusEligibleContribution * LIFETIME_ISA_BONUS_RATE;
+    if (includeLifetimeIsa === 'yes') {
+      const monthInYear = ((month - 1) % 12) + 1;
+      const contributionThisYear = contribution;
+      const annualAllowanceUsed = Math.min(contributionThisYear, LIFETIME_ISA_CAP / 12);
+      const bonus = annualAllowanceUsed * LIFETIME_ISA_BONUS_RATE;
       balance += bonus;
-      lifetimeBonusTotal += bonus;
+      lifetimeBonus += bonus;
     }
 
     if (monthlyRate > 0) {
@@ -82,94 +166,95 @@ const calculateIsaGrowth = ({
     }
   }
 
-  const totalInterest = balance - totalContributions - lifetimeBonusTotal;
+  const growth = balance - totalContributions - lifetimeBonus;
+
   return {
+    valid: true,
     balance,
     totalContributions,
-    lifetimeBonusTotal,
-    totalInterest,
+    lifetimeBonus,
+    growth,
+    warnings,
   };
 };
 
 export default function IsaCalculatorPage() {
-  const [inputs, setInputs] = useState({
-    initialBalance: 5000,
-    monthlyContribution: 600,
-    annualReturn: 5,
-    years: 10,
-    includeLifetimeIsa: false,
-  });
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [results, setResults] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-  const annualContributionTotal = inputs.monthlyContribution * 12;
-  const allowanceWarning =
-    annualContributionTotal > ISA_ANNUAL_ALLOWANCE
-      ? `Warning: You are planning to contribute £${annualContributionTotal.toLocaleString(
-          'en-GB'
-        )} per year, exceeding the £${ISA_ANNUAL_ALLOWANCE.toLocaleString('en-GB')} ISA allowance.`
-      : '';
+  const handleInputChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
 
-  const lifetimeBonusWarning =
-    inputs.includeLifetimeIsa && annualContributionTotal > LIFETIME_ISA_BONUS_CAP
-      ? `Lifetime ISA bonus only applies to the first £${LIFETIME_ISA_BONUS_CAP.toLocaleString(
-          'en-GB'
-        )} of contributions each tax year.`
-      : '';
+  const handleSelectChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
 
-  const results = useMemo(
-    () =>
-      calculateIsaGrowth({
-        initialBalance: Number(inputs.initialBalance) || 0,
-        monthlyContribution: Number(inputs.monthlyContribution) || 0,
-        annualReturn: Number(inputs.annualReturn) || 0,
-        years: Number(inputs.years) || 0,
-        includeLifetimeIsa: inputs.includeLifetimeIsa,
-      }),
-    [inputs]
-  );
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setResults(null);
+    setHasCalculated(false);
+  };
 
-  const resetInputs = () =>
-    setInputs({
-      initialBalance: 5000,
-      monthlyContribution: 600,
-      annualReturn: 5,
-      years: 10,
-      includeLifetimeIsa: false,
-    });
+  const handleCalculate = (event) => {
+    event.preventDefault();
+    const payload = {
+      initialBalance: sanitiseNumber(inputs.initialBalance),
+      monthlyContribution: sanitiseNumber(inputs.monthlyContribution),
+      annualReturn: sanitiseNumber(inputs.annualReturn),
+      years: sanitiseNumber(inputs.years),
+      includeLifetimeIsa: inputs.includeLifetimeIsa,
+    };
+    const outcome = calculateIsaGrowth(payload);
+    setResults({ ...outcome, payload });
+    setHasCalculated(true);
+  };
+
+  const chartData = useMemo(() => {
+    if (!results?.valid) return [];
+    return [
+      { name: 'Contributions', value: results.totalContributions, color: '#0ea5e9' },
+      { name: 'Lifetime ISA bonus', value: results.lifetimeBonus, color: '#facc15' },
+      { name: 'Investment growth', value: results.growth, color: '#22c55e' },
+    ].filter((segment) => segment.value > 0);
+  }, [results]);
+
+  const csvData = useMemo(() => {
+    if (!results?.valid) return null;
+    return [
+      ['Metric', 'Value'],
+      ['Initial balance (£)', results.payload.initialBalance.toFixed(2)],
+      ['Monthly contribution (£)', results.payload.monthlyContribution.toFixed(2)],
+      ['Annual return (%)', results.payload.annualReturn.toFixed(2)],
+      ['Years invested', results.payload.years.toFixed(1)],
+      ['Lifetime ISA bonus applied', results.payload.includeLifetimeIsa === 'yes' ? 'Yes' : 'No'],
+      ['Total contributions (£)', results.totalContributions.toFixed(2)],
+      ['Lifetime ISA bonus (£)', results.lifetimeBonus.toFixed(2)],
+      ['Investment growth (£)', results.growth.toFixed(2)],
+      ['Final balance (£)', results.balance.toFixed(2)],
+    ];
+  }, [results]);
+
+  const showResults = hasCalculated && results?.valid;
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>ISA Calculator | Lifetime ISA Calculator</title>
+        <title>{`${CALCULATOR_NAME} | Tax-Free Savings Planner`}</title>
         <meta name="description" content={metaDescription} />
+        {keywords.length ? <meta name="keywords" content={keywords.join(', ')} /> : null}
         <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="ISA Calculator | Lifetime ISA Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="ISA Calculator | Lifetime ISA Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'ISA Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Plan ISA contributions',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
       </Helmet>
+      <JsonLd data={webPageSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={faqStructuredData} />
 
       <section className="bg-gradient-to-r from-emerald-900 via-indigo-900 to-emerald-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
@@ -177,226 +262,217 @@ export default function IsaCalculatorPage() {
             ISA Calculator
           </Heading>
           <p className="text-lg md:text-xl text-emerald-100">
-            Plan your tax-free savings. Track contributions, growth, and government bonuses across
-            Cash ISAs, Stocks & Shares ISAs, and Lifetime ISAs.
+            Plan Cash, Stocks & Shares, and Lifetime ISA contributions while tracking government bonuses and tax-free growth.
           </p>
         </div>
       </section>
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <EmotionalHook
+          title="Let tax-free wrappers work harder for you"
+          message="Intentional ISA contributions and timely top-ups help you ring-fence growth from HMRC and keep goals on schedule."
+          quote="Small steps taken consistently over time create big results."
+          author="Unknown"
+        />
+      </div>
+
       <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
+        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
           <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-semibold">
                 <Calculator className="h-5 w-5 text-emerald-500" />
-                ISA Inputs
+                ISA inputs
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div>
-                <Label htmlFor="initialBalance" className="text-sm font-medium">
-                  Current ISA balance (£)
-                </Label>
-                <Input
-                  id="initialBalance"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.initialBalance}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, initialBalance: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="monthlyContribution" className="text-sm font-medium">
-                  Monthly contribution (£)
-                </Label>
-                <Input
-                  id="monthlyContribution"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.monthlyContribution}
-                  onChange={(event) =>
-                    setInputs((prev) => ({
-                      ...prev,
-                      monthlyContribution: Number(event.target.value),
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Expected annual growth
-                  <span className="text-emerald-600 font-semibold">
-                    {inputs.annualReturn.toFixed(1)}%
-                  </span>
-                </Label>
-                <Slider
-                  value={[inputs.annualReturn]}
-                  onValueChange={(value) =>
-                    setInputs((prev) => ({ ...prev, annualReturn: Number(value[0].toFixed(1)) }))
-                  }
-                  min={0}
-                  max={12}
-                  step={0.1}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Years to invest
-                  <span className="text-emerald-600 font-semibold">{inputs.years}</span>
-                </Label>
-                <Slider
-                  value={[inputs.years]}
-                  onValueChange={(value) =>
-                    setInputs((prev) => ({ ...prev, years: Math.round(value[0]) }))
-                  }
-                  min={1}
-                  max={40}
-                  step={1}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Include Lifetime ISA bonus</Label>
-                <Button
-                  variant={inputs.includeLifetimeIsa ? 'default' : 'outline'}
-                  onClick={() =>
-                    setInputs((prev) => ({ ...prev, includeLifetimeIsa: !prev.includeLifetimeIsa }))
-                  }
-                >
-                  {inputs.includeLifetimeIsa ? 'Included' : 'Excluded'}
-                </Button>
-              </div>
-              <Button onClick={resetInputs} variant="outline" className="w-full">
-                Reset inputs
-              </Button>
+            <CardContent>
+              <form className="space-y-5" onSubmit={handleCalculate}>
+                <div>
+                  <Label htmlFor="initialBalance" className="text-sm font-medium">
+                    Current ISA balance (£)
+                  </Label>
+                  <Input
+                    id="initialBalance"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="100"
+                    value={inputs.initialBalance}
+                    onChange={handleInputChange('initialBalance')}
+                    placeholder="e.g., 5,000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="monthlyContribution" className="text-sm font-medium">
+                    Monthly contribution (£)
+                  </Label>
+                  <Input
+                    id="monthlyContribution"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="10"
+                    value={inputs.monthlyContribution}
+                    onChange={handleInputChange('monthlyContribution')}
+                    placeholder="e.g., 600"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="annualReturn" className="text-sm font-medium">
+                    Expected annual return (%)
+                  </Label>
+                  <Input
+                    id="annualReturn"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.1"
+                    value={inputs.annualReturn}
+                    onChange={handleInputChange('annualReturn')}
+                    placeholder="e.g., 5"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="years" className="text-sm font-medium">
+                    Years invested
+                  </Label>
+                  <Input
+                    id="years"
+                    type="number"
+                    inputMode="decimal"
+                    min="1"
+                    step="1"
+                    value={inputs.years}
+                    onChange={handleInputChange('years')}
+                    placeholder="e.g., 10"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="includeLifetimeIsa" className="text-sm font-medium">
+                    Apply Lifetime ISA bonus?
+                  </Label>
+                  <select
+                    id="includeLifetimeIsa"
+                    value={inputs.includeLifetimeIsa}
+                    onChange={handleSelectChange('includeLifetimeIsa')}
+                    className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  >
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </div>
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1">
+                    Calculate
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleReset}>
+                    Reset
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
-            {allowanceWarning && (
-              <Card className="border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30">
-                <CardContent className="py-4 text-sm text-amber-900 dark:text-amber-100">
-                  {allowanceWarning}
+          {showResults ? (
+            <div className="space-y-6">
+              <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
+                    <PiggyBank className="h-5 w-5" />
+                    ISA projection summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {results.warnings?.length ? (
+                    <ul className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-600 dark:bg-amber-900/20 dark:text-amber-100">
+                      {results.warnings.map((warning, index) => (
+                        <li key={`warning-${index}`}>{warning}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/40 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Final ISA value
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter(results.balance)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/40 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Total contributions
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter(results.totalContributions)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/40 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Lifetime ISA bonus
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter(results.lifetimeBonus)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/40 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Investment growth
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter(results.growth)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900 p-4">
+                    <h3 className="text-base font-semibold text-emerald-900 dark:text-emerald-100 mb-4">
+                      Tax-free growth breakdown
+                    </h3>
+                    <ResultBreakdownChart data={chartData} title="ISA growth breakdown" />
+                  </div>
+
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="isa-calculator-results"
+                    title="ISA growth summary"
+                  />
                 </CardContent>
               </Card>
-            )}
-            {lifetimeBonusWarning && (
-              <Card className="border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30">
-                <CardContent className="py-4 text-sm text-amber-900 dark:text-amber-100">
-                  {lifetimeBonusWarning}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
+                  <Sparkles className="h-5 w-5 text-emerald-500" aria-hidden="true" />
+                  <p className="text-sm">
+                    {hasCalculated && results?.message ? (
+                      results.message
+                    ) : (
+                      <>
+                        Enter your current balance, monthly savings, and expected returns, then press{' '}
+                        <strong>Calculate</strong> to see your ISA projection.
+                      </>
+                    )}
+                  </p>
                 </CardContent>
               </Card>
-            )}
-
-            <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
-                  <PiggyBank className="h-5 w-5" />
-                  ISA Growth Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-4 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Final balance</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.balance)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">
-                    Total contributions
-                  </p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.totalContributions)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">
-                    Lifetime ISA bonus
-                  </p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.lifetimeBonusTotal)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">
-                    Investment growth
-                  </p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.totalInterest)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <TrendingUp className="h-5 w-5 text-slate-600" />
-                  Contribution Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <p>
-                  You plan to contribute{' '}
-                  <span className="font-semibold">
-                    £{(inputs.monthlyContribution * 12).toLocaleString('en-GB')}
-                  </span>{' '}
-                  per tax year. Adjust the monthly contribution to stay within the ISA allowance of{' '}
-                  £{ISA_ANNUAL_ALLOWANCE.toLocaleString('en-GB')}.
-                </p>
-                <p>
-                  The lifetime ISA calculator section adds{' '}
-                  {currencyFormatter.format(results.lifetimeBonusTotal)} of government bonus if
-                  turned on. Disable the bonus toggle to model a standard cash ISA calculator or
-                  stocks and shares ISA calculator scenario.
-                </p>
-                <p>
-                  Investment growth contributes {currencyFormatter.format(results.totalInterest)} to
-                  your final balance at an expected {inputs.annualReturn.toFixed(1)}% annual return
-                  over {inputs.years} years.
-                </p>
-              </CardContent>
-            </Card>
-
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Lifetime ISA calculator strategy
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Use the lifetime ISA calculator toggle to model first-home or retirement bonuses.
-                Combine the bonus with cash savings to accelerate your deposit.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Choosing between a cash ISA calculator and stocks and shares ISA calculator
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Cash ISAs keep capital secure, while stocks and shares ISAs target long-term growth.
-                Try different growth rates to see how each approach affects your ISA balance.
-              </p>
-            </section>
-          </div>
+            </div>
+          )}
         </div>
       </CalculatorWrapper>
 
       <section className="bg-white dark:bg-gray-950 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={isaFaqs} />
+          <FAQSection faqs={faqItems} />
         </div>
       </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
+        <DirectoryLinks links={directoryLinks} />
+        <RelatedCalculators calculators={relatedCalculators} />
+      </div>
     </div>
   );
 }

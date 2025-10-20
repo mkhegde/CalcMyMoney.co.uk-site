@@ -51,6 +51,25 @@ export const calculatorKeywordMap = {
     'hourly salary calculator',
     'hourly wage calculator',
   ],
+  'Inflation Calculator': ['inflation calculator', 'inflation rate', 'inflation', 'inflation calculator uk'],
+  'Inheritance Tax Calculator': [
+    'inheritance tax calculator',
+    'iht calculator',
+    'estate tax calculator uk',
+    'inheritance tax uk',
+  ],
+  'Investment Calculator': [
+    'investment calculator',
+    'future value calculator',
+    'compound interest calculator',
+    'investment growth calculator',
+  ],
+  'ISA Calculator': [
+    'isa calculator',
+    'lifetime isa calculator',
+    'cash isa calculator',
+    'stocks and shares isa calculator',
+  ],
   'Household Bills Splitter': ['household bills splitter'],
   'Income Tax Calculator': [
     'income tax calculator',

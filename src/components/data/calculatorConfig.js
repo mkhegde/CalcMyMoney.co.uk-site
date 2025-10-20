@@ -153,6 +153,11 @@ const rawCategories = [
         'Estimate capital gains tax due on property, shares, and other investments.'
       ),
       createCalculatorEntry(
+        'Inheritance Tax Calculator',
+        'InheritanceTaxCalculator',
+        'Project UK inheritance tax liability using nil-rate bands, residence allowances, and charitable gifts.'
+      ),
+      createCalculatorEntry(
         'Self Assessment Payment Planner',
         'SelfAssessmentPaymentPlanner',
         'Plan payments on account and balancing payments for the self assessment tax return.'
@@ -161,6 +166,11 @@ const rawCategories = [
         'Student Loan Repayment Calculator',
         'StudentLoanRepaymentCalculator',
         'Forecast student loan repayments across different plan types and salary scenarios.'
+      ),
+      createCalculatorEntry(
+        'Income Tax Calculator',
+        'IncomeTaxCalculator',
+        'Estimate Income Tax, National Insurance, pension deductions, and Student Loan plan 2 repayments for UK taxpayers.'
       ),
       createCalculatorEntry(
         'Take-Home Pay Calculator',
@@ -307,6 +317,11 @@ const rawCategories = [
         'Project how lump sums and regular contributions grow with compound interest over time.'
       ),
       createCalculatorEntry(
+        'Investment Calculator',
+        'InvestmentCalculator',
+        'Model investment growth with regular contributions, annual increases, and different compounding frequencies.'
+      ),
+      createCalculatorEntry(
         'Investment Portfolio Rebalancer',
         'InvestmentPortfolioRebalancer',
         'Check how to rebalance your portfolio to match target asset allocations.'
@@ -325,6 +340,11 @@ const rawCategories = [
         'Dividend Reinvestment Calculator',
         'DividendReinvestmentCalculator',
         'See how reinvesting dividends accelerates long-term portfolio growth.'
+      ),
+      createCalculatorEntry(
+        'ISA Calculator',
+        'IsaCalculator',
+        'Track ISA contributions, project tax-free growth, and factor in Lifetime ISA bonuses.'
       ),
       createCalculatorEntry(
         'FIRE Calculator',
@@ -539,6 +559,11 @@ const rawCategories = [
         'Inflation Impact Estimator',
         'InflationImpactEstimator',
         'Understand how inflation erodes purchasing power across spending categories.'
+      ),
+      createCalculatorEntry(
+        'Inflation Calculator',
+        'InflationCalculator',
+        'Measure how prices change over time and estimate future purchasing power using a chosen inflation rate.'
       ),
       createCalculatorEntry(
         'Net Worth Tracker',
