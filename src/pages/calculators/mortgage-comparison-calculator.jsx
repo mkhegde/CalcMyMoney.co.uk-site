@@ -1,36 +1,92 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Home, TrendingUp } from 'lucide-react';
-
+import React, { useMemo, useState, useCallback, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { Calculator, Home, TrendingUp, Quote, BookOpen, Scale } from 'lucide-react';
 
-const metaDescription =
-  'Use our mortgage comparison calculator to compare mortgage rates, view repayments side by side, and see the total cost of two mortgage deals before you decide.';
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
 
+const pagePath = '/calculators/mortgage-comparison-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/mortgage-comparison-calculator';
-const schemaKeywords = [
-  'mortgage comparison calculator',
-  'compare mortgage rates',
-  'mortgage comparison',
+const pageTitle = 'Mortgage Comparison Calculator UK | Compare Rates & Total Costs';
+const metaDescription =
+  'Use our UK mortgage comparison calculator to compare mortgage rates, view repayments side by side, and see the total cost of two mortgage deals before you decide.';
+const keywords = getMappedKeywords('Mortgage Comparison Calculator');
+
+const faqItems = [
+  {
+    question: 'Should I include lender fees?',
+    answer:
+      'Yes. Arrangement and valuation fees can significantly change the total cost. Enter each lender’s fees so the comparison is accurate.',
+  },
+  {
+    question: 'How do I compare fixed and variable rates?',
+    answer:
+      'Use promotional rates for the fixed period and stress test variable rates with a higher figure. Refresh the comparison when you remortgage.',
+  },
+  {
+    question: 'Can I model overpayments?',
+    answer:
+      'This basic comparison focuses on standard payments. To model overpayments, reduce the term or recalculate with a lower loan amount after your lump sum.',
+  },
 ];
 
-const currencyFormatter = (value) =>
-  value.toLocaleString('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: 0,
-  });
+const emotionalMessage =
+  'Comparing mortgage deals can save you thousands over the lifetime of your loan. Take the time to find the best fit for your financial future and secure your home with confidence.';
+const emotionalQuote = {
+  text: 'The best way to predict the future is to create it.',
+  author: 'Peter Drucker',
+};
+
+const directoryLinks = [
+  {
+    url: '/#property-mortgage',
+    label: 'Explore all property & mortgage calculators',
+    description: 'From stamp duty to rental yield, plan your property investments.',
+  },
+  {
+    url: '/mortgage-calculator',
+    label: 'Plan your mortgage repayments',
+    description: 'Stress test UK mortgage deals and understand combined loan commitments.',
+  },
+  {
+    url: '/remortgage-calculator',
+    label: 'Compare remortgage deals',
+    description: 'Find out if remortgaging could save you money on your monthly payments.',
+  },
+];
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 2,
+});
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
 
 const calculateRepayment = (amount, rate, termYears) => {
   const monthlyRate = rate / 100 / 12;
   const months = termYears * 12;
+  if (amount <= 0 || months <= 0) return 0;
   if (monthlyRate === 0) return amount / months;
   return (amount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
 };
@@ -64,300 +120,406 @@ const buildComparison = ({ loanAmount, termYears, mortgageA, mortgageB }) => {
   };
 };
 
-const comparisonFaqs = [
-  {
-    question: 'Should I include lender fees?',
-    answer:
-      'Yes. Arrangement and valuation fees can significantly change the total cost. Enter each lender’s fees so the comparison is accurate.',
-  },
-  {
-    question: 'How do I compare fixed and variable rates?',
-    answer:
-      'Use promotional rates for the fixed period and stress test variable rates with a higher figure. Refresh the comparison when you remortgage.',
-  },
-  {
-    question: 'Can I model overpayments?',
-    answer:
-      'This basic comparison focuses on standard payments. To model overpayments, reduce the term or recalculate with a lower loan amount after your lump sum.',
-  },
-];
+function buildCsvData(comparison, inputs) {
+  if (!comparison) return null;
+  return [
+    ['Metric', 'Mortgage A', 'Mortgage B', 'Difference (B - A)'],
+    ['Loan Amount (£)', currencyFormatter.format(parseNumber(inputs.loanAmount)), '', ''],
+    ['Term (Years)', inputs.termYears, '', ''],
+    [],
+    ['Interest Rate (%)', inputs.mortgageA.rate, inputs.mortgageB.rate, ''],
+    [
+      'Fees (£)',
+      currencyFormatter.format(inputs.mortgageA.fees),
+      currencyFormatter.format(inputs.mortgageB.fees),
+      '',
+    ],
+    [],
+    [
+      'Monthly Payment (£)',
+      currencyFormatter.format(comparison.a.payment),
+      currencyFormatter.format(comparison.b.payment),
+      currencyFormatter.format(comparison.difference.payment),
+    ],
+    [
+      'Total Interest (£)',
+      currencyFormatter.format(comparison.a.interest),
+      currencyFormatter.format(comparison.b.interest),
+      currencyFormatter.format(comparison.b.interest - comparison.a.interest),
+    ],
+    [
+      'Total Cost (£)',
+      currencyFormatter.format(comparison.a.totalCost),
+      currencyFormatter.format(comparison.b.totalCost),
+      currencyFormatter.format(comparison.difference.totalCost),
+    ],
+  ];
+}
+
+function buildChartData(comparison) {
+  if (!comparison) return [];
+  return [
+    { name: 'Mortgage A Total Cost', value: comparison.a.totalCost, color: '#10b981' },
+    { name: 'Mortgage B Total Cost', value: comparison.b.totalCost, color: '#3b82f6' },
+  ].filter((segment) => segment.value > 0);
+}
 
 export default function MortgageComparisonCalculatorPage() {
   const [inputs, setInputs] = useState({
-    loanAmount: 250000,
-    termYears: 25,
-    mortgageA: { rate: 4.2, fees: 999 },
-    mortgageB: { rate: 5.1, fees: 0 },
+    loanAmount: '250,000',
+    termYears: '25',
+    mortgageA: { rate: '4.2', fees: '999' },
+    mortgageB: { rate: '5.1', fees: '0' },
+  });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [comparison, setComparison] = useState(null);
+  const [csvData, setCsvData] = useState(null);
+
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Mortgage Comparison Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Property & Mortgage Calculators', url: '/calculators#property-mortgage' },
+      { name: 'Mortgage Comparison Calculator', url: pagePath },
+    ],
+    faq: faqItems,
   });
 
-  const results = useMemo(
-    () =>
-      buildComparison({
-        loanAmount: Number(inputs.loanAmount) || 0,
-        termYears: Number(inputs.termYears) || 0,
+  const handleInputChange = useCallback(
+    (loanKey, field) => (event) => {
+      const { value } = event.target;
+      if (loanKey) {
+        setInputs((prev) => ({
+          ...prev,
+          [loanKey]: { ...prev[loanKey], [field]: value },
+        }));
+      } else {
+        setInputs((prev) => ({ ...prev, [field]: value }));
+      }
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const parsedInputs = {
+        loanAmount: parseNumber(inputs.loanAmount),
+        termYears: parseNumber(inputs.termYears),
         mortgageA: {
-          rate: Number(inputs.mortgageA.rate) || 0,
-          fees: Number(inputs.mortgageA.fees) || 0,
+          rate: parseNumber(inputs.mortgageA.rate),
+          fees: parseNumber(inputs.mortgageA.fees),
         },
         mortgageB: {
-          rate: Number(inputs.mortgageB.rate) || 0,
-          fees: Number(inputs.mortgageB.fees) || 0,
+          rate: parseNumber(inputs.mortgageB.rate),
+          fees: parseNumber(inputs.mortgageB.fees),
         },
-      }),
+      };
+      const computedComparison = buildComparison(parsedInputs);
+      setComparison(computedComparison);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computedComparison, inputs));
+    },
     [inputs]
   );
 
-  const resetInputs = () =>
+  const handleReset = useCallback(() => {
     setInputs({
-      loanAmount: 250000,
-      termYears: 25,
-      mortgageA: { rate: 4.2, fees: 999 },
-      mortgageB: { rate: 5.1, fees: 0 },
+      loanAmount: '250,000',
+      termYears: '25',
+      mortgageA: { rate: '4.2', fees: '999' },
+      mortgageB: { rate: '5.1', fees: '0' },
     });
+    setHasCalculated(false);
+    setComparison(null);
+    setCsvData(null);
+  }, []);
+
+  const chartData = useMemo(() => buildChartData(comparison), [comparison]);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Mortgage Comparison Calculator | Compare Mortgage Rates</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta
-          property="og:title"
-          content="Mortgage Comparison Calculator | Compare Mortgage Rates"
-        />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:title"
-          content="Mortgage Comparison Calculator | Compare Mortgage Rates"
-        />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Mortgage Comparison Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Compare mortgage rates',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Mortgage Comparison Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-slate-200">
-            Compare two mortgage deals side by side. See monthly repayments, total interest, and the
-            overall cost including lender fees.
-          </p>
-        </div>
-      </section>
-
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
-          <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-indigo-500" />
-                Loan Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div>
-                <Label htmlFor="loanAmount" className="text-sm font-medium">
-                  Loan amount (£)
-                </Label>
-                <Input
-                  id="loanAmount"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.loanAmount}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, loanAmount: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Term (years)
-                  <span className="text-indigo-600 font-semibold">{inputs.termYears}</span>
-                </Label>
-                <Slider
-                  value={[inputs.termYears]}
-                  onValueChange={(value) =>
-                    setInputs((prev) => ({ ...prev, termYears: Math.round(value[0]) }))
-                  }
-                  min={5}
-                  max={40}
-                  step={1}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-semibold">Mortgage A rate (%)</Label>
-                  <Slider
-                    value={[inputs.mortgageA.rate]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        mortgageA: { ...prev.mortgageA, rate: Number(value[0].toFixed(2)) },
-                      }))
-                    }
-                    min={1}
-                    max={10}
-                    step={0.05}
-                  />
-                  <Input
-                    className="mt-2"
-                    type="number"
-                    min={0}
-                    inputMode="decimal"
-                    value={inputs.mortgageA.fees}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        mortgageA: { ...prev.mortgageA, fees: Number(event.target.value) },
-                      }))
-                    }
-                    placeholder="Mortgage A fees (£)"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-semibold">Mortgage B rate (%)</Label>
-                  <Slider
-                    value={[inputs.mortgageB.rate]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        mortgageB: { ...prev.mortgageB, rate: Number(value[0].toFixed(2)) },
-                      }))
-                    }
-                    min={1}
-                    max={10}
-                    step={0.05}
-                  />
-                  <Input
-                    className="mt-2"
-                    type="number"
-                    min={0}
-                    inputMode="decimal"
-                    value={inputs.mortgageB.fees}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        mortgageB: { ...prev.mortgageB, fees: Number(event.target.value) },
-                      }))
-                    }
-                    placeholder="Mortgage B fees (£)"
-                  />
-                </div>
-              </div>
-              <Button onClick={resetInputs} variant="outline" className="w-full">
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-6">
-            <Card className="border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-900/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-indigo-900 dark:text-indigo-100">
-                  <Home className="h-5 w-5" />
-                  Comparison Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-3 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-indigo-900/60 p-4 border border-indigo-100 dark:border-indigo-800">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">
-                    Monthly payment (A)
-                  </p>
-                  <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter(results.a.payment)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-indigo-900/60 p-4 border border-indigo-100 dark:border-indigo-800">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">
-                    Monthly payment (B)
-                  </p>
-                  <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter(results.b.payment)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-indigo-900/60 p-4 border border-indigo-100 dark:border-indigo-800">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">Difference</p>
-                  <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter(results.difference.payment)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <TrendingUp className="h-5 w-5 text-slate-600" />
-                  Total Cost Comparison
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <p>
-                  <span className="font-semibold">Mortgage A total cost:</span>{' '}
-                  {currencyFormatter(results.a.totalCost)} (Interest{' '}
-                  {currencyFormatter(results.a.interest)} + Fees {currencyFormatter(results.a.fees)}
-                  )
-                </p>
-                <p>
-                  <span className="font-semibold">Mortgage B total cost:</span>{' '}
-                  {currencyFormatter(results.b.totalCost)} (Interest{' '}
-                  {currencyFormatter(results.b.interest)} + Fees {currencyFormatter(results.b.fees)}
-                  )
-                </p>
-                <p>
-                  <span className="font-semibold">Overall difference:</span>{' '}
-                  {currencyFormatter(results.difference.totalCost)} over the full term.
-                </p>
-              </CardContent>
-            </Card>
-
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Mortgage comparison calculator tips
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Mortgage Comparison Calculator UK
               </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Compare mortgage rates by varying the interest, fees, and terms. The mortgage
-                comparison calculator highlights how lower fees can beat a slightly cheaper rate.
-              </p>
-            </section>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Compare two UK mortgage deals side by side. See monthly repayments, total interest,
+              and the overall cost including lender fees to find the best option for you.
+            </p>
+          </header>
+
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Home className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-indigo-600 dark:text-indigo-300"
+            borderColor="border-indigo-200 dark:border-indigo-800/60"
+            bgColor="bg-indigo-50/70 dark:bg-indigo-950/40"
+            textColor="text-indigo-900 dark:text-indigo-100"
+            footerColor="text-indigo-700 dark:text-indigo-300"
+          />
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Scale
+                    className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                    aria-hidden="true"
+                  />
+                  Mortgage Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="loanAmount">Loan amount (£)</Label>
+                      <Input
+                        id="loanAmount"
+                        inputMode="decimal"
+                        value={inputs.loanAmount}
+                        onChange={handleInputChange(null, 'loanAmount')}
+                        placeholder="e.g. 250,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="termYears">Term (years)</Label>
+                      <Input
+                        id="termYears"
+                        inputMode="numeric"
+                        value={inputs.termYears}
+                        onChange={handleInputChange(null, 'termYears')}
+                        placeholder="e.g. 25"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/40">
+                      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        Mortgage A
+                      </h2>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="mortgageA-rate">Interest rate (%)</Label>
+                          <Input
+                            id="mortgageA-rate"
+                            inputMode="decimal"
+                            value={inputs.mortgageA.rate}
+                            onChange={handleInputChange('mortgageA', 'rate')}
+                            placeholder="e.g. 4.2"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="mortgageA-fees">Arrangement fees (£)</Label>
+                          <Input
+                            id="mortgageA-fees"
+                            inputMode="decimal"
+                            value={inputs.mortgageA.fees}
+                            onChange={handleInputChange('mortgageA', 'fees')}
+                            placeholder="e.g. 999"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/40">
+                      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        Mortgage B
+                      </h2>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="mortgageB-rate">Interest rate (%)</Label>
+                          <Input
+                            id="mortgageB-rate"
+                            inputMode="decimal"
+                            value={inputs.mortgageB.rate}
+                            onChange={handleInputChange('mortgageB', 'rate')}
+                            placeholder="e.g. 5.1"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="mortgageB-fees">Arrangement fees (£)</Label>
+                          <Input
+                            id="mortgageB-fees"
+                            inputMode="decimal"
+                            value={inputs.mortgageB.fees}
+                            onChange={handleInputChange('mortgageB', 'fees')}
+                            placeholder="e.g. 0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Compare Mortgages
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter the details for two mortgage options, then press{' '}
+                    <span className="font-semibold">Compare Mortgages</span> to see a side-by-side
+                    comparison of monthly payments and total costs.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && comparison && (
+                <>
+                  <Card className="border border-indigo-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-indigo-900/30 dark:text-indigo-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Home
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-200"
+                          aria-hidden="true"
+                        />
+                        Comparison Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Mortgage A Monthly Payment
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(comparison.a.payment)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Mortgage B Monthly Payment
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(comparison.b.payment)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Mortgage A Total Cost
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(comparison.a.totalCost)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Mortgage B Total Cost
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(comparison.b.totalCost)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Monthly Payment Difference (B - A)
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(comparison.difference.payment)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Total Cost Difference (B - A)
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(comparison.difference.totalCost)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="mortgage-comparison-results"
+                          title="Mortgage Comparison Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <TrendingUp
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Total Cost Breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading comparison chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart
+                          data={chartData}
+                          title="Mortgage Total Cost Comparison"
+                        />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
       </CalculatorWrapper>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={comparisonFaqs} />
-        </div>
-      </section>
     </div>
   );
 }

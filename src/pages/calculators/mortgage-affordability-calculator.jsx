@@ -1,40 +1,33 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Home, PiggyBank } from 'lucide-react';
-
+import React, { useMemo, useState, useCallback } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { Calculator, Home, PiggyBank, Quote, BookOpen, Scale } from 'lucide-react';
 
-const keywords = [
-  'mortgage affordability calculator',
-  'how much mortgage can i afford',
-  'mortgage affordability',
-];
-
-const metaDescription =
-  'Use our mortgage affordability calculator to see how much mortgage you can afford, balance mortgage affordability against debts, and plan your deposit strategy.';
-
+const pagePath = '/calculators/mortgage-affordability-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/mortgage-affordability-calculator';
-const schemaKeywords = keywords;
+const pageTitle = 'Mortgage Affordability Calculator UK | How Much Mortgage Can I Afford';
+const metaDescription =
+  'Use our UK mortgage affordability calculator to see how much mortgage you can afford, balance mortgage affordability against debts, and plan your deposit strategy.';
+const keywords = getMappedKeywords('Mortgage Affordability Calculator');
 
-const currencyFormatter = (value) =>
-  value.toLocaleString('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: 0,
-  });
-
-const mortgageAffordabilityFaqs = [
+const faqItems = [
   {
     question: 'What income multiple do lenders use?',
     answer:
-      'Most lenders cap borrowing between 4x and 4.75x joint income, though the multiple can vary based on credit score and loan-to-value. Adjust the income multiple slider to match your lender’s policy.',
+      'Most lenders cap borrowing between 4x and 4.75x joint income, though the multiple can vary based on credit score and loan-to-value. Adjust the income multiple to match your lender’s policy.',
   },
   {
     question: 'Do lenders consider monthly debts?',
@@ -48,7 +41,45 @@ const mortgageAffordabilityFaqs = [
   },
 ];
 
-const calculateMortgageAffordability = ({
+const emotionalMessage =
+  'Finding your dream home starts with knowing what you can comfortably afford. Plan your mortgage with confidence, ensuring your future home brings joy, not financial strain.';
+const emotionalQuote = {
+  text: 'The ache for home lives in all of us, the safe place where we can go as we are and not be questioned.',
+  author: 'Maya Angelou',
+};
+
+const directoryLinks = [
+  {
+    url: '/#property-mortgage',
+    label: 'Explore all property & mortgage calculators',
+    description: 'From stamp duty to rental yield, plan your property investments.',
+  },
+  {
+    url: '/mortgage-calculator',
+    label: 'Plan your mortgage repayments',
+    description: 'Stress test UK mortgage deals and understand combined loan commitments.',
+  },
+  {
+    url: '/first-time-buyer-calculator',
+    label: 'First-time buyer calculator',
+    description: 'Understand costs and savings for your first home purchase.',
+  },
+];
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 2,
+});
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+function calculateMortgageAffordability({
   applicantIncome,
   partnerIncome,
   bonusIncome,
@@ -57,7 +88,7 @@ const calculateMortgageAffordability = ({
   deposit,
   interestRate,
   termYears,
-}) => {
+}) {
   const annualDebt = monthlyDebts * 12;
   const totalIncome = applicantIncome + partnerIncome + bonusIncome;
   const maxLoanByIncome = Math.max(totalIncome * incomeMultiple - annualDebt, 0);
@@ -81,324 +112,371 @@ const calculateMortgageAffordability = ({
     stressMonthlyPayment,
     loanToValue,
   };
-};
+}
+
+function buildCsvData(results, inputs) {
+  return [
+    ['Metric', 'Value'],
+    ['Your Annual Income (£)', currencyFormatter.format(inputs.applicantIncome)],
+    ['Partner Annual Income (£)', currencyFormatter.format(inputs.partnerIncome)],
+    ['Bonus or Variable Pay (£)', currencyFormatter.format(inputs.bonusIncome)],
+    ['Income Multiple (x)', inputs.incomeMultiple],
+    ['Monthly Credit Commitments (£)', currencyFormatter.format(inputs.monthlyDebts)],
+    ['Deposit / Equity (£)', currencyFormatter.format(inputs.deposit)],
+    ['Stress Rate (%)', inputs.interestRate],
+    ['Stress Term (years)', inputs.termYears],
+    [],
+    ['Total Income (£)', currencyFormatter.format(results.totalIncome)],
+    ['Maximum Loan by Income (£)', currencyFormatter.format(results.maxLoanByIncome)],
+    ['Total Buying Power (£)', currencyFormatter.format(results.totalBuyingPower)],
+    ['Stress-Tested Monthly Payment (£)', currencyFormatter.format(results.stressMonthlyPayment)],
+    ['Loan-to-Value (%)', `${results.loanToValue.toFixed(1)}%`],
+  ];
+}
+
+function buildChartData(results) {
+  if (!results) return [];
+  return [
+    { name: 'Max Loan by Income', value: results.maxLoanByIncome, color: '#10b981' },
+    { name: 'Deposit / Equity', value: results.deposit, color: '#3b82f6' },
+  ].filter((segment) => segment.value > 0);
+}
 
 export default function MortgageAffordabilityCalculatorPage() {
   const [inputs, setInputs] = useState({
-    applicantIncome: 45000,
-    partnerIncome: 28000,
-    bonusIncome: 5000,
-    incomeMultiple: 4.5,
-    monthlyDebts: 350,
-    deposit: 60000,
-    interestRate: 6,
-    termYears: 30,
+    applicantIncome: '45,000',
+    partnerIncome: '28,000',
+    bonusIncome: '5,000',
+    incomeMultiple: '4.5',
+    monthlyDebts: '350',
+    deposit: '60,000',
+    interestRate: '6',
+    termYears: '30',
+  });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
+
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Mortgage Affordability Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Property & Mortgage Calculators', url: '/calculators#property-mortgage' },
+      { name: 'Mortgage Affordability Calculator', url: pagePath },
+    ],
+    faq: faqItems,
   });
 
-  const results = useMemo(() => calculateMortgageAffordability(inputs), [inputs]);
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
-  const resetInputs = () =>
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const parsedInputs = {
+        applicantIncome: parseNumber(inputs.applicantIncome),
+        partnerIncome: parseNumber(inputs.partnerIncome),
+        bonusIncome: parseNumber(inputs.bonusIncome),
+        incomeMultiple: parseNumber(inputs.incomeMultiple),
+        monthlyDebts: parseNumber(inputs.monthlyDebts),
+        deposit: parseNumber(inputs.deposit),
+        interestRate: parseNumber(inputs.interestRate),
+        termYears: parseNumber(inputs.termYears),
+      };
+      const computedResults = calculateMortgageAffordability(parsedInputs);
+      setResults({ ...computedResults, deposit: parsedInputs.deposit }); // Add deposit to results for chart
+      setHasCalculated(true);
+      setCsvData(buildCsvData({ ...computedResults, deposit: parsedInputs.deposit }, parsedInputs));
+    },
+    [inputs]
+  );
+
+  const handleReset = useCallback(() => {
     setInputs({
-      applicantIncome: 45000,
-      partnerIncome: 28000,
-      bonusIncome: 5000,
-      incomeMultiple: 4.5,
-      monthlyDebts: 350,
-      deposit: 60000,
-      interestRate: 6,
-      termYears: 30,
+      applicantIncome: '45,000',
+      partnerIncome: '28,000',
+      bonusIncome: '5,000',
+      incomeMultiple: '4.5',
+      monthlyDebts: '350',
+      deposit: '60,000',
+      interestRate: '6',
+      termYears: '30',
     });
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  }, []);
+
+  const chartData = useMemo(() => buildChartData(results), [results]);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Mortgage Affordability Calculator | How Much Mortgage Can I Afford</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta
-          property="og:title"
-          content="Mortgage Affordability Calculator | How Much Mortgage Can I Afford"
-        />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:title"
-          content="Mortgage Affordability Calculator | How Much Mortgage Can I Afford"
-        />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Mortgage Affordability Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Check mortgage affordability',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
-      <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Mortgage Affordability Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
-            See how much mortgage you can afford based on income, debts, deposit, and lender stress
-            testing. Adjust the income multiple to match your lender.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Mortgage Affordability Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              See how much mortgage you can afford based on income, debts, deposit, and lender
+              stress testing. Enter your financial details to plan your home purchase with
+              confidence.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
-          <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-emerald-500" />
-                Income & Debts
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div>
-                <Label htmlFor="applicantIncome" className="text-sm font-medium">
-                  Your annual income (£)
-                </Label>
-                <Input
-                  id="applicantIncome"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.applicantIncome}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, applicantIncome: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="partnerIncome" className="text-sm font-medium">
-                  Partner annual income (£)
-                </Label>
-                <Input
-                  id="partnerIncome"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.partnerIncome}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, partnerIncome: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="bonusIncome" className="text-sm font-medium">
-                  Bonus or variable pay (£)
-                </Label>
-                <Input
-                  id="bonusIncome"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.bonusIncome}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, bonusIncome: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Income multiple
-                  <span className="text-emerald-600 font-semibold">
-                    {inputs.incomeMultiple.toFixed(2)}x
-                  </span>
-                </Label>
-                <Slider
-                  value={[inputs.incomeMultiple]}
-                  onValueChange={(value) =>
-                    setInputs((prev) => ({ ...prev, incomeMultiple: Number(value[0].toFixed(2)) }))
-                  }
-                  min={3.5}
-                  max={5.5}
-                  step={0.05}
-                />
-              </div>
-              <div>
-                <Label htmlFor="monthlyDebts" className="text-sm font-medium">
-                  Monthly credit commitments (£)
-                </Label>
-                <Input
-                  id="monthlyDebts"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.monthlyDebts}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, monthlyDebts: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="deposit" className="text-sm font-medium">
-                  Deposit / equity (£)
-                </Label>
-                <Input
-                  id="deposit"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.deposit}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, deposit: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Stress rate
-                    <span className="text-emerald-600 font-semibold">
-                      {inputs.interestRate.toFixed(1)}%
-                    </span>
-                  </Label>
-                  <Slider
-                    value={[inputs.interestRate]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({ ...prev, interestRate: Number(value[0].toFixed(1)) }))
-                    }
-                    min={3}
-                    max={10}
-                    step={0.1}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Stress term (years)
-                    <span className="text-emerald-600 font-semibold">{inputs.termYears}</span>
-                  </Label>
-                  <Slider
-                    value={[inputs.termYears]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({ ...prev, termYears: Math.round(value[0]) }))
-                    }
-                    min={5}
-                    max={35}
-                    step={1}
-                  />
-                </div>
-              </div>
-              <Button onClick={resetInputs} variant="outline" className="w-full">
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Home className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-emerald-600 dark:text-emerald-300"
+            borderColor="border-emerald-200 dark:border-emerald-800/60"
+            bgColor="bg-emerald-50/70 dark:bg-emerald-950/40"
+            textColor="text-emerald-900 dark:text-emerald-100"
+            footerColor="text-emerald-700 dark:text-emerald-300"
+          />
 
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/30">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
-                  <Home className="h-5 w-5" />
-                  Affordability Snapshot
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Scale
+                    className="h-5 w-5 text-emerald-600 dark:text-emerald-300"
+                    aria-hidden="true"
+                  />
+                  Affordability Inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid md:grid-cols-4 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Total income</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter(results.totalIncome)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Max loan</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter(results.maxLoanByIncome)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Buying power</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter(results.totalBuyingPower)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Loan-to-value</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {results.loanToValue.toFixed(1)}%
-                  </p>
-                </div>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="applicantIncome">Your annual income (£)</Label>
+                      <Input
+                        id="applicantIncome"
+                        inputMode="decimal"
+                        value={inputs.applicantIncome}
+                        onChange={handleInputChange('applicantIncome')}
+                        placeholder="e.g. 45,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="partnerIncome">Partner annual income (£)</Label>
+                      <Input
+                        id="partnerIncome"
+                        inputMode="decimal"
+                        value={inputs.partnerIncome}
+                        onChange={handleInputChange('partnerIncome')}
+                        placeholder="e.g. 28,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="bonusIncome">Bonus or variable pay (£)</Label>
+                      <Input
+                        id="bonusIncome"
+                        inputMode="decimal"
+                        value={inputs.bonusIncome}
+                        onChange={handleInputChange('bonusIncome')}
+                        placeholder="e.g. 5,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="incomeMultiple">Income multiple (x)</Label>
+                      <Input
+                        id="incomeMultiple"
+                        inputMode="decimal"
+                        value={inputs.incomeMultiple}
+                        onChange={handleInputChange('incomeMultiple')}
+                        placeholder="e.g. 4.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyDebts">Monthly credit commitments (£)</Label>
+                      <Input
+                        id="monthlyDebts"
+                        inputMode="decimal"
+                        value={inputs.monthlyDebts}
+                        onChange={handleInputChange('monthlyDebts')}
+                        placeholder="e.g. 350"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deposit">Deposit / equity (£)</Label>
+                      <Input
+                        id="deposit"
+                        inputMode="decimal"
+                        value={inputs.deposit}
+                        onChange={handleInputChange('deposit')}
+                        placeholder="e.g. 60,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="interestRate">Stress rate (%)</Label>
+                      <Input
+                        id="interestRate"
+                        inputMode="decimal"
+                        value={inputs.interestRate}
+                        onChange={handleInputChange('interestRate')}
+                        placeholder="e.g. 6"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="termYears">Stress term (years)</Label>
+                      <Input
+                        id="termYears"
+                        inputMode="numeric"
+                        value={inputs.termYears}
+                        onChange={handleInputChange('termYears')}
+                        placeholder="e.g. 30"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate Affordability
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <PiggyBank className="h-5 w-5 text-slate-600" />
-                  Stress Test Payment
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <p>
-                  At {inputs.interestRate.toFixed(1)}% over {inputs.termYears} years, your
-                  stress-tested monthly repayment is{' '}
-                  <span className="font-semibold">
-                    {currencyFormatter(results.stressMonthlyPayment)}
-                  </span>
-                  . Make sure this fits comfortably within your budget.
-                </p>
-                <p>
-                  Reduce monthly debts and increase deposit savings to unlock higher borrowing.
-                  Lenders check debt-to-income ratios as well as LTV limits.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your financial details and press{' '}
+                    <span className="font-semibold">Calculate Affordability</span> to see how much
+                    mortgage you can afford and your estimated monthly payments.
+                  </CardContent>
+                </Card>
+              )}
 
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Mortgage affordability calculator tips
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Try different interest rates to simulate lender stress tests. The mortgage
-                affordability calculator shows how a change from 6% to 8% can reduce your maximum
-                loan.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                How much mortgage can I afford planning
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Prepare supporting documents—payslips, bank statements, credit reports—so lenders
-                can verify the income used in the “how much mortgage can I afford” analysis.
-              </p>
-            </section>
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-emerald-200 bg-white shadow-sm dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Home
+                          className="h-5 w-5 text-emerald-600 dark:text-emerald-200"
+                          aria-hidden="true"
+                        />
+                        Affordability Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">
+                          Total income
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalIncome)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Max loan</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.maxLoanByIncome)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">
+                          Buying power
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalBuyingPower)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">
+                          Loan-to-value
+                        </p>
+                        <p className="text-2xl font-semibold">{results.loanToValue.toFixed(1)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">
+                          Stress-tested monthly payment
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.stressMonthlyPayment)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="mortgage-affordability-projection"
+                          title="Mortgage Affordability Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank
+                          className="h-5 w-5 text-emerald-600 dark:text-emerald-300"
+                          aria-hidden="true"
+                        />
+                        Buying Power Breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResultBreakdownChart data={chartData} title="Mortgage Buying Power" />
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
       </CalculatorWrapper>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={mortgageAffordabilityFaqs} />
-        </div>
-      </section>
     </div>
   );
 }

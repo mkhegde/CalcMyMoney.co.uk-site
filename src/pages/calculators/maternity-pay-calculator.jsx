@@ -1,24 +1,27 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Baby, CalendarRange, Heart } from 'lucide-react';
-
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Calculator, Baby, CalendarRange, Heart, Quote, BookOpen } from 'lucide-react';
 
+const pagePath = '/calculators/maternity-pay-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/maternity-pay-calculator';
-
-const schemaKeywords = [
-  'Average Weekly Earnings',
-  'Pay Schedule',
-  'Qualifying Week',
-  'Employment Rights',
-  'Paternity Pay',
-];
+const pageTitle = 'Maternity Pay Calculator UK | SMP Entitlement Planner';
+const metaDescription =
+  'Estimate Statutory Maternity Pay (SMP) for UK employees. Calculate maternity allowance, confirm eligibility, and plan your finances during maternity leave.';
+const keywords = getMappedKeywords('Statutory Maternity Pay Calculator');
 
 const faqItems = [
   {
@@ -38,40 +41,78 @@ const faqItems = [
   },
 ];
 
+const emotionalMessage =
+  'Planning for a new arrival is exciting, and understanding your maternity pay helps ensure financial peace of mind. Use this calculator to confidently map out your income during this special time.';
+const emotionalQuote = {
+  text: 'The most important thing a father can do for his children is to love their mother.',
+  author: 'Theodore Hesburgh',
+};
+
+const directoryLinks = [
+  {
+    url: '/#family-planning',
+    label: 'Explore all family planning calculators',
+    description: "From childcare costs to savings goals, plan for your family's financial future.",
+  },
+  {
+    url: '/childcare-cost-calculator',
+    label: 'Estimate childcare costs',
+    description: 'Understand the financial impact of childcare on your household budget.',
+  },
+  {
+    url: '/take-home-pay-calculator',
+    label: 'Check your take-home pay',
+    description: 'See how your income changes after tax and National Insurance.',
+  },
+];
+
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
   minimumFractionDigits: 2,
 });
 
-const SMP_STANDARD_RATE = 184.03; // 2025/26 example rate
+const SMP_STANDARD_RATE = 184.03; // 2025/26 example rate - always check current government rates
 const SMP_DURATION_WEEKS = 39;
 const SMP_HIGH_RATE_WEEKS = 6;
 
-export default function MaternityPayCalculator() {
+export default function MaternityPayCalculatorPage() {
   const [inputs, setInputs] = useState({
     averageWeeklyEarnings: '520',
     qualifyingWeekDate: '',
     additionalEmployersTopUp: '0',
   });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const reset = useCallback(() => {
-    setInputs({
-      averageWeeklyEarnings: '520',
-      qualifyingWeekDate: '',
-      additionalEmployersTopUp: '0',
-    });
-  }, []);
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Maternity Pay Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Family Planning Calculators', url: '/calculators#family-planning' },
+      { name: 'Maternity Pay Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
 
-  const results = useMemo(() => {
-    const awe = Number(inputs.averageWeeklyEarnings) || 0;
-    const employerTopUp = Number(inputs.additionalEmployersTopUp) || 0;
+  const parseNumber = (value) => {
+    if (value === null || value === undefined) return 0;
+    const cleaned = String(value).replace(/,/g, '').trim();
+    const numeric = Number.parseFloat(cleaned);
+    return Number.isFinite(numeric) ? numeric : 0;
+  };
 
-    const firstSixWeeksPay = SMP_HIGH_RATE_WEEKS * Math.min(awe * 0.9 + employerTopUp, awe * 0.9 + employerTopUp);
+  const calculateSMP = useCallback(() => {
+    const awe = parseNumber(inputs.averageWeeklyEarnings);
+    const employerTopUp = parseNumber(inputs.additionalEmployersTopUp);
+
+    const firstSixWeeksPay = SMP_HIGH_RATE_WEEKS * (Math.min(awe * 0.9, awe) + employerTopUp);
 
     const remainingWeeks = SMP_DURATION_WEEKS - SMP_HIGH_RATE_WEEKS;
     const standardWeeklyPay = Math.min(awe * 0.9, SMP_STANDARD_RATE) + employerTopUp;
@@ -80,7 +121,7 @@ export default function MaternityPayCalculator() {
     const totalSMP = firstSixWeeksPay + remainingPay;
     const totalWeeks = SMP_DURATION_WEEKS;
     const averageWeeklySMP = totalSMP / totalWeeks;
-    const monthlyEquivalent = (totalSMP / SMP_DURATION_WEEKS) * 4.34524;
+    const monthlyEquivalent = (totalSMP / SMP_DURATION_WEEKS) * (365.25 / 12 / 7); // Average days in month / 7
 
     return {
       awe,
@@ -95,208 +136,264 @@ export default function MaternityPayCalculator() {
     };
   }, [inputs]);
 
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computedResults = calculateSMP();
+      setResults(computedResults);
+      setHasCalculated(true);
+
+      const csvRows = [
+        ['Metric', 'Value'],
+        ['Average Weekly Earnings (£)', currencyFormatter.format(computedResults.awe)],
+        ['Employer Top-up per week (£)', currencyFormatter.format(computedResults.employerTopUp)],
+        ['First 6 weeks total (£)', currencyFormatter.format(computedResults.firstSixWeeksPay)],
+        ['Weeks 7-39 total (£)', currencyFormatter.format(computedResults.remainingPay)],
+        ['Average weekly SMP (£)', currencyFormatter.format(computedResults.averageWeeklySMP)],
+        ['Monthly equivalent (£)', currencyFormatter.format(computedResults.monthlyEquivalent)],
+        ['Total SMP (39 weeks) (£)', currencyFormatter.format(computedResults.totalSMP)],
+        ['Weeks covered', computedResults.totalWeeks],
+      ];
+      setCsvData(csvRows);
+    },
+    [calculateSMP, currencyFormatter]
+  );
+
+  const handleReset = useCallback(() => {
+    setInputs({
+      averageWeeklyEarnings: '520',
+      qualifyingWeekDate: '',
+      additionalEmployersTopUp: '0',
+    });
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  }, []);
+
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Maternity Pay Calculator &amp; SMP Entitlement Planner</title>
-        <meta
-          name="description"
-          content="Maternity Pay Calculator for UK employees. Estimate Statutory Maternity Pay, maternity allowance, and maternity benefits at each pay period."
-        />
-        <meta
-          name="keywords"
-          content="Maternity Pay Calculator, Statutory Maternity Pay, Maternity Leave"
-        />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'GovernmentService',
-              name: 'Maternity Pay Calculator',
-              description:
-                'Estimate Statutory Maternity Pay (SMP) based on average weekly earnings, pay schedule, qualifying week, and employment rights for UK parents.',
-              areaServed: 'GB',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-rose-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Maternity Pay Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-rose-100">
-            Calculate maternity pay, confirm SMP eligibility, and explore maternity benefits across
-            each pay period for informed planning.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-rose-600/10 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Maternity Pay Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Estimate your Statutory Maternity Pay (SMP) and plan your finances during maternity
+              leave. Enter your average weekly earnings and any employer top-up to see your pay
+              schedule.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-rose-500" />
-                SMP Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="averageWeeklyEarnings" className="text-sm font-medium">
-                  Average weekly earnings (GBP)
-                </Label>
-                <Input
-                  id="averageWeeklyEarnings"
-                  inputMode="decimal"
-                  value={inputs.averageWeeklyEarnings}
-                  onChange={(event) =>
-                    handleChange('averageWeeklyEarnings', event.target.value)
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="qualifyingWeekDate" className="text-sm font-medium">
-                  Qualifying week (optional)
-                </Label>
-                <Input
-                  id="qualifyingWeekDate"
-                  type="date"
-                  value={inputs.qualifyingWeekDate}
-                  onChange={(event) => handleChange('qualifyingWeekDate', event.target.value)}
-                />
-                <p className="caption text-muted-foreground">
-                  Used to discuss timelines with HR; not required for calculations.
-                </p>
-              </div>
-              <div>
-                <Label htmlFor="additionalEmployersTopUp" className="text-sm font-medium">
-                  Employer top-up per week (GBP)
-                </Label>
-                <Input
-                  id="additionalEmployersTopUp"
-                  inputMode="decimal"
-                  value={inputs.additionalEmployersTopUp}
-                  onChange={(event) =>
-                    handleChange('additionalEmployersTopUp', event.target.value)
-                  }
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Heart className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-rose-600 dark:text-rose-300"
+            borderColor="border-rose-200 dark:border-rose-800/60"
+            bgColor="bg-rose-50/70 dark:bg-rose-950/40"
+            textColor="text-rose-900 dark:text-rose-100"
+            footerColor="text-rose-700 dark:text-rose-300"
+          />
 
-          <div className="space-y-6">
-            <Card className="border border-rose-200 dark:border-rose-900 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Baby className="h-5 w-5 text-rose-500" />
-                  Maternity Pay Schedule
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Baby className="h-5 w-5 text-rose-600 dark:text-rose-300" aria-hidden="true" />
+                  Maternity Pay Inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">First 6 weeks total</p>
-                    <p className="text-lg font-semibold text-rose-600">
-                      {currencyFormatter.format(results.firstSixWeeksPay)}
-                    </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="averageWeeklyEarnings">Average weekly earnings (£)</Label>
+                      <Input
+                        id="averageWeeklyEarnings"
+                        inputMode="decimal"
+                        value={inputs.averageWeeklyEarnings}
+                        onChange={handleInputChange('averageWeeklyEarnings')}
+                        placeholder="e.g. 520"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="qualifyingWeekDate">Qualifying week (optional)</Label>
+                      <Input
+                        id="qualifyingWeekDate"
+                        type="date"
+                        value={inputs.qualifyingWeekDate}
+                        onChange={handleInputChange('qualifyingWeekDate')}
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Used to discuss timelines with HR; not required for calculations.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="additionalEmployersTopUp">Employer top-up per week (£)</Label>
+                      <Input
+                        id="additionalEmployersTopUp"
+                        inputMode="decimal"
+                        value={inputs.additionalEmployersTopUp}
+                        onChange={handleInputChange('additionalEmployersTopUp')}
+                        placeholder="e.g. 0"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Weeks 7-39 total</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.remainingPay)}
-                    </p>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate Maternity Pay
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Average weekly SMP</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.averageWeeklySMP)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Monthly equivalent</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.monthlyEquivalent)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Total SMP (39 weeks)</p>
-                    <p className="text-lg font-semibold text-rose-600">
-                      {currencyFormatter.format(results.totalSMP)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Weeks covered</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {results.totalWeeks}
-                    </p>
-                  </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-rose-200 dark;border-rose-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Heart className="h-5 w-5 text-rose-500" />
-                  Maternity Benefits Notes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  Check SMP eligibility early in pregnancy to confirm qualifying week and average
-                  weekly earnings meet statutory thresholds.
-                </p>
-                <p>
-                  Review maternity allowance options if SMP is not available. Self-employed parents
-                  can also qualify based on National Insurance contributions.
-                </p>
-                <p>
-                  Coordinate maternity benefits with shared parental leave and paternity pay plans to
-                  maximise family flexibility.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your earnings and any employer top-up, then press{' '}
+                    <span className="font-semibold">Calculate Maternity Pay</span> to see your SMP
+                    entitlement and payment schedule.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-rose-200 bg-white shadow-sm dark:border-rose-900 dark:bg-rose-900/30 dark:text-rose-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <CalendarRange
+                          className="h-5 w-5 text-rose-600 dark:text-rose-200"
+                          aria-hidden="true"
+                        />
+                        Maternity Pay Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-rose-900 dark:text-rose-200">
+                          First 6 weeks total
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.firstSixWeeksPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-rose-900 dark:text-rose-200">Weeks 7-39 total</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.remainingPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-rose-900 dark:text-rose-200">
+                          Total SMP (39 weeks)
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalSMP)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-rose-900 dark:text-rose-200">
+                          Monthly equivalent
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.monthlyEquivalent)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="maternity-pay-projection"
+                          title="Maternity Pay Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BookOpen
+                          className="h-5 w-5 text-rose-600 dark:text-rose-300"
+                          aria-hidden="true"
+                        />
+                        Important Notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        The standard SMP rate used in this calculator (£{SMP_STANDARD_RATE}) is an
+                        example for 2025/26. Always check the{' '}
+                        <a
+                          href="https://www.gov.uk/maternity-pay-leave/what-you-can-get"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-rose-600 hover:underline dark:text-rose-400"
+                        >
+                          official UK government website
+                        </a>{' '}
+                        for the most current rates and eligibility criteria.
+                      </p>
+                      <p>
+                        This calculator provides an estimate. Your actual pay may vary based on your
+                        employer's policies and any additional benefits.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Maternity Pay for Comprehensive Planning
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Understand Statutory Maternity Pay entitlements to build maternity allowance strategies.
-            Accurately anticipating pay periods keeps household budgets stable during maternity leave.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Confirm SMP Eligibility and Pay Period Structure
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            SMP eligibility depends on employment rights and average weekly earnings. Use this tool to
-            model pay schedules before discussing maternity benefits with HR teams.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Coordinate Maternity Allowance with Family Plans
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Align maternity allowance, shared parental leave, and partner pay period to balance cash
-            flow and support during early parenthood.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );

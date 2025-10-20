@@ -1,32 +1,80 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, PiggyBank, ClipboardList } from 'lucide-react';
-
+import React, { useMemo, useState, useCallback, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { Calculator, PiggyBank, ClipboardList, Quote, BookOpen, LineChart } from 'lucide-react';
 
-const metaDescription =
-  'Use our net income uk calculator to reveal take-home pay, compare net income uk calculator scenarios, and see how tax and NI deductions change your paycheque.';
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
 
+const pagePath = '/calculators/net-income-uk-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/net-income-uk-calculator';
-const schemaKeywords = [
-  'net income uk calculator',
-  'take home pay calculator uk',
-  'uk tax calculator',
+const pageTitle = 'Net Income UK Calculator | Take-Home Pay & Tax Deductions';
+const metaDescription =
+  'Use our UK net income calculator to reveal take-home pay, compare scenarios, and see how tax and NI deductions change your paycheque.';
+const keywords = getMappedKeywords('Net Income UK Calculator');
+
+const faqItems = [
+  {
+    question: 'Which tax code should I choose?',
+    answer:
+      'Use 1257L for most employees. Choose 0T if you are on an emergency tax code with no personal allowance or BR if your income is taxed at basic rate only.',
+  },
+  {
+    question: 'How are pension contributions treated?',
+    answer:
+      'Enter either a percentage or fixed annual amount. Salary sacrifice and personal contributions both reduce taxable income and National Insurance in this calculator.',
+  },
+  {
+    question: 'Does this cover the latest UK tax year?',
+    answer:
+      'Yes, it reflects the 2025/26 tax and NI thresholds. Update the inputs if HMRC announces changes in future budgets.',
+  },
 ];
 
-const currencyFormatter = (value) =>
-  value.toLocaleString('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: 0,
-  });
+const emotionalMessage =
+  'Understanding your net income is crucial for effective budgeting and financial planning. Use this calculator to gain clarity on your take-home pay and make informed decisions.';
+const emotionalQuote = {
+  text: 'Beware of little expenses; a small leak will sink a great ship.',
+  author: 'Benjamin Franklin',
+};
+
+const directoryLinks = [
+  {
+    url: '/#tax-national-insurance',
+    label: 'Explore all tax & National Insurance calculators',
+    description: 'From income tax to VAT, understand your tax obligations.',
+  },
+  {
+    url: '/income-tax-calculator',
+    label: 'Calculate your income tax',
+    description: 'Estimate your income tax liability based on your annual earnings.',
+  },
+  {
+    url: '/take-home-pay-calculator',
+    label: 'Check your take-home pay',
+    description: 'See your net income after tax and National Insurance.',
+  },
+];
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 2,
+});
 
 const ENGLAND_BANDS = [
   { min: 0, max: 12570, rate: 0 },
@@ -43,6 +91,13 @@ const NI_BANDS = [
 
 const STUDENT_LOAN_THRESHOLD = 27295;
 const STUDENT_LOAN_RATE = 0.09;
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
 
 const calculateBandTax = (income, bands) => {
   let remaining = income;
@@ -62,14 +117,10 @@ const calculatePersonalAllowance = (salary) => {
   return reduced;
 };
 
-const calculateNetIncome = ({ salary, pensionPercent, pensionType, studentLoan, taxCode }) => {
-  const pensionDeduction =
-    pensionType === 'percentage'
-      ? salary * (pensionPercent / 100)
-      : Math.min(pensionPercent, salary);
-
-  const taxableIncome = Math.max(salary - pensionDeduction, 0);
+const calculateNetIncome = ({ salary, pensionAmount, studentLoan, taxCode }) => {
   const personalAllowance = taxCode === '0T' ? 0 : calculatePersonalAllowance(salary);
+  const taxableIncome = Math.max(salary - pensionAmount, 0);
+
   const incomeTax = calculateBandTax(Math.max(taxableIncome - personalAllowance, 0), ENGLAND_BANDS);
   const nationalInsurance = calculateBandTax(taxableIncome, NI_BANDS);
   const studentLoanRepayment =
@@ -77,11 +128,11 @@ const calculateNetIncome = ({ salary, pensionPercent, pensionType, studentLoan, 
       ? (taxableIncome - STUDENT_LOAN_THRESHOLD) * STUDENT_LOAN_RATE
       : 0;
 
-  const totalDeductions = incomeTax + nationalInsurance + studentLoanRepayment + pensionDeduction;
+  const totalDeductions = incomeTax + nationalInsurance + studentLoanRepayment + pensionAmount;
   const netAnnual = salary - totalDeductions;
 
   return {
-    pensionDeduction,
+    pensionAmount,
     personalAllowance,
     incomeTax,
     nationalInsurance,
@@ -90,307 +141,408 @@ const calculateNetIncome = ({ salary, pensionPercent, pensionType, studentLoan, 
   };
 };
 
-const netIncomeFaqs = [
-  {
-    question: 'Which tax code should I choose?',
-    answer:
-      'Use 1257L for most employees. Choose 0T if you are on an emergency tax code with no personal allowance or BR if your income is taxed at basic rate only.',
-  },
-  {
-    question: 'How are pension contributions treated?',
-    answer:
-      'Enter either a percentage or fixed annual amount. Salary sacrifice and personal contributions both reduce taxable income and National Insurance in this calculator.',
-  },
-  {
-    question: 'Does this cover the latest UK tax year?',
-    answer:
-      'Yes, it reflects the 2025/26 tax and NI thresholds. Update the inputs if HMRC announces changes in future budgets.',
-  },
-];
+function buildCsvData(results, inputs) {
+  if (!results) return null;
+  return [
+    ['Metric', 'Value'],
+    ['Gross Annual Salary (£)', currencyFormatter.format(parseNumber(inputs.salary))],
+    ['Pension Contribution Type', inputs.pensionType === 'percentage' ? 'Percentage' : 'Fixed'],
+    [
+      'Pension Contribution Value',
+      inputs.pensionType === 'percentage'
+        ? `${inputs.pensionPercent}%`
+        : currencyFormatter.format(parseNumber(inputs.pensionPercent)),
+    ],
+    ['Include Student Loan Plan 2', inputs.studentLoan ? 'Yes' : 'No'],
+    ['Tax Code', inputs.taxCode],
+    [],
+    ['Net Annual Income (£)', currencyFormatter.format(results.netAnnual)],
+    ['Net Monthly Income (£)', currencyFormatter.format(results.netAnnual / 12)],
+    ['Income Tax (£)', currencyFormatter.format(results.incomeTax)],
+    ['National Insurance (£)', currencyFormatter.format(results.nationalInsurance)],
+    ['Student Loan Repayment (£)', currencyFormatter.format(results.studentLoanRepayment)],
+    ['Total Pension Contribution (£)', currencyFormatter.format(results.pensionAmount)],
+    ['Personal Allowance (£)', currencyFormatter.format(results.personalAllowance)],
+  ];
+}
+
+function buildChartData(results) {
+  if (!results) return [];
+  return [
+    { name: 'Income Tax', value: results.incomeTax, color: '#3b82f6' },
+    { name: 'National Insurance', value: results.nationalInsurance, color: '#10b981' },
+    { name: 'Pension Contribution', value: results.pensionAmount, color: '#f97316' },
+    { name: 'Student Loan', value: results.studentLoanRepayment, color: '#ef4444' },
+  ].filter((segment) => segment.value > 0);
+}
 
 export default function NetIncomeUKCalculatorPage() {
   const [inputs, setInputs] = useState({
-    salary: 52000,
-    pensionPercent: 5,
+    salary: '52,000',
+    pensionPercent: '5',
     pensionType: 'percentage',
     studentLoan: false,
     taxCode: '1257L',
   });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const results = useMemo(
-    () =>
-      calculateNetIncome({
-        salary: Number(inputs.salary) || 0,
-        pensionPercent: Number(inputs.pensionPercent) || 0,
-        pensionType: inputs.pensionType,
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Net Income UK Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Tax & National Insurance Calculators', url: '/calculators#tax-national-insurance' },
+      { name: 'Net Income UK Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
+
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handlePensionTypeChange = useCallback((type) => {
+    setInputs((prev) => ({
+      ...prev,
+      pensionType: type,
+      pensionPercent: type === 'percentage' ? '5' : '3000', // Default values for each type
+    }));
+  }, []);
+
+  const handleStudentLoanToggle = useCallback(() => {
+    setInputs((prev) => ({ ...prev, studentLoan: !prev.studentLoan }));
+  }, []);
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const parsedSalary = parseNumber(inputs.salary);
+      const parsedPensionValue = parseNumber(inputs.pensionPercent);
+
+      const pensionAmount =
+        inputs.pensionType === 'percentage'
+          ? parsedSalary * (parsedPensionValue / 100)
+          : parsedPensionValue;
+
+      const computedResults = calculateNetIncome({
+        salary: parsedSalary,
+        pensionAmount: pensionAmount,
         studentLoan: inputs.studentLoan,
         taxCode: inputs.taxCode,
-      }),
+      });
+      setResults(computedResults);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computedResults, inputs));
+    },
     [inputs]
   );
 
-  const resetInputs = () =>
+  const handleReset = useCallback(() => {
     setInputs({
-      salary: 52000,
-      pensionPercent: 5,
+      salary: '52,000',
+      pensionPercent: '5',
       pensionType: 'percentage',
       studentLoan: false,
       taxCode: '1257L',
     });
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  }, []);
 
-  const netMonthly = results.netAnnual / 12;
+  const chartData = useMemo(() => buildChartData(results), [results]);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Net Income UK Calculator | Take Home Pay Calculator UK</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta
-          property="og:title"
-          content="Net Income UK Calculator | Take Home Pay Calculator UK"
-        />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:title"
-          content="Net Income UK Calculator | Take Home Pay Calculator UK"
-        />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Net Income UK Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Calculate UK net income',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Net Income UK Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-slate-200">
-            Reveal your UK take-home pay after Income Tax, National Insurance, pension
-            contributions, and optional Student Loan deductions.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Net Income UK Calculator
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Reveal your UK take-home pay after Income Tax, National Insurance, pension
+              contributions, and optional Student Loan deductions.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
-          <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-indigo-500" />
-                Salary Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div>
-                <Label htmlFor="salary" className="text-sm font-medium">
-                  Gross annual salary (£)
-                </Label>
-                <Input
-                  id="salary"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.salary}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, salary: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Pension contribution</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant={inputs.pensionType === 'percentage' ? 'default' : 'outline'}
-                    onClick={() =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        pensionType: 'percentage',
-                        pensionPercent: 5,
-                      }))
-                    }
-                  >
-                    % of salary
-                  </Button>
-                  <Button
-                    variant={inputs.pensionType === 'fixed' ? 'default' : 'outline'}
-                    onClick={() =>
-                      setInputs((prev) => ({ ...prev, pensionType: 'fixed', pensionPercent: 3000 }))
-                    }
-                  >
-                    £ per year
-                  </Button>
-                </div>
-                {inputs.pensionType === 'percentage' ? (
-                  <Slider
-                    className="mt-3"
-                    value={[Number(inputs.pensionPercent) || 0]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        pensionPercent: Number(value[0].toFixed(1)),
-                      }))
-                    }
-                    min={0}
-                    max={30}
-                    step={0.5}
-                  />
-                ) : (
-                  <Input
-                    className="mt-3"
-                    type="number"
-                    min={0}
-                    inputMode="decimal"
-                    value={inputs.pensionPercent}
-                    onChange={(event) =>
-                      setInputs((prev) => ({ ...prev, pensionPercent: Number(event.target.value) }))
-                    }
-                  />
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Include Student Loan Plan 2</Label>
-                <Button
-                  variant={inputs.studentLoan ? 'default' : 'outline'}
-                  onClick={() => setInputs((prev) => ({ ...prev, studentLoan: !prev.studentLoan }))}
-                >
-                  {inputs.studentLoan ? 'Included' : 'Excluded'}
-                </Button>
-              </div>
-              <div>
-                <Label htmlFor="taxCode" className="text-sm font-medium">
-                  Tax code
-                </Label>
-                <Input
-                  id="taxCode"
-                  value={inputs.taxCode}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, taxCode: event.target.value.toUpperCase() }))
-                  }
-                  placeholder="1257L, 0T, BR ..."
-                />
-              </div>
-              <Button onClick={resetInputs} variant="outline" className="w-full">
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<PiggyBank className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-indigo-600 dark:text-indigo-300"
+            borderColor="border-indigo-200 dark:border-indigo-800/60"
+            bgColor="bg-indigo-50/70 dark:bg-indigo-950/40"
+            textColor="text-indigo-900 dark:text-indigo-100"
+            footerColor="text-indigo-700 dark:text-indigo-300"
+          />
 
-          <div className="space-y-6">
-            <Card className="border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-900/30">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-indigo-900 dark:text-indigo-100">
-                  <PiggyBank className="h-5 w-5" />
-                  Take-Home Summary
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calculator
+                    className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                    aria-hidden="true"
+                  />
+                  Income & Deduction Inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid md:grid-cols-4 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-indigo-900/60 p-4 border border-indigo-100 dark:border-indigo-800">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">Net annual</p>
-                  <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter(results.netAnnual)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-indigo-900/60 p-4 border border-indigo-100 dark:border-indigo-800">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">Net monthly</p>
-                  <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter(netMonthly)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-indigo-900/60 p-4 border border-indigo-100 dark:border-indigo-800">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">Income tax</p>
-                  <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter(results.incomeTax)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-indigo-900/60 p-4 border border-indigo-100 dark:border-indigo-800">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">National Insurance</p>
-                  <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter(results.nationalInsurance)}
-                  </p>
-                </div>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="salary">Gross annual salary (£)</Label>
+                      <Input
+                        id="salary"
+                        inputMode="decimal"
+                        value={inputs.salary}
+                        onChange={handleInputChange('salary')}
+                        placeholder="e.g. 52,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Pension contribution</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant={inputs.pensionType === 'percentage' ? 'default' : 'outline'}
+                          onClick={() => handlePensionTypeChange('percentage')}
+                        >
+                          % of salary
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={inputs.pensionType === 'fixed' ? 'default' : 'outline'}
+                          onClick={() => handlePensionTypeChange('fixed')}
+                        >
+                          £ per year
+                        </Button>
+                      </div>
+                      <Input
+                        className="mt-3"
+                        inputMode="decimal"
+                        value={inputs.pensionPercent}
+                        onChange={handleInputChange('pensionPercent')}
+                        placeholder={inputs.pensionType === 'percentage' ? 'e.g. 5' : 'e.g. 3000'}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="studentLoan" className="text-sm font-medium">
+                        Include Student Loan Plan 2
+                      </Label>
+                      <Button
+                        type="button"
+                        variant={inputs.studentLoan ? 'default' : 'outline'}
+                        onClick={handleStudentLoanToggle}
+                        className="w-full"
+                      >
+                        {inputs.studentLoan ? 'Included' : 'Excluded'}
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="taxCode">Tax code</Label>
+                      <Input
+                        id="taxCode"
+                        value={inputs.taxCode}
+                        onChange={handleInputChange('taxCode')}
+                        placeholder="e.g. 1257L"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate Net Income
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <ClipboardList className="h-5 w-5 text-slate-600" />
-                  Deduction Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <p>
-                  <span className="font-semibold">Personal allowance:</span>{' '}
-                  {currencyFormatter(results.personalAllowance)}
-                </p>
-                <p>
-                  <span className="font-semibold">Pension contribution:</span>{' '}
-                  {currencyFormatter(results.pensionDeduction)}
-                </p>
-                <p>
-                  <span className="font-semibold">Student loan:</span>{' '}
-                  {currencyFormatter(results.studentLoanRepayment)}
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your gross annual salary and deduction details, then press{' '}
+                    <span className="font-semibold">Calculate Net Income</span> to see your
+                    estimated take-home pay after all deductions.
+                  </CardContent>
+                </Card>
+              )}
 
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Net income uk calculator planning
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Adjust pension, tax code, or student loan repayments to see instant take-home pay
-                changes. The net income uk calculator keeps budgeting grounded in reality.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Comparing offers with a net income uk calculator
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Before accepting a new role, run the net income uk calculator for each offer so you
-                know exactly which package delivers the best take home pay.
-              </p>
-            </section>
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-indigo-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-indigo-900/30 dark:text-indigo-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-200"
+                          aria-hidden="true"
+                        />
+                        Take-Home Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Net annual</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.netAnnual)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Net monthly</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.netAnnual / 12)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Income tax</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.incomeTax)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          National Insurance
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.nationalInsurance)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Student Loan Repayment
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.studentLoanRepayment)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Pension Contribution
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.pensionAmount)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="net-income-uk-projection"
+                          title="Net Income UK Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <LineChart
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Deduction Breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Net Income Deductions" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BookOpen
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Important Notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        The tax and National Insurance thresholds and rates used in this calculator
+                        are examples. Always check the{' '}
+                        <a
+                          href="https://www.gov.uk/government/publications/rates-and-allowances-income-tax"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:underline dark:text-indigo-400"
+                        >
+                          official UK government website
+                        </a>{' '}
+                        for the most current rates and thresholds.
+                      </p>
+                      <p>
+                        This calculator provides an estimate. Your actual take-home pay may vary
+                        based on your specific employment circumstances, tax code, and any
+                        additional benefits or deductions.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
       </CalculatorWrapper>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={netIncomeFaqs} />
-        </div>
-      </section>
     </div>
   );
 }

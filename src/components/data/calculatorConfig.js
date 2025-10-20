@@ -13,32 +13,192 @@ import {
   Wallet,
 } from 'lucide-react';
 
+const MAPPED_KEYWORDS = {
+  'Loan Comparison Calculator': [
+    'loan comparison calculator',
+    'personal loan comparison calculator',
+  ],
+  'Loan Repayment Calculator': [
+    'loan repayment calculator',
+    'loan calculator',
+    'personal loan calculator',
+    'calculate loan payment',
+    'loan payment calculator',
+    'calculate loan',
+    'loan',
+    'loan payment',
+    'loan payoff calculator',
+    'loan payment schedule calculator',
+    'loan calculator with extra payments',
+    'loan repayment',
+    'loan calculator monthly payments',
+  ],
+  'Mortgage Affordability Calculator': [
+    'mortgage affordability calculator',
+    'how much mortgage can i afford',
+    'mortgage affordability',
+  ],
+  'Mortgage Calculator': [
+    'mortgage calculator',
+    'mortgage calculator uk',
+    'mortgage loan calculator',
+    'mortgage payment calculator',
+    'home loan calculator',
+    'home mortgage calculator',
+    'mortgage',
+    'mortgage calculator monthly payments',
+    'mortgage interest calculator',
+    'mortgage interest',
+    'calculate mortgage payment',
+    'home loan',
+    'loan mortgage calculator',
+  ],
+  'Mortgage Comparison Calculator': ['mortgage comparison calculator', 'compare mortgage rates'],
+  'Mortgage Repayment Calculator': [
+    'mortgage repayment calculator',
+    'home loan repayment calculator',
+  ],
+  'Net Income UK Calculator': ['net income uk calculator'],
+  'Net Worth Calculator': ['net worth calculator', 'how to calculate net worth'],
+  'NI Calculator': ['ni calculator', 'national insurance calculator'],
+  'Overtime & Bonus Calculator': ['overtime and bonus calculator'],
+  'Overtime Pay Calculator': ['overtime pay calculator'],
+  'Overtime Rate Calculator': ['overtime rate calculator'],
+  'PAYE Calculator': ['paye calculator'],
+  'Pension Calculator': [
+    'pension calculator',
+    'uk pension calculator',
+    'private pension calculator',
+    'state pension calculator',
+    'workplace pension calculator',
+  ],
+  'Pension Contribution Calculator': [
+    'pension contribution calculator',
+    'pension contributions calculator',
+    'contribution calculator',
+  ],
+  'Personal Loan Calculator': ['personal loan calculator', 'best personal loan calculator'],
+  'Pro Rata Salary Calculator': ['pro rata salary calculator'],
+  'Redundancy Pay Calculator': ['redundancy pay calculator'],
+  'Remortgage Calculator': ['remortgage calculator'],
+  'Rental Income Calculator': ['rental income calculator', 'rental income tax calculator'],
+  'Rental Yield Calculator': ['rental yield calculator', 'rental yield'],
+  'Retirement Savings Calculator': ['retirement savings calculator'],
+  'Rule of 72 Calculator': ['rule of 72 calculator'],
+  'Salary Calculator': [
+    'salary calculator',
+    'gross salary calculator',
+    'monthly salary calculator',
+    'annual salary calculator',
+    'yearly salary calculator',
+    'hourly salary calculator',
+    'weekly salary calculator',
+    'daily salary calculator',
+  ],
+  'Salary Increase Calculator': ['salary increase calculator'],
+  'Salary Sacrifice Calculator': ['salary sacrifice calculator'],
+  'Savings Goal Calculator': [
+    'savings goal calculator',
+    'savings calculator',
+    'savings planner',
+    'savings',
+  ],
+  'Severance Pay Calculator': ['severance pay calculator'],
+  'Simple Interest Calculator': ['simple interest calculator', 'simple interest'],
+  'Stamp Duty Calculator': [
+    'stamp duty calculator',
+    'stamp duty rates',
+    'stamp duty',
+    'stamp duty land tax calculator',
+    'sdlt calculator',
+  ],
+  'Statutory Maternity Pay Calculator': ['statutory maternity pay calculator', 'smp calculator'],
+  'Statutory Sick Pay Calculator': ['statutory sick pay calculator', 'ssp calculator'],
+  'Student Loan Calculator': ['student loan calculator'],
+  'Student Loan Repayment Calculator': ['student loan repayment calculator'],
+  'Subscription Cost Calculator': ['subscription cost calculator'],
+  'Take-Home Pay Calculator': [
+    'take home pay calculator',
+    'salary take home pay calculator',
+    'take home pay',
+    'salary after tax calculator',
+    'after tax income calculator',
+    'take home pay calculator 2024',
+    'salary take home',
+    'calculate take home pay',
+  ],
+  'Tax After Tax Calculator': ['tax after tax calculator'],
+  'Tax and NI Calculator': ['tax and ni calculator', 'tax and national insurance calculator'],
+  'Travel Budget Calculator': ['travel budget calculator'],
+  'VAT Calculator': ['vat calculator', 'vat reverse charge calculator'],
+  'Wedding Budget Calculator': ['wedding budget calculator'],
+};
+
 const toSlug = (value = '') =>
   value
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const createCalculatorEntry = (name, pageName, description) => ({
+const createCalculatorEntry = (name, pageName, description, keywords = []) => ({
   name,
   pageName,
   description,
   icon: CalculatorIcon,
   status: 'active',
   tags: [],
+  keywords: [...(MAPPED_KEYWORDS[name] || []), ...keywords],
   url: createPageUrl(pageName),
 });
 
 const rawCategories = [
   {
     name: 'Mortgages & Property',
-    description: 'Planning tools for buyers, landlords, and homeowners managing property decisions.',
+    description:
+      'Planning tools for buyers, landlords, and homeowners managing property decisions.',
     icon: Home,
     calculators: [
       createCalculatorEntry(
         'Mortgage Repayment Calculator',
         'MortgageRepaymentCalculator',
-        'Estimate monthly mortgage repayments and total interest costs over the term.'
+        'Use our UK mortgage repayment calculator to plan your mortgage allocation, test repayment scenarios, and understand how overpayments change the mortgage repayment schedule.',
+        MAPPED_KEYWORDS['Mortgage Repayment Calculator']
+      ),
+      createCalculatorEntry(
+        'Mortgage Comparison Calculator',
+        'MortgageComparisonCalculator',
+        'Use our UK mortgage comparison calculator to compare mortgage rates, view repayments side by side, and see the total cost of two mortgage deals before you decide.',
+        MAPPED_KEYWORDS['Mortgage Comparison Calculator']
+      ),
+      createCalculatorEntry(
+        'Mortgage Affordability Calculator',
+        'MortgageAffordabilityCalculator',
+        'Use our UK mortgage affordability calculator to see how much mortgage you can afford, balance mortgage affordability against debts, and plan your deposit strategy.',
+        MAPPED_KEYWORDS['Mortgage Affordability Calculator']
+      ),
+      createCalculatorEntry(
+        'Mortgage Calculator',
+        'MortgageCalculator',
+        'Use our UK mortgage calculator to estimate monthly repayments, total interest, and amortisation schedule. Plan your home loan with confidence.',
+        MAPPED_KEYWORDS['Mortgage Calculator']
+      ),
+      createCalculatorEntry(
+        'Remortgage Calculator',
+        'RemortgageCalculator',
+        'Compare remortgage deals and estimate potential monthly and lifetime savings.',
+        MAPPED_KEYWORDS['Remortgage Calculator']
+      ),
+      createCalculatorEntry(
+        'Stamp Duty Calculator',
+        'StampDutyCalculator',
+        'Work out stamp duty obligations for first homes, second homes, and investment properties.',
+        MAPPED_KEYWORDS['Stamp Duty Calculator']
+      ),
+      createCalculatorEntry(
+        'Rental Yield Calculator',
+        'RentalYieldCalculator',
+        'Calculate gross and net rental yields to benchmark investment properties.',
+        MAPPED_KEYWORDS['Rental Yield Calculator']
       ),
       createCalculatorEntry(
         'Buy-to-Let Profit Calculator',
@@ -46,19 +206,9 @@ const rawCategories = [
         'Assess rental income, costs, and yields for prospective buy-to-let investments.'
       ),
       createCalculatorEntry(
-        'Stamp Duty Land Tax Calculator',
-        'StampDutyLandTaxCalculator',
-        'Work out stamp duty obligations for first homes, second homes, and investment properties.'
-      ),
-      createCalculatorEntry(
         'Help to Buy Equity Loan Calculator',
         'HelpToBuyEquityLoanCalculator',
         'Project repayments and equity share changes for Help to Buy equity loans.'
-      ),
-      createCalculatorEntry(
-        'Remortgage Savings Calculator',
-        'RemortgageSavingsCalculator',
-        'Compare remortgage deals and estimate potential monthly and lifetime savings.'
       ),
       createCalculatorEntry(
         'First-Time Buyer Affordability Calculator',
@@ -119,23 +269,81 @@ const rawCategories = [
   },
   {
     name: 'Tax & Income',
-    description: 'Understand deductions, take-home pay, and tax liabilities on every type of income.',
+    description:
+      'Understand deductions, take-home pay, and tax liabilities on every type of income.',
     icon: Coins,
     calculators: [
       createCalculatorEntry(
-        'UK Income Tax Calculator',
-        'IncomeTaxCalculatorUK',
-        'Calculate take-home pay after income tax and national insurance in the UK.'
+        'Net Income UK Calculator',
+        'NetIncomeUKCalculator',
+        'Use our UK net income calculator to reveal take-home pay, compare scenarios, and see how tax and NI deductions change your paycheque.',
+        MAPPED_KEYWORDS['Net Income UK Calculator']
       ),
       createCalculatorEntry(
-        'National Insurance Contribution Calculator',
-        'NationalInsuranceContributionCalculator',
-        'Work out Class 1 and Class 4 national insurance based on earnings or profits.'
+        'NI Calculator',
+        'NationalInsuranceCalculator',
+        'Use our UK National Insurance calculator to estimate NI contributions, understand NI rates, and see the impact on your take-home pay.',
+        MAPPED_KEYWORDS['NI Calculator']
       ),
       createCalculatorEntry(
-        'PAYE Net Pay Calculator',
-        'PAYENetPayCalculator',
-        'Estimate PAYE deductions and net pay for salaried employees.'
+        'PAYE Calculator',
+        'PAYECalculator',
+        'Estimate PAYE deductions and net pay for salaried employees.',
+        MAPPED_KEYWORDS['PAYE Calculator']
+      ),
+      createCalculatorEntry(
+        'Salary Calculator',
+        'SalaryCalculator',
+        'Estimate your gross and net pay based on your annual salary.',
+        MAPPED_KEYWORDS['Salary Calculator']
+      ),
+      createCalculatorEntry(
+        'Take-Home Pay Calculator',
+        'TakeHomePayCalculator',
+        'Understand the impact of pension, benefits, and salary sacrifice on take-home pay.',
+        MAPPED_KEYWORDS['Take-Home Pay Calculator']
+      ),
+      createCalculatorEntry(
+        'Tax and NI Calculator',
+        'TaxAndNICalculator',
+        'Calculate take-home pay after income tax and national insurance in the UK.',
+        MAPPED_KEYWORDS['Tax and NI Calculator']
+      ),
+      createCalculatorEntry(
+        'Tax After Tax Calculator',
+        'TaxAfterTaxCalculator',
+        'Calculate take-home pay after income tax and national insurance in the UK.',
+        MAPPED_KEYWORDS['Tax After Tax Calculator']
+      ),
+      createCalculatorEntry(
+        'Salary Sacrifice Calculator',
+        'SalarySacrificeCalculator',
+        'Model tax savings and employer contributions when using salary sacrifice for pensions.',
+        MAPPED_KEYWORDS['Salary Sacrifice Calculator']
+      ),
+      createCalculatorEntry(
+        'Salary Increase Calculator',
+        'SalaryIncreaseCalculator',
+        'Calculate the impact of a salary increase on your take-home pay.',
+        MAPPED_KEYWORDS['Salary Increase Calculator']
+      ),
+      createCalculatorEntry(
+        'Pro Rata Salary Calculator',
+        'ProRataSalaryCalculator',
+        'Calculate a pro rata salary based on full-time equivalent earnings and working hours.',
+        MAPPED_KEYWORDS['Pro Rata Salary Calculator']
+      ),
+      createCalculatorEntry(
+        'Redundancy Pay Calculator',
+        'RedundancyPayCalculator',
+        'Estimate statutory redundancy pay based on age, length of service, and weekly pay.',
+        MAPPED_KEYWORDS['Redundancy Pay Calculator']
+      ),
+      createCalculatorEntry(
+        'Severance Pay Calculator',
+        'SeverancePayCalculator',
+        'Estimate severance pay, including notice period, statutory redundancy, and other entitlements.',
+        MAPPED_KEYWORDS['Severance Pay Calculator']
       ),
       createCalculatorEntry(
         'Dividend Tax Calculator',
@@ -165,17 +373,13 @@ const rawCategories = [
       createCalculatorEntry(
         'Student Loan Repayment Calculator',
         'StudentLoanRepaymentCalculator',
-        'Forecast student loan repayments across different plan types and salary scenarios.'
+        'Forecast student loan repayments across different plan types and salary scenarios.',
+        MAPPED_KEYWORDS['Student Loan Repayment Calculator']
       ),
       createCalculatorEntry(
         'Income Tax Calculator',
         'IncomeTaxCalculator',
         'Estimate Income Tax, National Insurance, pension deductions, and Student Loan plan 2 repayments for UK taxpayers.'
-      ),
-      createCalculatorEntry(
-        'Take-Home Pay Calculator',
-        'TakeHomePayCalculator',
-        'Understand the impact of pension, benefits, and salary sacrifice on take-home pay.'
       ),
       createCalculatorEntry(
         'Gross to Net Calculator',
@@ -185,7 +389,20 @@ const rawCategories = [
       createCalculatorEntry(
         'Overtime Pay Calculator',
         'OvertimePayCalculator',
-        'Calculate additional earnings from overtime hours at multiple pay rates.'
+        'Calculate additional earnings from overtime hours at multiple pay rates.',
+        MAPPED_KEYWORDS['Overtime Pay Calculator']
+      ),
+      createCalculatorEntry(
+        'Overtime Rate Calculator',
+        'OvertimeRateCalculator',
+        'Calculate additional earnings from overtime hours at multiple pay rates.',
+        MAPPED_KEYWORDS['Overtime Rate Calculator']
+      ),
+      createCalculatorEntry(
+        'Overtime & Bonus Calculator',
+        'OvertimeBonusCalculator',
+        'Calculate additional earnings from overtime hours and bonuses.',
+        MAPPED_KEYWORDS['Overtime & Bonus Calculator']
       ),
       createCalculatorEntry(
         'Holiday Pay Calculator',
@@ -224,6 +441,24 @@ const rawCategories = [
     description: 'Plan retirement ages, pension withdrawals, and contribution strategies.',
     icon: FileText,
     calculators: [
+      createCalculatorEntry(
+        'Pension Calculator',
+        'PensionCalculator',
+        'Project future pension values using contribution levels and investment returns.',
+        MAPPED_KEYWORDS['Pension Calculator']
+      ),
+      createCalculatorEntry(
+        'Pension Contribution Calculator',
+        'PensionContributionCalculator',
+        'Find the contribution level that maximises employer match and tax relief.',
+        MAPPED_KEYWORDS['Pension Contribution Calculator']
+      ),
+      createCalculatorEntry(
+        'Retirement Savings Calculator',
+        'RetirementSavingsCalculator',
+        'Work out the age you can retire based on savings, pensions, and lifestyle costs.',
+        MAPPED_KEYWORDS['Retirement Savings Calculator']
+      ),
       createCalculatorEntry(
         'Pension Growth Forecast Calculator',
         'PensionGrowthForecastCalculator',
@@ -302,6 +537,24 @@ const rawCategories = [
         'Visualise how regular contributions and compounding grow your savings.'
       ),
       createCalculatorEntry(
+        'Savings Goal Calculator',
+        'SavingsGoalCalculator',
+        'Set savings goals and monitor progress against monthly contributions.',
+        MAPPED_KEYWORDS['Savings Goal Calculator']
+      ),
+      createCalculatorEntry(
+        'Simple Interest Calculator',
+        'SimpleInterestCalculator',
+        'Calculate simple interest earned on savings or charged on loans over a set period.',
+        MAPPED_KEYWORDS['Simple Interest Calculator']
+      ),
+      createCalculatorEntry(
+        'Rule of 72 Calculator',
+        'RuleOf72Calculator',
+        'Estimate how long it takes for an investment to double using the Rule of 72.',
+        MAPPED_KEYWORDS['Rule of 72 Calculator']
+      ),
+      createCalculatorEntry(
         'ISA Allowance Planner',
         'ISAAllowancePlanner',
         'Plan ISA deposits across cash, stocks and shares, and lifetime ISA allowances.'
@@ -378,6 +631,30 @@ const rawCategories = [
     description: 'Plan repayments, understand borrowing costs, and accelerate debt freedom.',
     icon: CreditCard,
     calculators: [
+      createCalculatorEntry(
+        'Loan Repayment Calculator',
+        'LoanRepaymentCalculator',
+        'Use the UK loan repayment calculator to model monthly payments, total interest, and payoff dates. Add extra payments to see how quickly you can clear personal, car, or consolidation loans.',
+        MAPPED_KEYWORDS['Loan Repayment Calculator']
+      ),
+      createCalculatorEntry(
+        'Loan Comparison Calculator',
+        'LoanComparisonCalculator',
+        'Use the loan comparison calculator to weigh two UK personal loans side-by-side. Compare monthly repayments, total interest, APR-style costs, and fees before you apply.',
+        MAPPED_KEYWORDS['Loan Comparison Calculator']
+      ),
+      createCalculatorEntry(
+        'Personal Loan Calculator',
+        'PersonalLoanCalculator',
+        'Estimate monthly payments, total interest, and payoff time for personal loans.',
+        MAPPED_KEYWORDS['Personal Loan Calculator']
+      ),
+      createCalculatorEntry(
+        'Student Loan Calculator',
+        'StudentLoanCalculator',
+        'Forecast student loan repayments across different plan types and salary scenarios.',
+        MAPPED_KEYWORDS['Student Loan Calculator']
+      ),
       createCalculatorEntry(
         'Loan Repayment Schedule Calculator',
         'LoanRepaymentScheduleCalculator',
@@ -511,9 +788,10 @@ const rawCategories = [
         'Split rent, utilities, and subscriptions fairly across housemates with customised percentages.'
       ),
       createCalculatorEntry(
-        'Wedding Budget Planner',
-        'WeddingBudgetPlanner',
-        'Create a wedding budget, track deposits, and monitor remaining balances.'
+        'Wedding Budget Calculator',
+        'WeddingBudgetCalculator',
+        'Create a wedding budget, track deposits, and monitor remaining balances.',
+        MAPPED_KEYWORDS['Wedding Budget Calculator']
       ),
       createCalculatorEntry(
         'Emergency Fund Calculator',
@@ -531,9 +809,10 @@ const rawCategories = [
         'Price your dream lifestyle, set savings buffers, and define the income needed to sustain it.'
       ),
       createCalculatorEntry(
-        'Subscription Clean-Up Calculator',
-        'SubscriptionCleanUpCalculator',
-        'Identify recurring subscriptions and quantify savings from cancelling unused ones.'
+        'Subscription Cost Calculator',
+        'SubscriptionCostCalculator',
+        'Identify recurring subscriptions and quantify savings from cancelling unused ones.',
+        MAPPED_KEYWORDS['Subscription Cost Calculator']
       ),
       createCalculatorEntry(
         'Cost of Living Calculator',
@@ -566,9 +845,10 @@ const rawCategories = [
         'Measure how prices change over time and estimate future purchasing power using a chosen inflation rate.'
       ),
       createCalculatorEntry(
-        'Net Worth Tracker',
-        'NetWorthTracker',
-        'Aggregate assets and liabilities to track net worth growth over time.'
+        'Net Worth Calculator',
+        'NetWorthCalculator',
+        'Aggregate assets and liabilities to track net worth growth over time.',
+        MAPPED_KEYWORDS['Net Worth Calculator']
       ),
       createCalculatorEntry(
         'Annual Expense Forecaster',
@@ -579,6 +859,12 @@ const rawCategories = [
         'Spending Fast Planner',
         'SpendingFastPlanner',
         'Set a no-spend challenge and monitor progress toward short-term savings goals.'
+      ),
+      createCalculatorEntry(
+        'Travel Budget Calculator',
+        'TravelBudgetCalculator',
+        'Plan holiday spending with savings targets and cost breakdowns.',
+        MAPPED_KEYWORDS['Travel Budget Calculator']
       ),
     ],
   },
@@ -603,9 +889,10 @@ const rawCategories = [
         'Check turnover against thresholds to know when VAT registration is required.'
       ),
       createCalculatorEntry(
-        'VAT Reverse Charge Calculator',
-        'VATReverseChargeCalculator',
-        'Determine VAT amounts to report on domestic reverse charge transactions.'
+        'VAT Calculator',
+        'VATCalculator',
+        'Determine VAT amounts to report on domestic reverse charge transactions.',
+        MAPPED_KEYWORDS['VAT Calculator']
       ),
       createCalculatorEntry(
         'Profit & Loss Breakeven Calculator',
@@ -747,9 +1034,16 @@ const rawCategories = [
         'Project nursery, wraparound care, extras, and support to understand monthly childcare spend.'
       ),
       createCalculatorEntry(
-        'Maternity Pay Calculator',
+        'Statutory Maternity Pay Calculator',
         'MaternityPayCalculator',
-        'Work out statutory and enhanced maternity pay over the full leave period.'
+        'Work out statutory and enhanced maternity pay over the full leave period.',
+        MAPPED_KEYWORDS['Statutory Maternity Pay Calculator']
+      ),
+      createCalculatorEntry(
+        'Statutory Sick Pay Calculator',
+        'StatutorySickPayCalculator',
+        'Estimate statutory sick pay (SSP) entitlement and payment schedule.',
+        MAPPED_KEYWORDS['Statutory Sick Pay Calculator']
       ),
       createCalculatorEntry(
         'Shared Parental Leave Planner',
@@ -810,28 +1104,31 @@ const enrichCalculators = (items = []) =>
     ...calc,
     status: calc.status || 'active',
     tags: Array.isArray(calc.tags) ? calc.tags : [],
+    keywords: Array.isArray(calc.keywords) ? calc.keywords : [],
   }));
 
-export const calculatorCategories = rawCategories.map(({ name, description, icon, calculators }) => {
-  const categoryTag = toSlug(name);
-  const calculatorsWithDefaults = enrichCalculators(calculators).map((calc) => ({
-    ...calc,
-    tags: Array.from(new Set([...(calc.tags || []), categoryTag])),
-  }));
-  return {
-    name,
-    slug: toSlug(name),
-    description,
-    icon,
-    calculators: calculatorsWithDefaults,
-    subCategories: [
-      {
-        name: `${name} Tools`,
-        calculators: calculatorsWithDefaults,
-      },
-    ],
-  };
-});
+export const calculatorCategories = rawCategories.map(
+  ({ name, description, icon, calculators }) => {
+    const categoryTag = toSlug(name);
+    const calculatorsWithDefaults = enrichCalculators(calculators).map((calc) => ({
+      ...calc,
+      tags: Array.from(new Set([...(calc.tags || []), categoryTag])),
+    }));
+    return {
+      name,
+      slug: toSlug(name),
+      description,
+      icon,
+      calculators: calculatorsWithDefaults,
+      subCategories: [
+        {
+          name: `${name} Tools`,
+          calculators: calculatorsWithDefaults,
+        },
+      ],
+    };
+  }
+);
 
 export const allCalculators = calculatorCategories.flatMap((category) =>
   (category.subCategories || []).flatMap((sub) => sub.calculators || [])
@@ -857,6 +1154,7 @@ export const searchCalculators = (query) => {
   return allCalculators.filter(
     (calc) =>
       calc.name.toLowerCase().includes(term) ||
-      calc.description.toLowerCase().includes(term)
+      calc.description.toLowerCase().includes(term) ||
+      calc.keywords.some((keyword) => keyword.toLowerCase().includes(term))
   );
 };

@@ -1,11 +1,16 @@
 // src/pages/calculators/minimum-wage-calculator.jsx
 import React, { useState, useMemo, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Users, Landmark, ClipboardList } from 'lucide-react';
-
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,16 +22,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Calculator, Users, Landmark, ClipboardList, Quote, BookOpen } from 'lucide-react';
 
+const pagePath = '/calculators/minimum-wage-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/minimum-wage-calculator';
-
-const schemaKeywords = [
-  'National Living Wage',
-  'Age Brackets',
-  'Hourly Pay',
-  'Annual Earnings',
-  'UK Minimum',
-];
+const pageTitle = 'Minimum Wage Calculator UK | National Living Wage Checker';
+const metaDescription =
+  'Check UK minimum wage and National Living Wage rates across age brackets. Project hourly, weekly, monthly, and annual earnings to ensure compliance.';
+const keywords = getMappedKeywords('Minimum Wage Calculator');
 
 const faqItems = [
   {
@@ -46,11 +49,36 @@ const faqItems = [
   },
 ];
 
+const emotionalMessage =
+  'Knowing your worth is the first step to financial empowerment. Use this calculator to ensure your earnings align with UK minimum wage standards and plan for a secure future.';
+const emotionalQuote = {
+  text: 'The best way to predict the future is to create it.',
+  author: 'Peter Drucker',
+};
+
+const directoryLinks = [
+  {
+    url: '/#employment-income',
+    label: 'Explore all employment & income calculators',
+    description: 'From salary to tax, understand your earnings and financial obligations.',
+  },
+  {
+    url: '/salary-calculator',
+    label: 'Calculate your salary',
+    description: 'Estimate your gross and net pay based on your annual salary.',
+  },
+  {
+    url: '/take-home-pay-calculator',
+    label: 'Check your take-home pay',
+    description: 'See how your income changes after tax and National Insurance.',
+  },
+];
+
 const wageRates = {
   '21+ (National Living Wage)': 11.44,
-  '18-20': 8.60,
-  'Under 18': 6.40,
-  Apprentice: 6.40,
+  '18-20': 8.6,
+  'Under 18': 6.4,
+  Apprentice: 6.4,
 };
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
@@ -59,21 +87,42 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 2,
 });
 
-export default function MinimumWageCalculator() {
+export default function MinimumWageCalculatorPage() {
   const [inputs, setInputs] = useState({
     ageBand: '21+ (National Living Wage)',
     weeklyHours: '37.5',
     weeksPerYear: '52',
   });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const results = useMemo(() => {
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Minimum Wage Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Employment & Income Calculators', url: '/calculators#employment-income' },
+      { name: 'Minimum Wage Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
+
+  const parseNumber = (value) => {
+    if (value === null || value === undefined) return 0;
+    const cleaned = String(value).replace(/,/g, '').trim();
+    const numeric = Number.parseFloat(cleaned);
+    return Number.isFinite(numeric) ? numeric : 0;
+  };
+
+  const calculateWage = useCallback(() => {
     const hourlyRate = wageRates[inputs.ageBand] || 0;
-    const weeklyHours = Number(inputs.weeklyHours) || 0;
-    const weeksPerYear = Number(inputs.weeksPerYear) || 0;
+    const weeklyHours = parseNumber(inputs.weeklyHours);
+    const weeksPerYear = parseNumber(inputs.weeksPerYear);
 
     const weeklyPay = hourlyRate * weeklyHours;
     const annualPay = weeklyPay * weeksPerYear;
@@ -87,192 +136,267 @@ export default function MinimumWageCalculator() {
     };
   }, [inputs]);
 
-  const reset = useCallback(() => {
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handleSelectChange = useCallback((value) => {
+    setInputs((prev) => ({ ...prev, ageBand: value }));
+  }, []);
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computedResults = calculateWage();
+      setResults(computedResults);
+      setHasCalculated(true);
+
+      const csvRows = [
+        ['Metric', 'Value'],
+        ['Age Band', inputs.ageBand],
+        ['Weekly Hours', inputs.weeklyHours],
+        ['Weeks Per Year', inputs.weeksPerYear],
+        ['Hourly Pay (£)', currencyFormatter.format(computedResults.hourlyRate)],
+        ['Weekly Pay (£)', currencyFormatter.format(computedResults.weeklyPay)],
+        ['Monthly Pay (£)', currencyFormatter.format(computedResults.monthlyPay)],
+        ['Annual Earnings (£)', currencyFormatter.format(computedResults.annualPay)],
+      ];
+      setCsvData(csvRows);
+    },
+    [calculateWage, currencyFormatter, inputs]
+  );
+
+  const handleReset = useCallback(() => {
     setInputs({
       ageBand: '21+ (National Living Wage)',
       weeklyHours: '37.5',
       weeksPerYear: '52',
     });
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
   }, []);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Minimum Wage & Living Wage Calculator</title>
-        <meta
-          name="description"
-          content="Check UK minimum wage and National Living Wage rates across age brackets and project hourly, weekly, monthly, and annual earnings."
-        />
-        <meta name="keywords" content="Minimum Wage Rates, NLW, UK Pay" />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'GovernmentService',
-              name: 'Minimum Wage Calculator',
-              description:
-                'Minimum wage and National Living Wage calculator covering UK legislation, youth rates, and employment standards.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-              areaServed: 'GB',
-              serviceType: 'Wage compliance checker',
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-amber-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Minimum Wage Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-amber-100">
-            Calculate minimum wage, verify NLW compliance, and keep pace with UK employment standards.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-amber-600/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Minimum Wage Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Check UK minimum wage and National Living Wage rates across age brackets. Project
+              hourly, weekly, monthly, and annual earnings to ensure compliance.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-amber-200 dark:border-amber-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-amber-500" />
-                Wage Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="text-sm font-medium">Age band</Label>
-                <Select
-                  value={inputs.ageBand}
-                  onValueChange={(value) => handleChange('ageBand', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select band" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(wageRates).map((band) => (
-                      <SelectItem key={band} value={band}>
-                        {band}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="weeklyHours" className="text-sm font-medium">
-                  Weekly hours
-                </Label>
-                <Input
-                  id="weeklyHours"
-                  inputMode="decimal"
-                  value={inputs.weeklyHours}
-                  onChange={(event) => handleChange('weeklyHours', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="weeksPerYear" className="text-sm font-medium">
-                  Weeks per year
-                </Label>
-                <Input
-                  id="weeksPerYear"
-                  inputMode="decimal"
-                  value={inputs.weeksPerYear}
-                  onChange={(event) => handleChange('weeksPerYear', event.target.value)}
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Users className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-amber-600 dark:text-amber-300"
+            borderColor="border-amber-200 dark:border-amber-800/60"
+            bgColor="bg-amber-50/70 dark:bg-amber-950/40"
+            textColor="text-amber-900 dark:text-amber-100"
+            footerColor="text-amber-700 dark:text-amber-300"
+          />
 
-          <div className="space-y-6">
-                <Card className="border border-amber-200 dark:border-amber-900 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                      <Users className="h-5 w-5 text-amber-500" />
-                      NLW Checker Summary
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4 text-sm">
-                    <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calculator
+                    className="h-5 w-5 text-amber-600 dark:text-amber-300"
+                    aria-hidden="true"
+                  />
+                  Wage Inputs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="ageBand">Age band</Label>
+                      <Select value={inputs.ageBand} onValueChange={handleSelectChange}>
+                        <SelectTrigger id="ageBand">
+                          <SelectValue placeholder="Select band" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.keys(wageRates).map((band) => (
+                            <SelectItem key={band} value={band}>
+                              {band}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="weeklyHours">Weekly hours</Label>
+                      <Input
+                        id="weeklyHours"
+                        inputMode="decimal"
+                        value={inputs.weeklyHours}
+                        onChange={handleInputChange('weeklyHours')}
+                        placeholder="e.g. 37.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="weeksPerYear">Weeks per year</Label>
+                      <Input
+                        id="weeksPerYear"
+                        inputMode="decimal"
+                        value={inputs.weeksPerYear}
+                        onChange={handleInputChange('weeksPerYear')}
+                        placeholder="e.g. 52"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate Wage
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Select an age band and enter working hours, then press{' '}
+                    <span className="font-semibold">Calculate Wage</span> to see estimated earnings
+                    based on UK minimum wage rates.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-amber-200 bg-white shadow-sm dark:border-amber-900 dark:bg-amber-900/30 dark:text-amber-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Users
+                          className="h-5 w-5 text-amber-600 dark:text-amber-200"
+                          aria-hidden="true"
+                        />
+                        Earnings Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="text-muted-foreground">Hourly pay</p>
-                        <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                        <p className="text-sm text-amber-900 dark:text-amber-200">Hourly pay</p>
+                        <p className="text-2xl font-semibold">
                           {currencyFormatter.format(results.hourlyRate)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Weekly pay</p>
-                        <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                        <p className="text-sm text-amber-900 dark:text-amber-200">Weekly pay</p>
+                        <p className="text-2xl font-semibold">
                           {currencyFormatter.format(results.weeklyPay)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Monthly pay</p>
-                        <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                        <p className="text-sm text-amber-900 dark:text-amber-200">Monthly pay</p>
+                        <p className="text-2xl font-semibold">
                           {currencyFormatter.format(results.monthlyPay)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Annual earnings</p>
-                        <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                        <p className="text-sm text-amber-900 dark:text-amber-200">
+                          Annual earnings
+                        </p>
+                        <p className="text-2xl font-semibold">
                           {currencyFormatter.format(results.annualPay)}
                         </p>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="minimum-wage-earnings"
+                          title="Minimum Wage Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                <Card className="border border-amber-200 dark:border-amber-900 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                      <Landmark className="h-5 w-5 text-amber-500" />
-                      UK Legislation Notes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm text-muted-foreground">
-                    <p>• Review UK legislation every April when new minimum wage rates launch.</p>
-                    <p>• Youth rates move with birthdays—update employment contracts promptly.</p>
-                    <p>• Keep payroll records for at least six years to evidence compliance.</p>
-                  </CardContent>
-                </Card>
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <ClipboardList
+                          className="h-5 w-5 text-amber-600 dark:text-amber-300"
+                          aria-hidden="true"
+                        />
+                        Important Notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        The wage rates used in this calculator are examples. Always check the{' '}
+                        <a
+                          href="https://www.gov.uk/national-minimum-wage-rates"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-amber-600 hover:underline dark:text-amber-400"
+                        >
+                          official UK government website
+                        </a>{' '}
+                        for the most current National Living Wage and National Minimum Wage rates.
+                      </p>
+                      <p>
+                        This calculator provides an estimate. Your actual pay may vary based on your
+                        specific employment contract and any additional benefits.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Minimum Wage with Confidence
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Use this NLW checker to monitor hourly pay, confirm employment standards, and maintain
-            compliance with UK legislation. Regular reviews protect both employers and employees.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Youth Rates &amp; Employment Standards
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Minimum wage depends on age brackets, apprenticeship status, and agreed weekly hours.
-            Keep rotas and payslips aligned so young workers progress smoothly through the pay scale.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            NLW Checker for Employers and Workers
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Whether you are an employer auditing payroll or an employee verifying your payslip, this
-            tool helps you understand total compensation—hourly, weekly, monthly, or annually.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );

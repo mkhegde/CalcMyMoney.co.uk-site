@@ -12,15 +12,18 @@ import {
   Wallet,
   Zap,
   Briefcase,
+  PoundSterling,
+  Home as HomeIcon,
+  PiggyBank,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 import { prefetchPage } from '@/utils/prefetchPage';
-import { PoundSterling, Home as HomeIcon, PiggyBank } from 'lucide-react';
 import { useSeo } from '@/components/seo/SeoContext';
 import Heading from '@/components/common/Heading';
 import { calculatorCategories as DEFAULT_DIRECTORY_CATEGORIES } from '../components/data/calculatorConfig.js';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 
 const DEFAULT_STATS = { total: 0, active: 0, categories: 0 };
 
@@ -35,6 +38,12 @@ const ICONS_BY_SLUG = {
   'utilities-tools': Zap,
   'family-lifestyle': Users,
 };
+
+const pageTitle = 'UK Salary, Tax & Mortgage Calculators (2025/26) | CalcMyMoney';
+const metaDescription =
+  'Free UK calculators for salary, PAYE tax & NI, mortgages, loans, budgeting, savings and pensions. Fast, accurate 2025/26 tools to help you make confident money decisions.';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/';
+const keywords = getMappedKeywords('Home');
 
 export default function Home() {
   const location = useLocation();
@@ -133,21 +142,34 @@ export default function Home() {
   }, [calcData.categories, directoryCategories, fallbackHubCards]);
 
   useEffect(() => {
-    if (!hasQuery) {
-      resetSeo();
-      return;
-    }
-
     const origin =
       typeof window !== 'undefined' && window.location?.origin
         ? window.location.origin
         : 'https://www.calcmymoney.co.uk';
-    const canonical = origin.endsWith('/') ? origin : `${origin}/`;
+    const currentCanonical = origin.endsWith('/') ? origin : `${origin}/`;
 
-    setSeo({
-      robots: 'noindex,follow',
-      canonical,
-    });
+    if (hasQuery) {
+      setSeo({
+        robots: 'noindex,follow',
+        canonical: currentCanonical,
+      });
+    } else {
+      setSeo({
+        title: pageTitle,
+        description: metaDescription,
+        canonical: canonicalUrl,
+        ogTitle: pageTitle,
+        ogDescription: metaDescription,
+        ogUrl: canonicalUrl,
+        ogType: 'website',
+        ogSiteName: 'CalcMyMoney UK',
+        ogLocale: 'en_GB',
+        twitterTitle: pageTitle,
+        twitterDescription: metaDescription,
+        keywords: keywords,
+        articleTags: keywords,
+      });
+    }
 
     return () => {
       resetSeo();
@@ -196,7 +218,12 @@ export default function Home() {
       <div className="relative border-b border-border/70 bg-hero-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
           <div className="text-center max-w-4xl mx-auto text-hero-foreground">
-            <Heading as="h1" size="h1" weight="bold" className="title-hero text-hero-foreground mb-4">
+            <Heading
+              as="h1"
+              size="h1"
+              weight="bold"
+              className="title-hero text-hero-foreground mb-4"
+            >
               All UK Financial Calculators – Income Tax & Take-Home Pay
             </Heading>
             <p className="lead text-muted-foreground mb-8">
@@ -259,32 +286,32 @@ export default function Home() {
             </div>
 
             {/* Quick Stats */}
-          <div className="flex flex-wrap items-center justify-center gap-4 body text-muted-foreground sm:gap-8">
-            {isCatalogLoading ? (
-              Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  // eslint-disable-next-line react/no-array-index-key
-                  key={`stats-skeleton-${index}`}
-                  className="h-4 w-36 rounded bg-muted-foreground/20 animate-pulse"
-                />
-              ))
-            ) : (
-              <>
-                <div className="flex items-center gap-2">
-                  <Calculator className="h-4 w-4 text-primary" />
-                  <span>{stats.total} Calculators</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  <span>{stats.active} Active</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
-                  <span>Free to Use</span>
-                </div>
-              </>
-            )}
-          </div>
+            <div className="flex flex-wrap items-center justify-center gap-4 body text-muted-foreground sm:gap-8">
+              {isCatalogLoading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={`stats-skeleton-${index}`}
+                    className="h-4 w-36 rounded bg-muted-foreground/20 animate-pulse"
+                  />
+                ))
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Calculator className="h-4 w-4 text-primary" />
+                    <span>{stats.total} Calculators</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <span>{stats.active} Active</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
+                    <span>Free to Use</span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -372,7 +399,10 @@ export default function Home() {
                             {subCategory.calculators
                               .filter((calc) => showAllCalculators || calc.status === 'active')
                               .map((calc, index) => (
-                                <div key={index} className="flex items-center justify-between group">
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between group"
+                                >
                                   {calc.status === 'active' ? (
                                     <Link
                                       to={calc.url}
@@ -383,10 +413,12 @@ export default function Home() {
                                       {calc.name}
                                     </Link>
                                   ) : (
-                                    <span className="flex-1 body text-muted-foreground/60">{calc.name}</span>
+                                    <span className="flex-1 body text-muted-foreground/60">
+                                      {calc.name}
+                                    </span>
                                   )}
                                   {(calc.status === 'planned' || calc.status === 'pending') && (
-                                    <Badge variant="outline" className="ml-2 caption text-primary">
+                                    <Badge variant="secondary" className="caption">
                                       Coming Soon
                                     </Badge>
                                   )}
@@ -443,7 +475,6 @@ export default function Home() {
               Expand the directory to explore every calculator we offer.
             </div>
           )}
-
         </div>
       </div>
     </div>

@@ -1,24 +1,31 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Shield, PiggyBank, Percent } from 'lucide-react';
-
+import React, { useMemo, useState, useCallback, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Calculator, Shield, PiggyBank, Percent, Quote, BookOpen, LineChart } from 'lucide-react';
 
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
+
+const pagePath = '/calculators/national-insurance-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/national-insurance-calculator';
-
-const schemaKeywords = [
-  'NI Earnings Thresholds',
-  'Gross Salary',
-  'Take-Home Pay',
-  'UK Tax',
-  'State Pension',
-];
+const pageTitle = 'National Insurance Calculator UK | NI Contributions & Take-Home Pay';
+const metaDescription =
+  'Use our UK National Insurance calculator to estimate NI contributions, understand NI rates, and see the impact on your take-home pay.';
+const keywords = getMappedKeywords('NI Calculator');
 
 const faqItems = [
   {
@@ -38,6 +45,31 @@ const faqItems = [
   },
 ];
 
+const emotionalMessage =
+  'Understanding your National Insurance contributions is key to managing your take-home pay. Use this calculator to gain clarity and plan your finances effectively.';
+const emotionalQuote = {
+  text: 'An investment in knowledge pays the best interest.',
+  author: 'Benjamin Franklin',
+};
+
+const directoryLinks = [
+  {
+    url: '/#tax-national-insurance',
+    label: 'Explore all tax & National Insurance calculators',
+    description: 'From income tax to VAT, understand your tax obligations.',
+  },
+  {
+    url: '/income-tax-calculator',
+    label: 'Calculate your income tax',
+    description: 'Estimate your income tax liability based on your annual earnings.',
+  },
+  {
+    url: '/take-home-pay-calculator',
+    label: 'Check your take-home pay',
+    description: 'See your net income after tax and National Insurance.',
+  },
+];
+
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
@@ -51,34 +83,50 @@ const NI_UPPER_RATE = 0.02; // 2% employee rate
 const NI_EMPLOYER_SECONDARY_THRESHOLD = 9100;
 const NI_EMPLOYER_RATE = 0.138; // 13.8%
 
-export default function NationalInsuranceCalculator() {
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+export default function NationalInsuranceCalculatorPage() {
   const [inputs, setInputs] = useState({
-    annualSalary: '42000',
+    annualSalary: '42,000',
     pensionPercent: '5',
     salarySacrifice: '0',
   });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const reset = useCallback(() => {
-    setInputs({
-      annualSalary: '42000',
-      pensionPercent: '5',
-      salarySacrifice: '0',
-    });
-  }, []);
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'National Insurance Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Tax & National Insurance Calculators', url: '/calculators#tax-national-insurance' },
+      { name: 'National Insurance Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
 
-  const results = useMemo(() => {
-    const annualSalary = Number(inputs.annualSalary) || 0;
-    const pensionPercent = Math.max(0, Number(inputs.pensionPercent) || 0) / 100;
-    const salarySacrifice = Math.max(0, Number(inputs.salarySacrifice) || 0);
+  const calculateNI = useCallback(() => {
+    const annualSalary = parseNumber(inputs.annualSalary);
+    const pensionPercent = Math.max(0, parseNumber(inputs.pensionPercent)) / 100;
+    const salarySacrifice = Math.max(0, parseNumber(inputs.salarySacrifice));
 
     const pensionContribution = annualSalary * pensionPercent;
     const niablePay = Math.max(0, annualSalary - salarySacrifice);
 
-    const niBand1Earnings = Math.max(0, Math.min(niablePay, NI_UPPER_EARNINGS_LIMIT) - NI_PRIMARY_THRESHOLD);
+    const niBand1Earnings = Math.max(
+      0,
+      Math.min(niablePay, NI_UPPER_EARNINGS_LIMIT) - NI_PRIMARY_THRESHOLD
+    );
     const niBand2Earnings = Math.max(0, niablePay - NI_UPPER_EARNINGS_LIMIT);
 
     const employeeNI = niBand1Earnings * NI_MAIN_RATE + niBand2Earnings * NI_UPPER_RATE;
@@ -102,200 +150,328 @@ export default function NationalInsuranceCalculator() {
     };
   }, [inputs]);
 
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computedResults = calculateNI();
+      setResults(computedResults);
+      setHasCalculated(true);
+
+      const csvRows = [
+        ['Metric', 'Value'],
+        ['Annual Gross Salary (£)', currencyFormatter.format(parseNumber(inputs.annualSalary))],
+        ['Pension Contribution (%)', `${inputs.pensionPercent}%`],
+        ['Salary Sacrifice (£)', currencyFormatter.format(parseNumber(inputs.salarySacrifice))],
+        [],
+        ['NIable Pay (£)', currencyFormatter.format(computedResults.niablePay)],
+        ['Employee NI (Annual) (£)', currencyFormatter.format(computedResults.employeeNI)],
+        ['Employee NI (Monthly) (£)', currencyFormatter.format(computedResults.monthlyNI)],
+        ['Employer NI (Annual) (£)', currencyFormatter.format(computedResults.employerNI)],
+        ['Effective NI Rate (%)', `${computedResults.effectiveRate.toFixed(2)}%`],
+        [
+          'Estimated Take-Home Pay (after NI & Pension) (£)',
+          currencyFormatter.format(computedResults.takeHomeEstimate),
+        ],
+        ['Pension Contribution (£)', currencyFormatter.format(computedResults.pensionContribution)],
+      ];
+      setCsvData(csvRows);
+    },
+    [calculateNI, currencyFormatter, inputs]
+  );
+
+  const handleReset = useCallback(() => {
+    setInputs({
+      annualSalary: '42,000',
+      pensionPercent: '5',
+      salarySacrifice: '0',
+    });
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  }, []);
+
+  const chartData = useMemo(() => {
+    if (!results || !hasCalculated) return [];
+    return [
+      { name: 'Employee NI', value: results.employeeNI, color: '#3b82f6' },
+      { name: 'Employer NI', value: results.employerNI, color: '#10b981' },
+      { name: 'Pension Contribution', value: results.pensionContribution, color: '#f97316' },
+    ].filter((segment) => segment.value > 0);
+  }, [results, hasCalculated]);
+
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>National Insurance &amp; NI Contributions Calculator</title>
-        <meta
-          name="description"
-          content="National Insurance Calculator for UK employees. Estimate NI classes, taxable income bands, and NI contributions affecting take-home pay."
-        />
-        <meta
-          name="keywords"
-          content="National Insurance Calculator, NI Classes, Taxable Income"
-        />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FinancialProduct',
-              name: 'National Insurance Calculator',
-              description:
-                'Calculator estimating NI earnings thresholds, gross salary, take-home pay, and National Insurance contributions for UK employees under HMRC rules.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            National Insurance Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
-            Calculate National Insurance, understand your NI rate, and view contribution amount to
-            inform NI relief discussions with HMRC.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                National Insurance Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Calculate your National Insurance contributions, understand NI rates, and see the
+              impact on your take-home pay for informed financial planning.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-indigo-500" />
-                Income Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="annualSalary" className="text-sm font-medium">
-                  Annual gross salary (GBP)
-                </Label>
-                <Input
-                  id="annualSalary"
-                  inputMode="decimal"
-                  value={inputs.annualSalary}
-                  onChange={(event) => handleChange('annualSalary', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="pensionPercent" className="text-sm font-medium">
-                  Employee pension contribution (%)
-                </Label>
-                <Input
-                  id="pensionPercent"
-                  inputMode="decimal"
-                  value={inputs.pensionPercent}
-                  onChange={(event) => handleChange('pensionPercent', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="salarySacrifice" className="text-sm font-medium">
-                  Salary sacrifice (GBP)
-                </Label>
-                <Input
-                  id="salarySacrifice"
-                  inputMode="decimal"
-                  value={inputs.salarySacrifice}
-                  onChange={(event) => handleChange('salarySacrifice', event.target.value)}
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Shield className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-indigo-600 dark:text-indigo-300"
+            borderColor="border-indigo-200 dark:border-indigo-800/60"
+            bgColor="bg-indigo-50/70 dark:bg-indigo-950/40"
+            textColor="text-indigo-900 dark:text-indigo-100"
+            footerColor="text-indigo-700 dark:text-indigo-300"
+          />
 
-          <div className="space-y-6">
-            <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Shield className="h-5 w-5 text-indigo-500" />
-                  NI Contributions
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calculator
+                    className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                    aria-hidden="true"
+                  />
+                  Income & Contribution Inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Employee NI (annual)</p>
-                    <p className="text-lg font-semibold text-indigo-600">
-                      {currencyFormatter.format(results.employeeNI)}
-                    </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="annualSalary">Annual gross salary (£)</Label>
+                      <Input
+                        id="annualSalary"
+                        inputMode="decimal"
+                        value={inputs.annualSalary}
+                        onChange={handleInputChange('annualSalary')}
+                        placeholder="e.g. 42,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pensionPercent">Employee pension contribution (%)</Label>
+                      <Input
+                        id="pensionPercent"
+                        inputMode="decimal"
+                        value={inputs.pensionPercent}
+                        onChange={handleInputChange('pensionPercent')}
+                        placeholder="e.g. 5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="salarySacrifice">Salary sacrifice (£)</Label>
+                      <Input
+                        id="salarySacrifice"
+                        inputMode="decimal"
+                        value={inputs.salarySacrifice}
+                        onChange={handleInputChange('salarySacrifice')}
+                        placeholder="e.g. 0"
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Enter the amount of salary sacrificed for benefits like pensions or
+                        cycle-to-work schemes.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Employee NI (monthly)</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.monthlyNI)}
-                    </p>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate NI
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Employer NI (annual)</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.employerNI)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Effective NI rate</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {results.effectiveRate.toFixed(2)}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Estimated take-home pay (after NI &amp; pension)</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.takeHomeEstimate)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Pension contribution</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.pensionContribution)}
-                    </p>
-                  </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Percent className="h-5 w-5 text-indigo-500" />
-                  NI Relief Tips
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  Salary sacrifice arrangements and employee pension contributions reduce NIable pay,
-                  delivering NI relief and boosting take-home pay.
-                </p>
-                <p>
-                  Directors may calculate NI on an annual earnings basis. This calculator assumes a
-                  standard employee paid under PAYE.
-                </p>
-                <p>
-                  Keep payroll records up to date to support HMRC reviews and maintain qualifying
-                  years for the State Pension.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your annual salary and contributions, then press{' '}
+                    <span className="font-semibold">Calculate NI</span> to see your estimated
+                    National Insurance contributions and take-home pay.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-indigo-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-indigo-900/30 dark:text-indigo-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Shield
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-200"
+                          aria-hidden="true"
+                        />
+                        NI Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Employee NI (Annual)
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.employeeNI)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Employee NI (Monthly)
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.monthlyNI)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Employer NI (Annual)
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.employerNI)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Effective NI Rate
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {results.effectiveRate.toFixed(2)}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Estimated Take-Home Pay
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.takeHomeEstimate)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Pension Contribution
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.pensionContribution)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="national-insurance-contributions"
+                          title="National Insurance Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <LineChart
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Contribution Breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart
+                          data={chartData}
+                          title="National Insurance Breakdown"
+                        />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BookOpen
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Important Notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        The National Insurance thresholds and rates used in this calculator are
+                        examples. Always check the{' '}
+                        <a
+                          href="https://www.gov.uk/national-insurance-rates-bands"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:underline dark:text-indigo-400"
+                        >
+                          official UK government website
+                        </a>{' '}
+                        for the most current rates and thresholds.
+                      </p>
+                      <p>
+                        This calculator provides an estimate for Class 1 employee contributions.
+                        Your actual contributions may vary based on your specific employment
+                        circumstances and any additional benefits.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate National Insurance with Confidence
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Combine NI rate data and contribution amount outputs to review take-home pay. Use the
-            figures when discussing NI relief or HMRC adjustments with your payroll provider.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            NI Rate Awareness Supports Financial Planning
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Understanding how NI interacts with income tax ensures accurate cash-flow forecasts and
-            supports pension decisions that influence UK State Pension entitlements.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Monitor NI Contributions for HMRC Compliance
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Track NI classes and taxable income boundaries each tax year. Staying informed helps avoid
-            surprises during PAYE reconciliations and reinforces take-home pay planning.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );
