@@ -110,6 +110,11 @@ const rawCategories = [
         'EquityReleaseEstimator',
         'Estimate how much tax-free cash could be unlocked with equity release plans.'
       ),
+      createCalculatorEntry(
+        'Home Equity Loan Calculator',
+        'HomeEquityLoanCalculator',
+        'Estimate how much equity you can release, net cash after fees, and repayment costs for a HELOC or further advance.'
+      ),
     ],
   },
   {
@@ -163,14 +168,29 @@ const rawCategories = [
         'Understand the impact of pension, benefits, and salary sacrifice on take-home pay.'
       ),
       createCalculatorEntry(
+        'Gross to Net Calculator',
+        'GrossToNetCalculator',
+        'Convert gross salary into net pay after Income Tax, National Insurance, pension, and student loan deductions.'
+      ),
+      createCalculatorEntry(
         'Overtime Pay Calculator',
         'OvertimePayCalculator',
         'Calculate additional earnings from overtime hours at multiple pay rates.'
       ),
       createCalculatorEntry(
+        'Holiday Pay Calculator',
+        'HolidayPayCalculator',
+        'Estimate statutory holiday pay for salaried and irregular-hours staff using average pay rules.'
+      ),
+      createCalculatorEntry(
         'Bonus Tax Calculator',
         'BonusTaxCalculator',
         'Estimate tax on one-off bonuses and see the net amount paid to you.'
+      ),
+      createCalculatorEntry(
+        'Hourly to Annual Salary Calculator',
+        'HourlyToAnnualSalaryCalculator',
+        'Convert hourly pay into annual, monthly, weekly, and daily earnings including overtime.'
       ),
       createCalculatorEntry(
         'Off-Payroll IR35 Calculator',
@@ -280,6 +300,11 @@ const rawCategories = [
         'Savings Goal Tracker',
         'SavingsGoalTracker',
         'Set savings goals and monitor progress against monthly contributions.'
+      ),
+      createCalculatorEntry(
+        'Future Value Calculator',
+        'FutureValueCalculator',
+        'Project how lump sums and regular contributions grow with compound interest over time.'
       ),
       createCalculatorEntry(
         'Investment Portfolio Rebalancer',
@@ -459,6 +484,11 @@ const rawCategories = [
         'Holiday Budget Calculator',
         'HolidayBudgetCalculator',
         'Plan holiday spending with savings targets and cost breakdowns.'
+      ),
+      createCalculatorEntry(
+        'Household Bills Splitter',
+        'HouseholdBillsSplitter',
+        'Split rent, utilities, and subscriptions fairly across housemates with customised percentages.'
       ),
       createCalculatorEntry(
         'Wedding Budget Planner',

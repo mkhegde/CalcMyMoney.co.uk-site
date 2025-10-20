@@ -1,36 +1,121 @@
 import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Calculator, Home, PiggyBank } from 'lucide-react';
+import { Calculator, Home, PiggyBank, Percent } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import ExportActions from '@/components/calculators/ExportActions';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
+import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
+import { createCalculatorWebPageSchema, createCalculatorBreadcrumbs } from '@/utils/calculatorSchema.js';
+import { sanitiseNumber } from '@/utils/sanitiseNumber.js';
 
-const keywords = ['home equity loan calculator', 'heloc calculator'];
+const CALCULATOR_NAME = 'Home Equity Loan Calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/home-equity-loan-calculator';
+const keywords = getCalculatorKeywords(CALCULATOR_NAME);
 
 const metaDescription =
-  'Use our home equity loan calculator to estimate borrowing capacity, compare heloc calculator payment scenarios, and plan how a home equity loan affects your budget.';
+  'Estimate how much equity you can release, potential HELOC repayments, and the total interest cost before comparing lender offers.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/home-equity-loan-calculator';
-const schemaKeywords = keywords;
+const defaultInputs = {
+  propertyValue: '420,000',
+  outstandingMortgage: '215,000',
+  maxLtv: '80',
+  interestRate: '5.2',
+  termYears: '20',
+  fees: '1,500',
+};
+
+const faqItems = [
+  {
+    question: 'How do lenders calculate the maximum I can borrow?',
+    answer:
+      'They look at your combined loan-to-value (CLTV) ratio. Multiply your property value by the lender’s maximum CLTV and subtract your existing mortgage balance. That’s the gross amount available before fees.',
+  },
+  {
+    question: 'How do fees affect the cash I receive?',
+    answer:
+      'Arrangement fees reduce the money that actually arrives in your bank account. Add them here so you can compare the gross approval amount with the usable funds after costs.',
+  },
+  {
+    question: 'What repayment type does this calculator assume?',
+    answer:
+      'It models a repayment (capital and interest) loan. For interest-only drawdown periods, compare the monthly repayment shown here with the interest-only payment to stress-test affordability.',
+  },
+];
+
+const directoryLinks = [
+  {
+    label: 'Browse the full calculator directory',
+    url: '/#calculator-directory',
+    description: 'Jump to every mortgage, loan, and savings calculator we offer.',
+  },
+  {
+    label: 'Mortgages & property hub',
+    url: '/#mortgages-property',
+    description: 'Explore tools for repayments, overpayments, and landlord yields.',
+  },
+  {
+    label: 'Mortgage affordability calculator',
+    url: '/mortgage-affordability-calculator',
+    description: 'Check borrowing limits alongside your home equity plan.',
+  },
+];
+
+const relatedCalculators = [
+  {
+    name: 'Mortgage Repayment Calculator',
+    url: '/mortgage-repayment-calculator',
+    description: 'Compare mortgage repayments with and without extra borrowing.',
+  },
+  {
+    name: 'Down Payment Calculator',
+    url: '/down-payment-calculator',
+    description: 'Plan how much equity you’ll have left after releasing funds.',
+  },
+  {
+    name: 'Remortgage Calculator',
+    url: '/remortgage-calculator',
+    description: 'See if switching lender unlocks better rates before raising equity.',
+  },
+];
+
+const webPageSchema = createCalculatorWebPageSchema({
+  name: CALCULATOR_NAME,
+  description: metaDescription,
+  url: canonicalUrl,
+  keywords,
+});
+
+const breadcrumbSchema = createCalculatorBreadcrumbs({
+  name: CALCULATOR_NAME,
+  url: canonicalUrl,
+});
+
+const faqStructuredData = faqSchema(faqItems);
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
-const percentageFormatter = (value) => `${value.toFixed(2)}%`;
+const formatPercentage = (value) =>
+  `${value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
 
-const calcMonthlyPayment = (principal, annualRate, termYears) => {
+const calculateMonthlyPayment = (principal, annualRate, termYears) => {
   if (principal <= 0 || termYears <= 0) return 0;
-  const monthlyRate = annualRate / 100 / 12;
+  const monthlyRate = Math.max(annualRate, 0) / 100 / 12;
   const months = termYears * 12;
   if (monthlyRate === 0) return principal / months;
   return (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
@@ -44,93 +129,112 @@ const calculateHomeEquityLoan = ({
   termYears,
   fees,
 }) => {
-  const allowedLoanAmount = Math.max(propertyValue * (maxLtv / 100) - outstandingMortgage, 0);
-  const loanAmount = Math.max(allowedLoanAmount - fees, 0);
-  const monthlyPayment = calcMonthlyPayment(loanAmount, interestRate, termYears);
-  const totalInterest = monthlyPayment * termYears * 12 - loanAmount;
+  if (propertyValue <= 0) {
+    return {
+      valid: false,
+      message: 'Enter a property value to estimate the equity you can release.',
+    };
+  }
+
+  const cltvCap = propertyValue * (maxLtv / 100);
+  const grossLoan = Math.max(cltvCap - outstandingMortgage, 0);
+  if (grossLoan <= 0) {
+    return {
+      valid: false,
+      message: 'The current mortgage already uses all available equity at this LTV.',
+    };
+  }
+
+  const netLoan = Math.max(grossLoan - fees, 0);
+  const monthlyPayment = calculateMonthlyPayment(grossLoan, interestRate, termYears);
+  const totalInterest = monthlyPayment * termYears * 12 - grossLoan;
 
   return {
-    allowedLoanAmount,
-    loanAmount,
+    valid: true,
+    propertyValue,
+    outstandingMortgage,
+    grossLoan,
+    netLoan,
+    maxLtv,
+    interestRate,
+    termYears,
+    fees,
     monthlyPayment,
     totalInterest,
   };
 };
 
-const homeEquityFaqs = [
-  {
-    question: 'What LTV should I use for my lender?',
-    answer:
-      'Many lenders cap combined loan-to-value (CLTV) at 80-85%. Check your existing mortgage balance and lender policy to choose an accurate percentage.',
-  },
-  {
-    question: 'How do fees affect the loan?',
-    answer:
-      'Arrangement fees reduce the cash you receive. Enter estimated fees so the calculator shows both the gross approval amount and the cash that lands in your account.',
-  },
-  {
-    question: 'Can I model interest-only HELOC payments?',
-    answer:
-      'This calculator assumes amortising repayments. For interest-only HELOC payments, set a longer term and compare monthly amounts to approximate the lower payment during the draw period.',
-  },
-];
-
 export default function HomeEquityLoanCalculatorPage() {
-  const [inputs, setInputs] = useState({
-    propertyValue: 420000,
-    outstandingMortgage: 215000,
-    maxLtv: 80,
-    interestRate: 5.2,
-    termYears: 20,
-    fees: 1500,
-  });
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [results, setResults] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-  const results = useMemo(() => calculateHomeEquityLoan(inputs), [inputs]);
+  const handleInputChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
 
-  const resetInputs = () =>
-    setInputs({
-      propertyValue: 420000,
-      outstandingMortgage: 215000,
-      maxLtv: 80,
-      interestRate: 5.2,
-      termYears: 20,
-      fees: 1500,
-    });
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setResults(null);
+    setHasCalculated(false);
+  };
+
+  const handleCalculate = (event) => {
+    event.preventDefault();
+    const payload = {
+      propertyValue: sanitiseNumber(inputs.propertyValue),
+      outstandingMortgage: sanitiseNumber(inputs.outstandingMortgage),
+      maxLtv: sanitiseNumber(inputs.maxLtv),
+      interestRate: sanitiseNumber(inputs.interestRate),
+      termYears: sanitiseNumber(inputs.termYears),
+      fees: sanitiseNumber(inputs.fees),
+    };
+    const outcome = calculateHomeEquityLoan(payload);
+    setResults(outcome);
+    setHasCalculated(true);
+  };
+
+  const chartData = useMemo(() => {
+    if (!results?.valid) return [];
+    return [
+      { name: 'Existing mortgage', value: results.outstandingMortgage, color: '#0ea5e9' },
+      { name: 'New equity release', value: results.grossLoan, color: '#22c55e' },
+    ];
+  }, [results]);
+
+  const csvData = useMemo(() => {
+    if (!results?.valid) return null;
+    return [
+      ['Metric', 'Value'],
+      ['Property value (£)', results.propertyValue.toFixed(2)],
+      ['Outstanding mortgage (£)', results.outstandingMortgage.toFixed(2)],
+      ['Maximum CLTV (%)', results.maxLtv.toFixed(2)],
+      ['Gross loan approval (£)', results.grossLoan.toFixed(2)],
+      ['Arrangement fees (£)', results.fees.toFixed(2)],
+      ['Cash received after fees (£)', results.netLoan.toFixed(2)],
+      ['Interest rate (%)', results.interestRate.toFixed(2)],
+      ['Term (years)', results.termYears.toFixed(1)],
+      ['Monthly repayment (£)', results.monthlyPayment.toFixed(2)],
+      ['Total interest over term (£)', results.totalInterest.toFixed(2)],
+    ];
+  }, [results]);
+
+  const showResults = hasCalculated && results?.valid;
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>Home Equity Loan Calculator | HELOC Calculator</title>
+        <title>{`${CALCULATOR_NAME} | HELOC & Equity Release Planner`}</title>
         <meta name="description" content={metaDescription} />
+        {keywords.length ? <meta name="keywords" content={keywords.join(', ')} /> : null}
         <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Home Equity Loan Calculator | HELOC Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Home Equity Loan Calculator | HELOC Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Home Equity Loan Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate home equity borrowing',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
       </Helmet>
+      <JsonLd data={webPageSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={faqStructuredData} />
 
       <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
@@ -138,228 +242,237 @@ export default function HomeEquityLoanCalculatorPage() {
             Home Equity Loan Calculator
           </Heading>
           <p className="text-lg md:text-xl text-emerald-100">
-            Discover how much equity you can release, what the monthly payment looks like, and how a
-            HELOC stacks against traditional loan terms.
+            See how much equity you can release, what it costs each month, and how fees impact the cash you actually receive.
           </p>
         </div>
       </section>
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <EmotionalHook
+          title="Unlock value without losing focus"
+          message="Equity release can fund renovations, consolidate expensive debt, or support big life events. Knowing the repayment impact up front keeps those plans sustainable."
+          quote="Beware of little expenses; a small leak will sink a great ship."
+          author="Benjamin Franklin"
+        />
+      </div>
+
       <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
+        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
           <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-semibold">
                 <Calculator className="h-5 w-5 text-emerald-500" />
-                Property & Loan Inputs
+                Property & loan inputs
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div>
-                <Label htmlFor="propertyValue" className="text-sm font-medium">
-                  Property value (£)
-                </Label>
-                <Input
-                  id="propertyValue"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.propertyValue}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, propertyValue: Number(event.target.value) }))
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="outstandingMortgage" className="text-sm font-medium">
-                  Outstanding mortgage (£)
-                </Label>
-                <Input
-                  id="outstandingMortgage"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.outstandingMortgage}
-                  onChange={(event) =>
-                    setInputs((prev) => ({
-                      ...prev,
-                      outstandingMortgage: Number(event.target.value),
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium flex justify-between items-center">
-                  Maximum CLTV
-                  <span className="text-emerald-600 font-semibold">
-                    {inputs.maxLtv.toFixed(0)}%
-                  </span>
-                </Label>
-                <Slider
-                  value={[inputs.maxLtv]}
-                  onValueChange={(value) =>
-                    setInputs((prev) => ({ ...prev, maxLtv: Math.round(value[0]) }))
-                  }
-                  min={60}
-                  max={95}
-                  step={1}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent>
+              <form className="space-y-5" onSubmit={handleCalculate}>
                 <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Interest rate
-                    <span className="text-emerald-600 font-semibold">
-                      {percentageFormatter(inputs.interestRate)}
-                    </span>
+                  <Label htmlFor="propertyValue" className="text-sm font-medium">
+                    Property value (£)
                   </Label>
-                  <Slider
-                    value={[inputs.interestRate]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({ ...prev, interestRate: Number(value[0].toFixed(2)) }))
-                    }
-                    min={1}
-                    max={12}
-                    step={0.1}
+                  <Input
+                    id="propertyValue"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="1000"
+                    value={inputs.propertyValue}
+                    onChange={handleInputChange('propertyValue')}
+                    placeholder="e.g., 420,000"
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium flex justify-between items-center">
-                    Term (years)
-                    <span className="text-emerald-600 font-semibold">{inputs.termYears}</span>
+                  <Label htmlFor="outstandingMortgage" className="text-sm font-medium">
+                    Outstanding mortgage (£)
                   </Label>
-                  <Slider
-                    value={[inputs.termYears]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({ ...prev, termYears: Math.round(value[0]) }))
-                    }
-                    min={5}
-                    max={30}
-                    step={1}
+                  <Input
+                    id="outstandingMortgage"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="1000"
+                    value={inputs.outstandingMortgage}
+                    onChange={handleInputChange('outstandingMortgage')}
+                    placeholder="e.g., 215,000"
                   />
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="fees" className="text-sm font-medium">
-                  Arrangement fees (£)
-                </Label>
-                <Input
-                  id="fees"
-                  type="number"
-                  min={0}
-                  inputMode="decimal"
-                  value={inputs.fees}
-                  onChange={(event) =>
-                    setInputs((prev) => ({ ...prev, fees: Number(event.target.value) }))
-                  }
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  Include valuation, legal, or arrangement fees deducted from the advance.
-                </p>
-              </div>
-              <Button onClick={resetInputs} variant="outline" className="w-full">
-                Reset inputs
-              </Button>
+                <div>
+                  <Label htmlFor="maxLtv" className="text-sm font-medium">
+                    Maximum combined LTV (%)
+                  </Label>
+                  <Input
+                    id="maxLtv"
+                    type="number"
+                    inputMode="decimal"
+                    min="50"
+                    max="95"
+                    step="1"
+                    value={inputs.maxLtv}
+                    onChange={handleInputChange('maxLtv')}
+                    placeholder="e.g., 80"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="interestRate" className="text-sm font-medium">
+                      Interest rate (%)
+                    </Label>
+                    <Input
+                      id="interestRate"
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.05"
+                      value={inputs.interestRate}
+                      onChange={handleInputChange('interestRate')}
+                      placeholder="e.g., 5.2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="termYears" className="text-sm font-medium">
+                      Term (years)
+                    </Label>
+                    <Input
+                      id="termYears"
+                      type="number"
+                      inputMode="decimal"
+                      min="1"
+                      step="1"
+                      value={inputs.termYears}
+                      onChange={handleInputChange('termYears')}
+                      placeholder="e.g., 20"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="fees" className="text-sm font-medium">
+                    Arrangement & legal fees (£)
+                  </Label>
+                  <Input
+                    id="fees"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="100"
+                    value={inputs.fees}
+                    onChange={handleInputChange('fees')}
+                    placeholder="e.g., 1,500"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1">
+                    Calculate
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleReset}>
+                    Reset
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
-                  <Home className="h-5 w-5" />
-                  Home Equity Snapshot
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-4 gap-4 text-center">
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Allowed advance</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.allowedLoanAmount)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Cash after fees</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.loanAmount)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Monthly payment</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.monthlyPayment)}
-                  </p>
-                </div>
-                <div className="rounded-md bg-white/70 dark:bg-emerald-900/60 p-4 border border-emerald-100 dark:border-emerald-800">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Total interest</p>
-                  <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.totalInterest)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          {showResults ? (
+            <div className="space-y-6">
+              <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
+                    <Home className="h-5 w-5" />
+                    Equity release summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/40 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Gross loan approval
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter.format(results.grossLoan)}
+                      </p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                        CLTV {formatPercentage(results.maxLtv)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/40 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Cash after fees
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter.format(results.netLoan)}
+                      </p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                        Fees deducted: {currencyFormatter.format(results.fees)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/40 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Monthly repayment
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter.format(results.monthlyPayment)}
+                      </p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                        Total interest: {currencyFormatter.format(results.totalInterest)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/40 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Remaining mortgage
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter.format(results.outstandingMortgage)}
+                      </p>
+                    </div>
+                  </div>
 
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <PiggyBank className="h-5 w-5 text-slate-600" />
-                  Payment Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <p>
-                  <span className="font-semibold">Combined LTV target:</span> {inputs.maxLtv}% means
-                  you can borrow up to {currencyFormatter.format(results.allowedLoanAmount)} across
-                  all secured loans.
-                </p>
-                <p>
-                  <span className="font-semibold">Monthly payment:</span>{' '}
-                  {currencyFormatter.format(results.monthlyPayment)} based on an interest rate of{' '}
-                  {inputs.interestRate.toFixed(2)}% over {inputs.termYears} years.
-                </p>
-                <p>
-                  <span className="font-semibold">Fees deducted:</span>{' '}
-                  {currencyFormatter.format(inputs.fees)} for arrangement/valuation costs, leaving{' '}
-                  {currencyFormatter.format(results.loanAmount)} cash on completion.
-                </p>
-              </CardContent>
-            </Card>
+                  <div className="rounded-md bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900 p-4">
+                    <h3 className="text-base font-semibold text-emerald-900 dark:text-emerald-100 mb-4">
+                      Combined borrowing
+                    </h3>
+                    <ResultBreakdownChart data={chartData} title="Combined property borrowing" />
+                  </div>
 
-            <section className="space-y-6">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Home equity loan calculator strategy
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Experiment with the home equity loan calculator by adjusting rates, fees, and terms.
-                Small shifts in CLTV or interest rate can change monthly payments dramatically.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Comparing lenders with a heloc calculator
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Use the heloc calculator to compare introductory rates, repayment terms, and fee
-                structures across lenders. Save scenarios so you can quickly choose the best offer
-                when you are ready to apply.
-              </p>
-            </section>
-          </div>
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="home-equity-loan-calculator-results"
+                    title="Home equity loan summary"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
+                  <Percent className="h-5 w-5 text-emerald-500" aria-hidden="true" />
+                  <p className="text-sm">
+                    {hasCalculated && results?.message ? (
+                      results.message
+                    ) : (
+                      <>
+                        Add your property value, outstanding mortgage, and lender LTV, then press{' '}
+                        <strong>Calculate</strong> to size up your equity release.
+                      </>
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </CalculatorWrapper>
 
       <section className="bg-white dark:bg-gray-950 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={homeEquityFaqs} />
+          <FAQSection faqs={faqItems} />
         </div>
       </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
+        <DirectoryLinks links={directoryLinks} />
+        <RelatedCalculators calculators={relatedCalculators} />
+      </div>
     </div>
   );
 }

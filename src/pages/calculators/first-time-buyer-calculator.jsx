@@ -1,102 +1,127 @@
 import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Home, Wallet, Scale, Percent, FileText, Calculator } from 'lucide-react';
+import { Calculator, Home, Percent, PiggyBank, Target } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import ExportActions from '@/components/calculators/ExportActions';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
+import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
+import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
+import { createCalculatorWebPageSchema, createCalculatorBreadcrumbs } from '@/utils/calculatorSchema.js';
+import { sanitiseNumber } from '@/utils/sanitiseNumber.js';
 
-const keywords = [
-  'first time buyer calculator',
-  'mortgage affordability calculator',
-  'stamp duty calculator',
-  'loan to value calculator',
-  'deposit calculator',
-];
+const CALCULATOR_NAME = 'First Time Buyer Calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/first-time-buyer-calculator';
+const keywords = getCalculatorKeywords(CALCULATOR_NAME);
 
 const metaDescription =
-  'Use our first time buyer calculator, mortgage affordability calculator, and stamp duty calculator to size your deposit, LTV, and repayments before you offer.';
-
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/first-time-buyer-calculator';
-const schemaKeywords = keywords.slice(0, 5);
-
-const currencyFormatter = new Intl.NumberFormat('en-GB', {
-  style: 'currency',
-  currency: 'GBP',
-  minimumFractionDigits: 0,
-});
+  'Size your first home deposit, lending multiple, and mortgage repayments with our UK first time buyer calculator before you make an offer.';
 
 const defaultInputs = {
-  propertyPrice: 340000,
-  depositAmount: 48000,
-  primaryIncome: 52000,
-  partnerIncome: 28000,
-  monthlyDebtPayments: 350,
-  interestRate: 4.75,
-  loanTermYears: 30,
-  incomeMultiple: 4.5,
-  targetLtv: 85,
+  propertyPrice: '340,000',
+  depositAmount: '48,000',
+  primaryIncome: '52,000',
+  partnerIncome: '28,000',
+  monthlyDebtPayments: '350',
+  interestRate: '4.75',
+  loanTermYears: '30',
+  incomeMultiple: '4.5',
+  targetLtv: '85',
 };
 
 const buyerFaqs = [
   {
     question: 'How do lenders judge affordability?',
     answer:
-      'They start with income multiples, then adjust for debts and stress-test repayments. The mortgage affordability calculator in this tool mirrors that logic so you can spot potential gaps early.',
+      'Most UK lenders start with an income multiple, then deduct existing debt commitments and stress test repayments several percentage points above the headline rate. This calculator mirrors that approach so you can close gaps before you apply.',
   },
   {
-    question: 'Where do stamp duty costs come from?',
+    question: 'How are first time buyer stamp duty reliefs applied?',
     answer:
-      'The stamp duty calculator applies the latest first time buyer relief bands. If your property exceeds the relief thresholds, the standard SDLT rates kick in automatically.',
+      'The stamp duty output uses current HMRC thresholds. Homes up to £425,000 are exempt, relief tapers off between £425,001 and £625,000, and standard SDLT rates apply above that value.',
   },
   {
-    question: 'How does deposit size influence offers?',
+    question: 'How much deposit should I aim for?',
     answer:
-      'Bigger deposits reduce the loan to value ratio, unlock better rates, and strengthen your application. Use the loan to value calculator output to see how close you are to each tier.',
+      'A 10% to 15% deposit unlocks more products and sharper interest rates. Adjust the target LTV slider to see how much extra cash is needed to hit each tier.',
   },
 ];
 
-const calculateStampDuty = (price) => {
-  const amount = Math.max(Number(price) || 0, 0);
-  if (amount <= 425000) {
-    return 0;
-  }
-  if (amount <= 625000) {
-    return (amount - 425000) * 0.05;
-  }
+const directoryLinks = [
+  {
+    label: 'Browse the full calculator directory',
+    url: '/#calculator-directory',
+    description: 'Jump straight to every UK money calculator in one place.',
+  },
+  {
+    label: 'Mortgages & property tools',
+    url: '/#mortgages-property',
+    description: 'Compare repayments, deposits, and landlord yields with tailored tools.',
+  },
+  {
+    label: 'Deposit savings planner',
+    url: '/down-payment-calculator',
+    description: 'Build the cash buffer you need alongside boosting affordability.',
+  },
+];
 
-  // Standard SDLT bands
-  let duty = 0;
-  const bands = [
-    { threshold: 1500000, rate: 0.12 },
-    { threshold: 925000, rate: 0.1 },
-    { threshold: 250000, rate: 0.05 },
-    { threshold: 0, rate: 0 },
-  ];
+const relatedCalculators = [
+  {
+    name: 'Mortgage Affordability Calculator',
+    url: '/mortgage-affordability-calculator',
+    description: 'Stress test your borrowing limit against income and outgoings.',
+  },
+  {
+    name: 'Mortgage Repayment Calculator',
+    url: '/mortgage-repayment-calculator',
+    description: 'See how rate changes shift your monthly repayments.',
+  },
+  {
+    name: 'Stamp Duty Calculator',
+    url: '/sdlt-calculator',
+    description: 'Check SDLT for first homes, second homes, and investment properties.',
+  },
+];
 
-  let remaining = amount;
-  let previousThreshold = amount;
+const webPageSchema = createCalculatorWebPageSchema({
+  name: CALCULATOR_NAME,
+  description: metaDescription,
+  url: canonicalUrl,
+  keywords,
+});
 
-  for (const band of bands) {
-    if (remaining > band.threshold) {
-      const taxableAmount = previousThreshold - Math.max(band.threshold, 0);
-      duty += taxableAmount * band.rate;
-      previousThreshold = band.threshold;
-    }
-  }
+const breadcrumbSchema = createCalculatorBreadcrumbs({
+  name: CALCULATOR_NAME,
+  url: canonicalUrl,
+});
 
-  return duty;
-};
+const faqStructuredData = faqSchema(buyerFaqs);
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+const percentageFormatter = new Intl.NumberFormat('en-GB', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
 
 const calculateMonthlyPayment = (loanAmount, interestRate, loanTermYears) => {
-  const principal = Math.max(Number(loanAmount) || 0, 0);
-  const monthlyRate = Math.max(Number(interestRate) || 0, 0) / 100 / 12;
-  const months = Math.max(Math.round(Number(loanTermYears) * 12) || 0, 1);
+  const principal = Math.max(loanAmount, 0);
+  const monthlyRate = Math.max(interestRate, 0) / 100 / 12;
+  const months = Math.max(Math.round(loanTermYears * 12), 1);
 
   if (monthlyRate === 0) {
     return principal / months;
@@ -104,6 +129,39 @@ const calculateMonthlyPayment = (loanAmount, interestRate, loanTermYears) => {
 
   const factor = (1 + monthlyRate) ** months;
   return (principal * monthlyRate * factor) / (factor - 1);
+};
+
+const calculateStampDuty = (price) => {
+  const amount = Math.max(price, 0);
+
+  if (amount <= 425000) {
+    return 0;
+  }
+
+  if (amount <= 625000) {
+    return (amount - 425000) * 0.05;
+  }
+
+  const bands = [
+    { limit: 1500000, rate: 0.12 },
+    { limit: 925000, rate: 0.1 },
+    { limit: 250000, rate: 0.05 },
+    { limit: 0, rate: 0 },
+  ];
+
+  let duty = 0;
+  let remaining = amount;
+  let previousThreshold = amount;
+
+  for (const band of bands) {
+    if (remaining > band.limit) {
+      const taxable = previousThreshold - Math.max(band.limit, 0);
+      duty += taxable * band.rate;
+      previousThreshold = band.limit;
+    }
+  }
+
+  return duty;
 };
 
 const evaluateFirstTimeBuyerPlan = ({
@@ -117,16 +175,23 @@ const evaluateFirstTimeBuyerPlan = ({
   incomeMultiple,
   targetLtv,
 }) => {
-  const price = Math.max(Number(propertyPrice) || 0, 0);
-  const deposit = Math.min(Math.max(Number(depositAmount) || 0, 0), price);
+  const price = Math.max(propertyPrice, 0);
+  if (price <= 0) {
+    return {
+      valid: false,
+      message: 'Enter a property price to model borrowing, deposit, and stamp duty requirements.',
+    };
+  }
+
+  const deposit = Math.min(Math.max(depositAmount, 0), price);
   const loanAmount = Math.max(price - deposit, 0);
 
-  const income = Math.max(Number(primaryIncome) || 0, 0) + Math.max(Number(partnerIncome) || 0, 0);
-  const debtPayments = Math.max(Number(monthlyDebtPayments) || 0, 0);
-  const multiple = Math.max(Number(incomeMultiple) || 0, 0);
+  const householdIncome = Math.max(primaryIncome, 0) + Math.max(partnerIncome, 0);
+  const monthlyDebts = Math.max(monthlyDebtPayments, 0);
+  const incomeMultipleCap = Math.max(incomeMultiple, 0);
 
-  const maxLoanByIncome = income * multiple;
-  const debtDrag = debtPayments * 12 * 4;
+  const maxLoanByIncome = householdIncome * incomeMultipleCap;
+  const debtDrag = monthlyDebts * 12 * 4;
   const adjustedMaxLoan = Math.max(maxLoanByIncome - debtDrag, 0);
 
   const ltv = price > 0 ? (loanAmount / price) * 100 : 0;
@@ -134,462 +199,446 @@ const evaluateFirstTimeBuyerPlan = ({
 
   const monthlyPayment = calculateMonthlyPayment(loanAmount, interestRate, loanTermYears);
   const stressPayment = calculateMonthlyPayment(loanAmount, interestRate + 3, loanTermYears);
-  const totalInterest =
-    monthlyPayment * Math.max(Math.round(Number(loanTermYears) * 12) || 0, 0) - loanAmount;
+  const totalInterest = monthlyPayment * Math.round(loanTermYears * 12) - loanAmount;
 
-  const targetLtvPercent = Math.min(Math.max(Number(targetLtv) || 0, 0), 95);
-  const depositNeededForTarget = price * Math.max(1 - targetLtvPercent / 100, 0);
+  const targetLtvPercent = Math.min(Math.max(targetLtv, 0), 95);
+  const depositNeededForTarget = price * (1 - targetLtvPercent / 100);
   const extraDepositForTarget = Math.max(depositNeededForTarget - deposit, 0);
-
   const extraDepositForAffordability = Math.max(loanAmount - adjustedMaxLoan, 0);
-  const stampDuty = calculateStampDuty(price);
 
-  const incomeMultiplierUsed = income > 0 ? loanAmount / income : 0;
-  const monthlyIncome = income / 12;
+  const stampDuty = calculateStampDuty(price);
+  const incomeMultiplierUsed = householdIncome > 0 ? loanAmount / householdIncome : 0;
+  const monthlyIncome = householdIncome / 12;
   const paymentToIncomeRatio = monthlyIncome > 0 ? (monthlyPayment / monthlyIncome) * 100 : 0;
 
   return {
+    valid: true,
+    propertyPrice: price,
+    deposit,
     loanAmount,
     ltv,
     depositPercent,
     monthlyPayment,
     stressPayment,
     totalInterest,
-    depositNeededForTarget,
-    extraDepositForTarget,
     adjustedMaxLoan,
     affordabilityGap: adjustedMaxLoan - loanAmount,
     extraDepositForAffordability,
+    depositNeededForTarget,
+    extraDepositForTarget,
     stampDuty,
     incomeMultiplierUsed,
     paymentToIncomeRatio,
-    income,
+    householdIncome,
+    targetLtvPercent,
   };
 };
 
 export default function FirstTimeBuyerCalculatorPage() {
   const [inputs, setInputs] = useState(defaultInputs);
+  const [results, setResults] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-  const plan = useMemo(
-    () =>
-      evaluateFirstTimeBuyerPlan({
-        propertyPrice: inputs.propertyPrice,
-        depositAmount: inputs.depositAmount,
-        primaryIncome: inputs.primaryIncome,
-        partnerIncome: inputs.partnerIncome,
-        monthlyDebtPayments: inputs.monthlyDebtPayments,
-        interestRate: inputs.interestRate,
-        loanTermYears: inputs.loanTermYears,
-        incomeMultiple: inputs.incomeMultiple,
-        targetLtv: inputs.targetLtv,
-      }),
-    [inputs]
-  );
+  const handleInputChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
 
-  const resetAll = () => setInputs(defaultInputs);
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setResults(null);
+    setHasCalculated(false);
+  };
+
+  const handleCalculate = (event) => {
+    event.preventDefault();
+    const payload = {
+      propertyPrice: sanitiseNumber(inputs.propertyPrice),
+      depositAmount: sanitiseNumber(inputs.depositAmount),
+      primaryIncome: sanitiseNumber(inputs.primaryIncome),
+      partnerIncome: sanitiseNumber(inputs.partnerIncome),
+      monthlyDebtPayments: sanitiseNumber(inputs.monthlyDebtPayments),
+      interestRate: sanitiseNumber(inputs.interestRate),
+      loanTermYears: sanitiseNumber(inputs.loanTermYears),
+      incomeMultiple: sanitiseNumber(inputs.incomeMultiple),
+      targetLtv: sanitiseNumber(inputs.targetLtv),
+    };
+    const outcome = evaluateFirstTimeBuyerPlan(payload);
+    setResults({ ...outcome, payload });
+    setHasCalculated(true);
+  };
+
+  const chartData = useMemo(() => {
+    if (!results?.valid) return [];
+    const segments = [
+      { name: 'Loan amount', value: results.loanAmount, color: '#0ea5e9' },
+      { name: 'Deposit', value: results.deposit, color: '#22c55e' },
+      { name: 'Stamp duty', value: results.stampDuty, color: '#f97316' },
+    ];
+    return segments.filter((segment) => segment.value > 0);
+  }, [results]);
+
+  const csvData = useMemo(() => {
+    if (!results?.valid) return null;
+    return [
+      ['Metric', 'Value'],
+      ['Property price (£)', results.propertyPrice.toFixed(2)],
+      ['Deposit (£)', results.deposit.toFixed(2)],
+      ['Loan amount (£)', results.loanAmount.toFixed(2)],
+      ['Loan to value (%)', results.ltv.toFixed(2)],
+      ['Deposit percentage (%)', results.depositPercent.toFixed(2)],
+      ['Monthly repayment (£)', results.monthlyPayment.toFixed(2)],
+      ['Stress-tested payment (£)', results.stressPayment.toFixed(2)],
+      ['Total interest over term (£)', results.totalInterest.toFixed(2)],
+      ['Stamp duty (£)', results.stampDuty.toFixed(2)],
+      ['Household income (£)', results.householdIncome.toFixed(2)],
+      ['Income multiple used', results.incomeMultiplierUsed.toFixed(2)],
+      ['Payment-to-income ratio (%)', results.paymentToIncomeRatio.toFixed(2)],
+      ['Adjusted max loan (£)', results.adjustedMaxLoan.toFixed(2)],
+      ['Affordability gap (£)', results.affordabilityGap.toFixed(2)],
+      ['Deposit needed for target LTV (£)', results.depositNeededForTarget.toFixed(2)],
+      ['Extra deposit for target LTV (£)', results.extraDepositForTarget.toFixed(2)],
+      ['Extra deposit for affordability (£)', results.extraDepositForAffordability.toFixed(2)],
+    ];
+  }, [results]);
+
+  const showResults = hasCalculated && results?.valid;
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>First Time Buyer Calculator | Mortgage Affordability Calculator</title>
+        <title>{`${CALCULATOR_NAME} | Mortgage Affordability Helper`}</title>
         <meta name="description" content={metaDescription} />
         <link rel="canonical" href={canonicalUrl} />
-        <meta
-          property="og:title"
-          content="First Time Buyer Calculator | Mortgage Affordability Calculator"
-        />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:title"
-          content="First Time Buyer Calculator | Mortgage Affordability Calculator"
-        />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'First Time Buyer Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Plan a purchase with a first time buyer calculator',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
+        {keywords.length ? <meta name="keywords" content={keywords.join(', ')} /> : null}
       </Helmet>
+      <JsonLd data={webPageSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <Heading as="h1" size="h1" weight="bold" className="text-white">
             First Time Buyer Calculator
           </Heading>
-          <p className="text-lg text-emerald-100 md:text-xl">
-            Understand deposits, repayments, and stamp duty before you book viewings, with a single
-            mortgage affordability calculator dashboard.
+          <p className="text-lg md:text-xl text-emerald-100">
+            Understand how your deposit, borrowing capacity, and mortgage repayments line up before you book a viewing.
           </p>
         </div>
       </section>
 
-      <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 bg-white text-slate-900 shadow-md dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Home className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Property & deposit
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="propertyPrice">Property price (£)</Label>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <EmotionalHook
+          title="Turn home ownership from dream to date"
+          message="Visibility over your numbers shrinks the gap between renting and receiving the keys. Check in regularly and tweak the plan to stay on track."
+          quote="The future depends on what you do today."
+          author="Mahatma Gandhi"
+        />
+      </div>
+
+      <CalculatorWrapper className="bg-white dark:bg-gray-950">
+        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+          <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <Calculator className="h-5 w-5 text-emerald-500" />
+                Buyer inputs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-5" onSubmit={handleCalculate}>
+                <div>
+                  <Label htmlFor="propertyPrice" className="text-sm font-medium">
+                    Property price (£)
+                  </Label>
                   <Input
                     id="propertyPrice"
                     type="number"
+                    inputMode="decimal"
                     min="0"
                     step="1000"
                     value={inputs.propertyPrice}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        propertyPrice: Number(event.target.value) || 0,
-                      }))
-                    }
+                    onChange={handleInputChange('propertyPrice')}
+                    placeholder="e.g., 340,000"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="depositAmount">Deposit saved (£)</Label>
+                <div>
+                  <Label htmlFor="depositAmount" className="text-sm font-medium">
+                    Deposit saved (£)
+                  </Label>
                   <Input
                     id="depositAmount"
                     type="number"
+                    inputMode="decimal"
                     min="0"
-                    step="1000"
+                    step="100"
                     value={inputs.depositAmount}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        depositAmount: Number(event.target.value) || 0,
-                      }))
-                    }
+                    onChange={handleInputChange('depositAmount')}
+                    placeholder="e.g., 48,000"
                   />
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Current deposit represents {plan.depositPercent.toFixed(1)}% of the purchase.
-                  </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="targetLtv">Target loan to value (%)</Label>
-                  <Slider
-                    id="targetLtv"
-                    className="mt-3"
-                    value={[Number(inputs.targetLtv)]}
-                    min={60}
-                    max={95}
-                    step={1}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        targetLtv: Number(value[0]),
-                      }))
-                    }
-                  />
-                  <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                    <span>60%</span>
-                    <span>{inputs.targetLtv}%</span>
-                    <span>95%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-emerald-200 bg-white text-slate-900 shadow-md dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Income & commitments
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="primaryIncome">Your annual income (£)</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="primaryIncome" className="text-sm font-medium">
+                      Your gross income (£/year)
+                    </Label>
                     <Input
                       id="primaryIncome"
                       type="number"
+                      inputMode="decimal"
                       min="0"
-                      step="500"
+                      step="100"
                       value={inputs.primaryIncome}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          primaryIncome: Number(event.target.value) || 0,
-                        }))
-                      }
+                      onChange={handleInputChange('primaryIncome')}
+                      placeholder="e.g., 52,000"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="partnerIncome">Partner income (£)</Label>
+                  <div>
+                    <Label htmlFor="partnerIncome" className="text-sm font-medium">
+                      Partner income (£/year)
+                    </Label>
                     <Input
                       id="partnerIncome"
                       type="number"
+                      inputMode="decimal"
                       min="0"
-                      step="500"
+                      step="100"
                       value={inputs.partnerIncome}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          partnerIncome: Number(event.target.value) || 0,
-                        }))
-                      }
+                      onChange={handleInputChange('partnerIncome')}
+                      placeholder="e.g., 28,000"
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="monthlyDebtPayments">Monthly committed debt payments (£)</Label>
+                <div>
+                  <Label htmlFor="monthlyDebtPayments" className="text-sm font-medium">
+                    Monthly debt payments (£)
+                  </Label>
                   <Input
                     id="monthlyDebtPayments"
                     type="number"
+                    inputMode="decimal"
                     min="0"
                     step="10"
                     value={inputs.monthlyDebtPayments}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        monthlyDebtPayments: Number(event.target.value) || 0,
-                      }))
-                    }
+                    onChange={handleInputChange('monthlyDebtPayments')}
+                    placeholder="e.g., 350"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="incomeMultiple">Income multiple</Label>
-                  <Slider
-                    id="incomeMultiple"
-                    className="mt-3"
-                    value={[Number(inputs.incomeMultiple)]}
-                    min={3}
-                    max={5.5}
-                    step={0.1}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        incomeMultiple: Number(value[0].toFixed(1)),
-                      }))
-                    }
-                  />
-                  <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                    <span>3.0×</span>
-                    <span>{inputs.incomeMultiple.toFixed(1)}×</span>
-                    <span>5.5×</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-emerald-200 bg-white text-slate-900 shadow-md dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Percent className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Mortgage terms
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="interestRate">Indicative mortgage rate (%)</Label>
-                  <Slider
-                    id="interestRate"
-                    className="mt-3"
-                    value={[Number(inputs.interestRate)]}
-                    min={1.5}
-                    max={8}
-                    step={0.05}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        interestRate: Number(value[0].toFixed(2)),
-                      }))
-                    }
-                  />
-                  <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                    <span>1.5%</span>
-                    <span>{inputs.interestRate.toFixed(2)}%</span>
-                    <span>8.0%</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="loanTermYears">Mortgage term (years)</Label>
-                  <Slider
-                    id="loanTermYears"
-                    className="mt-3"
-                    value={[Number(inputs.loanTermYears)]}
-                    min={20}
-                    max={35}
-                    step={1}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        loanTermYears: Number(value[0]),
-                      }))
-                    }
-                  />
-                  <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                    <span>20 years</span>
-                    <span>{inputs.loanTermYears} years</span>
-                    <span>35 years</span>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full" onClick={resetAll}>
-                  Reset to example purchase
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 bg-emerald-50 text-slate-900 shadow-md dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Scale className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
-                  Affordability snapshot
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-md border border-white/40 bg-white/60 p-4 text-center dark:border-white/10 dark:bg-white/10">
-                    <p className="text-sm text-emerald-700 dark:text-emerald-200">Loan required</p>
-                    <p className="text-2xl font-semibold text-emerald-900 dark:text-emerald-100">
-                      {currencyFormatter.format(plan.loanAmount)}
-                    </p>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-200">
-                      Income multiple {plan.incomeMultiplierUsed.toFixed(2)}×
-                    </p>
-                  </div>
-                  <div className="rounded-md border border-white/40 bg-white/60 p-4 text-center dark:border-white/10 dark:bg-white/10">
-                    <p className="text-sm text-emerald-700 dark:text-emerald-200">Loan to value</p>
-                    <p className="text-2xl font-semibold text-emerald-900 dark:text-emerald-100">
-                      {plan.ltv.toFixed(1)}%
-                    </p>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-200">
-                      Deposit {plan.depositPercent.toFixed(1)}%
-                    </p>
-                  </div>
-                </div>
-                <div className="rounded-md border border-white/40 bg-white/60 p-4 dark:border-white/10 dark:bg-white/10">
-                  <div className="flex items-center justify-between">
-                    <span>Monthly repayment</span>
-                    <span>{currencyFormatter.format(plan.monthlyPayment)}</span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span>Stress test at +3%</span>
-                    <span>{currencyFormatter.format(plan.stressPayment)}</span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span>Payment vs income</span>
-                    <span>{plan.paymentToIncomeRatio.toFixed(1)}%</span>
-                  </div>
-                </div>
-                <div className="rounded-md border border-white/40 bg-white/60 p-4 text-xs dark:border-white/10 dark:bg-white/10">
-                  <p>
-                    Based on total household income of <strong>{currencyFormatter.format(plan.income)}</strong> and an
-                    income multiple of {inputs.incomeMultiple.toFixed(1)}×.
+                  <p className="mt-1 text-xs text-slate-500">
+                    Include credit cards, loans, car finance, and student loan repayments.
                   </p>
-                  {plan.affordabilityGap < 0 && (
-                    <p className="mt-2 text-rose-700 dark:text-rose-300">
-                      Reduce borrowing by {currencyFormatter.format(Math.abs(plan.affordabilityGap))} or increase your
-                      deposit to fit typical lender parameters.
-                    </p>
-                  )}
-                  {plan.affordabilityGap >= 0 && (
-                    <p className="mt-2 text-emerald-700 dark:text-emerald-200">
-                      You have a buffer of {currencyFormatter.format(plan.affordabilityGap)} under the selected income
-                      multiple.
-                    </p>
-                  )}
                 </div>
-              </CardContent>
-            </Card>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="interestRate" className="text-sm font-medium">
+                      Mortgage rate (%)
+                    </Label>
+                    <Input
+                      id="interestRate"
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="0.05"
+                      value={inputs.interestRate}
+                      onChange={handleInputChange('interestRate')}
+                      placeholder="e.g., 4.75"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="loanTermYears" className="text-sm font-medium">
+                      Loan term (years)
+                    </Label>
+                    <Input
+                      id="loanTermYears"
+                      type="number"
+                      inputMode="decimal"
+                      min="1"
+                      step="1"
+                      value={inputs.loanTermYears}
+                      onChange={handleInputChange('loanTermYears')}
+                      placeholder="e.g., 30"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="incomeMultiple" className="text-sm font-medium">
+                      Income multiple
+                    </Label>
+                    <Input
+                      id="incomeMultiple"
+                      type="number"
+                      inputMode="decimal"
+                      min="1"
+                      step="0.1"
+                      value={inputs.incomeMultiple}
+                      onChange={handleInputChange('incomeMultiple')}
+                      placeholder="e.g., 4.5"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="targetLtv" className="text-sm font-medium">
+                      Target LTV (%)
+                    </Label>
+                    <Input
+                      id="targetLtv"
+                      type="number"
+                      inputMode="decimal"
+                      min="50"
+                      max="95"
+                      step="0.5"
+                      value={inputs.targetLtv}
+                      onChange={handleInputChange('targetLtv')}
+                      placeholder="e.g., 85"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1">
+                    Calculate
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleReset}>
+                    Reset
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
 
-            <Card className="border border-slate-200 bg-white text-slate-900 shadow-md dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calculator className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Cost breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-                  <span>Stamp duty estimate</span>
-                  <span>{currencyFormatter.format(plan.stampDuty)}</span>
-                </div>
-                <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-                  <span>Total interest over term</span>
-                  <span>{currencyFormatter.format(plan.totalInterest)}</span>
-                </div>
-                <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-                  <span>Deposit needed for {inputs.targetLtv}% LTV</span>
-                  <span>{currencyFormatter.format(plan.depositNeededForTarget)}</span>
-                </div>
-                <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-                  <span>Extra deposit for target LTV</span>
-                  <span>{currencyFormatter.format(plan.extraDepositForTarget)}</span>
-                </div>
-                <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-                  <span>Extra deposit to satisfy affordability</span>
-                  <span>{currencyFormatter.format(plan.extraDepositForAffordability)}</span>
-                </div>
-              </CardContent>
-            </Card>
+          {showResults ? (
+            <div className="space-y-6">
+              <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
+                    <PiggyBank className="h-5 w-5" />
+                    Home buying snapshot
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/30 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Loan amount
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter.format(results.loanAmount)}
+                      </p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                        LTV {percentageFormatter.format(results.ltv)}%
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/30 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Monthly repayment
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter.format(results.monthlyPayment)}
+                      </p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                        Stress tested at {percentageFormatter.format(results.payload.interestRate + 3)}% →{' '}
+                        {currencyFormatter.format(results.stressPayment)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/30 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Deposit in place
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter.format(results.deposit)}
+                      </p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                        {percentageFormatter.format(results.depositPercent)}% of purchase price
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-emerald-900/30 p-4 border border-emerald-100 dark:border-emerald-800">
+                      <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-200">
+                        Stamp duty due
+                      </p>
+                      <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                        {currencyFormatter.format(results.stampDuty)}
+                      </p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                        Includes first-time buyer relief where eligible
+                      </p>
+                    </div>
+                  </div>
 
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Loan to value calculator tactics for first homes
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Work the numbers like a loan to value calculator by testing multiple property prices,
-                deposits, and rates. Shift the sliders until you uncover the sweet spot where lenders,
-                risk, and your monthly budget align.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Deposit calculator moves that speed up completion
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Treat this dashboard like a deposit calculator that tells you the next milestone. Save
-                windfalls, trim expenses, and explore gifted deposits so you can shift into a stronger LTV
-                band before exchange.
-              </p>
-            </section>
+                  <div className="rounded-md bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900 p-4">
+                    <h3 className="text-base font-semibold text-emerald-900 dark:text-emerald-100 mb-4">
+                      Deposit versus borrowing mix
+                    </h3>
+                    <ResultBreakdownChart data={chartData} title="Deposit versus borrowing" />
+                  </div>
 
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader className="px-0">
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  <FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Need more guidance?
-                </CardTitle>
-              </CardHeader>
-              <FAQSection faqs={buyerFaqs} />
-            </section>
-          </div>
+                  <div className="rounded-md bg-white/80 dark:bg-emerald-900/30 p-4 border border-emerald-100 dark:border-emerald-800">
+                    <h3 className="text-base font-semibold text-emerald-900 dark:text-emerald-100">
+                      Affordability insights
+                    </h3>
+                    <ul className="mt-3 space-y-2 text-sm text-emerald-900 dark:text-emerald-100">
+                      <li>
+                        Income multiple used:{' '}
+                        <strong>{percentageFormatter.format(results.incomeMultiplierUsed)}</strong>x household income
+                      </li>
+                      <li>
+                        Payment-to-income ratio:{' '}
+                        <strong>{percentageFormatter.format(results.paymentToIncomeRatio)}%</strong> of monthly income
+                      </li>
+                      <li>
+                        Affordability gap: <strong>{currencyFormatter.format(results.affordabilityGap)}</strong>{' '}
+                        (negative values indicate a shortfall)
+                      </li>
+                      <li>
+                        Extra deposit for target {percentageFormatter.format(results.targetLtvPercent)}% LTV:{' '}
+                        <strong>{currencyFormatter.format(results.extraDepositForTarget)}</strong>
+                      </li>
+                      <li>
+                        Extra deposit to satisfy income stress tests:{' '}
+                        <strong>{currencyFormatter.format(results.extraDepositForAffordability)}</strong>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="first-time-buyer-calculator-results"
+                    title="First time buyer affordability summary"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
+                <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
+                  <Target className="h-5 w-5 text-emerald-500" aria-hidden="true" />
+                  <p className="text-sm">
+                    {hasCalculated && results?.message ? (
+                      results.message
+                    ) : (
+                      <>
+                        Enter your property price, savings, and income details, then press{' '}
+                        <strong>Calculate</strong> to see your first home roadmap.
+                      </>
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </CalculatorWrapper>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={buyerFaqs} />
+        </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
+        <DirectoryLinks links={directoryLinks} />
+        <RelatedCalculators calculators={relatedCalculators} />
+      </div>
     </div>
   );
 }

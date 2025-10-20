@@ -6,54 +6,129 @@ import Heading from '@/components/common/Heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import ExportActions from '@/components/calculators/ExportActions';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
+import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
+import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
+import { createCalculatorWebPageSchema, createCalculatorBreadcrumbs } from '@/utils/calculatorSchema.js';
+import { sanitiseNumber } from '@/utils/sanitiseNumber.js';
 
-const keywords = [
-  'fuel cost calculator',
-  'fuel consumption calculator',
-  'trip fuel cost calculator',
-  'fuel price calculator',
-  'fuel economy calculator',
-];
+const CALCULATOR_NAME = 'Fuel Cost Calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/fuel-cost-calculator';
+const keywords = getCalculatorKeywords(CALCULATOR_NAME);
 
 const metaDescription =
-  'Use our fuel cost calculator and fuel consumption calculator to plan trips, compare fuel price calculator scenarios, and check fuel economy calculator savings per passenger.';
+  'Estimate UK road trip fuel spend by combining journey distance, fuel economy, and current pump prices. Split the total between passengers in seconds.';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/fuel-cost-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+const defaultInputs = {
+  distance: '250',
+  distanceUnit: 'miles',
+  fuelPrice: '151.9',
+  fuelPriceUnit: 'per-litre',
+  economyValue: '42',
+  economyUnit: 'mpg',
+  passengers: '2',
+};
+
+const fuelFaqs = [
+  {
+    question: 'Should I calculate in miles per gallon or litres per 100km?',
+    answer:
+      'Whichever unit matches your vehicle. Toggle the fuel economy unit and the calculator converts automatically, using UK (imperial) miles per gallon when selected.',
+  },
+  {
+    question: 'How do I reflect fluctuating pump prices?',
+    answer:
+      'Update the price field with the latest rate from your preferred station. You can switch between pence per litre and pounds per gallon depending on how prices are displayed.',
+  },
+  {
+    question: 'Can we split the cost for a car share?',
+    answer:
+      'Yes. Enter the number of passengers and the per-person share updates instantly, perfect for work travel, festivals, or weekend getaways.',
+  },
+];
+
+const directoryLinks = [
+  {
+    label: 'Browse the full calculator directory',
+    url: '/#calculator-directory',
+    description: 'See every UK finance calculator in a single place.',
+  },
+  {
+    label: 'Utilities & household tools',
+    url: '/#utilities-tools',
+    description: 'Compare energy, transport, and living costs side by side.',
+  },
+  {
+    label: 'Travel budget calculator',
+    url: '/travel-budget-calculator',
+    description: 'Plan accommodation, food, and activities alongside your fuel costs.',
+  },
+];
+
+const relatedCalculators = [
+  {
+    name: 'Commute Cost Calculator',
+    url: '/commute-cost-calculator',
+    description: 'Compare driving, public transport, and cycling for weekday commutes.',
+  },
+  {
+    name: 'Fuel Cost Splitter',
+    url: '/fuel-cost-splitter',
+    description: 'Divide fuel and tolls across passengers for shared journeys.',
+  },
+  {
+    name: 'Energy Bill Calculator',
+    url: '/energy-bill-calculator',
+    description: 'Balance travel spending with household utility bills.',
+  },
+];
+
+const webPageSchema = createCalculatorWebPageSchema({
+  name: CALCULATOR_NAME,
+  description: metaDescription,
+  url: canonicalUrl,
+  keywords,
+});
+
+const breadcrumbSchema = createCalculatorBreadcrumbs({
+  name: CALCULATOR_NAME,
+  url: canonicalUrl,
+});
+
+const faqStructuredData = faqSchema(fuelFaqs);
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
   minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
-const fuelFaqs = [
-  {
-    question: 'Should I enter MPG or L/100km?',
-    answer:
-      'Pick the unit that matches your vehicle. Toggle the economy units and the fuel consumption calculator converts automatically. For UK cars, miles per gallon (imperial) is common.',
-  },
-  {
-    question: 'How do I include fuel price fluctuations?',
-    answer:
-      'Adjust the fuel price slider for different stations or regions. The trip fuel cost calculator updates in real time so you can decide whether to fill up before or after a long drive.',
-  },
-  {
-    question: 'Can I split costs between passengers?',
-    answer:
-      'Yes. Enter the number of travellers to calculate per-person costs. The fuel economy calculator will show total and individual contributions, perfect for car shares.',
-  },
-];
+const formatLitres = (value) =>
+  `${value.toLocaleString('en-GB', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} L`;
 
-const convertToMpg = ({ economyValue, economyUnit }) => {
-  if (economyUnit === 'mpg') return Math.max(economyValue, 0.01);
-  // L/100km to MPG (imperial)
+const convertToMpg = (economyValue, economyUnit) => {
+  if (economyUnit === 'mpg') {
+    return Math.max(economyValue, 0.01);
+  }
   return economyValue > 0 ? 282.481 / economyValue : 0;
 };
+
+const normaliseDistance = (distance, distanceUnit) =>
+  distanceUnit === 'miles' ? distance : distance * 0.621371;
+
+const normalisePricePerLitre = (fuelPrice, fuelPriceUnit) =>
+  fuelPriceUnit === 'per-litre' ? fuelPrice : fuelPrice / 4.54609;
 
 const calculateFuelCost = ({
   distance,
@@ -64,100 +139,115 @@ const calculateFuelCost = ({
   economyUnit,
   passengers,
 }) => {
-  const miles = distanceUnit === 'miles' ? Math.max(distance, 0) : Math.max(distance, 0) * 0.621371;
-  const mpg = convertToMpg({ economyValue, economyUnit });
+  const miles = normaliseDistance(distance, distanceUnit);
+  const mpg = convertToMpg(economyValue, economyUnit);
+  if (miles <= 0 || mpg <= 0) {
+    return {
+      valid: false,
+      message: 'Enter a journey distance and positive fuel economy to estimate costs.',
+    };
+  }
 
-  const gallonsRequired = mpg > 0 ? miles / mpg : 0;
+  const gallonsRequired = miles / mpg;
   const litresRequired = gallonsRequired * 4.54609;
-
-  const pricePerLitre =
-    fuelPriceUnit === 'per-litre' ? Math.max(fuelPrice, 0) : Math.max(fuelPrice, 0) / 4.54609;
-
+  const pricePerLitre = normalisePricePerLitre(fuelPrice, fuelPriceUnit);
   const totalCost = litresRequired * pricePerLitre;
-  const perPassenger = Math.max(passengers, 1) > 0 ? totalCost / Math.max(passengers, 1) : totalCost;
-  const costPerMile = miles > 0 ? totalCost / miles : 0;
+  const people = Math.max(passengers, 1);
+  const costPerPassenger = totalCost / people;
+  const costPerMile = totalCost / miles;
 
   return {
+    valid: true,
     miles,
     litresRequired,
     gallonsRequired,
     pricePerLitre,
     totalCost,
-    perPassenger,
+    costPerPassenger,
     costPerMile,
+    passengers: people,
   };
 };
 
 export default function FuelCostCalculatorPage() {
-  const [inputs, setInputs] = useState({
-    distance: 250,
-    distanceUnit: 'miles',
-    fuelPrice: 151.9,
-    fuelPriceUnit: 'per-litre',
-    economyValue: 42,
-    economyUnit: 'mpg',
-    passengers: 2,
-  });
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [results, setResults] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-  const results = useMemo(
-    () =>
-      calculateFuelCost({
-        distance: Number(inputs.distance) || 0,
-        distanceUnit: inputs.distanceUnit,
-        fuelPrice: Number(inputs.fuelPrice) || 0,
-        fuelPriceUnit: inputs.fuelPriceUnit,
-        economyValue: Number(inputs.economyValue) || 0,
-        economyUnit: inputs.economyUnit,
-        passengers: Number(inputs.passengers) || 1,
-      }),
-    [inputs]
-  );
+  const handleInputChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
 
-  const resetAll = () =>
-    setInputs({
-      distance: 250,
-      distanceUnit: 'miles',
-      fuelPrice: 151.9,
-      fuelPriceUnit: 'per-litre',
-      economyValue: 42,
-      economyUnit: 'mpg',
-      passengers: 2,
-    });
+  const setUnit = (field, value) => () => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setResults(null);
+    setHasCalculated(false);
+  };
+
+  const handleCalculate = (event) => {
+    event.preventDefault();
+    const payload = {
+      distance: sanitiseNumber(inputs.distance),
+      distanceUnit: inputs.distanceUnit,
+      fuelPrice: sanitiseNumber(inputs.fuelPrice),
+      fuelPriceUnit: inputs.fuelPriceUnit,
+      economyValue: sanitiseNumber(inputs.economyValue),
+      economyUnit: inputs.economyUnit,
+      passengers: sanitiseNumber(inputs.passengers),
+    };
+    const outcome = calculateFuelCost(payload);
+    setResults(outcome);
+    setHasCalculated(true);
+  };
+
+  const chartData = useMemo(() => {
+    if (!results?.valid) return [];
+    const data = Array.from({ length: results.passengers }).map((_, index) => ({
+      name: `Passenger ${index + 1}`,
+      value: results.costPerPassenger,
+      color: ['#0ea5e9', '#f97316', '#22c55e', '#a855f7', '#14b8a6', '#facc15'][index % 6],
+    }));
+    return data;
+  }, [results]);
+
+  const csvData = useMemo(() => {
+    if (!results?.valid) return null;
+    return [
+      ['Metric', 'Value'],
+      ['Distance (miles)', results.miles.toFixed(2)],
+      ['Fuel required (litres)', results.litresRequired.toFixed(2)],
+      ['Fuel required (gallons)', results.gallonsRequired.toFixed(2)],
+      ['Price per litre (£)', results.pricePerLitre.toFixed(4)],
+      ['Total fuel cost (£)', results.totalCost.toFixed(2)],
+      ['Cost per passenger (£)', results.costPerPassenger.toFixed(2)],
+      ['Cost per mile (£)', results.costPerMile.toFixed(4)],
+      ['Passengers', results.passengers],
+    ];
+  }, [results]);
+
+  const showResults = hasCalculated && results?.valid;
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>Fuel Cost Calculator | Fuel Consumption Calculator</title>
+        <title>{`${CALCULATOR_NAME} | Trip Fuel Planner`}</title>
         <meta name="description" content={metaDescription} />
+        {keywords.length ? <meta name="keywords" content={keywords.join(', ')} /> : null}
         <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Fuel Cost Calculator | Fuel Consumption Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Fuel Cost Calculator | Fuel Consumption Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Fuel Cost Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Estimate trip costs with a fuel cost calculator',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
       </Helmet>
+      <JsonLd data={webPageSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={faqStructuredData} />
 
       <section className="bg-gradient-to-r from-amber-900 via-slate-900 to-amber-900 py-16 text-white">
         <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
@@ -165,256 +255,229 @@ export default function FuelCostCalculatorPage() {
             Fuel Cost Calculator
           </Heading>
           <p className="text-lg md:text-xl text-amber-100">
-            Plan road trips, car shares, and commutes with accurate fuel consumption estimates tailored to
-            your vehicle.
+            Estimate real-world fuel spend before you set off and split the bill fairly with passengers.
           </p>
         </div>
       </section>
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <EmotionalHook
+          title="No more surprises at the pump"
+          message="When you price every journey, even the daily commute becomes a conscious choice. Use the numbers to decide when to car share, take the train, or plan that road trip."
+          quote="A budget is telling your money where to go instead of wondering where it went."
+          author="Dave Ramsey"
+        />
+      </div>
+
       <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-amber-200 bg-white text-slate-900 shadow-md dark:border-amber-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calculator className="h-5 w-5 text-amber-600 dark:text-amber-300" />
-                  Trip details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="distance">Distance</Label>
+        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+          <Card className="border border-amber-200 bg-white text-slate-900 shadow-sm dark:border-amber-900 dark:bg-slate-950 dark:text-slate-100">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <Calculator className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+                Journey inputs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-5" onSubmit={handleCalculate}>
+                <div>
+                  <Label htmlFor="distance" className="text-sm font-medium">
+                    Distance
+                  </Label>
                   <Input
                     id="distance"
                     type="number"
+                    inputMode="decimal"
                     min="0"
                     step="1"
-                    inputMode="decimal"
                     value={inputs.distance}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        distance: Number(event.target.value) || 0,
-                      }))
-                    }
+                    onChange={handleInputChange('distance')}
+                    placeholder="e.g., 250"
                   />
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={inputs.distanceUnit === 'miles' ? 'default' : 'outline'}
-                      onClick={() =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          distanceUnit: 'miles',
-                        }))
-                      }
-                    >
+                  <div className="mt-2 flex gap-2">
+                    <Button type="button" variant={inputs.distanceUnit === 'miles' ? 'default' : 'outline'} onClick={setUnit('distanceUnit', 'miles')}>
                       Miles
                     </Button>
-                    <Button
-                      type="button"
-                      variant={inputs.distanceUnit === 'km' ? 'default' : 'outline'}
-                      onClick={() =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          distanceUnit: 'km',
-                        }))
-                      }
-                    >
+                    <Button type="button" variant={inputs.distanceUnit === 'km' ? 'default' : 'outline'} onClick={setUnit('distanceUnit', 'km')}>
                       Kilometres
                     </Button>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="fuelPrice">Fuel price</Label>
+                <div>
+                  <Label htmlFor="fuelPrice" className="text-sm font-medium">
+                    Fuel price
+                  </Label>
                   <Input
                     id="fuelPrice"
                     type="number"
+                    inputMode="decimal"
                     min="0"
                     step="0.1"
-                    inputMode="decimal"
                     value={inputs.fuelPrice}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        fuelPrice: Number(event.target.value) || 0,
-                      }))
-                    }
+                    onChange={handleInputChange('fuelPrice')}
+                    placeholder="e.g., 151.9"
                   />
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={inputs.fuelPriceUnit === 'per-litre' ? 'default' : 'outline'}
-                      onClick={() =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          fuelPriceUnit: 'per-litre',
-                        }))
-                      }
-                    >
-                      £/L
+                  <div className="mt-2 flex gap-2">
+                    <Button type="button" variant={inputs.fuelPriceUnit === 'per-litre' ? 'default' : 'outline'} onClick={setUnit('fuelPriceUnit', 'per-litre')}>
+                      pence / litre
                     </Button>
-                    <Button
-                      type="button"
-                      variant={inputs.fuelPriceUnit === 'per-gallon' ? 'default' : 'outline'}
-                      onClick={() =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          fuelPriceUnit: 'per-gallon',
-                        }))
-                      }
-                    >
-                      £/Gal
+                    <Button type="button" variant={inputs.fuelPriceUnit === 'per-gallon' ? 'default' : 'outline'} onClick={setUnit('fuelPriceUnit', 'per-gallon')}>
+                      £ / gallon
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            <Card className="border border-amber-200 bg-white text-slate-900 shadow-md dark:border-amber-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Gauge className="h-5 w-5 text-amber-600 dark:text-amber-300" />
-                  Fuel economy
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="economyValue">Fuel economy</Label>
+                <div>
+                  <Label htmlFor="economyValue" className="text-sm font-medium">
+                    Fuel economy
+                  </Label>
                   <Input
                     id="economyValue"
                     type="number"
+                    inputMode="decimal"
                     min="0"
                     step="0.1"
-                    inputMode="decimal"
                     value={inputs.economyValue}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        economyValue: Number(event.target.value) || 0,
-                      }))
-                    }
+                    onChange={handleInputChange('economyValue')}
+                    placeholder="e.g., 42"
                   />
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={inputs.economyUnit === 'mpg' ? 'default' : 'outline'}
-                      onClick={() =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          economyUnit: 'mpg',
-                        }))
-                      }
-                    >
+                  <div className="mt-2 flex gap-2">
+                    <Button type="button" variant={inputs.economyUnit === 'mpg' ? 'default' : 'outline'} onClick={setUnit('economyUnit', 'mpg')}>
                       MPG (UK)
                     </Button>
-                    <Button
-                      type="button"
-                      variant={inputs.economyUnit === 'l_per_100km' ? 'default' : 'outline'}
-                      onClick={() =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          economyUnit: 'l_per_100km',
-                        }))
-                      }
-                    >
-                      L/100km
+                    <Button type="button" variant={inputs.economyUnit === 'l_per_100km' ? 'default' : 'outline'} onClick={setUnit('economyUnit', 'l_per_100km')}>
+                      L / 100km
                     </Button>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="passengers">Passengers</Label>
-                  <Slider
+                <div>
+                  <Label htmlFor="passengers" className="text-sm font-medium">
+                    Passengers
+                  </Label>
+                  <Input
                     id="passengers"
-                    className="mt-3"
-                    value={[Number(inputs.passengers)]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        passengers: Number(value[0].toFixed(0)),
-                      }))
-                    }
-                    min={1}
-                    max={8}
-                    step={1}
+                    type="number"
+                    inputMode="numeric"
+                    min="1"
+                    step="1"
+                    value={inputs.passengers}
+                    onChange={handleInputChange('passengers')}
+                    placeholder="e.g., 2"
                   />
-                  <div className="flex justify-between text-sm text-amber-700 dark:text-amber-200">
-                    <span>1</span>
-                    <span>{inputs.passengers}</span>
-                    <span>8</span>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Include the driver so the cost split reflects the full car.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1">
+                    Calculate
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleReset}>
+                    Reset
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          {showResults ? (
+            <div className="space-y-6">
+              <Card className="border border-amber-200 bg-amber-50 text-slate-900 shadow-sm dark:border-amber-900 dark:bg-amber-900/20 dark:text-amber-100">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                    <Fuel className="h-5 w-5 text-amber-600 dark:text-amber-200" />
+                    Trip fuel cost summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-md bg-white/80 dark:bg-amber-900/40 p-4 border border-amber-100 dark:border-amber-800">
+                      <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                        Total fuel required
+                      </p>
+                      <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+                        {formatLitres(results.litresRequired)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-amber-900/40 p-4 border border-amber-100 dark:border-amber-800">
+                      <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                        Total journey cost
+                      </p>
+                      <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+                        {currencyFormatter.format(results.totalCost)}
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-amber-900/40 p-4 border border-amber-100 dark:border-amber-800">
+                      <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                        Cost per passenger
+                      </p>
+                      <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+                        {currencyFormatter.format(results.costPerPassenger)}
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-200">
+                        {results.passengers} people sharing the trip
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-amber-900/40 p-4 border border-amber-100 dark:border-amber-800">
+                      <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                        Cost per mile
+                      </p>
+                      <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+                        {currencyFormatter.format(results.costPerMile)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Button variant="outline" className="w-full" onClick={resetAll}>
-              Reset calculator
-            </Button>
-          </div>
+                  <div className="rounded-md bg-white dark:bg-slate-900 border border-amber-100 dark:border-amber-900 p-4">
+                    <h3 className="text-base font-semibold text-amber-900 dark:text-amber-100 mb-4">
+                      Passenger cost split
+                    </h3>
+                    <ResultBreakdownChart data={chartData} title="Fuel cost split by passenger" />
+                  </div>
 
-          <div className="space-y-6">
-            <Card className="border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Fuel className="h-5 w-5 text-amber-600 dark:text-amber-300" />
-                  Trip fuel cost calculator summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span>Total fuel needed</span>
-                  <span>{results.litresRequired.toFixed(2)} L</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Total trip cost</span>
-                  <span>{currencyFormatter.format(results.totalCost)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Cost per mile</span>
-                  <span>{currencyFormatter.format(results.costPerMile)}</span>
-                </div>
-                <div className="flex items-center justify-between font-semibold text-slate-700 dark:text-slate-200">
-                  <span>Per passenger ({inputs.passengers})</span>
-                  <span>{currencyFormatter.format(results.perPassenger)}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Fuel price calculator reminders
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Fuel prices fluctuate daily. Update the fuel price calculator inputs with live pump data
-                before you leave so budgeting stays accurate.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Fuel economy calculator insights
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Compare manufacturer MPG with real-world figures. The fuel economy calculator shows how
-                improvements—like tyre pressure or reducing weight—shave pounds off every journey.
-              </p>
-            </section>
-
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <FAQSection faqs={fuelFaqs} />
-            </section>
-          </div>
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="fuel-cost-calculator-results"
+                    title="Fuel cost breakdown"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
+                  <Users className="h-5 w-5 text-amber-500" aria-hidden="true" />
+                  <p className="text-sm">
+                    {hasCalculated && results?.message ? (
+                      results.message
+                    ) : (
+                      <>
+                        Add your distance, fuel economy, and current pump prices, then press{' '}
+                        <strong>Calculate</strong> to plan the trip budget.
+                      </>
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </CalculatorWrapper>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={fuelFaqs} />
+        </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
+        <DirectoryLinks links={directoryLinks} />
+        <RelatedCalculators calculators={relatedCalculators} />
+      </div>
     </div>
   );
 }

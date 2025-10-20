@@ -1,136 +1,261 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Calculator, Briefcase, Clock, Target } from 'lucide-react';
+import { Calculator, Briefcase, Clock, Target, Percent } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import ExportActions from '@/components/calculators/ExportActions';
+import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
+import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
+import { createCalculatorWebPageSchema, createCalculatorBreadcrumbs } from '@/utils/calculatorSchema.js';
+import { sanitiseNumber } from '@/utils/sanitiseNumber.js';
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/freelancer-day-rate-calculator';
+const CALCULATOR_NAME = 'Freelancer Day Rate Calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/freelancer-day-rate-calculator';
+const keywords = getCalculatorKeywords(CALCULATOR_NAME);
 
-const schemaKeywords = [
-  'Freelance Income',
-  'Overheads',
-  'Utilisation Rate',
-  'Annual Income Goal',
-  'Pricing Strategy',
-];
+const metaDescription =
+  'Convert your annual freelance income goals into profitable UK day and hourly rates by factoring overheads, utilisation, and planned profit.';
+
+const defaultInputs = {
+  annualIncomeGoal: '65,000',
+  businessOverheads: '9,000',
+  workingWeeks: '48',
+  daysPerWeek: '5',
+  utilisationRate: '70',
+  profitMargin: '15',
+  billableHoursPerDay: '7.5',
+};
 
 const faqItems = [
   {
     question: 'What is a utilisation rate?',
     answer:
-      'Utilisation rate is the percentage of working days you can bill clients. Holidays, admin, marketing, and sick days reduce the time available for paid work.',
+      'Utilisation is the percentage of your working time that converts into billable client work. Holidays, pitching, admin, and professional development all reduce the rate, so account for them up front.',
   },
   {
-    question: 'Which costs should be included in overheads?',
+    question: 'Which expenses should be included in overheads?',
     answer:
-      'Include software subscriptions, insurance, equipment, office space, and other recurring expenses required to run your freelance business.',
+      'Include everything required to run your freelance business: software, insurance, equipment, workspace, accounting fees, marketing, and training. Build in a contingency for annual renewals too.',
   },
   {
-    question: 'How do I adjust my contractor pay for non-billable time?',
+    question: 'Why add a profit margin on top of income goals?',
     answer:
-      'Increase your day rate to cover unpaid hours. This ensures annual income goals are met even when spending time on proposals, invoicing, and professional development.',
+      'Adding a margin helps you future-proof your business, cover quiet months, and reinvest in growth. Without it you only break even when everything goes to plan.',
   },
 ];
+
+const directoryLinks = [
+  {
+    label: 'Browse the full calculator directory',
+    url: '/#calculator-directory',
+    description: 'Explore every UK money calculator in one place.',
+  },
+  {
+    label: 'Business & freelancing tools',
+    url: '/#business-freelancing',
+    description: 'Price projects, estimate taxes, and manage cash flow with specialist tools.',
+  },
+  {
+    label: 'Take-home pay calculator',
+    url: '/take-home-pay-calculator',
+    description: 'Compare employee and contractor net pay before setting your rates.',
+  },
+];
+
+const relatedCalculators = [
+  {
+    name: 'Freelancer Tax Calculator',
+    url: '/contractor-calculator',
+    description: 'Estimate take-home pay after tax and expenses as a UK contractor.',
+  },
+  {
+    name: 'Savings Goal Calculator',
+    url: '/savings-goal-calculator',
+    description: 'Allocate a slice of each invoice towards future goals.',
+  },
+  {
+    name: 'Income Tax Calculator',
+    url: '/income-tax-calculator',
+    description: 'Understand how income tax and National Insurance affect your drawings.',
+  },
+];
+
+const schemaKeywords = [
+  'freelancer day rate calculator',
+  'contractor hourly rate calculator',
+  'freelance pricing',
+  'utilisation rate',
+  'freelance overheads',
+];
+
+const webPageSchema = createCalculatorWebPageSchema({
+  name: CALCULATOR_NAME,
+  description: metaDescription,
+  url: canonicalUrl,
+  keywords,
+});
+
+const breadcrumbSchema = createCalculatorBreadcrumbs({
+  name: CALCULATOR_NAME,
+  url: canonicalUrl,
+});
+
+const faqStructuredData = faqSchema(faqItems);
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
   minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
-export default function FreelancerDayRateCalculator() {
-  const [inputs, setInputs] = useState({
-    annualIncomeGoal: '65000',
-    businessOverheads: '9000',
-    workingWeeks: '48',
-    daysPerWeek: '5',
-    utilisationRate: '70',
-    profitMargin: '15',
-  });
+const percentageFormatter = new Intl.NumberFormat('en-GB', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+const calculateFreelancerRate = ({
+  annualIncomeGoal,
+  businessOverheads,
+  workingWeeks,
+  daysPerWeek,
+  utilisationRate,
+  profitMargin,
+  billableHoursPerDay,
+}) => {
+  const incomeGoal = Math.max(annualIncomeGoal, 0);
+  const overheads = Math.max(businessOverheads, 0);
+  const weeks = Math.max(workingWeeks, 0);
+  const daysWeek = Math.max(daysPerWeek, 0);
+  const utilisation = Math.min(Math.max(utilisationRate, 1), 100);
+  const margin = Math.max(profitMargin, 0);
+  const hoursPerDay = Math.max(billableHoursPerDay, 1);
 
-  const reset = useCallback(() => {
-    setInputs({
-      annualIncomeGoal: '65000',
-      businessOverheads: '9000',
-      workingWeeks: '48',
-      daysPerWeek: '5',
-      utilisationRate: '70',
-      profitMargin: '15',
-    });
-  }, []);
+  const potentialWorkingDays = weeks * daysWeek;
+  const billableDays = Math.max(1, Math.round((potentialWorkingDays * utilisation) / 100));
+  const totalAnnualCost = incomeGoal + overheads;
+  const baseDayRate = billableDays > 0 ? totalAnnualCost / billableDays : 0;
+  const dayRateWithMargin = baseDayRate * (1 + margin / 100);
+  const hourlyRate = dayRateWithMargin / hoursPerDay;
+  const overheadShare = overheads / billableDays;
+  const incomeShare = incomeGoal / billableDays;
+  const profitShare = baseDayRate * (margin / 100);
 
-  const results = useMemo(() => {
-    const annualIncomeGoal = Number(inputs.annualIncomeGoal) || 0;
-    const businessOverheads = Number(inputs.businessOverheads) || 0;
-    const workingWeeks = Number(inputs.workingWeeks) || 0;
-    const daysPerWeek = Number(inputs.daysPerWeek) || 0;
-    const utilisationRate = Math.min(Math.max(Number(inputs.utilisationRate) || 0, 1), 100);
-    const profitMargin = Math.max(Number(inputs.profitMargin) || 0, 0);
+  return {
+    valid: true,
+    incomeGoal,
+    overheads,
+    weeks,
+    daysWeek,
+    utilisation,
+    margin,
+    hoursPerDay,
+    billableDays,
+    totalAnnualCost,
+    baseDayRate,
+    dayRateWithMargin,
+    hourlyRate,
+    overheadShare,
+    incomeShare,
+    profitShare,
+  };
+};
 
-    const totalAnnualCost = annualIncomeGoal + businessOverheads;
-    const potentialWorkingDays = workingWeeks * daysPerWeek;
-    const billableDays = Math.max(
-      1,
-      Math.round((potentialWorkingDays * utilisationRate) / 100),
-    );
-    const baseDayRate = totalAnnualCost / billableDays;
-    const marginMultiplier = profitMargin > 0 ? 1 + profitMargin / 100 : 1;
-    const suggestedDayRate = baseDayRate * marginMultiplier;
-    const suggestedHourlyRate = suggestedDayRate / 7.5; // assume 7.5 billable hours per day
+export default function FreelancerDayRateCalculatorPage() {
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [results, setResults] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
 
-    return {
-      annualIncomeGoal,
-      businessOverheads,
-      workingWeeks,
-      daysPerWeek,
-      utilisationRate,
-      profitMargin,
-      totalAnnualCost,
-      billableDays,
-      baseDayRate,
-      suggestedDayRate,
-      suggestedHourlyRate,
+  const handleInputChange = (field) => (event) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }));
+  };
+
+  const handleReset = () => {
+    setInputs(defaultInputs);
+    setResults(null);
+    setHasCalculated(false);
+  };
+
+  const handleCalculate = (event) => {
+    event.preventDefault();
+    const payload = {
+      annualIncomeGoal: sanitiseNumber(inputs.annualIncomeGoal),
+      businessOverheads: sanitiseNumber(inputs.businessOverheads),
+      workingWeeks: sanitiseNumber(inputs.workingWeeks),
+      daysPerWeek: sanitiseNumber(inputs.daysPerWeek),
+      utilisationRate: sanitiseNumber(inputs.utilisationRate),
+      profitMargin: sanitiseNumber(inputs.profitMargin),
+      billableHoursPerDay: sanitiseNumber(inputs.billableHoursPerDay),
     };
-  }, [inputs]);
+
+    const potentialWorkingDays = payload.workingWeeks * payload.daysPerWeek;
+    if (potentialWorkingDays <= 0) {
+      setResults({
+        valid: false,
+        message: 'Add the weeks and days you expect to work to calculate a realistic day rate.',
+      });
+      setHasCalculated(true);
+      return;
+    }
+
+    const outcome = calculateFreelancerRate(payload);
+    setResults({ ...outcome, payload });
+    setHasCalculated(true);
+  };
+
+  const chartData = useMemo(() => {
+    if (!results?.valid) return [];
+    return [
+      { name: 'Income goal', value: results.incomeShare, color: '#f97316' },
+      { name: 'Overheads', value: results.overheadShare, color: '#6366f1' },
+      { name: 'Profit margin', value: results.profitShare, color: '#22c55e' },
+    ].filter((item) => item.value > 0);
+  }, [results]);
+
+  const csvData = useMemo(() => {
+    if (!results?.valid) return null;
+    return [
+      ['Metric', 'Value'],
+      ['Annual income goal (£)', results.incomeGoal.toFixed(2)],
+      ['Annual business overheads (£)', results.overheads.toFixed(2)],
+      ['Working weeks per year', results.weeks.toFixed(0)],
+      ['Working days per week', results.daysWeek.toFixed(0)],
+      ['Utilisation rate (%)', results.utilisation.toFixed(2)],
+      ['Profit margin (%)', results.margin.toFixed(2)],
+      ['Billable hours per day', results.hoursPerDay.toFixed(2)],
+      ['Billable days per year', results.billableDays.toFixed(0)],
+      ['Base day rate (£)', results.baseDayRate.toFixed(2)],
+      ['Suggested day rate (£)', results.dayRateWithMargin.toFixed(2)],
+      ['Suggested hourly rate (£)', results.hourlyRate.toFixed(2)],
+    ];
+  }, [results]);
+
+  const showResults = hasCalculated && results?.valid;
 
   return (
     <div className="bg-white dark:bg-gray-950">
       <Helmet>
-        <title>Freelancer Day Rate &amp; Hourly Rate Calculator</title>
-        <meta
-          name="description"
-          content="Freelancer Day Rate Calculator to convert annual income goals into day rates. Factor in billable hours, overheads, and utilisation for contractor pay."
-        />
-        <meta
-          name="keywords"
-          content="Day Rate Calculator, Target Salary, Billable Hours"
-        />
+        <title>{`${CALCULATOR_NAME} | UK Contractor Pricing Tool`}</title>
+        <meta name="description" content={metaDescription} />
+        <meta name="keywords" content={schemaKeywords.join(', ')} />
         <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FinancialProduct',
-              name: 'Freelancer Day Rate Calculator',
-              description:
-                'Pricing strategy tool for freelancers to plan freelance income, overheads, utilisation rate, and annual income goals when setting day rates.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-            }),
-          }}
-        />
       </Helmet>
+      <JsonLd data={webPageSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={faqStructuredData} />
 
       <section className="bg-gradient-to-r from-slate-900 via-amber-900 to-slate-900 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
@@ -138,11 +263,19 @@ export default function FreelancerDayRateCalculator() {
             Freelancer Day Rate Calculator
           </Heading>
           <p className="text-lg md:text-xl text-amber-100">
-            Calculate day rate, plan freelance business pricing, and factor in contractor pay for
-            non-billable time when setting rates.
+            Turn annual income goals into profitable day and hourly rates that cover overheads and non-billable time.
           </p>
         </div>
       </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <EmotionalHook
+          title="Price with confidence"
+          message="You are not just charging for the hours you invoice. You are pricing for holidays, admin time, and the freedom to choose clients that light you up."
+          quote="If you think it’s expensive to hire a professional, wait until you hire an amateur."
+          author="Red Adair"
+        />
+      </div>
 
       <CalculatorWrapper className="bg-white dark:bg-gray-950">
         <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
@@ -150,189 +283,245 @@ export default function FreelancerDayRateCalculator() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-semibold">
                 <Calculator className="h-5 w-5 text-amber-500" />
-                Income Targets
+                Freelance inputs
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="annualIncomeGoal" className="text-sm font-medium">
-                  Annual income goal (GBP)
-                </Label>
-                <Input
-                  id="annualIncomeGoal"
-                  inputMode="decimal"
-                  value={inputs.annualIncomeGoal}
-                  onChange={(event) => handleChange('annualIncomeGoal', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="businessOverheads" className="text-sm font-medium">
-                  Annual business overheads (GBP)
-                </Label>
-                <Input
-                  id="businessOverheads"
-                  inputMode="decimal"
-                  value={inputs.businessOverheads}
-                  onChange={(event) => handleChange('businessOverheads', event.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent>
+              <form className="space-y-5" onSubmit={handleCalculate}>
                 <div>
-                  <Label htmlFor="workingWeeks" className="text-sm font-medium">
-                    Working weeks per year
+                  <Label htmlFor="annualIncomeGoal" className="text-sm font-medium">
+                    Annual income goal (£)
                   </Label>
                   <Input
-                    id="workingWeeks"
+                    id="annualIncomeGoal"
+                    type="number"
                     inputMode="decimal"
-                    value={inputs.workingWeeks}
-                    onChange={(event) => handleChange('workingWeeks', event.target.value)}
+                    min="0"
+                    step="500"
+                    value={inputs.annualIncomeGoal}
+                    onChange={handleInputChange('annualIncomeGoal')}
+                    placeholder="e.g., 65,000"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="daysPerWeek" className="text-sm font-medium">
-                    Working days each week
+                  <Label htmlFor="businessOverheads" className="text-sm font-medium">
+                    Annual business overheads (£)
                   </Label>
                   <Input
-                    id="daysPerWeek"
+                    id="businessOverheads"
+                    type="number"
                     inputMode="decimal"
-                    value={inputs.daysPerWeek}
-                    onChange={(event) => handleChange('daysPerWeek', event.target.value)}
+                    min="0"
+                    step="100"
+                    value={inputs.businessOverheads}
+                    onChange={handleInputChange('businessOverheads')}
+                    placeholder="e.g., 9,000"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Include software, insurance, workspace, equipment, and other recurring costs.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="workingWeeks" className="text-sm font-medium">
+                      Working weeks per year
+                    </Label>
+                    <Input
+                      id="workingWeeks"
+                      type="number"
+                      inputMode="decimal"
+                      min="1"
+                      max="52"
+                      step="1"
+                      value={inputs.workingWeeks}
+                      onChange={handleInputChange('workingWeeks')}
+                      placeholder="e.g., 48"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="daysPerWeek" className="text-sm font-medium">
+                      Working days each week
+                    </Label>
+                    <Input
+                      id="daysPerWeek"
+                      type="number"
+                      inputMode="decimal"
+                      min="1"
+                      max="7"
+                      step="1"
+                      value={inputs.daysPerWeek}
+                      onChange={handleInputChange('daysPerWeek')}
+                      placeholder="e.g., 5"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="utilisationRate" className="text-sm font-medium">
+                      Utilisation rate (%)
+                    </Label>
+                    <Input
+                      id="utilisationRate"
+                      type="number"
+                      inputMode="decimal"
+                      min="1"
+                      max="100"
+                      step="1"
+                      value={inputs.utilisationRate}
+                      onChange={handleInputChange('utilisationRate')}
+                      placeholder="e.g., 70"
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Percentage of working time that you expect to invoice clients.
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="profitMargin" className="text-sm font-medium">
+                      Profit margin (%)
+                    </Label>
+                    <Input
+                      id="profitMargin"
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="1"
+                      value={inputs.profitMargin}
+                      onChange={handleInputChange('profitMargin')}
+                      placeholder="e.g., 15"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="billableHoursPerDay" className="text-sm font-medium">
+                    Billable hours per day
+                  </Label>
+                  <Input
+                    id="billableHoursPerDay"
+                    type="number"
+                    inputMode="decimal"
+                    min="1"
+                    step="0.25"
+                    value={inputs.billableHoursPerDay}
+                    onChange={handleInputChange('billableHoursPerDay')}
+                    placeholder="e.g., 7.5"
                   />
                 </div>
-              </div>
-              <div>
-                <Label htmlFor="utilisationRate" className="text-sm font-medium">
-                  Utilisation rate (% billable days)
-                </Label>
-                <Input
-                  id="utilisationRate"
-                  inputMode="decimal"
-                  value={inputs.utilisationRate}
-                  onChange={(event) => handleChange('utilisationRate', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="profitMargin" className="text-sm font-medium">
-                  Profit margin uplift (%)
-                </Label>
-                <Input
-                  id="profitMargin"
-                  inputMode="decimal"
-                  value={inputs.profitMargin}
-                  onChange={(event) => handleChange('profitMargin', event.target.value)}
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
+                <div className="flex gap-3">
+                  <Button type="submit" className="flex-1">
+                    Calculate
+                  </Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={handleReset}>
+                    Reset
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
-            <Card className="border border-amber-200 dark:border-amber-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Clock className="h-5 w-5 text-amber-500" />
-                  Rate Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Billable days per year</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {results.billableDays}
-                    </p>
+          {showResults ? (
+            <div className="space-y-6">
+              <Card className="border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/20 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold text-amber-900 dark:text-amber-100">
+                    <Briefcase className="h-5 w-5" />
+                    Day rate summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-md bg-white/80 dark:bg-amber-900/30 p-4 border border-amber-100 dark:border-amber-800">
+                      <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                        Suggested day rate
+                      </p>
+                      <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+                        {currencyFormatter.format(results.dayRateWithMargin)}
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-200">
+                        Includes {percentageFormatter.format(results.margin)}% profit uplift
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-amber-900/30 p-4 border border-amber-100 dark:border-amber-800">
+                      <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                        Suggested hourly rate
+                      </p>
+                      <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+                        {currencyFormatter.format(results.hourlyRate)}
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-200">
+                        Based on {results.hoursPerDay.toFixed(1)} billable hours per day
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-amber-900/30 p-4 border border-amber-100 dark:border-amber-800">
+                      <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                        Billable days per year
+                      </p>
+                      <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+                        {results.billableDays}
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-200">
+                        Utilisation {percentageFormatter.format(results.utilisation)}% of {results.weeks} weeks
+                      </p>
+                    </div>
+                    <div className="rounded-md bg-white/80 dark:bg-amber-900/30 p-4 border border-amber-100 dark:border-amber-800">
+                      <p className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-200">
+                        Annual coverage
+                      </p>
+                      <p className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+                        {currencyFormatter.format(results.totalAnnualCost)}
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-200">
+                        Income goal + overheads before profit
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Total annual cost</p>
-                    <p className="text-lg font-semibold text-amber-600">
-                      {currencyFormatter.format(results.totalAnnualCost)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Base day rate</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.baseDayRate)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Suggested day rate</p>
-                    <p className="text-lg font-semibold text-amber-600">
-                      {currencyFormatter.format(results.suggestedDayRate)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Suggested hourly rate</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.suggestedHourlyRate)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Utilisation (%)</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {results.utilisationRate}%
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className="border border-amber-200 dark:border-amber-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Target className="h-5 w-5 text-amber-500" />
-                  Pricing Strategy Notes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  Track non-billable time to keep your freelance business profitable. Marketing,
-                  proposals, and admin tasks should be covered through a higher day rate.
-                </p>
-                <p>
-                  Review rates annually to account for inflation, tax changes, and updated annual
-                  income goals.
-                </p>
-                <p>
-                  Cross-check day rate with market benchmarks. Offer tiered pricing for different
-                  service levels while maintaining your minimum acceptable rate.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                  <div className="rounded-md bg-white dark:bg-slate-900 border border-amber-100 dark:border-amber-900 p-4">
+                    <h3 className="text-base font-semibold text-amber-900 dark:text-amber-100 mb-4">
+                      Day rate composition
+                    </h3>
+                    <ResultBreakdownChart data={chartData} title="Freelancer day rate breakdown" />
+                  </div>
+
+                  <ExportActions
+                    csvData={csvData}
+                    fileName="freelancer-day-rate-results"
+                    title="Freelancer day rate analysis"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
+                <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
+                  <Target className="h-5 w-5 text-amber-500" aria-hidden="true" />
+                  <p className="text-sm">
+                    {hasCalculated && results?.message ? (
+                      results.message
+                    ) : (
+                      <>
+                        Add your income target, overheads, and billable utilisation, then press{' '}
+                        <strong>Calculate</strong> to reveal a sustainable day rate.
+                      </>
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Day Rate for Freelance Business Success
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Establish contractor pay that covers annual income goals, business overheads, and
-            non-billable time. Use this calculator as the foundation of your rate setting strategy.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Align Freelance Business Plans with Utilisation
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Adjust utilisation rates to reflect realistic working patterns. Lower utilisation means
-            higher day rates to support the same annual income goal.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Consider Non-Billable Time in Contractor Pay
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Non-billable activities such as networking, training, and administration need to be
-            priced into invoices. Set day rates that ensure long-term financial stability.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
+
+      <section className="bg-white dark:bg-gray-950 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FAQSection faqs={faqItems} />
+        </div>
+      </section>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
+        <DirectoryLinks links={directoryLinks} />
+        <RelatedCalculators calculators={relatedCalculators} />
+      </div>
     </div>
   );
 }
