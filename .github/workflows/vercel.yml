@@ -1,45 +1,67 @@
-name: Build and Deploy to Vercel (prebuilt)
+name: Vercel CI/CD
 
 on:
   push:
-    branches: [ main ]    # runs on merge to main
-  pull_request:
-    branches: [ main ]    # runs for previews
-  workflow_dispatch:      # allows manual "Run workflow"
+    branches: [ main, preview ]   # main => prod, preview => preview
+  workflow_dispatch:              # manual run if you ever need it
+    inputs:
+      environment:
+        description: "preview or prod"
+        required: true
+        default: "preview"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # (optional, add if you’ve created these secrets)
+      # VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      # VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      - name: Install deps
         run: npm ci
 
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
 
-      - name: Pull Vercel env & link project
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      # Decide environment: main => production, preview => preview
+      - name: Set environment
+        id: env
+        run: |
+          if [ "${GITHUB_REF##*/}" = "main" ]; then
+            echo "MODE=prod" >> $GITHUB_OUTPUT
+            echo "VERCEL_ENV=production" >> $GITHUB_OUTPUT
+          else
+            echo "MODE=preview" >> $GITHUB_OUTPUT
+            echo "VERCEL_ENV=preview" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Build in GitHub
+      # Pull linking + env for the chosen environment
+      - name: vercel pull
+        run: vercel pull --yes --environment=${{ steps.env.outputs.VERCEL_ENV }} --token="$VERCEL_TOKEN"
+
+      # Build on GitHub (not on Vercel)
+      - name: vercel build
         run: vercel build
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
-      - name: Deploy Preview
-        if: github.event_name == 'pull_request'
-        run: vercel deploy --prebuilt
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy Production
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: vercel deploy --prebuilt --prod
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # Deploy prebuilt output
+      - name: Deploy
+        run: |
+          if [ "${{ steps.env.outputs.MODE }}" = "prod" ]; then
+            vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+          else
+            vercel deploy --prebuilt --token="$VERCEL_TOKEN"
+          fi
