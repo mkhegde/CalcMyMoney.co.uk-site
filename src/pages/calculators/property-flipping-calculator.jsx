@@ -14,10 +14,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Calculator, Home, Hammer, TrendingUp, Quote, BookOpen, LineChart, Plus } from 'lucide-react';
+import {
+  Calculator,
+  Home,
+  Hammer,
+  TrendingUp,
+  Quote,
+  BookOpen,
+  LineChart,
+  Plus,
+} from 'lucide-react';
 
-const ResultBreakdownChart = React.lazy(() =>
-  import('@/components/calculators/ResultBreakdownChart.jsx'),
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
 );
 
 const pagePath = '/calculators/property-flipping-calculator';
@@ -69,12 +78,14 @@ const directoryLinks = [
   {
     url: '/buy-to-let-mortgage-calculator',
     label: 'Buy-to-Let Mortgage Calculator',
-    description: 'Calculate potential rental income and mortgage affordability for investment properties.',
+    description:
+      'Calculate potential rental income and mortgage affordability for investment properties.',
   },
   {
     url: '/mortgage-affordability-calculator',
     label: 'Mortgage Affordability Calculator',
-    description: 'Determine how much you can afford to borrow for a mortgage based on your income and expenses.',
+    description:
+      'Determine how much you can afford to borrow for a mortgage based on your income and expenses.',
   },
 ];
 
@@ -101,20 +112,15 @@ const calculateFlippingMetrics = (inputs, renovationItems) => {
   const desiredSalePrice = parseNumber(inputs.desiredSalePrice);
   const contingencyPercent = parseNumber(inputs.contingencyPercent) / 100;
 
-  const renovationCost = renovationItems.reduce(
-    (sum, item) => sum + parseNumber(item.amount),
-    0,
-  );
+  const renovationCost = renovationItems.reduce((sum, item) => sum + parseNumber(item.amount), 0);
   const contingency = renovationCost * contingencyPercent;
   const holdingCosts = holdingCostsPerMonth * holdingMonths;
   const acquisitionCosts = purchasePrice + stampDuty + legalFees;
-  const total Investment =
-    acquisitionCosts + renovationCost + contingency + holdingCosts;
+  const totalInvestment = acquisitionCosts + renovationCost + contingency + holdingCosts;
   const sellingFees = desiredSalePrice * sellingFeesPercent;
   const netProceeds = desiredSalePrice - sellingFees;
   const grossProfit = netProceeds - totalInvestment;
-  const roi =
-    totalInvestment > 0 ? (grossProfit / totalInvestment) * 100 : 0;
+  const roi = totalInvestment > 0 ? (grossProfit / totalInvestment) * 100 : 0;
 
   return {
     purchasePrice,
@@ -139,14 +145,20 @@ function buildCsvData(results, inputs, renovationItems) {
     ['Purchase Price (£)', currencyFormatter.format(parseNumber(inputs.purchasePrice))],
     ['Stamp Duty (£)', currencyFormatter.format(parseNumber(inputs.stampDuty))],
     ['Legal & Conveyancing Fees (£)', currencyFormatter.format(parseNumber(inputs.legalFees))],
-    ['Holding Costs Per Month (£)', currencyFormatter.format(parseNumber(inputs.holdingCostsPerMonth))],
+    [
+      'Holding Costs Per Month (£)',
+      currencyFormatter.format(parseNumber(inputs.holdingCostsPerMonth)),
+    ],
     ['Holding Duration (Months)', inputs.holdingMonths],
     ['Selling Fees (% of Sale Price)', `${inputs.sellingFeesPercent}%`],
     ['Contingency (% of Reno Budget)', `${inputs.contingencyPercent}%`],
     ['Target Sale Price (£)', currencyFormatter.format(parseNumber(inputs.desiredSalePrice))],
     [],
     ['Renovation Items'],
-    ...renovationItems.map(item => [item.label, currencyFormatter.format(parseNumber(item.amount))]),
+    ...renovationItems.map((item) => [
+      item.label,
+      currencyFormatter.format(parseNumber(item.amount)),
+    ]),
     [],
     ['Total Investment (£)', currencyFormatter.format(results.totalInvestment)],
     ['Net Sale Proceeds (£)', currencyFormatter.format(results.netProceeds)],
@@ -159,8 +171,16 @@ function buildCsvData(results, inputs, renovationItems) {
 function buildChartData(results) {
   if (!results) return [];
   return [
-    { name: 'Acquisition Costs', value: results.purchasePrice + results.stampDuty + results.legalFees, color: '#3b82f6' },
-    { name: 'Renovation & Contingency', value: results.renovationCost + results.contingency, color: '#10b981' },
+    {
+      name: 'Acquisition Costs',
+      value: results.purchasePrice + results.stampDuty + results.legalFees,
+      color: '#3b82f6',
+    },
+    {
+      name: 'Renovation & Contingency',
+      value: results.renovationCost + results.contingency,
+      color: '#10b981',
+    },
     { name: 'Holding Costs', value: results.holdingCosts, color: '#f97316' },
     { name: 'Selling Fees', value: results.sellingFees, color: '#ef4444' },
     { name: 'Gross Profit', value: results.grossProfit, color: '#8b5cf6' },
@@ -200,33 +220,36 @@ export default function PropertyFlippingCalculatorPage() {
 
   const updateRenovationItem = useCallback((id, value) => {
     setRenovationItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, amount: value } : item)),
+      prev.map((item) => (item.id === id ? { ...item, amount: value } : item))
     );
   }, []);
 
   const addRenovationItem = useCallback(() => {
-    setRenovationItems((prev) => [
-      ...prev,
-      { id: renovationId++, label: 'New item', amount: '0' },
-    ]);
+    setRenovationItems((prev) => [...prev, { id: renovationId++, label: 'New item', amount: '0' }]);
   }, []);
 
   const removeRenovationItem = useCallback((id) => {
     setRenovationItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  const handleInputChange = useCallback((field) => (event) => {
-    const { value } = event.target;
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
-  const handleSubmit = useCallback((event) => {
-    event.preventDefault();
-    const computedResults = calculateFlippingMetrics(inputs, renovationItems);
-    setResults(computedResults);
-    setHasCalculated(true);
-    setCsvData(buildCsvData(computedResults, inputs, renovationItems));
-  }, [inputs, renovationItems]);
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computedResults = calculateFlippingMetrics(inputs, renovationItems);
+      setResults(computedResults);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computedResults, inputs, renovationItems));
+    },
+    [inputs, renovationItems]
+  );
 
   const handleReset = useCallback(() => {
     setInputs({
@@ -298,7 +321,10 @@ export default function PropertyFlippingCalculatorPage() {
             <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Calculator className="h-5 w-5 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                  <Calculator
+                    className="h-5 w-5 text-amber-600 dark:text-amber-300"
+                    aria-hidden="true"
+                  />
                   Flip Inputs
                 </CardTitle>
               </CardHeader>
@@ -382,7 +408,12 @@ export default function PropertyFlippingCalculatorPage() {
                             </Button>
                           </div>
                         ))}
-                        <Button type="button" variant="outline" onClick={addRenovationItem} className="w-full">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={addRenovationItem}
+                          className="w-full"
+                        >
                           <Plus className="mr-2 h-4 w-4" />
                           Add renovation item
                         </Button>
@@ -448,7 +479,12 @@ export default function PropertyFlippingCalculatorPage() {
                     <Button type="submit" className="flex-1">
                       Calculate Flip Profit
                     </Button>
-                    <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
                       Reset
                     </Button>
                   </div>
@@ -472,19 +508,26 @@ export default function PropertyFlippingCalculatorPage() {
                   <Card className="border border-amber-200 bg-white shadow-sm dark:border-amber-900 dark:bg-amber-900/30 dark:text-amber-50">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg">
-                        <Home className="h-5 w-5 text-amber-600 dark:text-amber-200" aria-hidden="true" />
+                        <Home
+                          className="h-5 w-5 text-amber-600 dark:text-amber-200"
+                          aria-hidden="true"
+                        />
                         Flip Profit Summary
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="text-sm text-amber-900 dark:text-amber-200">Total investment</p>
+                        <p className="text-sm text-amber-900 dark:text-amber-200">
+                          Total investment
+                        </p>
                         <p className="text-2xl font-semibold">
                           {currencyFormatter.format(results.totalInvestment)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-amber-900 dark:text-amber-200">Net sale proceeds</p>
+                        <p className="text-sm text-amber-900 dark:text-amber-200">
+                          Net sale proceeds
+                        </p>
                         <p className="text-2xl font-semibold">
                           {currencyFormatter.format(results.netProceeds)}
                         </p>
@@ -496,7 +539,9 @@ export default function PropertyFlippingCalculatorPage() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-amber-900 dark:text-amber-200">Return on investment</p>
+                        <p className="text-sm text-amber-900 dark:text-amber-200">
+                          Return on investment
+                        </p>
                         <p className="text-2xl font-semibold">{results.roi.toFixed(1)}%</p>
                       </div>
                       <div className="sm:col-span-2">
@@ -512,7 +557,10 @@ export default function PropertyFlippingCalculatorPage() {
                   <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg">
-                        <LineChart className="h-5 w-5 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                        <LineChart
+                          className="h-5 w-5 text-amber-600 dark:text-amber-300"
+                          aria-hidden="true"
+                        />
                         Cost Breakdown
                       </CardTitle>
                     </CardHeader>
@@ -524,7 +572,10 @@ export default function PropertyFlippingCalculatorPage() {
                           </div>
                         }
                       >
-                        <ResultBreakdownChart data={chartData} title="Property Flip Cost Breakdown" />
+                        <ResultBreakdownChart
+                          data={chartData}
+                          title="Property Flip Cost Breakdown"
+                        />
                       </Suspense>
                     </CardContent>
                   </Card>
@@ -532,7 +583,10 @@ export default function PropertyFlippingCalculatorPage() {
                   <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg">
-                        <BookOpen className="h-5 w-5 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                        <BookOpen
+                          className="h-5 w-5 text-amber-600 dark:text-amber-300"
+                          aria-hidden="true"
+                        />
                         Important Notes
                       </CardTitle>
                     </CardHeader>
