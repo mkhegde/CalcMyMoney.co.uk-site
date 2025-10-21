@@ -1,29 +1,79 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Users, Percent, Receipt } from 'lucide-react';
-
+import React, { useCallback, useMemo, useState, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Calculator, Users, Percent, Receipt, PieChart } from 'lucide-react';
 
-const keywords = [
-  'tip calculator',
-  'restaurant tip calculator',
-  'bill tip calculator',
-  'tip percentage calculator',
-  'group tip calculator',
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
+
+const pagePath = '/calculators/tip-calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/tip-calculator';
+const pageTitle = 'Tip Calculator UK | Split Bills & Add Gratuity';
+const metaDescription =
+  'Split restaurant bills, add a tip, and remove UK service charges with the interactive tip calculator. Share the totals instantly with your group.';
+const keywords = getMappedKeywords('Tip Calculator');
+
+const faqItems = [
+  {
+    question: 'Should I tip on the pre-service charge amount?',
+    answer:
+      'Many UK diners tip on the subtotal before the optional service charge. Use the “Remove automatic service charge” option to back out the percentage before applying your chosen tip.',
+  },
+  {
+    question: 'How do I split the bill between friends?',
+    answer:
+      'Enter the number of people in your party. The calculator divides the total, including tip, so everyone can transfer the exact amount without mental maths at the table.',
+  },
+  {
+    question: 'Can I add a fixed tip instead of a percentage?',
+    answer:
+      'Yes. Toggle to fixed tip mode to enter a set amount, perfect for rounding up or leaving cash on the table. The calculator still shows the effective tip percentage for etiquette checks.',
+  },
 ];
 
-const metaDescription =
-  'Use our tip calculator and restaurant tip calculator to split bills, adjust tip percentage calculator settings, and share group tip calculator totals instantly.';
+const emotionalMessage =
+  'Settle the bill with zero awkwardness. A quick calculation keeps your group aligned and makes it easy to be generous with great service.';
+const emotionalQuote = {
+  text: 'Feeling gratitude and not expressing it is like wrapping a present and not giving it.',
+  author: 'William Arthur Ward',
+};
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/tip-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+const directoryLinks = [
+  {
+    url: '/#budgeting',
+    label: 'Explore budgeting tools',
+    description: 'Track eating-out spending alongside groceries, travel, and personal treats.',
+  },
+  {
+    url: '/calculators/travel-budget-calculator',
+    label: 'Travel Budget Calculator',
+    description: 'Plan holiday spending, including meals and experiences, before you fly.',
+  },
+  {
+    url: '/calculators/weekly-budget-planner',
+    label: 'Weekly Budget Planner',
+    description: 'Balance hospitality treats with your weekly spending limit.',
+  },
+];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -31,23 +81,28 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 2,
 });
 
-const tipFaqs = [
-  {
-    question: 'Should I tip on the pre-service charge amount?',
-    answer:
-      'Many diners tip on the pre-service charge subtotal. Use the optional “Subtract service charge” toggle to remove automatic gratuities before the tip calculator applies your percentage.',
-  },
-  {
-    question: 'How do I handle large groups?',
-    answer:
-      'Enter the number of guests in the group tip calculator field. The calculator splits the total, including tip, so everyone can send the exact amount right away.',
-  },
-  {
-    question: 'Can I add a fixed amount rather than a percentage?',
-    answer:
-      'Yes. Switch to custom amount mode to add or remove a flat tip. The restaurant tip calculator updates the effective percentage so you can double-check etiquette.',
-  },
-];
+const percentFormatter = new Intl.NumberFormat('en-GB', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+const defaultInputs = {
+  billAmount: '68.50',
+  tipPercentage: '12.5',
+  guests: '2',
+  roundUp: false,
+  useFixedTip: false,
+  fixedTip: '5',
+  removeServiceCharge: false,
+  serviceChargeRate: '12.5',
+};
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
 
 const calculateTip = ({
   billAmount,
@@ -66,14 +121,15 @@ const calculateTip = ({
 
   const tipAmount = useFixedTip
     ? Math.max(fixedTip, 0)
-    : adjustedBill * Math.max(tipPercentage, 0) / 100;
+    : (adjustedBill * Math.max(tipPercentage, 0)) / 100;
 
   let total = adjustedBill + tipAmount;
   if (roundUp) {
     total = Math.ceil(total);
   }
 
-  const perPerson = Math.max(guests, 1) > 0 ? total / Math.max(guests, 1) : total;
+  const people = Math.max(guests, 1);
+  const perPerson = total / people;
   const effectiveRate = adjustedBill > 0 ? (tipAmount / adjustedBill) * 100 : 0;
 
   return {
@@ -82,329 +138,384 @@ const calculateTip = ({
     total,
     perPerson,
     effectiveRate,
+    serviceChargeRemoved: removeServiceCharge ? baseBill - adjustedBill : 0,
   };
 };
 
+const buildCsvData = (results, inputs) => {
+  if (!results) return null;
+  return [
+    ['Input', 'Value'],
+    ['Bill total (£)', inputs.billAmount],
+    ['Tip percentage (%)', inputs.tipPercentage],
+    ['Number of guests', inputs.guests],
+    ['Use fixed tip', inputs.useFixedTip ? 'Yes' : 'No'],
+    ['Fixed tip (£)', inputs.fixedTip],
+    ['Round up to nearest pound', inputs.roundUp ? 'Yes' : 'No'],
+    ['Remove service charge', inputs.removeServiceCharge ? 'Yes' : 'No'],
+    ['Service charge rate (%)', inputs.serviceChargeRate],
+    [],
+    ['Output', 'Value'],
+    ['Adjusted bill (£)', currencyFormatter.format(results.adjustedBill)],
+    ['Tip amount (£)', currencyFormatter.format(results.tipAmount)],
+    ['Total to pay (£)', currencyFormatter.format(results.total)],
+    ['Per person (£)', currencyFormatter.format(results.perPerson)],
+    ['Effective tip (%)', `${percentFormatter.format(results.effectiveRate)}%`],
+  ];
+};
+
+const buildChartData = (results) => {
+  if (!results) return [];
+  return [
+    { name: 'Adjusted bill', value: results.adjustedBill, color: '#0ea5e9' },
+    { name: 'Tip amount', value: results.tipAmount, color: '#10b981' },
+  ].filter((item) => item.value > 0);
+};
+
 export default function TipCalculatorPage() {
-  const [inputs, setInputs] = useState({
-    billAmount: 68.5,
-    tipPercentage: 12.5,
-    guests: 2,
-    roundUp: false,
-    useFixedTip: false,
-    fixedTip: 5,
-    removeServiceCharge: false,
-    serviceChargeRate: 12.5,
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
+
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Tip Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Budgeting & Planning Calculators', url: '/calculators#budgeting' },
+      { name: 'Tip Calculator', url: pagePath },
+    ],
+    faq: faqItems,
   });
 
-  const results = useMemo(
-    () =>
-      calculateTip({
-        billAmount: Number(inputs.billAmount) || 0,
-        tipPercentage: Number(inputs.tipPercentage) || 0,
-        guests: Number(inputs.guests) || 1,
+  const resetResults = useCallback(() => {
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  }, []);
+
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+      resetResults();
+    },
+    [resetResults]
+  );
+
+  const handleCheckboxChange = useCallback(
+    (field) => (event) => {
+      const { checked } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: checked }));
+      resetResults();
+    },
+    [resetResults]
+  );
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computed = calculateTip({
+        billAmount: parseNumber(inputs.billAmount),
+        tipPercentage: parseNumber(inputs.tipPercentage),
+        guests: Math.max(parseNumber(inputs.guests), 1),
         roundUp: inputs.roundUp,
         useFixedTip: inputs.useFixedTip,
-        fixedTip: Number(inputs.fixedTip) || 0,
+        fixedTip: parseNumber(inputs.fixedTip),
         removeServiceCharge: inputs.removeServiceCharge,
-        serviceChargeRate: Number(inputs.serviceChargeRate) || 0,
-      }),
+        serviceChargeRate: parseNumber(inputs.serviceChargeRate),
+      });
+      setResults(computed);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computed, inputs));
+    },
     [inputs]
   );
 
-  const toggleBoolean = (field) =>
-    setInputs((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
+  const handleReset = useCallback(() => {
+    setInputs(defaultInputs);
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  }, []);
 
-  const resetAll = () =>
-    setInputs({
-      billAmount: 68.5,
-      tipPercentage: 12.5,
-      guests: 2,
-      roundUp: false,
-      useFixedTip: false,
-      fixedTip: 5,
-      removeServiceCharge: false,
-      serviceChargeRate: 12.5,
-    });
+  const chartData = useMemo(() => buildChartData(results), [results]);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Tip Calculator | Restaurant Tip Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Tip Calculator | Restaurant Tip Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Tip Calculator | Restaurant Tip Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Tip Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Split a bill with a tip calculator',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
-
-      <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Tip Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
-            Calculate gratuities in seconds, split the bill by headcount, and share round-ups so the group
-            stays in sync.
-          </p>
-        </div>
-      </section>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        keywords={keywords}
+        articleTags={keywords}
+        jsonLd={schema}
+      />
 
       <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 bg-white text-slate-900 shadow-md dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-100">
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Tip Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Quickly set the right gratuity, optionally remove automatic service charges, and share the
+              split with your dining companions.
+            </p>
+          </header>
+
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Receipt className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-emerald-600 dark:text-emerald-300"
+            borderColor="border-emerald-200 dark:border-emerald-800/60"
+            bgColor="bg-emerald-50/70 dark:bg-emerald-900/40"
+            textColor="text-emerald-900 dark:text-emerald-50"
+            footerColor="text-emerald-700 dark:text-emerald-200"
+          />
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)]">
+            <Card className="border border-emerald-200 bg-white dark:border-emerald-900 dark:bg-slate-950">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calculator className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Percent className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
                   Bill details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="billAmount">Bill total (£)</Label>
-                  <Input
-                    id="billAmount"
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    inputMode="decimal"
-                    value={inputs.billAmount}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        billAmount: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tipPercentage">Tip percentage</Label>
-                  <Slider
-                    id="tipPercentage"
-                    className="mt-3"
-                    value={[Number(inputs.tipPercentage)]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        tipPercentage: Number(value[0].toFixed(1)),
-                      }))
-                    }
-                    min={0}
-                    max={30}
-                    step={0.5}
-                    disabled={inputs.useFixedTip}
-                  />
-                  <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                    <span>0%</span>
-                    <span>{inputs.tipPercentage.toFixed(1)}%</span>
-                    <span>30%</span>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="billAmount">Bill total (£)</Label>
+                      <Input
+                        id="billAmount"
+                        inputMode="decimal"
+                        value={inputs.billAmount}
+                        onChange={handleInputChange('billAmount')}
+                        placeholder="e.g. 68.50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tipPercentage">Tip percentage (%)</Label>
+                      <Input
+                        id="tipPercentage"
+                        inputMode="decimal"
+                        value={inputs.tipPercentage}
+                        onChange={handleInputChange('tipPercentage')}
+                        placeholder="e.g. 12.5"
+                        disabled={inputs.useFixedTip}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fixedTip">Fixed tip (£)</Label>
+                      <Input
+                        id="fixedTip"
+                        inputMode="decimal"
+                        value={inputs.fixedTip}
+                        onChange={handleInputChange('fixedTip')}
+                        placeholder="e.g. 5"
+                        disabled={!inputs.useFixedTip}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="guests">Number of people splitting</Label>
+                      <Input
+                        id="guests"
+                        inputMode="decimal"
+                        value={inputs.guests}
+                        onChange={handleInputChange('guests')}
+                        placeholder="e.g. 2"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="serviceChargeRate">Service charge rate (%)</Label>
+                      <Input
+                        id="serviceChargeRate"
+                        inputMode="decimal"
+                        value={inputs.serviceChargeRate}
+                        onChange={handleInputChange('serviceChargeRate')}
+                        placeholder="e.g. 12.5"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="guests">Number of guests</Label>
-                  <Slider
-                    id="guests"
-                    className="mt-3"
-                    value={[Number(inputs.guests)]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        guests: Number(value[0].toFixed(0)),
-                      }))
-                    }
-                    min={1}
-                    max={12}
-                    step={1}
-                  />
-                  <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                    <span>1</span>
-                    <span>{inputs.guests}</span>
-                    <span>12</span>
+
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={inputs.useFixedTip}
+                        onChange={handleCheckboxChange('useFixedTip')}
+                      />
+                      Use fixed tip instead of percentage
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={inputs.roundUp}
+                        onChange={handleCheckboxChange('roundUp')}
+                      />
+                      Round total up to nearest pound
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={inputs.removeServiceCharge}
+                        onChange={handleCheckboxChange('removeServiceCharge')}
+                      />
+                      Remove automatic service charge before tipping
+                    </label>
                   </div>
-                </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate tip & split
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset inputs
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-emerald-200 bg-emerald-50 text-slate-900 shadow-md dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Percent className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
-                  Tip options
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <Label className="font-medium">Use fixed tip amount</Label>
-                  <Button variant={inputs.useFixedTip ? 'default' : 'outline'} onClick={() => toggleBoolean('useFixedTip')}>
-                    {inputs.useFixedTip ? 'Fixed amount' : 'Percentage'}
-                  </Button>
-                </div>
-                {inputs.useFixedTip && (
-                  <div className="space-y-2">
-                    <Label htmlFor="fixedTip">Tip amount (£)</Label>
-                    <Input
-                      id="fixedTip"
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      inputMode="decimal"
-                      value={inputs.fixedTip}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          fixedTip: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <Label className="font-medium">Round total up</Label>
-                  <Button variant={inputs.roundUp ? 'default' : 'outline'} onClick={() => toggleBoolean('roundUp')}>
-                    {inputs.roundUp ? 'Rounded' : 'Exact'}
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="font-medium">Remove service charge {`(${inputs.serviceChargeRate.toFixed(1)}%)`}</Label>
-                  <Button
-                    variant={inputs.removeServiceCharge ? 'default' : 'outline'}
-                    onClick={() => toggleBoolean('removeServiceCharge')}
-                  >
-                    {inputs.removeServiceCharge ? 'Removed' : 'Included'}
-                  </Button>
-                </div>
-                {inputs.removeServiceCharge && (
-                  <div className="space-y-2">
-                    <Label htmlFor="serviceChargeRate">Service charge rate (%)</Label>
-                    <Input
-                      id="serviceChargeRate"
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      inputMode="decimal"
-                      value={inputs.serviceChargeRate}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          serviceChargeRate: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your bill details and press
+                    <span className="font-semibold"> Calculate tip & split</span> to see the gratuity and
+                    per-person share.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-emerald-200 bg-white shadow-sm dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-200" aria-hidden="true" />
+                        Bill summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-100">Adjusted bill</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.adjustedBill)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-100">Tip amount</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.tipAmount)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-100">Total to pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.total)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-100">Per person</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.perPerson)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-100">Effective tip</p>
+                        <p className="text-2xl font-semibold">
+                          {percentFormatter.format(results.effectiveRate)}%
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="tip-calculation"
+                          title="Tip Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Receipt className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                        Service charge insights
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                      {results.serviceChargeRemoved > 0 ? (
+                        <p>
+                          Automatic service charge removed: {currencyFormatter.format(results.serviceChargeRemoved)}.
+                          Your tip is applied to the original subtotal.
+                        </p>
+                      ) : (
+                        <p>No service charge adjustments applied to this calculation.</p>
+                      )}
+                      <p>
+                        Share the per-person amount via your group chat so everyone can transfer the same
+                        figure immediately.
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PieChart className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                        Bill composition
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Bill vs tip" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <Card className="border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Group tip summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span>Adjusted bill</span>
-                  <span>{currencyFormatter.format(results.adjustedBill)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>
-                    Tip {inputs.useFixedTip ? '(fixed)' : `(${inputs.tipPercentage.toFixed(1)}%)`}
-                  </span>
-                  <span>{currencyFormatter.format(results.tipAmount)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Total</span>
-                  <span>{currencyFormatter.format(results.total)}</span>
-                </div>
-                <div className="flex items-center justify-between font-semibold text-slate-700 dark:text-slate-200">
-                  <span>Per person ({inputs.guests})</span>
-                  <span>{currencyFormatter.format(results.perPerson)}</span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Effective tip rate {results.effectiveRate.toFixed(2)}%
-                </p>
-              </CardContent>
-            </Card>
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
 
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Restaurant tip calculator best practices
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Always double-check whether service is already included before adding more. The restaurant
-                tip calculator makes it simple to remove automatic charges and replace them with your own
-                figure when you prefer.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Tip percentage calculator etiquette
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Switch the tip percentage calculator slider to align with local customs or service quality.
-                Use preset percentages like 10%, 12.5%, and 20% for faster decisions.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Bill tip calculator for travel
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                When travelling, enter the bill in local currency and note the effective tip rate. The bill tip
-                calculator ensures you comply with international norms without guesswork.
-              </p>
-            </section>
-
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <FAQSection faqs={tipFaqs} />
-            </section>
-
-            <Button variant="outline" className="w-full" onClick={resetAll}>
-              Reset calculator
-            </Button>
-          </div>
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
       </CalculatorWrapper>
     </div>

@@ -1,40 +1,83 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Receipt, FileWarning, BadgeCheck } from 'lucide-react';
-
+import React, { useCallback, useMemo, useState, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import {
+  Calculator,
+  Receipt,
+  FileWarning,
+  CheckCircle,
+  PieChart,
+} from 'lucide-react';
 
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
+
+const pagePath = '/calculators/tax-refund-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/tax-refund-calculator';
-
-const schemaKeywords = [
-  'P800',
-  'Tax Overpayment',
-  'Expenses Claim',
-  'HMRC Refund',
-  'PAYE Tax',
-];
+const pageTitle = 'Tax Refund Calculator UK | Estimate PAYE Rebates';
+const metaDescription =
+  'Estimate potential HMRC tax refunds by comparing PAYE tax paid with expected liability and allowable expenses.';
+const keywords = getMappedKeywords('Tax Refund Calculator');
 
 const faqItems = [
   {
-    question: 'When might I receive a tax refund?',
+    question: 'When might I receive a PAYE tax refund?',
     answer:
-      'Refunds are common if you overpaid tax due to an emergency tax code, a late-year pay rise, or expenses that HMRC did not process. HMRC usually issues a P800 calculation when you overpay.',
+      'Refunds are common after emergency tax codes, leaving a job mid-year, receiving backdated pay, or claiming allowable expenses that reduce your taxable income.',
   },
   {
-    question: 'What is a P800?',
+    question: 'What is a P800 tax calculation?',
     answer:
-      'A P800 is a notice from HMRC detailing tax you overpaid or underpaid through PAYE. If it shows a refund, HMRC usually pays it automatically or lets you claim online.',
+      'HMRC issues a P800 to show whether you overpaid or underpaid tax. If it shows a refund, HMRC may send it automatically or invite you to claim online. Use this calculator to anticipate the amount.',
   },
   {
-    question: 'Can I claim expenses for a refund?',
+    question: 'How can I strengthen a refund claim?',
     answer:
-      'Yes. Claim allowable expenses such as professional fees or mileage. If granted, HMRC adjusts your tax code or issues a refund for the relevant tax year.',
+      'Keep payslips, P60s, and receipts for expenses such as professional fees or uniforms. If the calculator shows a refund, use these documents when submitting your claim through HMRC.',
+  },
+];
+
+const emotionalMessage =
+  'Overpaying tax means lending HMRC your hard-earned money interest free. Spot the mismatch, file the claim, and put those pounds back to work for you.';
+const emotionalQuote = {
+  text: 'A penny saved is a penny earned.',
+  author: 'Benjamin Franklin',
+};
+
+const directoryLinks = [
+  {
+    url: '/#income',
+    label: 'Browse income & tax tools',
+    description: 'Cross-check PAYE, dividend, and self-employed scenarios in one hub.',
+  },
+  {
+    url: '/calculators/self-assessment-calculator',
+    label: 'Self Assessment Tax Calculator',
+    description: 'Model payments on account and balancing payments for freelance income.',
+  },
+  {
+    url: '/calculators/take-home-pay-calculator',
+    label: 'Take-Home Pay Calculator',
+    description: 'See how annual refunds change your monthly budget.',
   },
 ];
 
@@ -44,24 +87,46 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 2,
 });
 
-const PERSONAL_ALLOWANCE = 12570;
+const percentFormatter = new Intl.NumberFormat('en-GB', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+const defaultInputs = {
+  yearToDatePay: '32,000',
+  yearToDateTaxPaid: '5,200',
+  expectedAnnualSalary: '42,000',
+  monthsWorked: '9',
+  personalAllowance: '12,570',
+  allowableExpenses: '500',
+};
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const PERSONAL_ALLOWANCE_DEFAULT = 12570;
 const BASIC_RATE_LIMIT = 50270;
 const HIGHER_RATE_LIMIT = 125140;
 
-function annualTax(income, personalAllowance) {
-  let allowance = personalAllowance;
+const annualTax = (income, personalAllowanceInput) => {
+  const baseAllowance = personalAllowanceInput || PERSONAL_ALLOWANCE_DEFAULT;
+  let allowance = baseAllowance;
   if (income > 100000) {
     const reduction = Math.floor((income - 100000) / 2);
-    allowance = Math.max(0, allowance - reduction);
+    allowance = Math.max(0, baseAllowance - reduction);
   }
   const taxable = Math.max(0, income - allowance);
   let tax = 0;
-  const basicBand = Math.min(taxable, BASIC_RATE_LIMIT - allowance);
+  const basicBand = Math.min(taxable, Math.max(0, BASIC_RATE_LIMIT - allowance));
   tax += basicBand * 0.2;
 
   const higherBand = Math.min(
     Math.max(0, taxable - basicBand),
-    HIGHER_RATE_LIMIT - BASIC_RATE_LIMIT,
+    Math.max(0, HIGHER_RATE_LIMIT - BASIC_RATE_LIMIT)
   );
   tax += higherBand * 0.4;
 
@@ -69,315 +134,402 @@ function annualTax(income, personalAllowance) {
   tax += additionalBand * 0.45;
 
   return { tax, allowanceUsed: allowance };
-}
+};
 
-export default function TaxRefundCalculator() {
-  const [inputs, setInputs] = useState({
-    yearToDatePay: '32000',
-    yearToDateTaxPaid: '5200',
-    expectedAnnualSalary: '42000',
-    monthsWorked: '9',
-    personalAllowance: '12570',
-    allowableExpenses: '500',
+const calculateRefund = (inputs) => {
+  const yearToDatePay = Math.max(parseNumber(inputs.yearToDatePay), 0);
+  const yearToDateTaxPaid = Math.max(parseNumber(inputs.yearToDateTaxPaid), 0);
+  const expectedAnnualSalary = Math.max(parseNumber(inputs.expectedAnnualSalary), 0);
+  const monthsWorked = Math.min(12, Math.max(1, parseNumber(inputs.monthsWorked)));
+  const personalAllowance = Math.max(parseNumber(inputs.personalAllowance), 0) || PERSONAL_ALLOWANCE_DEFAULT;
+  const allowableExpenses = Math.max(parseNumber(inputs.allowableExpenses), 0);
+
+  const adjustedAnnualIncome = Math.max(0, expectedAnnualSalary - allowableExpenses);
+  const { tax: annualTaxDue, allowanceUsed } = annualTax(adjustedAnnualIncome, personalAllowance);
+  const expectedTaxToDate = (annualTaxDue * monthsWorked) / 12;
+
+  const overpayment = Math.max(0, yearToDateTaxPaid - expectedTaxToDate);
+  const underpayment = Math.max(0, expectedTaxToDate - yearToDateTaxPaid);
+  const refundLikelihood = overpayment > 0 ? 'Likely refund' : underpayment > 0 ? 'Likely underpayment' : 'On track';
+
+  const potentialRefundTriggers = [
+    yearToDateTaxPaid > expectedTaxToDate
+      ? 'Tax deducted at source exceeds PAYE for the year to date.'
+      : null,
+    allowableExpenses > 0 ? 'Allowable expenses reduce taxable income.' : null,
+    expectedAnnualSalary < (monthsWorked > 0 ? (yearToDatePay * 12) / monthsWorked : expectedAnnualSalary)
+      ? 'Income earlier in the year was higher than the annual salary projection.'
+      : null,
+  ].filter(Boolean);
+
+  return {
+    yearToDatePay,
+    yearToDateTaxPaid,
+    expectedAnnualSalary,
+    monthsWorked,
+    personalAllowance,
+    allowableExpenses,
+    annualTaxDue,
+    expectedTaxToDate,
+    overpayment,
+    underpayment,
+    refundLikelihood,
+    potentialRefundTriggers,
+    allowanceUsed,
+  };
+};
+
+const buildCsvData = (results, inputs) => {
+  if (!results) return null;
+
+  const rows = [
+    ['Input', 'Value'],
+    ['Pay received to date (£)', inputs.yearToDatePay],
+    ['Tax paid to date (£)', inputs.yearToDateTaxPaid],
+    ['Expected annual salary (£)', inputs.expectedAnnualSalary],
+    ['Months worked', inputs.monthsWorked],
+    ['Personal allowance (£)', inputs.personalAllowance],
+    ['Allowable expenses (£)', inputs.allowableExpenses],
+    [],
+    ['Output', 'Value'],
+    ['Expected tax to date (£)', currencyFormatter.format(results.expectedTaxToDate)],
+    ['Tax paid to date (£)', currencyFormatter.format(results.yearToDateTaxPaid)],
+    ['Potential refund (£)', currencyFormatter.format(results.overpayment)],
+    ['Potential underpayment (£)', currencyFormatter.format(results.underpayment)],
+    ['Projected annual tax (£)', currencyFormatter.format(results.annualTaxDue)],
+    ['Refund likelihood', results.refundLikelihood],
+  ];
+
+  if (results.potentialRefundTriggers.length) {
+    rows.push([], ['Potential refund triggers']);
+    results.potentialRefundTriggers.forEach((trigger) => rows.push([trigger]));
+  }
+
+  return rows;
+};
+
+const buildChartData = (results) => {
+  if (!results) return [];
+  return [
+    { name: 'Tax paid year to date', value: results.yearToDateTaxPaid, color: '#0ea5e9' },
+    { name: 'Expected tax year to date', value: results.expectedTaxToDate, color: '#6366f1' },
+    { name: 'Potential refund', value: results.overpayment, color: '#10b981' },
+  ].filter((item) => item.value > 0);
+};
+
+export default function TaxRefundCalculatorPage() {
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
+
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Tax Refund Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Salary & Tax Calculators', url: '/calculators#income' },
+      { name: 'Tax Refund Calculator', url: pagePath },
+    ],
+    faq: faqItems,
   });
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+      setHasCalculated(false);
+      setResults(null);
+      setCsvData(null);
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computed = calculateRefund(inputs);
+      setResults(computed);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computed, inputs));
+    },
+    [inputs]
+  );
+
+  const handleReset = useCallback(() => {
+    setInputs(defaultInputs);
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
   }, []);
 
-  const reset = useCallback(() => {
-    setInputs({
-      yearToDatePay: '32000',
-      yearToDateTaxPaid: '5200',
-      expectedAnnualSalary: '42000',
-      monthsWorked: '9',
-      personalAllowance: '12570',
-      allowableExpenses: '500',
-    });
-  }, []);
-
-  const results = useMemo(() => {
-    const yearToDatePay = Number(inputs.yearToDatePay) || 0;
-    const yearToDateTaxPaid = Number(inputs.yearToDateTaxPaid) || 0;
-    const expectedAnnualSalary = Number(inputs.expectedAnnualSalary) || 0;
-    const monthsWorked = Math.min(12, Math.max(1, Number(inputs.monthsWorked) || 0));
-    const personalAllowance = Math.max(0, Number(inputs.personalAllowance) || 0);
-    const allowableExpenses = Math.max(0, Number(inputs.allowableExpenses) || 0);
-
-    const adjustedAnnualIncome = Math.max(0, expectedAnnualSalary - allowableExpenses);
-    const { tax: annualTaxDue } = annualTax(adjustedAnnualIncome, personalAllowance);
-    const expectedTaxToDate = (annualTaxDue * monthsWorked) / 12;
-
-    const overpayment = Math.max(0, yearToDateTaxPaid - expectedTaxToDate);
-    const underpayment = Math.max(0, expectedTaxToDate - yearToDateTaxPaid);
-
-    const projectedYearEndTax = annualTaxDue;
-    const projectedYearEndPay = expectedAnnualSalary;
-
-    const potentialRefundTriggers = [
-      yearToDateTaxPaid > expectedTaxToDate ? 'Tax code emergency rate applied earlier in the year.' : null,
-      allowableExpenses > 0 ? 'Claiming allowable expenses that reduce taxable income.' : null,
-      expectedAnnualSalary < (yearToDatePay * 12) / monthsWorked
-        ? 'Late-year pay rise led to tax calculated on higher monthly pay than annual salary.'
-        : null,
-    ].filter(Boolean);
-
-    return {
-      yearToDatePay,
-      yearToDateTaxPaid,
-      expectedAnnualSalary,
-      monthsWorked,
-      personalAllowance,
-      allowableExpenses,
-      annualTaxDue,
-      expectedTaxToDate,
-      overpayment,
-      underpayment,
-      projectedYearEndTax,
-      projectedYearEndPay,
-      potentialRefundTriggers,
-    };
-  }, [inputs]);
+  const chartData = useMemo(() => buildChartData(results), [results]);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Tax Refund &amp; Tax Rebate Calculator</title>
-        <meta
-          name="description"
-          content="Tax Refund Calculator estimating how much tax you overpaid during the tax year. Model P800 outcomes, expenses claims, and HMRC refunds."
-        />
-        <meta
-          name="keywords"
-          content="Tax Refund Calculator, Overpaid Tax, Tax Year"
-        />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FinancialProduct',
-              name: 'Tax Refund Calculator',
-              description:
-                'Estimate PAYE tax overpayment using P800 style comparisons, tax overpayment scenarios, expenses claims, and HMRC refund guidance.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        keywords={keywords}
+        articleTags={keywords}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Tax Refund Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-blue-100">
-            Calculate tax refund scenarios, assess rebate eligibility, and understand tax code errors
-            to claim tax back through the HMRC process.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-600/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Tax Refund Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Compare PAYE tax deducted with the expected liability for your annual salary, taking
+              into account personal allowance adjustments and allowable expenses.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-blue-200 dark:border-blue-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-blue-500" />
-                PAYE Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="yearToDatePay" className="text-sm font-medium">
-                  Pay received this tax year (GBP)
-                </Label>
-                <Input
-                  id="yearToDatePay"
-                  inputMode="decimal"
-                  value={inputs.yearToDatePay}
-                  onChange={(event) => handleChange('yearToDatePay', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="yearToDateTaxPaid" className="text-sm font-medium">
-                  Tax paid this tax year (GBP)
-                </Label>
-                <Input
-                  id="yearToDateTaxPaid"
-                  inputMode="decimal"
-                  value={inputs.yearToDateTaxPaid}
-                  onChange={(event) => handleChange('yearToDateTaxPaid', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="expectedAnnualSalary" className="text-sm font-medium">
-                  Expected annual salary (GBP)
-                </Label>
-                <Input
-                  id="expectedAnnualSalary"
-                  inputMode="decimal"
-                  value={inputs.expectedAnnualSalary}
-                  onChange={(event) => handleChange('expectedAnnualSalary', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="monthsWorked" className="text-sm font-medium">
-                  Months worked so far
-                </Label>
-                <Input
-                  id="monthsWorked"
-                  inputMode="numeric"
-                  value={inputs.monthsWorked}
-                  onChange={(event) => handleChange('monthsWorked', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="personalAllowance" className="text-sm font-medium">
-                  Personal allowance (GBP)
-                </Label>
-                <Input
-                  id="personalAllowance"
-                  inputMode="decimal"
-                  value={inputs.personalAllowance}
-                  onChange={(event) => handleChange('personalAllowance', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="allowableExpenses" className="text-sm font-medium">
-                  Allowable expenses to claim (GBP)
-                </Label>
-                <Input
-                  id="allowableExpenses"
-                  inputMode="decimal"
-                  value={inputs.allowableExpenses}
-                  onChange={(event) => handleChange('allowableExpenses', event.target.value)}
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Receipt className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-sky-600 dark:text-sky-300"
+            borderColor="border-sky-200 dark:border-sky-800/60"
+            bgColor="bg-sky-50/70 dark:bg-sky-900/40"
+            textColor="text-sky-900 dark:text-sky-50"
+            footerColor="text-sky-700 dark:text-sky-200"
+          />
 
-          <div className="space-y-6">
-            <Card className="border border-blue-200 dark:border-blue-900 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)]">
+            <Card className="border border-sky-200 bg-white dark:border-sky-900 dark:bg-slate-950">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Receipt className="h-5 w-5 text-blue-500" />
-                  Refund Result
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <FileWarning className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                  PAYE details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Expected tax to date</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.expectedTaxToDate)}
-                    </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="yearToDatePay">Pay received this tax year (£)</Label>
+                      <Input
+                        id="yearToDatePay"
+                        inputMode="decimal"
+                        value={inputs.yearToDatePay}
+                        onChange={handleInputChange('yearToDatePay')}
+                        placeholder="e.g. 32,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="yearToDateTaxPaid">Tax deducted this tax year (£)</Label>
+                      <Input
+                        id="yearToDateTaxPaid"
+                        inputMode="decimal"
+                        value={inputs.yearToDateTaxPaid}
+                        onChange={handleInputChange('yearToDateTaxPaid')}
+                        placeholder="e.g. 5,200"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="expectedAnnualSalary">Expected annual salary (£)</Label>
+                      <Input
+                        id="expectedAnnualSalary"
+                        inputMode="decimal"
+                        value={inputs.expectedAnnualSalary}
+                        onChange={handleInputChange('expectedAnnualSalary')}
+                        placeholder="e.g. 42,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="monthsWorked">Months worked so far</Label>
+                      <Input
+                        id="monthsWorked"
+                        inputMode="decimal"
+                        value={inputs.monthsWorked}
+                        onChange={handleInputChange('monthsWorked')}
+                        placeholder="e.g. 9"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="personalAllowance">Personal allowance (£)</Label>
+                      <Input
+                        id="personalAllowance"
+                        inputMode="decimal"
+                        value={inputs.personalAllowance}
+                        onChange={handleInputChange('personalAllowance')}
+                        placeholder="e.g. 12,570"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="allowableExpenses">Allowable expenses (£)</Label>
+                      <Input
+                        id="allowableExpenses"
+                        inputMode="decimal"
+                        value={inputs.allowableExpenses}
+                        onChange={handleInputChange('allowableExpenses')}
+                        placeholder="e.g. 500"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Tax paid to date</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.yearToDateTaxPaid)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Estimated refund</p>
-                    <p
-                      className={`text-lg font-semibold ${
-                        results.overpayment > 0 ? 'text-blue-600' : 'text-slate-900 dark:text-slate-100'
-                      }`}
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate potential refund
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
                     >
-                      {currencyFormatter.format(results.overpayment)}
-                    </p>
+                      Reset inputs
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Possible underpayment</p>
-                    <p
-                      className={`text-lg font-semibold ${
-                        results.underpayment > 0 ? 'text-rose-600' : 'text-slate-900 dark:text-slate-100'
-                      }`}
-                    >
-                      {currencyFormatter.format(results.underpayment)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Projected year-end tax</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.projectedYearEndTax)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Projected year-end income</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.projectedYearEndPay)}
-                    </p>
-                  </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-blue-200 dark:border-blue-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <FileWarning className="h-5 w-5 text-blue-500" />
-                  Refund Triggers
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                {results.potentialRefundTriggers.length > 0 ? (
-                  <ul className="list-disc pl-6 space-y-1">
-                    {results.potentialRefundTriggers.map((item, index) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>
-                    No obvious overpayment signals detected. Double-check tax code notices or contact
-                    HMRC if you believe an error exists.
-                  </p>
-                )}
-                <p>
-                  Keep your payslips and P60/P45 records. HMRC may request evidence when processing a
-                  PAYE tax refund or adjusting your tax code.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Add your payslip figures and press
+                    <span className="font-semibold"> Calculate potential refund</span> to compare tax paid
+                    against expected liability.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-sky-200 bg-white shadow-sm dark:border-sky-900 dark:bg-sky-900/30 dark:text-sky-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <CheckCircle className="h-5 w-5 text-sky-600 dark:text-sky-200" aria-hidden="true" />
+                        Refund overview
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-100">Expected tax to date</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.expectedTaxToDate)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-100">Tax paid to date</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.yearToDateTaxPaid)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-100">Potential refund</p>
+                        <p className="text-2xl font-semibold text-emerald-500">
+                          {currencyFormatter.format(results.overpayment)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-100">Potential underpayment</p>
+                        <p className="text-2xl font-semibold text-rose-500">
+                          {currencyFormatter.format(results.underpayment)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-100">Refund likelihood</p>
+                        <p className="text-lg font-semibold">{results.refundLikelihood}</p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="tax-refund-calculation"
+                          title="Tax Refund Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Receipt className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                        Allowances & triggers
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center justify-between">
+                        <span>Personal allowance used</span>
+                        <span>{currencyFormatter.format(results.allowanceUsed)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Projected annual tax</span>
+                        <span>{currencyFormatter.format(results.annualTaxDue)}</span>
+                      </div>
+                      {results.potentialRefundTriggers.length > 0 ? (
+                        <div>
+                          <p className="font-medium text-slate-700 dark:text-slate-200">Potential refund triggers</p>
+                          <ul className="mt-2 list-disc space-y-1 pl-5">
+                            {results.potentialRefundTriggers.map((trigger, index) => (
+                              <li key={`${trigger}-${index}`}>{trigger}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        <p>
+                          No obvious triggers detected—double-check your tax code and expenses before
+                          submitting a claim.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PieChart className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                        Tax comparison
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Tax paid vs expected" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Tax Refund Eligibility with Confidence
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Use this tool to assess rebate eligibility after a tax code error or late-year pay rise.
-            Understanding your position prepares you for the HMRC process.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Spot Tax Code Error Quickly
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Compare expected tax against PAYE deductions to see if an emergency tax code caused an
-            overpayment. Correcting the code prevents future P800 adjustments.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Claim Tax Back Using HMRC Process
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            If the calculator shows a refund, claim tax back through your Personal Tax Account or wait
-            for HMRC to issue instructions. Provide expenses claims to maximise your tax rebate.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );

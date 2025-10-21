@@ -478,11 +478,44 @@ export const calculatorListings = [
         keywords: ['emergency fund calculator', 'emergency savings calculator'],
       },
       {
+        name: 'Subscription Cost Calculator',
+        slug: 'subscription-cost-calculator',
+        path: '/calculators/subscription-cost-calculator',
+        keywords: [
+          'subscription cost calculator',
+          'subscription tracker',
+          'subscription budget calculator',
+          'manage subscriptions',
+        ],
+      },
+      {
+        name: 'Travel Budget Calculator',
+        slug: 'travel-budget-calculator',
+        path: '/calculators/travel-budget-calculator',
+        keywords: [
+          'travel budget calculator',
+          'holiday budget calculator',
+          'trip budget calculator',
+          'vacation budget planner',
+        ],
+      },
+      {
+        name: 'Wedding Budget Calculator',
+        slug: 'wedding-budget-calculator',
+        path: '/calculators/wedding-budget-calculator',
+        keywords: [
+          'wedding budget calculator',
+          'wedding cost calculator',
+          'wedding budget planner',
+        ],
+      },
+      {
         name: 'Weekly Budget Planner',
         slug: 'weekly-budget-planner',
         path: '/calculators/weekly-budget-planner',
         keywords: [
           'weekly budget planner',
+          'weekly budget calculator',
           'budget planner',
           'budget spreadsheet',
           'budget tracker',
@@ -554,6 +587,7 @@ export const calculatorListings = [
         slug: 'zero-based-budgeting-calculator',
         path: '/calculators/zero-based-budgeting-calculator',
         keywords: [
+          'zero based budgeting calculator',
           'zero based budgeting',
           'zbb',
           'budget planner',
@@ -641,9 +675,9 @@ export const calculatorListings = [
         path: '/calculators/vat-calculator',
         keywords: [
           'vat calculator',
-          'online vat calculator',
-          'tax calculator',
-          'tax return calculator',
+          'vat reverse charge calculator',
+          'uk vat calculator',
+          'vat tax calculator',
         ],
       },
       {
@@ -668,6 +702,17 @@ export const calculatorListings = [
           'tax calculator',
           'tax return calculator',
           'tax estimator',
+        ],
+      },
+      {
+        name: 'Tax Refund Calculator',
+        slug: 'tax-refund-calculator',
+        path: '/calculators/tax-refund-calculator',
+        keywords: [
+          'tax refund calculator',
+          'tax rebate calculator',
+          'hmrc tax refund calculator',
+          'tax rebate uk',
         ],
       },
       {
@@ -848,6 +893,17 @@ export const calculatorListings = [
           'hourly salary calculator',
           'weekly salary calculator',
           'daily salary calculator',
+        ],
+      },
+      {
+        name: 'Take-Home Pay Calculator',
+        slug: 'take-home-pay-calculator',
+        path: '/calculators/take-home-pay-calculator',
+        keywords: [
+          'take home pay calculator',
+          'salary take home pay calculator',
+          'after tax income calculator',
+          'salary after tax calculator',
         ],
       },
       {
