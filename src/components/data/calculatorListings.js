@@ -95,6 +95,16 @@ export const calculatorListings = [
         ],
       },
       {
+        name: 'Student Loan Repayment Calculator',
+        slug: 'student-loan-repayment-calculator',
+        path: '/calculators/student-loan-repayment-calculator',
+        keywords: [
+          'student loan repayment calculator',
+          'student loan payoff calculator',
+          'uk student loan repayments',
+        ],
+      },
+      {
         name: 'Average Daily Balance Calculator',
         slug: 'average-daily-balance-calculator',
         path: '/calculators/average-daily-balance-calculator',
@@ -177,6 +187,17 @@ export const calculatorListings = [
           'retirement savings calculator',
         ],
       },
+      {
+        name: 'Retirement Savings Calculator',
+        slug: 'retirement-savings-calculator',
+        path: '/calculators/retirement-savings-calculator',
+        keywords: [
+          'retirement savings calculator',
+          'pension savings calculator uk',
+          'retirement pot calculator',
+          'pension growth calculator',
+        ],
+      },
     ],
   },
   {
@@ -252,9 +273,8 @@ export const calculatorListings = [
         path: '/calculators/roi-calculator',
         keywords: [
           'roi calculator',
-          'return on investment formula',
-          'investment return calculator',
-          'return calculator',
+          'return on investment calculator',
+          'investment roi calculator',
           'cagr calculator',
         ],
       },
@@ -276,10 +296,9 @@ export const calculatorListings = [
         path: '/calculators/savings-calculator',
         keywords: [
           'savings calculator',
-          'compound interest calculator',
-          'interest calculator savings',
+          'savings interest calculator',
+          'savings planner',
           'savings account calculator',
-          'fixed deposit calculator',
         ],
       },
     ],
@@ -352,11 +371,11 @@ export const calculatorListings = [
         slug: 'property-flipping-calculator',
         path: '/calculators/property-flipping-calculator',
         keywords: [
-          'rental property calculator',
-          'roi calculator',
-          'investment calculator',
-          'mortgage loan calculator',
-          'property tax calculator',
+          'property flipping calculator',
+          'flip calculator',
+          'property renovation calculator',
+          'property investment calculator',
+          'buy to sell calculator',
         ],
       },
       {
@@ -364,11 +383,22 @@ export const calculatorListings = [
         slug: 'rent-to-buy-calculator',
         path: '/calculators/rent-to-buy-calculator',
         keywords: [
-          'mortgage calculator',
-          'remortgage calculator',
-          'mortgage payment calculator',
-          'loan calculator',
-          'home loan calculator',
+          'rent to buy calculator',
+          'rent to own calculator uk',
+          'rent to buy scheme calculator',
+          'rent to buy agreement calculator',
+          'rent to buy uk',
+        ],
+      },
+      {
+        name: 'Rent vs Buy Calculator',
+        slug: 'rent-vs-buy-calculator',
+        path: '/calculators/rent-vs-buy-calculator',
+        keywords: [
+          'rent vs buy calculator',
+          'rent or buy calculator',
+          'should i rent or buy',
+          'rent vs buy uk',
         ],
       },
       {
@@ -377,10 +407,10 @@ export const calculatorListings = [
         path: '/calculators/rental-yield-calculator',
         keywords: [
           'rental yield calculator',
-          'buy to let mortgage calculator',
-          'yield calculator',
-          'rental property calculator',
-          'roi calculator',
+          'rental yield',
+          'buy to let yield calculator',
+          'rental roi calculator',
+          'property yield calculator',
         ],
       },
       {
@@ -389,10 +419,10 @@ export const calculatorListings = [
         path: '/calculators/reverse-mortgage-calculator',
         keywords: [
           'reverse mortgage calculator',
-          'mortgage calculator',
-          'remortgage calculator',
-          'home loan calculator',
-          'housing loan calculator',
+          'equity release calculator',
+          'lifetime mortgage calculator',
+          'equity release uk',
+          'reverse mortgage uk',
         ],
       },
       {
@@ -448,11 +478,44 @@ export const calculatorListings = [
         keywords: ['emergency fund calculator', 'emergency savings calculator'],
       },
       {
+        name: 'Subscription Cost Calculator',
+        slug: 'subscription-cost-calculator',
+        path: '/calculators/subscription-cost-calculator',
+        keywords: [
+          'subscription cost calculator',
+          'subscription tracker',
+          'subscription budget calculator',
+          'manage subscriptions',
+        ],
+      },
+      {
+        name: 'Travel Budget Calculator',
+        slug: 'travel-budget-calculator',
+        path: '/calculators/travel-budget-calculator',
+        keywords: [
+          'travel budget calculator',
+          'holiday budget calculator',
+          'trip budget calculator',
+          'vacation budget planner',
+        ],
+      },
+      {
+        name: 'Wedding Budget Calculator',
+        slug: 'wedding-budget-calculator',
+        path: '/calculators/wedding-budget-calculator',
+        keywords: [
+          'wedding budget calculator',
+          'wedding cost calculator',
+          'wedding budget planner',
+        ],
+      },
+      {
         name: 'Weekly Budget Planner',
         slug: 'weekly-budget-planner',
         path: '/calculators/weekly-budget-planner',
         keywords: [
           'weekly budget planner',
+          'weekly budget calculator',
           'budget planner',
           'budget spreadsheet',
           'budget tracker',
@@ -524,6 +587,7 @@ export const calculatorListings = [
         slug: 'zero-based-budgeting-calculator',
         path: '/calculators/zero-based-budgeting-calculator',
         keywords: [
+          'zero based budgeting calculator',
           'zero based budgeting',
           'zbb',
           'budget planner',
@@ -584,15 +648,25 @@ export const calculatorListings = [
         ],
       },
       {
+        name: 'Self Assessment Calculator',
+        slug: 'self-assessment-calculator',
+        path: '/calculators/self-assessment-calculator',
+        keywords: [
+          'self assessment calculator',
+          'self assessment tax calculator',
+          'hmrc self assessment calculator',
+        ],
+      },
+      {
         name: 'Property Tax Calculator',
         slug: 'property-tax-calculator',
         path: '/calculators/property-tax-calculator',
         keywords: [
-          'stamp duty calculator',
-          'tax calculator',
-          'sdlt calculator',
           'property tax calculator',
-          'uk stamp duty calculator',
+          'uk property tax calculator',
+          'property tax rates uk',
+          'sdlt calculator',
+          'stamp duty calculator',
         ],
       },
       {
@@ -601,9 +675,9 @@ export const calculatorListings = [
         path: '/calculators/vat-calculator',
         keywords: [
           'vat calculator',
-          'online vat calculator',
-          'tax calculator',
-          'tax return calculator',
+          'vat reverse charge calculator',
+          'uk vat calculator',
+          'vat tax calculator',
         ],
       },
       {
@@ -628,6 +702,17 @@ export const calculatorListings = [
           'tax calculator',
           'tax return calculator',
           'tax estimator',
+        ],
+      },
+      {
+        name: 'Tax Refund Calculator',
+        slug: 'tax-refund-calculator',
+        path: '/calculators/tax-refund-calculator',
+        keywords: [
+          'tax refund calculator',
+          'tax rebate calculator',
+          'hmrc tax refund calculator',
+          'tax rebate uk',
         ],
       },
       {
@@ -747,6 +832,16 @@ export const calculatorListings = [
         path: '/calculators/overtime-rate-calculator',
         keywords: ['overtime rate calculator'],
       },
+      {
+        name: 'Severance Pay Calculator',
+        slug: 'severance-pay-calculator',
+        path: '/calculators/severance-pay-calculator',
+        keywords: [
+          'severance pay calculator',
+          'redundancy package calculator',
+          'termination pay calculator',
+        ],
+      },
     ],
   },
   {
@@ -791,10 +886,24 @@ export const calculatorListings = [
         path: '/calculators/salary-calculator',
         keywords: [
           'salary calculator',
+          'gross salary calculator',
+          'monthly salary calculator',
           'annual salary calculator',
-          'gross pay calculator',
           'yearly salary calculator',
-          'hourly wage calculator',
+          'hourly salary calculator',
+          'weekly salary calculator',
+          'daily salary calculator',
+        ],
+      },
+      {
+        name: 'Take-Home Pay Calculator',
+        slug: 'take-home-pay-calculator',
+        path: '/calculators/take-home-pay-calculator',
+        keywords: [
+          'take home pay calculator',
+          'salary take home pay calculator',
+          'after tax income calculator',
+          'salary after tax calculator',
         ],
       },
       {
@@ -803,10 +912,8 @@ export const calculatorListings = [
         path: '/calculators/salary-sacrifice-calculator',
         keywords: [
           'salary sacrifice calculator',
-          'net income calculator',
-          'pay after tax',
-          'net pay calculator',
-          'take home pay calculator',
+          'salary sacrifice pension calculator',
+          'salary sacrifice uk',
         ],
       },
     ],

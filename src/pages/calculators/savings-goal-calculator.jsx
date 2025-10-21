@@ -1,40 +1,77 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, PiggyBank, TrendingUp, Target } from 'lucide-react';
-
+import React, { useCallback, useMemo, useState, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Calculator, Target, TrendingUp, LineChart, BookOpen } from 'lucide-react';
 
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
+
+const pagePath = '/calculators/savings-goal-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/savings-goal-calculator';
-
-const schemaKeywords = [
-  'Future Value',
-  'Interest Rate',
-  'Initial Deposit',
-  'Savings Target',
-  'Personal Finance',
-];
+const pageTitle = 'Savings Goal Calculator UK | Time to Target Planner';
+const metaDescription =
+  'Plan your UK savings goal with monthly contributions and compound interest. Estimate the time to target and interest earned with our savings goal calculator.';
+const keywords = getMappedKeywords('Savings Goal Calculator');
 
 const faqItems = [
   {
-    question: 'How often should I review my savings goal?',
+    question: 'How often should I check my progress?',
     answer:
-      'Check progress at least quarterly. Adjust contributions if your circumstances change or you receive windfalls.',
+      'Review progress monthly and adjust contributions after pay rises or expense changes. Re-running the calculator keeps your plan aligned with your cash flow.',
   },
   {
-    question: 'What interest rate should I assume?',
+    question: 'What interest rate should I use?',
     answer:
-      'Use a realistic rate reflecting your savings account or investment strategy. Conservative estimates prevent overestimating growth.',
+      'Use the rate offered by your savings account or investment. If uncertain, err on the conservative side so you are not relying on high returns to reach the goal.',
   },
   {
-    question: 'How can I reach targets faster?',
+    question: 'Can I model contribution increases?',
     answer:
-      'Increase monthly contributions, make lump sum deposits, or move funds to higher-yield accounts where appropriate while managing risk.',
+      'Yes. Add an annual contribution increase percentage to reflect automatic savings escalators or expected pay rises.',
+  },
+];
+
+const emotionalMessage =
+  'Give your goal a timeline. When you can see the finish line, sticking to monthly contributions feels effortless and purposeful.';
+const emotionalQuote = {
+  text: 'A goal without a plan is just a wish.',
+  author: 'Antoine de Saint-Exupéry',
+};
+
+const directoryLinks = [
+  {
+    url: '/#savings',
+    label: 'Savings & budgeting calculators',
+    description: 'Build an emergency fund, plan holidays, and monitor your budget in one hub.',
+  },
+  {
+    url: '/calculators/savings-calculator',
+    label: 'Savings Calculator',
+    description: 'Project balances over time with compound interest and inflation adjustments.',
+  },
+  {
+    url: '/calculators/travel-budget-calculator',
+    label: 'Travel Budget Calculator',
+    description: 'Turn your savings goal into a detailed trip budget and spending plan.',
   },
 ];
 
@@ -44,295 +81,405 @@ const currencyFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 2,
 });
 
-export default function SavingsGoalCalculator() {
-  const [inputs, setInputs] = useState({
-    savingsTarget: '25000',
-    initialDeposit: '5000',
-    monthlyContribution: '450',
-    annualInterestRate: '3.5',
-    contributionIncreaseRate: '0',
+const percentFormatter = new Intl.NumberFormat('en-GB', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+const defaultInputs = {
+  savingsTarget: '25,000',
+  initialDeposit: '5,000',
+  monthlyContribution: '450',
+  annualInterestRate: '3.5',
+  contributionIncreaseRate: '0',
+};
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const calculateSavingsGoal = (inputs) => {
+  const target = Math.max(parseNumber(inputs.savingsTarget), 0);
+  const initialDeposit = Math.max(parseNumber(inputs.initialDeposit), 0);
+  const monthlyContribution = Math.max(parseNumber(inputs.monthlyContribution), 0);
+  const annualRate = Math.max(parseNumber(inputs.annualInterestRate), 0) / 100;
+  const contributionIncreaseRate = Math.max(parseNumber(inputs.contributionIncreaseRate), 0) / 100;
+
+  const monthlyRate = annualRate / 12;
+  const monthlyIncrease = contributionIncreaseRate / 12;
+
+  let balance = initialDeposit;
+  let months = 0;
+  let totalContributions = initialDeposit;
+  let interestEarned = 0;
+  let currentContribution = monthlyContribution;
+
+  while (balance < target && months < 1200) {
+    balance += balance * monthlyRate;
+    interestEarned += balance * monthlyRate;
+    balance += currentContribution;
+    totalContributions += currentContribution;
+    currentContribution *= 1 + monthlyIncrease;
+    months += 1;
+  }
+
+  const years = months / 12;
+  const monthlyNeededNoGrowth =
+    target > initialDeposit && months > 0 ? (target - initialDeposit) / months : 0;
+  const reached = balance >= target;
+
+  return {
+    target,
+    initialDeposit,
+    monthlyContribution,
+    annualRate,
+    contributionIncreaseRate,
+    months,
+    years,
+    reached,
+    balance: reached ? target : balance,
+    totalContributions,
+    interestEarned,
+    monthlyNeededNoGrowth,
+  };
+};
+
+const buildCsvData = (results, inputs) => {
+  if (!results) return null;
+
+  return [
+    ['Input', 'Value'],
+    ['Savings target (£)', inputs.savingsTarget],
+    ['Initial deposit (£)', inputs.initialDeposit],
+    ['Monthly contribution (£)', inputs.monthlyContribution],
+    ['Annual interest rate (%)', `${percentFormatter.format(parseNumber(inputs.annualInterestRate))}%`],
+    ['Annual contribution increase (%)', `${percentFormatter.format(parseNumber(inputs.contributionIncreaseRate))}%`],
+    [],
+    ['Output', 'Value'],
+    ['Months to goal', results.reached ? results.months : 'Goal not reached'],
+    ['Years to goal', results.reached ? results.years.toFixed(1) : 'Goal not reached'],
+    ['Estimated balance (£)', currencyFormatter.format(results.balance)],
+    ['Total contributions (£)', currencyFormatter.format(results.totalContributions)],
+    ['Interest earned (£)', currencyFormatter.format(results.interestEarned)],
+    ['Monthly needed without growth (£)', currencyFormatter.format(results.monthlyNeededNoGrowth)],
+  ];
+};
+
+const buildChartData = (results) => {
+  if (!results) return [];
+  const remainingGap = Math.max(results.target - results.balance, 0);
+  return [
+    { name: 'Total contributions', value: results.totalContributions, color: '#0ea5e9' },
+    { name: 'Interest earned', value: results.interestEarned, color: '#22c55e' },
+    { name: 'Remaining gap', value: remainingGap, color: '#f97316' },
+  ].filter((segment) => segment.value > 0);
+};
+
+export default function SavingsGoalCalculatorPage() {
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
+
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Savings Goal Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Savings & Budgeting Calculators', url: '/calculators#savings' },
+      { name: 'Savings Goal Calculator', url: pagePath },
+    ],
+    faq: faqItems,
   });
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computed = calculateSavingsGoal(inputs);
+      setResults(computed);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computed, inputs));
+    },
+    [inputs]
+  );
+
+  const handleReset = useCallback(() => {
+    setInputs(defaultInputs);
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
   }, []);
 
-  const reset = useCallback(() => {
-    setInputs({
-      savingsTarget: '25000',
-      initialDeposit: '5000',
-      monthlyContribution: '450',
-      annualInterestRate: '3.5',
-      contributionIncreaseRate: '0',
-    });
-  }, []);
-
-  const results = useMemo(() => {
-    const target = Number(inputs.savingsTarget) || 0;
-    const initialDeposit = Number(inputs.initialDeposit) || 0;
-    const monthlyContribution = Number(inputs.monthlyContribution) || 0;
-    const annualRate = Number(inputs.annualInterestRate) / 100 || 0;
-    const contributionIncreaseRate = Number(inputs.contributionIncreaseRate) / 100 || 0;
-
-    const monthlyRate = annualRate / 12;
-    const monthlyIncrease = contributionIncreaseRate / 12;
-
-    let balance = initialDeposit;
-    let months = 0;
-    let totalContributions = initialDeposit;
-
-    while (balance < target && months < 1200) {
-      balance += balance * monthlyRate;
-      balance += monthlyContribution * Math.pow(1 + monthlyIncrease, months);
-      totalContributions += monthlyContribution * Math.pow(1 + monthlyIncrease, months);
-      months += 1;
-    }
-
-    const years = months / 12;
-    const interestEarned = balance - totalContributions;
-
-    const monthlyNeededNoGrowth =
-      target > initialDeposit && years > 0
-        ? (target - initialDeposit) / months
-        : 0;
-
-    return {
-      target,
-      initialDeposit,
-      monthlyContribution,
-      annualRate,
-      contributionIncreaseRate,
-      months,
-      years,
-      balance: Math.min(balance, target),
-      totalContributions,
-      interestEarned,
-      monthlyNeededNoGrowth,
-    };
-  }, [inputs]);
+  const chartData = useMemo(() => buildChartData(results), [results]);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Savings Goal &amp; Time to Save Calculator</title>
-        <meta
-          name="description"
-          content="Savings Goal Calculator demonstrating monthly contribution plans, goal dates, and interest growth to help you reach financial targets."
-        />
-        <meta
-          name="keywords"
-          content="Savings Goal Calculator, Monthly Contribution, Goal Date"
-        />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FinancialProduct',
-              name: 'Savings Goal Calculator',
-              description:
-                'Future value calculator combining interest rate, initial deposit, and monthly contributions to plan savings targets for personal finance goals.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        keywords={keywords}
+        articleTags={keywords}
+        jsonLd={schema}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-emerald-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Savings Goal Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
-            Calculate savings goal timelines, monitor time to reach goal, and create a savings plan
-            using compound interest to achieve financial goals.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-amber-600/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Savings Goal Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Set a target, map the contribution schedule, and see how interest accelerates your
+              progress towards the finish line.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-emerald-500" />
-                Savings Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="savingsTarget" className="text-sm font-medium">
-                  Savings target (GBP)
-                </Label>
-                <Input
-                  id="savingsTarget"
-                  inputMode="decimal"
-                  value={inputs.savingsTarget}
-                  onChange={(event) => handleChange('savingsTarget', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="initialDeposit" className="text-sm font-medium">
-                  Initial deposit (GBP)
-                </Label>
-                <Input
-                  id="initialDeposit"
-                  inputMode="decimal"
-                  value={inputs.initialDeposit}
-                  onChange={(event) => handleChange('initialDeposit', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="monthlyContribution" className="text-sm font-medium">
-                  Monthly contribution (GBP)
-                </Label>
-                <Input
-                  id="monthlyContribution"
-                  inputMode="decimal"
-                  value={inputs.monthlyContribution}
-                  onChange={(event) =>
-                    handleChange('monthlyContribution', event.target.value)
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="annualInterestRate" className="text-sm font-medium">
-                  Annual interest rate (%)
-                </Label>
-                <Input
-                  id="annualInterestRate"
-                  inputMode="decimal"
-                  value={inputs.annualInterestRate}
-                  onChange={(event) => handleChange('annualInterestRate', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="contributionIncreaseRate" className="text-sm font-medium">
-                  Annual contribution increase (%)
-                </Label>
-                <Input
-                  id="contributionIncreaseRate"
-                  inputMode="decimal"
-                  value={inputs.contributionIncreaseRate}
-                  onChange={(event) =>
-                    handleChange('contributionIncreaseRate', event.target.value)
-                  }
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Target className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-amber-600 dark:text-amber-300"
+            borderColor="border-amber-200 dark:border-amber-800/60"
+            bgColor="bg-amber-50/70 dark:bg-amber-900/40"
+            textColor="text-amber-900 dark:text-amber-100"
+            footerColor="text-amber-700 dark:text-amber-300"
+          />
 
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <PiggyBank className="h-5 w-5 text-emerald-500" />
-                  Savings Projection
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <TrendingUp className="h-5 w-5 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                  Goal inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Months to goal</p>
-                    <p className="text-lg font-semibold text-emerald-600">
-                      {Number.isFinite(results.months) ? results.months : 'Goal unreachable'}
-                    </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="savingsTarget">Savings target (£)</Label>
+                      <Input
+                        id="savingsTarget"
+                        inputMode="decimal"
+                        value={inputs.savingsTarget}
+                        onChange={handleInputChange('savingsTarget')}
+                        placeholder="e.g. 25,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="initialDeposit">Initial deposit (£)</Label>
+                      <Input
+                        id="initialDeposit"
+                        inputMode="decimal"
+                        value={inputs.initialDeposit}
+                        onChange={handleInputChange('initialDeposit')}
+                        placeholder="e.g. 5,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyContribution">Monthly contribution (£)</Label>
+                      <Input
+                        id="monthlyContribution"
+                        inputMode="decimal"
+                        value={inputs.monthlyContribution}
+                        onChange={handleInputChange('monthlyContribution')}
+                        placeholder="e.g. 450"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="annualInterestRate">Annual interest rate (%)</Label>
+                      <Input
+                        id="annualInterestRate"
+                        inputMode="decimal"
+                        value={inputs.annualInterestRate}
+                        onChange={handleInputChange('annualInterestRate')}
+                        placeholder="e.g. 3.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contributionIncreaseRate">Annual contribution increase (%)</Label>
+                      <Input
+                        id="contributionIncreaseRate"
+                        inputMode="decimal"
+                        value={inputs.contributionIncreaseRate}
+                        onChange={handleInputChange('contributionIncreaseRate')}
+                        placeholder="e.g. 0"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Years to goal</p>
-                    <p className="text-lg font-semibold text-emerald-600">
-                      {Number.isFinite(results.years)
-                        ? results.years.toFixed(1)
-                        : 'Goal unreachable'}
-                    </p>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate savings goal
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset inputs
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Estimated balance</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.balance)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Total contributions</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.totalContributions)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Interest earned</p>
-                    <p className="text-lg font-semibold text-emerald-600">
-                      {currencyFormatter.format(results.interestEarned)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Monthly needed without growth</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.monthlyNeededNoGrowth)}
-                    </p>
-                  </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <TrendingUp className="h-5 w-5 text-emerald-500" />
-                  Savings Plan Guidance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  Automate transfers to maintain your savings plan. Gradually increase contributions to
-                  stay ahead of inflation and reach goals sooner.
-                </p>
-                <p>
-                  Adjust assumptions for compound interest and contribution growth to build realistic
-                  forecasts tuned to your personal finance strategy.
-                </p>
-                <p>
-                  Celebrate milestones. Reaching a savings target strengthens confidence in pursuing
-                  future financial goals.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Tell us your target, deposit, and monthly contribution, then press
+                    <span className="font-semibold"> Calculate savings goal</span> to reveal how long it
+                    could take and the interest earned on the way.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-amber-200 bg-white shadow-sm dark:border-amber-900 dark:bg-amber-900/30 dark:text-amber-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Target className="h-5 w-5 text-amber-600 dark:text-amber-200" aria-hidden="true" />
+                        Goal summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-amber-900 dark:text-amber-200">Months to goal</p>
+                        <p className="text-2xl font-semibold">
+                          {results.reached ? results.months : 'Goal not reached'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-amber-900 dark:text-amber-200">Years to goal</p>
+                        <p className="text-2xl font-semibold">
+                          {results.reached ? results.years.toFixed(1) : 'Goal not reached'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-amber-900 dark:text-amber-200">Estimated balance</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.balance)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-amber-900 dark:text-amber-200">Interest earned</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.interestEarned)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-amber-900 dark:text-amber-200">Monthly needed with no growth</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.monthlyNeededNoGrowth)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="savings-goal-results"
+                          title="Savings Goal Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <LineChart className="h-5 w-5 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                        Progress outlook
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        Review the monthly figure with no growth to understand the benefit compound interest
+                        delivers. Increasing contributions or boosting the interest rate shortens the journey.
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <TrendingUp className="h-5 w-5 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                        Goal composition
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Savings goal contribution mix" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BookOpen className="h-5 w-5 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                        Important notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        Large monthly increases can make the model optimistic. Revisit the plan regularly and
+                        adjust the contribution increase to reflect what you can realistically save.
+                      </p>
+                      <p>
+                        For goals longer than ten years, account for inflation or switch to an investment
+                        calculator to capture potential market growth and volatility.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Savings Goal Timelines with Confidence
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Use this savings planner to understand how compound interest accelerates progress toward
-            your savings target. Adjust contributions to align with your timeline.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Track Time to Reach Goal and Stay Motivated
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Visualise months and years required to hit your savings target. Smaller, consistent steps
-            create momentum for long-term financial goals.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Savings Plan Encourages Compound Interest Benefits
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Regular contributions plus compounding deliver exponential growth. Revisit your plan often
-            to ensure you remain on track and adapt to life changes.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );
