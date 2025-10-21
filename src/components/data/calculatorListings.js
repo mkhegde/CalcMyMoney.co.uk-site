@@ -95,6 +95,16 @@ export const calculatorListings = [
         ],
       },
       {
+        name: 'Student Loan Repayment Calculator',
+        slug: 'student-loan-repayment-calculator',
+        path: '/calculators/student-loan-repayment-calculator',
+        keywords: [
+          'student loan repayment calculator',
+          'student loan payoff calculator',
+          'uk student loan repayments',
+        ],
+      },
+      {
         name: 'Average Daily Balance Calculator',
         slug: 'average-daily-balance-calculator',
         path: '/calculators/average-daily-balance-calculator',
@@ -263,9 +273,8 @@ export const calculatorListings = [
         path: '/calculators/roi-calculator',
         keywords: [
           'roi calculator',
-          'return on investment formula',
-          'investment return calculator',
-          'return calculator',
+          'return on investment calculator',
+          'investment roi calculator',
           'cagr calculator',
         ],
       },
@@ -287,10 +296,9 @@ export const calculatorListings = [
         path: '/calculators/savings-calculator',
         keywords: [
           'savings calculator',
-          'compound interest calculator',
-          'interest calculator savings',
+          'savings interest calculator',
+          'savings planner',
           'savings account calculator',
-          'fixed deposit calculator',
         ],
       },
     ],
@@ -606,6 +614,16 @@ export const calculatorListings = [
         ],
       },
       {
+        name: 'Self Assessment Calculator',
+        slug: 'self-assessment-calculator',
+        path: '/calculators/self-assessment-calculator',
+        keywords: [
+          'self assessment calculator',
+          'self assessment tax calculator',
+          'hmrc self assessment calculator',
+        ],
+      },
+      {
         name: 'Property Tax Calculator',
         slug: 'property-tax-calculator',
         path: '/calculators/property-tax-calculator',
@@ -769,6 +787,16 @@ export const calculatorListings = [
         path: '/calculators/overtime-rate-calculator',
         keywords: ['overtime rate calculator'],
       },
+      {
+        name: 'Severance Pay Calculator',
+        slug: 'severance-pay-calculator',
+        path: '/calculators/severance-pay-calculator',
+        keywords: [
+          'severance pay calculator',
+          'redundancy package calculator',
+          'termination pay calculator',
+        ],
+      },
     ],
   },
   {
@@ -813,10 +841,13 @@ export const calculatorListings = [
         path: '/calculators/salary-calculator',
         keywords: [
           'salary calculator',
+          'gross salary calculator',
+          'monthly salary calculator',
           'annual salary calculator',
-          'gross pay calculator',
           'yearly salary calculator',
-          'hourly wage calculator',
+          'hourly salary calculator',
+          'weekly salary calculator',
+          'daily salary calculator',
         ],
       },
       {
@@ -825,10 +856,8 @@ export const calculatorListings = [
         path: '/calculators/salary-sacrifice-calculator',
         keywords: [
           'salary sacrifice calculator',
-          'net income calculator',
-          'pay after tax',
-          'net pay calculator',
-          'take home pay calculator',
+          'salary sacrifice pension calculator',
+          'salary sacrifice uk',
         ],
       },
     ],

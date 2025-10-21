@@ -101,8 +101,19 @@ export const MAPPED_KEYWORDS = {
   ],
   'Salary Increase Calculator': ['salary increase calculator'],
   'Salary Sacrifice Calculator': ['salary sacrifice calculator'],
+  'Savings Calculator': [
+    'savings calculator',
+    'savings interest calculator',
+    'savings planner',
+    'savings account calculator',
+  ],
   'Savings Goal Calculator': ['savings goal calculator', 'savings calculator', 'savings planner', 'savings'],
   'Severance Pay Calculator': ['severance pay calculator'],
+  'Self Assessment Calculator': [
+    'self assessment calculator',
+    'self assessment tax calculator',
+    'hmrc self assessment calculator',
+  ],
   'Simple Interest Calculator': ['simple interest calculator', 'simple interest'],
   'Stamp Duty Calculator': [
     'stamp duty calculator',

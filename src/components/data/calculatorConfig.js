@@ -1,4 +1,5 @@
 import { createPageUrl } from '../../utils/createPageUrl.js';
+import { MAPPED_KEYWORDS } from '../seo/keywordMappings.js';
 import {
   Calculator as CalculatorIcon,
   Home,
@@ -227,7 +228,11 @@ const rawCategories = [
         'Stamp Duty Calculator',
         'StampDutyCalculator',
         'Work out stamp duty obligations for first homes, second homes, and investment properties.',
-        MAPPED_KEYWORDS['Stamp Duty Calculator']
+        MAPPED_KEYWORDS['Stamp Duty Calculator'],
+        {
+          url: '/calculators/sdlt-calculator',
+          page: 'calculators/sdlt-calculator',
+        }
       ),
       createCalculatorEntry(
         'Rental Yield Calculator',
@@ -369,7 +374,11 @@ const rawCategories = [
         'Salary Calculator',
         'SalaryCalculator',
         'Estimate your gross and net pay based on your annual salary.',
-        MAPPED_KEYWORDS['Salary Calculator']
+        MAPPED_KEYWORDS['Salary Calculator'],
+        {
+          url: '/calculators/salary-calculator',
+          page: 'calculators/salary-calculator',
+        }
       ),
       createCalculatorEntry(
         'Take-Home Pay Calculator',
@@ -393,7 +402,11 @@ const rawCategories = [
         'Salary Sacrifice Calculator',
         'SalarySacrificeCalculator',
         'Model tax savings and employer contributions when using salary sacrifice for pensions.',
-        MAPPED_KEYWORDS['Salary Sacrifice Calculator']
+        MAPPED_KEYWORDS['Salary Sacrifice Calculator'],
+        {
+          url: '/calculators/salary-sacrifice-calculator',
+          page: 'calculators/salary-sacrifice-calculator',
+        }
       ),
       createCalculatorEntry(
         'Salary Increase Calculator',
@@ -421,7 +434,11 @@ const rawCategories = [
         'Severance Pay Calculator',
         'SeverancePayCalculator',
         'Estimate severance pay, including notice period, statutory redundancy, and other entitlements.',
-        MAPPED_KEYWORDS['Severance Pay Calculator']
+        MAPPED_KEYWORDS['Severance Pay Calculator'],
+        {
+          url: '/calculators/severance-pay-calculator',
+          page: 'calculators/severance-pay-calculator',
+        }
       ),
       createCalculatorEntry(
         'Dividend Tax Calculator',
@@ -444,6 +461,16 @@ const rawCategories = [
         'Project UK inheritance tax liability using nil-rate bands, residence allowances, and charitable gifts.'
       ),
       createCalculatorEntry(
+        'Self Assessment Calculator',
+        'SelfAssessmentCalculator',
+        'Estimate self assessment tax bills, payments on account, and deadlines for UK taxpayers.',
+        MAPPED_KEYWORDS['Self Assessment Calculator'],
+        {
+          url: '/calculators/self-assessment-calculator',
+          page: 'calculators/self-assessment-calculator',
+        }
+      ),
+      createCalculatorEntry(
         'Self Assessment Payment Planner',
         'SelfAssessmentPaymentPlanner',
         'Plan payments on account and balancing payments for the self assessment tax return.'
@@ -452,7 +479,11 @@ const rawCategories = [
         'Student Loan Repayment Calculator',
         'StudentLoanRepaymentCalculator',
         'Forecast student loan repayments across different plan types and salary scenarios.',
-        MAPPED_KEYWORDS['Student Loan Repayment Calculator']
+        MAPPED_KEYWORDS['Student Loan Repayment Calculator'],
+        {
+          url: '/calculators/student-loan-repayment-calculator',
+          page: 'calculators/student-loan-repayment-calculator',
+        }
       ),
       createCalculatorEntry(
         'Income Tax Calculator',
@@ -642,7 +673,21 @@ const rawCategories = [
         'Savings Goal Calculator',
         'SavingsGoalCalculator',
         'Set savings goals and monitor progress against monthly contributions.',
-        MAPPED_KEYWORDS['Savings Goal Calculator']
+        MAPPED_KEYWORDS['Savings Goal Calculator'],
+        {
+          url: '/calculators/savings-goal-calculator',
+          page: 'calculators/savings-goal-calculator',
+        }
+      ),
+      createCalculatorEntry(
+        'Savings Calculator',
+        'SavingsCalculator',
+        'Plan savings growth with monthly contributions, compound interest, and inflation assumptions.',
+        MAPPED_KEYWORDS['Savings Calculator'],
+        {
+          url: '/calculators/savings-calculator',
+          page: 'calculators/savings-calculator',
+        }
       ),
       createCalculatorEntry(
         'Simple Interest Calculator',
@@ -654,7 +699,21 @@ const rawCategories = [
         'Rule of 72 Calculator',
         'RuleOf72Calculator',
         'Estimate how long it takes for an investment to double using the Rule of 72.',
-        MAPPED_KEYWORDS['Rule of 72 Calculator']
+        MAPPED_KEYWORDS['Rule of 72 Calculator'],
+        {
+          url: '/calculators/rule-of-72-calculator',
+          page: 'calculators/rule-of-72-calculator',
+        }
+      ),
+      createCalculatorEntry(
+        'ROI Calculator',
+        'RoiCalculator',
+        'Analyse return on investment, annualised returns, and income yield for UK investments.',
+        MAPPED_KEYWORDS['ROI Calculator'],
+        {
+          url: '/calculators/roi-calculator',
+          page: 'calculators/roi-calculator',
+        }
       ),
       createCalculatorEntry(
         'ISA Allowance Planner',
