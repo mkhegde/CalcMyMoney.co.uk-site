@@ -88,12 +88,6 @@ export const MAPPED_KEYWORDS = {
     'equity release calculator',
     'lifetime mortgage calculator',
   ],
-  'ROI Calculator': [
-    'roi calculator',
-    'return on investment calculator',
-    'investment roi calculator',
-    'cagr calculator',
-  ],
   'Rule of 72 Calculator': ['rule of 72 calculator'],
   'Salary Calculator': [
     'salary calculator',
