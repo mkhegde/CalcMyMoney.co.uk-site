@@ -79,11 +79,33 @@ const MAPPED_KEYWORDS = {
   ],
   'Personal Loan Calculator': ['personal loan calculator', 'best personal loan calculator'],
   'Pro Rata Salary Calculator': ['pro rata salary calculator'],
+  'Property Flipping Calculator': [
+    'property flipping calculator',
+    'flip calculator',
+    'property renovation calculator',
+  ],
+  'Property Tax Calculator': [
+    'property tax calculator',
+    'uk property tax calculator',
+    'property tax rates uk',
+  ],
   'Redundancy Pay Calculator': ['redundancy pay calculator'],
   'Remortgage Calculator': ['remortgage calculator'],
   'Rental Income Calculator': ['rental income calculator', 'rental income tax calculator'],
   'Rental Yield Calculator': ['rental yield calculator', 'rental yield'],
+  'Rent to Buy Calculator': ['rent to buy calculator', 'rent to buy scheme calculator'],
+  'Rent vs Buy Calculator': ['rent vs buy calculator', 'rent or buy calculator'],
+  'Retirement Calculator': [
+    'retirement calculator',
+    'retirement income calculator',
+    'retirement planning calculator',
+  ],
   'Retirement Savings Calculator': ['retirement savings calculator'],
+  'Reverse Mortgage Calculator': [
+    'reverse mortgage calculator',
+    'equity release calculator',
+    'lifetime mortgage calculator',
+  ],
   'Rule of 72 Calculator': ['rule of 72 calculator'],
   'Salary Calculator': [
     'salary calculator',
@@ -140,16 +162,25 @@ const toSlug = (value = '') =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const createCalculatorEntry = (name, pageName, description, keywords = []) => ({
-  name,
-  pageName,
-  description,
-  icon: CalculatorIcon,
-  status: 'active',
-  tags: [],
-  keywords: [...(MAPPED_KEYWORDS[name] || []), ...keywords],
-  url: createPageUrl(pageName),
-});
+const createCalculatorEntry = (name, pageName, description, keywords = [], options = {}) => {
+  const baseKeywords = [...(MAPPED_KEYWORDS[name] || []), ...keywords];
+  const entry = {
+    name,
+    pageName,
+    description,
+    icon: options.icon || CalculatorIcon,
+    status: options.status || 'active',
+    tags: Array.isArray(options.tags) ? options.tags : [],
+    keywords: baseKeywords,
+    url: options.url || createPageUrl(pageName),
+  };
+
+  if (options.page) {
+    entry.page = options.page;
+  }
+
+  return entry;
+};
 
 const rawCategories = [
   {
@@ -186,7 +217,11 @@ const rawCategories = [
         'Remortgage Calculator',
         'RemortgageCalculator',
         'Compare remortgage deals and estimate potential monthly and lifetime savings.',
-        MAPPED_KEYWORDS['Remortgage Calculator']
+        MAPPED_KEYWORDS['Remortgage Calculator'],
+        {
+          url: '/calculators/remortgage-calculator',
+          page: 'calculators/remortgage-calculator',
+        }
       ),
       createCalculatorEntry(
         'Stamp Duty Calculator',
@@ -198,7 +233,21 @@ const rawCategories = [
         'Rental Yield Calculator',
         'RentalYieldCalculator',
         'Calculate gross and net rental yields to benchmark investment properties.',
-        MAPPED_KEYWORDS['Rental Yield Calculator']
+        MAPPED_KEYWORDS['Rental Yield Calculator'],
+        {
+          url: '/calculators/rental-yield-calculator',
+          page: 'calculators/rental-yield-calculator',
+        }
+      ),
+      createCalculatorEntry(
+        'Property Flipping Calculator',
+        'PropertyFlippingCalculator',
+        'Forecast purchase costs, renovation spend, holding costs, and projected sale profit for UK property flips.',
+        MAPPED_KEYWORDS['Property Flipping Calculator'],
+        {
+          url: '/calculators/property-flipping-calculator',
+          page: 'calculators/property-flipping-calculator',
+        }
       ),
       createCalculatorEntry(
         'Buy-to-Let Profit Calculator',
@@ -231,9 +280,24 @@ const rawCategories = [
         'Evaluate how regular or one-off overpayments shorten your mortgage term.'
       ),
       createCalculatorEntry(
-        'Rent vs Buy Comparison Calculator',
-        'RentVsBuyComparisonCalculator',
-        'Compare the long-term cost of renting versus purchasing a property.'
+        'Rent to Buy Calculator',
+        'RentToBuyCalculator',
+        'Project rent credits, deposit growth, and completion affordability for UK rent to buy agreements.',
+        MAPPED_KEYWORDS['Rent to Buy Calculator'],
+        {
+          url: '/calculators/rent-to-buy-calculator',
+          page: 'calculators/rent-to-buy-calculator',
+        }
+      ),
+      createCalculatorEntry(
+        'Rent vs Buy Calculator',
+        'RentVsBuyCalculator',
+        'Compare lifetime renting versus owning costs including deposits, mortgages, and opportunity cost.',
+        MAPPED_KEYWORDS['Rent vs Buy Calculator'],
+        {
+          url: '/calculators/rent-vs-buy-calculator',
+          page: 'calculators/rent-vs-buy-calculator',
+        }
       ),
       createCalculatorEntry(
         'House Price Growth Forecast Calculator',
@@ -259,6 +323,16 @@ const rawCategories = [
         'Equity Release Estimator',
         'EquityReleaseEstimator',
         'Estimate how much tax-free cash could be unlocked with equity release plans.'
+      ),
+      createCalculatorEntry(
+        'Reverse Mortgage Calculator',
+        'ReverseMortgageCalculator',
+        'Estimate tax-free equity release, interest roll-up, and remaining property value under lifetime mortgage plans.',
+        MAPPED_KEYWORDS['Reverse Mortgage Calculator'],
+        {
+          url: '/calculators/reverse-mortgage-calculator',
+          page: 'calculators/reverse-mortgage-calculator',
+        }
       ),
       createCalculatorEntry(
         'Home Equity Loan Calculator',
@@ -337,7 +411,11 @@ const rawCategories = [
         'Redundancy Pay Calculator',
         'RedundancyPayCalculator',
         'Estimate statutory redundancy pay based on age, length of service, and weekly pay.',
-        MAPPED_KEYWORDS['Redundancy Pay Calculator']
+        MAPPED_KEYWORDS['Redundancy Pay Calculator'],
+        {
+          url: '/calculators/redundancy-pay-calculator',
+          page: 'calculators/redundancy-pay-calculator',
+        }
       ),
       createCalculatorEntry(
         'Severance Pay Calculator',
@@ -380,6 +458,16 @@ const rawCategories = [
         'Income Tax Calculator',
         'IncomeTaxCalculator',
         'Estimate Income Tax, National Insurance, pension deductions, and Student Loan plan 2 repayments for UK taxpayers.'
+      ),
+      createCalculatorEntry(
+        'Property Tax Calculator',
+        'PropertyTaxCalculator',
+        'Estimate UK property tax (SDLT) for home movers, second homes, and non-UK resident surcharges.',
+        MAPPED_KEYWORDS['Property Tax Calculator'],
+        {
+          url: '/calculators/property-tax-calculator',
+          page: 'calculators/property-tax-calculator',
+        }
       ),
       createCalculatorEntry(
         'Gross to Net Calculator',
@@ -454,10 +542,24 @@ const rawCategories = [
         MAPPED_KEYWORDS['Pension Contribution Calculator']
       ),
       createCalculatorEntry(
+        'Retirement Calculator',
+        'RetirementCalculator',
+        'Work out the pension pot and investments needed to meet your desired retirement income in the UK.',
+        MAPPED_KEYWORDS['Retirement Calculator'],
+        {
+          url: '/calculators/retirement-calculator',
+          page: 'calculators/retirement-calculator',
+        }
+      ),
+      createCalculatorEntry(
         'Retirement Savings Calculator',
         'RetirementSavingsCalculator',
-        'Work out the age you can retire based on savings, pensions, and lifestyle costs.',
-        MAPPED_KEYWORDS['Retirement Savings Calculator']
+        'Project pension contributions, employer match, and investment growth towards your retirement savings goal.',
+        MAPPED_KEYWORDS['Retirement Savings Calculator'],
+        {
+          url: '/calculators/retirement-savings-calculator',
+          page: 'calculators/retirement-savings-calculator',
+        }
       ),
       createCalculatorEntry(
         'Pension Growth Forecast Calculator',

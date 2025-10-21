@@ -177,6 +177,17 @@ export const calculatorListings = [
           'retirement savings calculator',
         ],
       },
+      {
+        name: 'Retirement Savings Calculator',
+        slug: 'retirement-savings-calculator',
+        path: '/calculators/retirement-savings-calculator',
+        keywords: [
+          'retirement savings calculator',
+          'pension savings calculator uk',
+          'retirement pot calculator',
+          'pension growth calculator',
+        ],
+      },
     ],
   },
   {
@@ -352,11 +363,11 @@ export const calculatorListings = [
         slug: 'property-flipping-calculator',
         path: '/calculators/property-flipping-calculator',
         keywords: [
-          'rental property calculator',
-          'roi calculator',
-          'investment calculator',
-          'mortgage loan calculator',
-          'property tax calculator',
+          'property flipping calculator',
+          'flip calculator',
+          'property renovation calculator',
+          'property investment calculator',
+          'buy to sell calculator',
         ],
       },
       {
@@ -364,11 +375,22 @@ export const calculatorListings = [
         slug: 'rent-to-buy-calculator',
         path: '/calculators/rent-to-buy-calculator',
         keywords: [
-          'mortgage calculator',
-          'remortgage calculator',
-          'mortgage payment calculator',
-          'loan calculator',
-          'home loan calculator',
+          'rent to buy calculator',
+          'rent to own calculator uk',
+          'rent to buy scheme calculator',
+          'rent to buy agreement calculator',
+          'rent to buy uk',
+        ],
+      },
+      {
+        name: 'Rent vs Buy Calculator',
+        slug: 'rent-vs-buy-calculator',
+        path: '/calculators/rent-vs-buy-calculator',
+        keywords: [
+          'rent vs buy calculator',
+          'rent or buy calculator',
+          'should i rent or buy',
+          'rent vs buy uk',
         ],
       },
       {
@@ -377,10 +399,10 @@ export const calculatorListings = [
         path: '/calculators/rental-yield-calculator',
         keywords: [
           'rental yield calculator',
-          'buy to let mortgage calculator',
-          'yield calculator',
-          'rental property calculator',
-          'roi calculator',
+          'rental yield',
+          'buy to let yield calculator',
+          'rental roi calculator',
+          'property yield calculator',
         ],
       },
       {
@@ -389,10 +411,10 @@ export const calculatorListings = [
         path: '/calculators/reverse-mortgage-calculator',
         keywords: [
           'reverse mortgage calculator',
-          'mortgage calculator',
-          'remortgage calculator',
-          'home loan calculator',
-          'housing loan calculator',
+          'equity release calculator',
+          'lifetime mortgage calculator',
+          'equity release uk',
+          'reverse mortgage uk',
         ],
       },
       {
@@ -588,11 +610,11 @@ export const calculatorListings = [
         slug: 'property-tax-calculator',
         path: '/calculators/property-tax-calculator',
         keywords: [
-          'stamp duty calculator',
-          'tax calculator',
-          'sdlt calculator',
           'property tax calculator',
-          'uk stamp duty calculator',
+          'uk property tax calculator',
+          'property tax rates uk',
+          'sdlt calculator',
+          'stamp duty calculator',
         ],
       },
       {

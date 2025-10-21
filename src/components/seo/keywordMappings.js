@@ -61,11 +61,33 @@ export const MAPPED_KEYWORDS = {
   ],
   'Personal Loan Calculator': ['personal loan calculator', 'best personal loan calculator'],
   'Pro Rata Salary Calculator': ['pro rata salary calculator'],
+  'Property Flipping Calculator': [
+    'property flipping calculator',
+    'flip calculator',
+    'property renovation calculator',
+  ],
+  'Property Tax Calculator': [
+    'property tax calculator',
+    'uk property tax calculator',
+    'property tax rates uk',
+  ],
   'Redundancy Pay Calculator': ['redundancy pay calculator'],
   'Remortgage Calculator': ['remortgage calculator'],
   'Rental Income Calculator': ['rental income calculator', 'rental income tax calculator'],
   'Rental Yield Calculator': ['rental yield calculator', 'rental yield'],
+  'Rent to Buy Calculator': ['rent to buy calculator', 'rent to buy scheme calculator'],
+  'Rent vs Buy Calculator': ['rent vs buy calculator', 'rent or buy calculator'],
+  'Retirement Calculator': [
+    'retirement calculator',
+    'retirement income calculator',
+    'retirement planning calculator',
+  ],
   'Retirement Savings Calculator': ['retirement savings calculator'],
+  'Reverse Mortgage Calculator': [
+    'reverse mortgage calculator',
+    'equity release calculator',
+    'lifetime mortgage calculator',
+  ],
   'Rule of 72 Calculator': ['rule of 72 calculator'],
   'Salary Calculator': [
     'salary calculator',
