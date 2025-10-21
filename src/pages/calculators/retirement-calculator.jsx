@@ -1,32 +1,79 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Target, TrendingUp, PiggyBank, Shield } from 'lucide-react';
-
+import React, { useMemo, useState, useCallback, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Calculator, Target, PiggyBank, TrendingUp, LineChart } from 'lucide-react';
 
-const keywords = [
-  'pension calculator',
-  'retirement calculator',
-  'retirement income calculator',
-  'retirement planning calculator',
-  'retirement savings calculator',
-  'fire calculator',
-  'annuity calculator',
-  'enhanced annuity calculator',
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
+
+const pagePath = '/calculators/retirement-calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/retirement-calculator';
+const pageTitle = 'Retirement Calculator UK | Project Pot, Income & Withdrawal Plans';
+const metaDescription =
+  'Plan UK retirement goals by projecting pension growth, contributions, inflation, and withdrawal rates to estimate sustainable income, pot requirements, and any funding gap.';
+const keywords = getMappedKeywords('Retirement Calculator');
+
+const faqItems = [
+  {
+    question: 'How often should I review my retirement targets?',
+    answer:
+      'Check in at least twice each year. Update contributions after pay rises, re-run the numbers when markets move sharply, and revisit the withdrawal plan as you get closer to retiring.',
+  },
+  {
+    question: 'What if I prefer a guaranteed income?',
+    answer:
+      'Use annuity quotes alongside this plan. Convert part of your pension into guaranteed income while keeping the remainder invested for growth.',
+  },
+  {
+    question: 'Can this help with FIRE planning?',
+    answer:
+      'Yes. Adjust the retirement age, contributions, and withdrawal rate to model early retirement or FIRE scenarios and see how much extra saving you need.',
+  },
 ];
 
-const metaDescription =
-  'Use our retirement calculator as a pension calculator and retirement income calculator to build a confident glide path into retirement.';
+const emotionalMessage =
+  'Build a retirement plan with confidence. Understand how your savings, contributions, and investment returns translate into the lifestyle you want after work.';
+const emotionalQuote = {
+  text: 'Someone’s sitting in the shade today because someone planted a tree a long time ago.',
+  author: 'Warren Buffett',
+};
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/retirement-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+const directoryLinks = [
+  {
+    url: '/#retirement-pensions',
+    label: 'Explore pension calculators',
+    description: 'Plan contributions, savings growth, and income drawdown strategies.',
+  },
+  {
+    url: '/retirement-savings-calculator',
+    label: 'Retirement Savings Calculator',
+    description: 'Project pension growth with salary increases and employer matches.',
+  },
+  {
+    url: '/pension-calculator',
+    label: 'Pension Calculator',
+    description: 'Combine state and private pensions to estimate retirement income.',
+  },
+];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -39,36 +86,12 @@ const percentFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 1,
 });
 
-const defaultInputs = {
-  currentAge: 38,
-  retirementAge: 67,
-  currentSavings: 65000,
-  monthlyContribution: 650,
-  employerContribution: 350,
-  expectedReturn: 5.2,
-  inflationRate: 2.4,
-  desiredIncome: 38000,
-  otherIncome: 11000,
-  withdrawalRate: 4,
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
 };
-
-const retirementFaqs = [
-  {
-    question: 'How often should I review my retirement targets?',
-    answer:
-      'Check in at least twice each year. Update contributions after pay rises, re-run the retirement income numbers whenever markets move sharply, and revisit the withdrawal plan in the final decade before retiring.',
-  },
-  {
-    question: 'What if I prefer a guaranteed income?',
-    answer:
-      'Use the annuity calculator and enhanced annuity calculator quotes alongside this plan. Convert part of your pension into a guaranteed income while keeping the remainder invested for growth.',
-  },
-  {
-    question: 'Can this help with FIRE planning?',
-    answer:
-      'Yes. The withdrawal rate and desired income fields mirror the fire calculator 25x rule. Adjust the retirement age slider to model an early exit and track how much extra monthly savings you need.',
-  },
-];
 
 const calculateRetirementPlan = ({
   currentAge,
@@ -99,31 +122,25 @@ const calculateRetirementPlan = ({
       ? 0
       : monthlyReturn === 0
       ? totalMonthlyContribution * monthsToRetirement
-      : totalMonthlyContribution *
-        (((1 + monthlyReturn) ** monthsToRetirement - 1) / monthlyReturn);
+      : totalMonthlyContribution * (((1 + monthlyReturn) ** monthsToRetirement - 1) / monthlyReturn);
 
   const projectedPot = futureValueSavings + futureValueContributions;
   const realProjectedPot = inflationFactor > 0 ? projectedPot / inflationFactor : projectedPot;
-
   const sustainableIncome = projectedPot * (Math.max(withdrawalRate, 0) / 100);
-  const realSustainableIncome =
-    inflationFactor > 0 ? sustainableIncome / inflationFactor : sustainableIncome;
-
+  const realSustainableIncome = inflationFactor > 0 ? sustainableIncome / inflationFactor : sustainableIncome;
   const totalRetirementIncome = realSustainableIncome + Math.max(otherIncome, 0);
   const incomeGap = Math.max(desiredIncome - totalRetirementIncome, 0);
   const incomeSurplus = Math.max(totalRetirementIncome - desiredIncome, 0);
 
   const withdrawalRateDecimal = Math.max(withdrawalRate, 0) / 100;
   const requiredPot =
-    withdrawalRateDecimal > 0
-      ? Math.max(desiredIncome - otherIncome, 0) / withdrawalRateDecimal
-      : Infinity;
-  const potShortfall = Math.max(requiredPot - projectedPot, 0);
+    withdrawalRateDecimal > 0 ? Math.max(desiredIncome - otherIncome, 0) / withdrawalRateDecimal : Infinity;
+  const potShortfall = Number.isFinite(requiredPot) ? Math.max(requiredPot - projectedPot, 0) : 0;
 
   let requiredContribution = 0;
   if (monthsToRetirement > 0) {
     if (monthlyReturn === 0) {
-      requiredContribution = (Math.max(requiredPot - currentSavings, 0)) / monthsToRetirement;
+      requiredContribution = Math.max(requiredPot - currentSavings, 0) / monthsToRetirement;
     } else {
       const discountedTarget = Math.max(requiredPot - futureValueSavings, 0);
       const factor = ((1 + monthlyReturn) ** monthsToRetirement - 1) / monthlyReturn;
@@ -137,7 +154,6 @@ const calculateRetirementPlan = ({
 
   return {
     yearsToRetirement,
-    monthsToRetirement,
     projectedPot,
     realProjectedPot,
     sustainableIncome,
@@ -156,461 +172,426 @@ const calculateRetirementPlan = ({
   };
 };
 
+const buildCsvData = (results, inputs) => {
+  if (!results) return null;
+  return [
+    ['Input', 'Value'],
+    ['Current age', inputs.currentAge],
+    ['Retirement age', inputs.retirementAge],
+    ['Current retirement savings (£)', inputs.currentSavings],
+    ['Monthly contribution (£)', inputs.monthlyContribution],
+    ['Employer contribution (£)', inputs.employerContribution],
+    ['Expected annual return (%)', inputs.expectedReturn],
+    ['Inflation assumption (% p.a.)', inputs.inflationRate],
+    ['Desired annual income (£)', inputs.desiredIncome],
+    ['Other annual income (£)', inputs.otherIncome],
+    ['Withdrawal rate (%)', inputs.withdrawalRate],
+    [],
+    ['Output', 'Value'],
+    ['Years to retirement', results.yearsToRetirement],
+    ['Projected pot (£)', currencyFormatter.format(results.projectedPot)],
+    ['Projected pot (real £)', currencyFormatter.format(results.realProjectedPot)],
+    ['Sustainable income (£)', currencyFormatter.format(results.realSustainableIncome)],
+    ['Total retirement income (£)', currencyFormatter.format(results.totalRetirementIncome)],
+    ['Income gap (£)', currencyFormatter.format(results.incomeGap)],
+    ['Income surplus (£)', currencyFormatter.format(results.incomeSurplus)],
+    ['Required pot (£)', Number.isFinite(results.requiredPot) ? currencyFormatter.format(results.requiredPot) : 'n/a'],
+    ['Pot shortfall (£)', currencyFormatter.format(results.potShortfall)],
+    ['Extra monthly needed (£)', currencyFormatter.format(results.extraMonthlyNeeded)],
+  ];
+};
+
+const chartPalette = ['#10b981', '#3b82f6', '#f97316', '#ef4444'];
+
+const buildChartData = (results, inputs) => {
+  if (!results) return [];
+  return [
+    { name: 'Desired income', value: Math.max(parseNumber(inputs.desiredIncome), 0), color: chartPalette[0] },
+    { name: 'Sustainable income', value: results.realSustainableIncome, color: chartPalette[1] },
+    { name: 'Other income', value: Math.max(parseNumber(inputs.otherIncome), 0), color: chartPalette[2] },
+    { name: 'Income gap', value: results.incomeGap, color: chartPalette[3] },
+  ].filter((segment) => segment.value > 0);
+};
+
+const defaultInputs = {
+  currentAge: '38',
+  retirementAge: '67',
+  currentSavings: '65,000',
+  monthlyContribution: '650',
+  employerContribution: '350',
+  expectedReturn: '5.2',
+  inflationRate: '2.4',
+  desiredIncome: '38,000',
+  otherIncome: '11,000',
+  withdrawalRate: '4',
+};
+
 export default function RetirementCalculatorPage() {
   const [inputs, setInputs] = useState(defaultInputs);
+  const [results, setResults] = useState(null);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [csvData, setCsvData] = useState(null);
 
-  const results = useMemo(
-    () =>
-      calculateRetirementPlan({
-        currentAge: Number(inputs.currentAge) || 0,
-        retirementAge: Number(inputs.retirementAge) || 0,
-        currentSavings: Number(inputs.currentSavings) || 0,
-        monthlyContribution: Number(inputs.monthlyContribution) || 0,
-        employerContribution: Number(inputs.employerContribution) || 0,
-        expectedReturn: Number(inputs.expectedReturn) || 0,
-        inflationRate: Number(inputs.inflationRate) || 0,
-        desiredIncome: Number(inputs.desiredIncome) || 0,
-        otherIncome: Number(inputs.otherIncome) || 0,
-        withdrawalRate: Number(inputs.withdrawalRate) || 0,
-      }),
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Retirement Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Retirement & Pension Calculators', url: '/calculators#retirement-pensions' },
+      { name: 'Retirement Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
+
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computed = calculateRetirementPlan({
+        currentAge: Math.max(parseNumber(inputs.currentAge), 0),
+        retirementAge: Math.max(parseNumber(inputs.retirementAge), 0),
+        currentSavings: Math.max(parseNumber(inputs.currentSavings), 0),
+        monthlyContribution: Math.max(parseNumber(inputs.monthlyContribution), 0),
+        employerContribution: Math.max(parseNumber(inputs.employerContribution), 0),
+        expectedReturn: parseNumber(inputs.expectedReturn),
+        inflationRate: parseNumber(inputs.inflationRate),
+        desiredIncome: Math.max(parseNumber(inputs.desiredIncome), 0),
+        otherIncome: Math.max(parseNumber(inputs.otherIncome), 0),
+        withdrawalRate: Math.max(parseNumber(inputs.withdrawalRate), 0),
+      });
+      setResults(computed);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computed, inputs));
+    },
     [inputs]
   );
 
-  const resetAll = () => setInputs(defaultInputs);
+  const handleReset = useCallback(() => {
+    setInputs(defaultInputs);
+    setResults(null);
+    setHasCalculated(false);
+    setCsvData(null);
+  }, []);
+
+  const chartData = useMemo(() => buildChartData(results, inputs), [results, inputs]);
 
   return (
-    <div className="bg-gray-950 text-white">
-      <Helmet>
-        <title>Retirement Calculator | Pension Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Retirement Calculator | Pension Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Retirement Calculator | Pension Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Retirement Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Model future income with a retirement income calculator',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
-
-      <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Retirement Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
-            Blend pension calculator checks with a retirement income calculator outlook so you know
-            exactly what lifestyle your savings can support.
-          </p>
-        </div>
-      </section>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
       <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-emerald-200 bg-white text-slate-900 shadow-md dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-100">
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Retirement Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Project your pension pot, understand sustainable retirement income, and spot any savings gap before you leave work.
+            </p>
+          </header>
+
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Target className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-emerald-600 dark:text-emerald-300"
+            borderColor="border-emerald-200 dark:border-emerald-800/60"
+            bgColor="bg-emerald-50/70 dark:bg-emerald-950/40"
+            textColor="text-emerald-900 dark:text-emerald-100"
+            footerColor="text-emerald-700 dark:text-emerald-300"
+          />
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+            <Card className="border border-emerald-200 dark:border-emerald-900 bg-white dark:bg-slate-950">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Target className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Retirement journey inputs
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Target className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                  Journey inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentAge">Current age</Label>
-                    <Slider
-                      id="currentAge"
-                      className="mt-3"
-                      value={[Number(inputs.currentAge)]}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          currentAge: Number(value[0].toFixed(0)),
-                        }))
-                      }
-                      min={20}
-                      max={65}
-                      step={1}
-                    />
-                    <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                      <span>20</span>
-                      <span>{inputs.currentAge}</span>
-                      <span>65</span>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="currentAge">Current age</Label>
+                      <Input
+                        id="currentAge"
+                        inputMode="decimal"
+                        value={inputs.currentAge}
+                        onChange={handleInputChange('currentAge')}
+                        placeholder="e.g. 38"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="retirementAge">Retirement age</Label>
+                      <Input
+                        id="retirementAge"
+                        inputMode="decimal"
+                        value={inputs.retirementAge}
+                        onChange={handleInputChange('retirementAge')}
+                        placeholder="e.g. 67"
+                      />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="retirementAge">Retirement age</Label>
-                    <Slider
-                      id="retirementAge"
-                      className="mt-3"
-                      value={[Number(inputs.retirementAge)]}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          retirementAge: Number(value[0].toFixed(0)),
-                        }))
-                      }
-                      min={45}
-                      max={75}
-                      step={1}
-                    />
-                    <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                      <span>45</span>
-                      <span>{inputs.retirementAge}</span>
-                      <span>75</span>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="currentSavings">Current retirement savings (£)</Label>
+                      <Input
+                        id="currentSavings"
+                        inputMode="decimal"
+                        value={inputs.currentSavings}
+                        onChange={handleInputChange('currentSavings')}
+                        placeholder="e.g. 65,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="monthlyContribution">Your monthly contribution (£)</Label>
+                      <Input
+                        id="monthlyContribution"
+                        inputMode="decimal"
+                        value={inputs.monthlyContribution}
+                        onChange={handleInputChange('monthlyContribution')}
+                        placeholder="e.g. 650"
+                      />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="currentSavings">Current retirement savings (£)</Label>
-                    <Input
-                      id="currentSavings"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="1000"
-                      value={inputs.currentSavings}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          currentSavings: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="monthlyContribution">Your monthly contribution (£)</Label>
-                    <Input
-                      id="monthlyContribution"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="25"
-                      value={inputs.monthlyContribution}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          monthlyContribution: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="employerContribution">Employer contribution (£)</Label>
-                    <Input
-                      id="employerContribution"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="25"
-                      value={inputs.employerContribution}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          employerContribution: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expectedReturn">Expected annual return (%)</Label>
-                    <Slider
-                      id="expectedReturn"
-                      className="mt-3"
-                      value={[Number(inputs.expectedReturn)]}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          expectedReturn: Number(value[0].toFixed(1)),
-                        }))
-                      }
-                      min={0}
-                      max={12}
-                      step={0.1}
-                    />
-                    <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                      <span>0%</span>
-                      <span>{inputs.expectedReturn.toFixed(1)}%</span>
-                      <span>12%</span>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="employerContribution">Employer contribution (£)</Label>
+                      <Input
+                        id="employerContribution"
+                        inputMode="decimal"
+                        value={inputs.employerContribution}
+                        onChange={handleInputChange('employerContribution')}
+                        placeholder="e.g. 350"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="expectedReturn">Expected annual return (%)</Label>
+                      <Input
+                        id="expectedReturn"
+                        inputMode="decimal"
+                        value={inputs.expectedReturn}
+                        onChange={handleInputChange('expectedReturn')}
+                        placeholder="e.g. 5.2"
+                      />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="inflationRate">Inflation assumption (% p.a.)</Label>
-                    <Slider
-                      id="inflationRate"
-                      className="mt-3"
-                      value={[Number(inputs.inflationRate)]}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          inflationRate: Number(value[0].toFixed(1)),
-                        }))
-                      }
-                      min={0}
-                      max={6}
-                      step={0.1}
-                    />
-                    <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                      <span>0%</span>
-                      <span>{inputs.inflationRate.toFixed(1)}%</span>
-                      <span>6%</span>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="inflationRate">Inflation assumption (% p.a.)</Label>
+                      <Input
+                        id="inflationRate"
+                        inputMode="decimal"
+                        value={inputs.inflationRate}
+                        onChange={handleInputChange('inflationRate')}
+                        placeholder="e.g. 2.4"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="desiredIncome">Desired annual income (£)</Label>
+                      <Input
+                        id="desiredIncome"
+                        inputMode="decimal"
+                        value={inputs.desiredIncome}
+                        onChange={handleInputChange('desiredIncome')}
+                        placeholder="e.g. 38,000"
+                      />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="desiredIncome">Desired annual income (£)</Label>
-                    <Input
-                      id="desiredIncome"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="500"
-                      value={inputs.desiredIncome}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          desiredIncome: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="otherIncome">Other annual income (£)</Label>
-                    <Input
-                      id="otherIncome"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="500"
-                      value={inputs.otherIncome}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          otherIncome: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="withdrawalRate">Withdrawal rate (% of pot)</Label>
-                    <Slider
-                      id="withdrawalRate"
-                      className="mt-3"
-                      value={[Number(inputs.withdrawalRate)]}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          withdrawalRate: Number(value[0].toFixed(1)),
-                        }))
-                      }
-                      min={2}
-                      max={6}
-                      step={0.1}
-                    />
-                    <div className="flex justify-between text-sm text-emerald-800 dark:text-emerald-200">
-                      <span>2%</span>
-                      <span>{inputs.withdrawalRate.toFixed(1)}%</span>
-                      <span>6%</span>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="otherIncome">Other annual income (£)</Label>
+                      <Input
+                        id="otherIncome"
+                        inputMode="decimal"
+                        value={inputs.otherIncome}
+                        onChange={handleInputChange('otherIncome')}
+                        placeholder="e.g. 11,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="withdrawalRate">Withdrawal rate (% of pot)</Label>
+                      <Input
+                        id="withdrawalRate"
+                        inputMode="decimal"
+                        value={inputs.withdrawalRate}
+                        onChange={handleInputChange('withdrawalRate')}
+                        placeholder="e.g. 4"
+                      />
                     </div>
                   </div>
-                </div>
-                <Button variant="outline" className="w-full" onClick={resetAll}>
-                  Reset to example plan
-                </Button>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate retirement outlook
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
+
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your pension details and press <span className="font-semibold">Calculate retirement outlook</span> to see projected pots, sustainable income, and any savings gap.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-emerald-200 bg-white shadow-sm dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PiggyBank className="h-5 w-5 text-emerald-600 dark:text-emerald-200" aria-hidden="true" />
+                        Retirement summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Years to retirement</p>
+                        <p className="text-2xl font-semibold">{results.yearsToRetirement}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Projected pot</p>
+                        <p className="text-2xl font-semibold">{currencyFormatter.format(results.projectedPot)}</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-200">Real terms {currencyFormatter.format(results.realProjectedPot)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Sustainable income</p>
+                        <p className="text-2xl font-semibold">{currencyFormatter.format(results.realSustainableIncome)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Total retirement income</p>
+                        <p className="text-2xl font-semibold">{currencyFormatter.format(results.totalRetirementIncome)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Income gap / surplus</p>
+                        <p
+                          className={`text-2xl font-semibold ${
+                            results.incomeGap > 0 ? 'text-rose-300' : 'text-emerald-300'
+                          }`}
+                        >
+                          {currencyFormatter.format(results.incomeGap > 0 ? results.incomeGap : results.incomeSurplus)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-900 dark:text-emerald-200">Required pot</p>
+                        <p className="text-2xl font-semibold">
+                          {Number.isFinite(results.requiredPot)
+                            ? currencyFormatter.format(results.requiredPot)
+                            : 'n/a'}
+                        </p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-200">Shortfall {currencyFormatter.format(results.potShortfall)}</p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="retirement-plan"
+                          title="Retirement Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                        Contribution progress
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center justify-between">
+                        <span>Total monthly invested</span>
+                        <span>{currencyFormatter.format(results.totalMonthlyContribution)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Growth from new contributions</span>
+                        <span>{currencyFormatter.format(results.futureValueContributions)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Growth from existing savings</span>
+                        <span>{currencyFormatter.format(results.futureValueSavings)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Extra monthly needed</span>
+                        <span>{currencyFormatter.format(results.extraMonthlyNeeded)}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <LineChart className="h-5 w-5 text-emerald-600 dark:text-emerald-300" aria-hidden="true" />
+                        Income outlook
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Retirement income comparison" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <Card className="border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calculator className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  Retirement readiness summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Years to retirement</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {results.yearsToRetirement}
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Projected pot</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.projectedPot)}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Real terms {currencyFormatter.format(results.realProjectedPot)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-center dark:border-emerald-800 dark:bg-emerald-900/30">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Sustainable income</p>
-                  <p className="text-2xl font-semibold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.realSustainableIncome)}
-                  </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-200">
-                    Withdrawal rate {inputs.withdrawalRate.toFixed(1)}%
-                  </p>
-                </div>
-                <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-center dark:border-emerald-800 dark:bg-emerald-900/30">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-200">Total retirement income</p>
-                  <p className="text-2xl font-semibold text-emerald-900 dark:text-emerald-100">
-                    {currencyFormatter.format(results.totalRetirementIncome)}
-                  </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-200">
-                    Includes other income {currencyFormatter.format(inputs.otherIncome)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Income gap</p>
-                  <p
-                    className={`text-2xl font-semibold ${
-                      results.incomeGap > 0
-                        ? 'text-rose-600 dark:text-rose-300'
-                        : 'text-emerald-700 dark:text-emerald-200'
-                    }`}
-                  >
-                    {results.incomeGap > 0
-                      ? currencyFormatter.format(results.incomeGap)
-                      : currencyFormatter.format(results.incomeSurplus)}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {results.incomeGap > 0 ? 'Shortfall' : 'Surplus'}
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Pot required</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {Number.isFinite(results.requiredPot)
-                      ? currencyFormatter.format(results.requiredPot)
-                      : 'n/a'}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Shortfall {currencyFormatter.format(results.potShortfall)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
 
-            <Card className="border border-emerald-200 bg-emerald-50 text-slate-900 shadow-md dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <PiggyBank className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
-                  Contribution breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span>Monthly invested (you + employer)</span>
-                  <span>{currencyFormatter.format(results.totalMonthlyContribution)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Projected growth from contributions</span>
-                  <span>{currencyFormatter.format(results.futureValueContributions)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Projected growth from existing savings</span>
-                  <span>{currencyFormatter.format(results.futureValueSavings)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Extra monthly needed for target</span>
-                  <span>{currencyFormatter.format(results.extraMonthlyNeeded)}</span>
-                </div>
-                <p>
-                  Increasing tax-relief savings or adding lump sums can reduce the extra required. If
-                  you have a retirement savings calculator spreadsheet, plug these numbers in to test
-                  different contribution schedules.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
-                  FIRE and longevity view
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span>FIRE target (based on withdrawal rate)</span>
-                  <span>
-                    {Number.isFinite(results.fireTarget)
-                      ? currencyFormatter.format(results.fireTarget)
-                      : 'n/a'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Progress toward FIRE goal</span>
-                  <span>{percentFormatter.format(results.fireProgress)}</span>
-                </div>
-                <p>
-                  Treat the slider set as a fire calculator when aiming for an early exit. If the
-                  withdrawal rate feels aggressive, blend the plan with annuity calculator quotes or
-                  phased drawdown options.
-                </p>
-              </CardContent>
-            </Card>
-
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Retirement planning calculator playbook
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Pair this view with any retirement planning calculator or advice journey your provider
-                offers. Layer in life expectancy tools, state pension forecasts, and tax planning to
-                make confident decisions every year.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Stress test with a retirement savings calculator
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Build scenarios that include part-time work, phased drawdown, or legacy goals. Use the
-                retirement savings calculator variants provided by your pension provider to confirm
-                the plan stays resilient even in lower-return markets.
-              </p>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Annuitising part of the pot later in life? Compare standard, single-life, joint-life,
-                and enhanced annuity calculator illustrations so you secure an income floor while
-                keeping flexibility with the remaining investments.
-              </p>
-            </section>
-
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <FAQSection faqs={retirementFaqs} />
-            </section>
-          </div>
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
       </CalculatorWrapper>
     </div>
