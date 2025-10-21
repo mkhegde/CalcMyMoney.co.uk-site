@@ -1,25 +1,40 @@
 // src/pages/calculators/overtime-pay-calculator.jsx
-import React, { useState, useMemo, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Clock, PoundSterling, PiggyBank } from 'lucide-react';
-
+import React, { useState, useMemo, useCallback, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import {
+  Calculator,
+  Clock,
+  PoundSterling,
+  PiggyBank,
+  Quote,
+  BookOpen,
+  LineChart,
+} from 'lucide-react';
 
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
+
+const pagePath = '/calculators/overtime-pay-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/overtime-pay-calculator';
-
-const schemaKeywords = [
-  'Overtime Wages',
-  'Extra Hours',
-  'Paycheck',
-  'Hours Worked',
-  'Time and a Half',
-];
+const pageTitle = 'Overtime Pay Calculator UK | Calculate Extra Earnings';
+const metaDescription =
+  'Use our UK overtime pay calculator to estimate extra earnings from overtime hours, understand overtime rules, and project gross vs net pay.';
+const keywords = getMappedKeywords('Overtime Pay Calculator');
 
 const faqItems = [
   {
@@ -39,13 +54,115 @@ const faqItems = [
   },
 ];
 
+const emotionalMessage =
+  'Your extra effort deserves clear recognition. Use this calculator to accurately track your overtime earnings and ensure every hour worked is accounted for in your take-home pay.';
+const emotionalQuote = {
+  text: 'The future depends on what you do today.',
+  author: 'Mahatma Gandhi',
+};
+
+const directoryLinks = [
+  {
+    url: '/#tax-income',
+    label: 'Explore all tax & income calculators',
+    description:
+      'Understand deductions, take-home pay, and tax liabilities on every type of income.',
+  },
+  {
+    url: '/overtime-bonus-calculator',
+    label: 'Overtime & Bonus Calculator',
+    description: 'Estimate extra earnings from overtime shifts and bonuses.',
+  },
+  {
+    url: '/salary-calculator',
+    label: 'Salary Calculator',
+    description: 'Estimate your gross and net pay based on your annual salary.',
+  },
+];
+
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
   minimumFractionDigits: 2,
 });
 
-export default function OvertimePayCalculator() {
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const calculateOvertimePay = ({
+  hourlyRate,
+  regularHours,
+  overtimeHours,
+  overtimeMultiplier,
+  taxRate,
+  niRate,
+}) => {
+  const parsedHourlyRate = parseNumber(hourlyRate);
+  const parsedRegularHours = parseNumber(regularHours);
+  const parsedOvertimeHours = parseNumber(overtimeHours);
+  const parsedOvertimeMultiplier = parseNumber(overtimeMultiplier);
+  const parsedTaxRate = parseNumber(taxRate);
+  const parsedNiRate = parseNumber(niRate);
+
+  const regularPay = parsedHourlyRate * parsedRegularHours;
+  const overtimeRate = parsedHourlyRate * parsedOvertimeMultiplier;
+  const overtimePay = overtimeRate * parsedOvertimeHours;
+  const grossPay = regularPay + overtimePay;
+
+  const tax = grossPay * (parsedTaxRate / 100);
+  const nationalInsurance = grossPay * (parsedNiRate / 100);
+  const deductions = tax + nationalInsurance;
+  const netPay = grossPay - deductions;
+
+  return {
+    overtimeRate,
+    regularPay,
+    overtimePay,
+    grossPay,
+    tax,
+    nationalInsurance,
+    deductions,
+    netPay,
+  };
+};
+
+function buildCsvData(results, inputs) {
+  if (!results) return null;
+  return [
+    ['Metric', 'Value'],
+    ['Hourly Rate (£)', currencyFormatter.format(parseNumber(inputs.hourlyRate))],
+    ['Regular Hours This Pay Period', inputs.regularHours],
+    ['Overtime Hours', inputs.overtimeHours],
+    ['Overtime Multiplier (x)', inputs.overtimeMultiplier],
+    ['Tax Rate (%)', `${inputs.taxRate}%`],
+    ['NI Rate (%)', `${inputs.niRate}%`],
+    [],
+    ['Overtime Rate (£)', currencyFormatter.format(results.overtimeRate)],
+    ['Overtime Pay (£)', currencyFormatter.format(results.overtimePay)],
+    ['Regular Pay (£)', currencyFormatter.format(results.regularPay)],
+    ['Gross Pay (£)', currencyFormatter.format(results.grossPay)],
+    ['Income Tax (£)', currencyFormatter.format(results.tax)],
+    ['National Insurance (£)', currencyFormatter.format(results.nationalInsurance)],
+    ['Total Deductions (£)', currencyFormatter.format(results.deductions)],
+    ['Net Pay (£)', currencyFormatter.format(results.netPay)],
+  ];
+}
+
+function buildChartData(results) {
+  if (!results) return [];
+  return [
+    { name: 'Regular Pay', value: results.regularPay, color: '#10b981' },
+    { name: 'Overtime Pay', value: results.overtimePay, color: '#3b82f6' },
+    { name: 'Income Tax', value: results.tax, color: '#f97316' },
+    { name: 'National Insurance', value: results.nationalInsurance, color: '#ef4444' },
+  ].filter((segment) => segment.value > 0);
+}
+
+export default function OvertimePayCalculatorPage() {
   const [inputs, setInputs] = useState({
     hourlyRate: '18.00',
     regularHours: '37.5',
@@ -54,42 +171,45 @@ export default function OvertimePayCalculator() {
     taxRate: '20',
     niRate: '12',
   });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const handleChange = useCallback((field, value) => {
-    setInputs((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const results = useMemo(() => {
-    const hourlyRate = Number(inputs.hourlyRate) || 0;
-    const regularHours = Number(inputs.regularHours) || 0;
-    const overtimeHours = Number(inputs.overtimeHours) || 0;
-    const overtimeMultiplier = Number(inputs.overtimeMultiplier) || 0;
-    const taxRate = Number(inputs.taxRate) || 0;
-    const niRate = Number(inputs.niRate) || 0;
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Overtime Pay Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Tax & Income Calculators', url: '/calculators#tax-income' },
+      { name: 'Overtime Pay Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
 
-    const regularPay = hourlyRate * regularHours;
-    const overtimeRate = hourlyRate * overtimeMultiplier;
-    const overtimePay = overtimeRate * overtimeHours;
-    const grossPay = regularPay + overtimePay;
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
-    const tax = grossPay * (taxRate / 100);
-    const nationalInsurance = grossPay * (niRate / 100);
-    const deductions = tax + nationalInsurance;
-    const netPay = grossPay - deductions;
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computedResults = calculateOvertimePay(inputs);
+      setResults(computedResults);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computedResults, inputs));
+    },
+    [inputs]
+  );
 
-    return {
-      overtimeRate,
-      regularPay,
-      overtimePay,
-      grossPay,
-      tax,
-      nationalInsurance,
-      deductions,
-      netPay,
-    };
-  }, [inputs]);
-
-  const reset = useCallback(() => {
+  const handleReset = useCallback(() => {
     setInputs({
       hourlyRate: '18.00',
       regularHours: '37.5',
@@ -98,244 +218,298 @@ export default function OvertimePayCalculator() {
       taxRate: '20',
       niRate: '12',
     });
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
   }, []);
 
+  const chartData = useMemo(() => buildChartData(results), [results]);
+
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Overtime Pay & Overtime Earnings Calculator</title>
-        <meta
-          name="description"
-          content="Calculate overtime rate, overtime pay, and net pay for UK workers with our overtime earnings calculator."
-        />
-        <meta name="keywords" content="Overtime Rate, Overtime Calculator, UK Pay" />
-        <link rel="canonical" href={canonicalUrl} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'FinancialProduct',
-              name: 'Overtime Pay Calculator',
-              description:
-                'Interactive overtime pay calculator for UK employees covering extra hours, gross pay, and net pay.',
-              url: canonicalUrl,
-              keywords: schemaKeywords,
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Calculate overtime pay',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
-      <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Overtime Pay Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
-            Calculate overtime earnings, understand overtime rules, and estimate gross vs net pay in
-            line with UK employer obligations.
-          </p>
-        </div>
-      </section>
+      <CalculatorWrapper>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Overtime Pay Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Calculate your overtime earnings, understand overtime rules, and estimate gross vs net
+              pay in line with UK employer obligations.
+            </p>
+          </header>
 
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-          <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Calculator className="h-5 w-5 text-indigo-500" />
-                Pay Inputs
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="hourlyRate" className="text-sm font-medium">
-                  Hourly rate (£)
-                </Label>
-                <Input
-                  id="hourlyRate"
-                  inputMode="decimal"
-                  value={inputs.hourlyRate}
-                  onChange={(event) => handleChange('hourlyRate', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="regularHours" className="text-sm font-medium">
-                  Regular hours this pay period
-                </Label>
-                <Input
-                  id="regularHours"
-                  inputMode="decimal"
-                  value={inputs.regularHours}
-                  onChange={(event) => handleChange('regularHours', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="overtimeHours" className="text-sm font-medium">
-                  Overtime hours
-                </Label>
-                <Input
-                  id="overtimeHours"
-                  inputMode="decimal"
-                  value={inputs.overtimeHours}
-                  onChange={(event) => handleChange('overtimeHours', event.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="overtimeMultiplier" className="text-sm font-medium">
-                  Overtime multiplier (e.g. 1.5)
-                </Label>
-                <Input
-                  id="overtimeMultiplier"
-                  inputMode="decimal"
-                  value={inputs.overtimeMultiplier}
-                  onChange={(event) => handleChange('overtimeMultiplier', event.target.value)}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="taxRate" className="text-sm font-medium">
-                    Tax rate (%)
-                  </Label>
-                  <Input
-                    id="taxRate"
-                    inputMode="decimal"
-                    value={inputs.taxRate}
-                    onChange={(event) => handleChange('taxRate', event.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="niRate" className="text-sm font-medium">
-                    NI rate (%)
-                  </Label>
-                  <Input
-                    id="niRate"
-                    inputMode="decimal"
-                    value={inputs.niRate}
-                    onChange={(event) => handleChange('niRate', event.target.value)}
-                  />
-                </div>
-              </div>
-              <Button type="button" variant="outline" onClick={reset}>
-                Reset inputs
-              </Button>
-            </CardContent>
-          </Card>
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Clock className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-indigo-600 dark:text-indigo-300"
+            borderColor="border-indigo-200 dark:border-indigo-800/60"
+            bgColor="bg-indigo-50/70 dark:bg-indigo-950/40"
+            textColor="text-indigo-900 dark:text-indigo-100"
+            footerColor="text-indigo-700 dark:text-indigo-300"
+          />
 
-          <div className="space-y-6">
-            <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <Clock className="h-5 w-5 text-indigo-500" />
-                  Overtime Summary
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calculator
+                    className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                    aria-hidden="true"
+                  />
+                  Pay Inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Overtime rate</p>
-                    <p className="text-lg font-semibold text-indigo-600">
-                      {currencyFormatter.format(results.overtimeRate)}
-                    </p>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="hourlyRate">Hourly rate (£)</Label>
+                      <Input
+                        id="hourlyRate"
+                        inputMode="decimal"
+                        value={inputs.hourlyRate}
+                        onChange={handleInputChange('hourlyRate')}
+                        placeholder="e.g. 18.00"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="regularHours">Regular hours this pay period</Label>
+                      <Input
+                        id="regularHours"
+                        inputMode="decimal"
+                        value={inputs.regularHours}
+                        onChange={handleInputChange('regularHours')}
+                        placeholder="e.g. 37.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="overtimeHours">Overtime hours</Label>
+                      <Input
+                        id="overtimeHours"
+                        inputMode="decimal"
+                        value={inputs.overtimeHours}
+                        onChange={handleInputChange('overtimeHours')}
+                        placeholder="e.g. 6"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="overtimeMultiplier">Overtime multiplier (x)</Label>
+                      <Input
+                        id="overtimeMultiplier"
+                        inputMode="decimal"
+                        value={inputs.overtimeMultiplier}
+                        onChange={handleInputChange('overtimeMultiplier')}
+                        placeholder="e.g. 1.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="taxRate">Tax rate (%)</Label>
+                      <Input
+                        id="taxRate"
+                        inputMode="decimal"
+                        value={inputs.taxRate}
+                        onChange={handleInputChange('taxRate')}
+                        placeholder="e.g. 20"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="niRate">NI rate (%)</Label>
+                      <Input
+                        id="niRate"
+                        inputMode="decimal"
+                        value={inputs.niRate}
+                        onChange={handleInputChange('niRate')}
+                        placeholder="e.g. 12"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Overtime pay</p>
-                    <p className="text-lg font-semibold text-indigo-600">
-                      {currencyFormatter.format(results.overtimePay)}
-                    </p>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate Overtime Pay
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Regular pay</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.regularPay)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Gross pay</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.grossPay)}
-                    </p>
-                  </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-indigo-200 dark:border-indigo-900 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                  <PoundSterling className="h-5 w-5 text-indigo-500" />
-                  Deductions &amp; Net Pay
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground">Income tax</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.tax)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">National Insurance</p>
-                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      {currencyFormatter.format(results.nationalInsurance)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Total deductions</p>
-                    <p className="text-lg font-semibold text-rose-600">
-                      {currencyFormatter.format(results.deductions)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Net pay</p>
-                    <p className="text-lg font-semibold text-emerald-600">
-                      {currencyFormatter.format(results.netPay)}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your hourly rate, hours, and tax details, then press{' '}
+                    <span className="font-semibold">Calculate Overtime Pay</span> to see your
+                    estimated gross and net earnings.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-indigo-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-indigo-900/30 dark:text-indigo-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <PoundSterling
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-200"
+                          aria-hidden="true"
+                        />
+                        Overtime Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Overtime rate
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.overtimeRate)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Overtime pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.overtimePay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Regular pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.regularPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Gross pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.grossPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Income tax</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.tax)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          National Insurance
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.nationalInsurance)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Total deductions
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.deductions)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Net pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.netPay)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="overtime-pay-earnings"
+                          title="Overtime Pay Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <LineChart
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Pay Breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Overtime Pay Breakdown" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BookOpen
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Important Notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        The tax and National Insurance rates used in this calculator are simplified
+                        examples. Your actual deductions may vary based on your full tax code, NI
+                        category, and any other deductions or allowances.
+                      </p>
+                      <p>
+                        Always check your payslip for accurate figures and consult with a financial
+                        advisor for personalized tax planning.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
+
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
-
-        <section className="mt-12 space-y-6">
-          <Heading as="h2" size="h2" className="text-slate-900 dark:text-slate-100">
-            Calculate Overtime the Right Way
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Understanding overtime rules matters for both employees and employers. Always confirm
-            how gross pay is calculated, check net pay after deductions, and make sure employer
-            obligations such as automatic pension enrolment or paid holiday accrual are satisfied.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Overtime Rules &amp; Gross Pay vs Net Pay
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            UK legislation does not mandate overtime premiums, but most employment contracts specify
-            an overtime multiplier. Always confirm whether overtime is paid at time and a half or
-            double time, and keep accurate records of hours worked to avoid pay disputes.
-          </p>
-
-          <Heading as="h3" size="h3" className="text-slate-900 dark:text-slate-100">
-            Employer Obligations for Extra Hours
-          </Heading>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Employers must ensure the working time directive is respected, including rest breaks and
-            weekly limits, unless the employee has opted out. Regular overtime may also impact
-            holiday pay calculations, which should reflect the employee’s normal income.
-          </p>
-        </section>
-
-        <section className="mt-12">
-          <FAQSection faqs={faqItems} />
-        </section>
       </CalculatorWrapper>
     </div>
   );

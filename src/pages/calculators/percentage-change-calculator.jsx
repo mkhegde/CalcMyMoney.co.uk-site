@@ -1,34 +1,41 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, TrendingUp, TrendingDown, Percent } from 'lucide-react';
-
+import React, { useMemo, useState, useCallback, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import {
+  Calculator,
+  TrendingUp,
+  TrendingDown,
+  Percent,
+  Quote,
+  BookOpen,
+  LineChart,
+} from 'lucide-react';
 
-const keywords = [
-  'percentage change calculator',
-  'percent change calculator',
-  'percentage increase calculator',
-  'percentage decrease calculator',
-  'percent difference calculator',
-];
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
 
-const metaDescription =
-  'Use our percentage change calculator and percent change calculator to measure percentage increase calculator values, percentage decrease calculator drops, and percent difference calculator comparisons.';
-
+const pagePath = '/calculators/percentage-change-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/percentage-change-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+const pageTitle = 'Percentage Change Calculator UK | Increase, Decrease & Difference';
+const metaDescription =
+  'Use our UK percentage change calculator to measure percentage increase, percentage decrease, and percent difference for investments, pricing, or KPIs.';
+const keywords = getMappedKeywords('Percentage Change Calculator');
 
-const formatNumber = (value, decimals = 2) =>
-  Number.isFinite(value) ? Number(value).toFixed(decimals) : '0.00';
-
-const percentageChangeFaqs = [
+const faqItems = [
   {
     question: 'How do I compare two prices or salaries?',
     answer:
@@ -37,7 +44,7 @@ const percentageChangeFaqs = [
   {
     question: 'What if I want to reverse the calculation?',
     answer:
-      'Toggle the reverse slider to solve for the new value given a percentage change. It is useful when you need to target a specific price rise or cost reduction.',
+      'Toggle the reverse mode to solve for the new value given a percentage change. It is useful when you need to target a specific price rise or cost reduction.',
   },
   {
     question: 'How is percent difference different from percent change?',
@@ -46,9 +53,50 @@ const percentageChangeFaqs = [
   },
 ];
 
+const emotionalMessage =
+  'Understanding changes in your finances is crucial for smart decision-making. Use this calculator to clearly see the impact of increases, decreases, and differences on your financial journey.';
+const emotionalQuote = {
+  text: 'Change is the only constant in life.',
+  author: 'Heraclitus',
+};
+
+const directoryLinks = [
+  {
+    url: '/#budgeting-planning',
+    label: 'Explore all budgeting & planning calculators',
+    description: 'Coordinate spending plans, short-term goals, and day-to-day money decisions.',
+  },
+  {
+    url: '/salary-increase-calculator',
+    label: 'Salary Increase Calculator',
+    description: 'Calculate the impact of a salary increase on your take-home pay.',
+  },
+  {
+    url: '/inflation-calculator',
+    label: 'Inflation Calculator',
+    description: 'Measure how prices change over time and estimate future purchasing power.',
+  },
+];
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 2,
+});
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const formatNumber = (value, decimals = 2) =>
+  Number.isFinite(value) ? Number(value).toFixed(decimals) : '0.00';
+
 const calculatePercentageChange = ({ originalValue, newValue }) => {
-  const original = Number(originalValue) || 0;
-  const updated = Number(newValue) || 0;
+  const original = parseNumber(originalValue);
+  const updated = parseNumber(newValue);
   const difference = updated - original;
   const percentChange = original !== 0 ? (difference / original) * 100 : 0;
   const percentIncrease = difference > 0 ? percentChange : 0;
@@ -68,281 +116,392 @@ const calculatePercentageChange = ({ originalValue, newValue }) => {
 };
 
 const calculateReverseValue = ({ originalValue, percentChange }) => {
-  const original = Number(originalValue) || 0;
-  const change = Number(percentChange) || 0;
+  const original = parseNumber(originalValue);
+  const change = parseNumber(percentChange);
   return original * (1 + change / 100);
 };
 
+function buildCsvData(results, inputs) {
+  if (!results) return null;
+  const csvRows = [
+    ['Metric', 'Value'],
+    ['Original Value (£)', formatNumber(parseNumber(inputs.originalValue), inputs.decimals)],
+    ['New Value (£)', formatNumber(parseNumber(inputs.newValue), inputs.decimals)],
+    ['Decimal Places', inputs.decimals],
+    ['Reverse Mode', inputs.reverseMode ? 'Enabled' : 'Disabled'],
+    ['Target Percent Change (%)', `${inputs.reversePercent}%`],
+    [],
+    ['Difference (£)', formatNumber(results.difference, inputs.decimals)],
+    ['Percentage Change (%)', `${formatNumber(results.percentChange, inputs.decimals)}%`],
+    ['Percentage Increase (%)', `${formatNumber(results.percentIncrease, inputs.decimals)}%`],
+    ['Percentage Decrease (%)', `${formatNumber(results.percentDecrease, inputs.decimals)}%`],
+    ['Percent Difference (%)', `${formatNumber(results.percentDifference, inputs.decimals)}%`],
+  ];
+
+  if (inputs.reverseMode) {
+    csvRows.push([
+      'New Value Required (Reverse Calculation) (£)',
+      formatNumber(calculateReverseValue(inputs), inputs.decimals),
+    ]);
+  }
+  return csvRows;
+}
+
+function buildChartData(results) {
+  if (!results) return [];
+  const data = [];
+  if (results.percentIncrease > 0) {
+    data.push({ name: 'Percentage Increase', value: results.percentIncrease, color: '#10b981' });
+  }
+  if (results.percentDecrease > 0) {
+    data.push({ name: 'Percentage Decrease', value: results.percentDecrease, color: '#ef4444' });
+  }
+  if (data.length === 0 && results.percentChange === 0) {
+    data.push({ name: 'No Change', value: 100, color: '#3b82f6' }); // Placeholder for no change
+  }
+  return data;
+}
+
 export default function PercentageChangeCalculatorPage() {
   const [inputs, setInputs] = useState({
-    originalValue: 1250,
-    newValue: 1485,
-    decimals: 2,
+    originalValue: '1,250',
+    newValue: '1,485',
+    decimals: '2',
     reverseMode: false,
-    reversePercent: 12,
+    reversePercent: '12',
+  });
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
+
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Percentage Change Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Budgeting & Planning Calculators', url: '/calculators#budgeting-planning' },
+      { name: 'Percentage Change Calculator', url: pagePath },
+    ],
+    faq: faqItems,
   });
 
-  const results = useMemo(
-    () =>
-      calculatePercentageChange({
-        originalValue: inputs.originalValue,
-        newValue: inputs.newValue,
-      }),
-    [inputs.originalValue, inputs.newValue]
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
   );
 
-  const reversedValue = useMemo(
-    () =>
-      calculateReverseValue({
-        originalValue: inputs.originalValue,
-        percentChange: inputs.reversePercent,
-      }),
-    [inputs.originalValue, inputs.reversePercent]
+  const handleReverseModeToggle = useCallback(() => {
+    setInputs((prev) => ({ ...prev, reverseMode: !prev.reverseMode }));
+  }, []);
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computedResults = calculatePercentageChange(inputs);
+      setResults(computedResults);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computedResults, inputs));
+    },
+    [inputs]
   );
 
-  const resetAll = () =>
+  const handleReset = useCallback(() => {
     setInputs({
-      originalValue: 1250,
-      newValue: 1485,
-      decimals: 2,
+      originalValue: '1,250',
+      newValue: '1,485',
+      decimals: '2',
       reverseMode: false,
-      reversePercent: 12,
+      reversePercent: '12',
     });
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  }, []);
+
+  const chartData = useMemo(() => buildChartData(results), [results]);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Percentage Change Calculator | Percent Change Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Percentage Change Calculator | Percent Change Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Percentage Change Calculator | Percent Change Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Percentage Change Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Compare values with a percentage change calculator',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
-
-      <section className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Percentage Change Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
-            Measure increases, decreases, and differences instantly—perfect for investments, pricing, or KPI
-            dashboards.
-          </p>
-        </div>
-      </section>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
       <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-indigo-200 bg-white text-slate-900 shadow-md dark:border-indigo-900 dark:bg-slate-950 dark:text-slate-100">
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Percentage Change Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Measure increases, decreases, and differences instantly—perfect for investments,
+              pricing, or KPI dashboards.
+            </p>
+          </header>
+
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Percent className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-indigo-600 dark:text-indigo-300"
+            borderColor="border-indigo-200 dark:border-indigo-800/60"
+            bgColor="bg-indigo-50/70 dark:bg-indigo-950/40"
+            textColor="text-indigo-900 dark:text-indigo-100"
+            footerColor="text-indigo-700 dark:text-indigo-300"
+          />
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calculator className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                  Value comparison
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calculator
+                    className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                    aria-hidden="true"
+                  />
+                  Value Inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="originalValue">Original value (£)</Label>
-                  <Input
-                    id="originalValue"
-                    type="number"
-                    inputMode="decimal"
-                    value={inputs.originalValue}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        originalValue: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newValue">New value (£)</Label>
-                  <Input
-                    id="newValue"
-                    type="number"
-                    inputMode="decimal"
-                    value={inputs.newValue}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        newValue: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="decimals">Decimal places</Label>
-                  <Slider
-                    id="decimals"
-                    className="mt-3"
-                    value={[Number(inputs.decimals)]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        decimals: Number(value[0].toFixed(0)),
-                      }))
-                    }
-                    min={0}
-                    max={6}
-                    step={1}
-                  />
-                  <div className="flex justify-between text-sm text-indigo-700 dark:text-indigo-200">
-                    <span>0</span>
-                    <span>{inputs.decimals}</span>
-                    <span>6</span>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="originalValue">Original value (£)</Label>
+                      <Input
+                        id="originalValue"
+                        inputMode="decimal"
+                        value={inputs.originalValue}
+                        onChange={handleInputChange('originalValue')}
+                        placeholder="e.g. 1,250"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newValue">New value (£)</Label>
+                      <Input
+                        id="newValue"
+                        inputMode="decimal"
+                        value={inputs.newValue}
+                        onChange={handleInputChange('newValue')}
+                        placeholder="e.g. 1,485"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="decimals">Decimal places</Label>
+                      <Input
+                        id="decimals"
+                        inputMode="numeric"
+                        value={inputs.decimals}
+                        onChange={handleInputChange('decimals')}
+                        placeholder="e.g. 2"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="reverseMode" className="text-sm font-medium">
+                        Reverse calculation mode
+                      </Label>
+                      <Button
+                        type="button"
+                        variant={inputs.reverseMode ? 'default' : 'outline'}
+                        onClick={handleReverseModeToggle}
+                        className="w-full"
+                      >
+                        {inputs.reverseMode ? 'Enabled' : 'Disabled'}
+                      </Button>
+                    </div>
+                    {inputs.reverseMode && (
+                      <div className="space-y-2">
+                        <Label htmlFor="reversePercent">Target percent change (%)</Label>
+                        <Input
+                          id="reversePercent"
+                          inputMode="decimal"
+                          value={inputs.reversePercent}
+                          onChange={handleInputChange('reversePercent')}
+                          placeholder="e.g. 12"
+                        />
+                      </div>
+                    )}
                   </div>
-                </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate Change
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Card className="border border-indigo-200 bg-indigo-50 text-slate-900 shadow-md dark:border-indigo-900 dark:bg-indigo-900/30 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Percent className="h-5 w-5 text-indigo-700 dark:text-indigo-300" />
-                  Reverse calculation
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <Label className="font-medium">Reverse mode</Label>
-                  <Button
-                    variant={inputs.reverseMode ? 'default' : 'outline'}
-                    onClick={() =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        reverseMode: !prev.reverseMode,
-                      }))
-                    }
-                  >
-                    {inputs.reverseMode ? 'Enabled' : 'Disabled'}
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reversePercent">Target percent change (%)</Label>
-                  <Slider
-                    id="reversePercent"
-                    className="mt-3"
-                    value={[Number(inputs.reversePercent)]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        reversePercent: Number(value[0].toFixed(1)),
-                      }))
-                    }
-                    min={-100}
-                    max={200}
-                    step={0.5}
-                  />
-                  <div className="flex justify-between text-sm text-indigo-700 dark:text-indigo-200">
-                    <span>-100%</span>
-                    <span>{inputs.reversePercent.toFixed(1)}%</span>
-                    <span>200%</span>
-                  </div>
-                </div>
-                {inputs.reverseMode && (
-                  <p className="rounded-md border border-indigo-200 bg-white p-3 text-sm font-medium dark:border-indigo-800 dark:bg-slate-900/40">
-                    New value required: {formatNumber(reversedValue, inputs.decimals)}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your original and new values, then press{' '}
+                    <span className="font-semibold">Calculate Change</span> to see the percentage
+                    increase, decrease, or difference.
+                  </CardContent>
+                </Card>
+              )}
 
-            <Button variant="outline" className="w-full" onClick={resetAll}>
-              Reset calculator
-            </Button>
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-indigo-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-indigo-900/30 dark:text-indigo-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <TrendingUp
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-200"
+                          aria-hidden="true"
+                        />
+                        Change Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Difference</p>
+                        <p className="text-2xl font-semibold">
+                          {formatNumber(results.difference, inputs.decimals)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Percentage change
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {formatNumber(results.percentChange, inputs.decimals)}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Percentage increase
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {formatNumber(results.percentIncrease, inputs.decimals)}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Percentage decrease
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {formatNumber(results.percentDecrease, inputs.decimals)}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Percent difference
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {formatNumber(results.percentDifference, inputs.decimals)}%
+                        </p>
+                      </div>
+                      {inputs.reverseMode && (
+                        <div>
+                          <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                            New value required
+                          </p>
+                          <p className="text-2xl font-semibold">
+                            {formatNumber(calculateReverseValue(inputs), inputs.decimals)}
+                          </p>
+                        </div>
+                      )}
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="percentage-change-results"
+                          title="Percentage Change Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <LineChart
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Change Visualisation
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart
+                          data={chartData}
+                          title="Percentage Change Breakdown"
+                        />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BookOpen
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Important Notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        This calculator provides a mathematical calculation of percentage change.
+                        Always consider the context of the numbers when interpreting results for
+                        financial decisions.
+                      </p>
+                      <p>
+                        For complex financial analysis, consult with a qualified financial advisor.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <Card className="border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <TrendingUp className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                  Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span>Difference</span>
-                  <span>{formatNumber(results.difference, inputs.decimals)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Percentage change</span>
-                  <span>{formatNumber(results.percentChange, inputs.decimals)}%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Percentage increase</span>
-                  <span>{formatNumber(results.percentIncrease, inputs.decimals)}%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Percentage decrease</span>
-                  <span>{formatNumber(results.percentDecrease, inputs.decimals)}%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Percent difference</span>
-                  <span>{formatNumber(results.percentDifference, inputs.decimals)}%</span>
-                </div>
-              </CardContent>
-            </Card>
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
 
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Percentage increase calculator and percentage decrease calculator tips
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Use the percentage increase calculator to measure growth in KPIs or investments. Switch the
-                values to track cost savings with the percentage decrease calculator when negotiating with
-                suppliers.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Percent difference calculator insights
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                When neither value is the baseline, the percent difference calculator gives a fair comparison
-                of volatility—ideal for scientific measurements or price comparisons between products.
-              </p>
-            </section>
-
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <FAQSection faqs={percentageChangeFaqs} />
-            </section>
-          </div>
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
       </CalculatorWrapper>
     </div>

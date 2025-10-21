@@ -1,49 +1,39 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Clock, BadgePercent } from 'lucide-react';
-
+import React, { useMemo, useState, useCallback, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
+import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
+import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
+import { Calculator, Clock, BadgePercent, Quote, BookOpen, LineChart } from 'lucide-react';
 
-const keywords = [
-  'pro rata calculator',
-  'hourly to salary calculator',
-  'annual salary calculator',
-  'salary converter',
-  'hourly rate to salary',
-  'yearly salary calculator',
-];
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
 
-const metaDescription =
-  'Use our pro rata calculator and hourly to salary calculator to turn an annual salary calculator figure into the exact pay for your contract.';
-
+const pagePath = '/calculators/pro-rata-salary-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/pro-rata-salary-calculator';
-const schemaKeywords = keywords.slice(0, 5);
-
-const currencyFormatter = new Intl.NumberFormat('en-GB', {
-  style: 'currency',
-  currency: 'GBP',
-  minimumFractionDigits: 0,
-});
-
-const numberFormatter = new Intl.NumberFormat('en-GB', {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 1,
-});
+const pageTitle = 'Pro Rata Salary Calculator UK | Part-Time Pay & FTE';
+const metaDescription =
+  'Use our UK pro rata salary calculator to convert a full-time salary into the exact pay for your part-time contract. Understand FTE and flexible working.';
+const keywords = getMappedKeywords('Pro Rata Salary Calculator');
 
 const defaultInputs = {
-  fullSalary: 38000,
-  fullTimeHours: 37.5,
-  actualHours: 28,
-  fullTimeDays: 5,
-  actualDays: 4,
-  contractWeeks: 46,
+  fullSalary: '38,000',
+  fullTimeHours: '37.5',
+  actualHours: '28',
+  fullTimeDays: '5',
+  actualDays: '4',
+  contractWeeks: '46',
 };
 
 const proRataFaqs = [
@@ -55,7 +45,7 @@ const proRataFaqs = [
   {
     question: 'Does annual leave change the calculation?',
     answer:
-      'Enter the actual number of weeks you will be paid for, including paid holiday weeks. If your employer pays you across the full year, keep the weeks slider at 52 to reflect that.',
+      'Enter the actual number of weeks you will be paid for, including paid holiday weeks. If your employer pays you across the full year, keep the weeks input at 52 to reflect that.',
   },
   {
     question: 'Is the hourly rate the same for part-time staff?',
@@ -64,13 +54,57 @@ const proRataFaqs = [
   },
 ];
 
+const emotionalMessage =
+  'Flexible working offers freedom, and understanding your pro rata salary ensures financial fairness. Use this calculator to confidently plan your income for any working pattern.';
+const emotionalQuote = {
+  text: 'The only way to do great work is to love what you do.',
+  author: 'Steve Jobs',
+};
+
+const directoryLinks = [
+  {
+    url: '/#tax-income',
+    label: 'Explore all tax & income calculators',
+    description:
+      'Understand deductions, take-home pay, and tax liabilities on every type of income.',
+  },
+  {
+    url: '/salary-calculator',
+    label: 'Salary Calculator',
+    description: 'Estimate your gross and net pay based on your annual salary.',
+  },
+  {
+    url: '/take-home-pay-calculator',
+    label: 'Take-Home Pay Calculator',
+    description: 'See your net income after tax and National Insurance.',
+  },
+];
+
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  minimumFractionDigits: 2,
+});
+
+const numberFormatter = new Intl.NumberFormat('en-GB', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 1,
+});
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
 const calculateProRata = (inputs) => {
-  const fullSalary = Number(inputs.fullSalary) || 0;
-  const fullTimeHours = Number(inputs.fullTimeHours) || 0;
-  const actualHours = Number(inputs.actualHours) || 0;
-  const fullTimeDays = Number(inputs.fullTimeDays) || 0;
-  const actualDays = Number(inputs.actualDays) || 0;
-  const contractWeeks = Math.min(Math.max(Number(inputs.contractWeeks) || 0, 0), 52);
+  const fullSalary = parseNumber(inputs.fullSalary);
+  const fullTimeHours = parseNumber(inputs.fullTimeHours);
+  const actualHours = parseNumber(inputs.actualHours);
+  const fullTimeDays = parseNumber(inputs.fullTimeDays);
+  const actualDays = parseNumber(inputs.actualDays);
+  const contractWeeks = Math.min(Math.max(parseNumber(inputs.contractWeeks), 0), 52);
 
   const hoursRatio = fullTimeHours > 0 ? actualHours / fullTimeHours : 0;
   const contractFraction = contractWeeks / 52;
@@ -101,332 +135,380 @@ const calculateProRata = (inputs) => {
   };
 };
 
+function buildCsvData(results, inputs) {
+  if (!results) return null;
+  return [
+    ['Metric', 'Value'],
+    ['Full-Time Salary (£)', currencyFormatter.format(parseNumber(inputs.fullSalary))],
+    ['Full-Time Hours Per Week', inputs.fullTimeHours],
+    ['Your Hours Per Week', inputs.actualHours],
+    ['Full-Time Days Per Week', inputs.fullTimeDays],
+    ['Your Days Per Week', inputs.actualDays],
+    ['Paid Weeks In Contract', inputs.contractWeeks],
+    [],
+    ['FTE Match (%)', `${numberFormatter.format(results.hoursRatio * 100)}%`],
+    ['Contract Fraction (%)', `${numberFormatter.format(results.contractFraction * 100)}%`],
+    ['Annualised Salary (£)', currencyFormatter.format(results.fteEquivalent)],
+    ['Contract Pay (£)', currencyFormatter.format(results.contractPay)],
+    ['Monthly (Annualised) (£)', currencyFormatter.format(results.annualisedMonthlyPay)],
+    ['Monthly (Contract) (£)', currencyFormatter.format(results.contractMonthlyPay)],
+    ['Weekly Pay (£)', currencyFormatter.format(results.weeklyPay)],
+    ['Daily Pay (£)', currencyFormatter.format(results.dailyPay)],
+    ['Hourly Rate (£)', currencyFormatter.format(results.partTimeHourlyRate)],
+  ];
+}
+
+function buildChartData(results) {
+  if (!results) return [];
+  return [
+    { name: 'FTE Equivalent', value: results.fteEquivalent, color: '#3b82f6' },
+    { name: 'Contract Pay', value: results.contractPay, color: '#10b981' },
+  ].filter((segment) => segment.value > 0);
+}
+
 export default function ProRataSalaryCalculatorPage() {
   const [inputs, setInputs] = useState(defaultInputs);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const results = useMemo(() => calculateProRata(inputs), [inputs]);
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
 
-  const resetAll = () => setInputs(defaultInputs);
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Pro Rata Salary Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Tax & Income Calculators', url: '/calculators#tax-income' },
+      { name: 'Pro Rata Salary Calculator', url: pagePath },
+    ],
+    faq: proRataFaqs,
+  });
+
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computedResults = calculateProRata(inputs);
+      setResults(computedResults);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computedResults, inputs));
+    },
+    [inputs]
+  );
+
+  const handleReset = useCallback(() => {
+    setInputs(defaultInputs);
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  }, []);
+
+  const chartData = useMemo(() => buildChartData(results), [results]);
 
   return (
-    <div className="bg-gray-950 text-white">
-      <Helmet>
-        <title>Pro Rata Salary Calculator | Hourly to Salary Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Pro Rata Salary Calculator | Hourly to Salary Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Pro Rata Salary Calculator | Hourly to Salary Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Pro Rata Salary Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Convert a full-time salary into a part-time pro rata amount',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
-
-      <section className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Pro Rata Salary Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
-            Translate full-time pay into part-time reality, compare contract lengths, and see how your
-            take-home adapts to flexible working patterns.
-          </p>
-        </div>
-      </section>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        jsonLd={schema}
+        keywords={keywords}
+        articleTags={keywords}
+      />
 
       <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-indigo-200 bg-white text-slate-900 shadow-md dark:border-indigo-900 dark:bg-slate-950 dark:text-slate-100">
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Pro Rata Salary Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Translate full-time pay into part-time reality, compare contract lengths, and see how
+              your take-home adapts to flexible working patterns.
+            </p>
+          </header>
+
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Clock className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-indigo-600 dark:text-indigo-300"
+            borderColor="border-indigo-200 dark:border-indigo-800/60"
+            bgColor="bg-indigo-50/70 dark:bg-indigo-950/40"
+            textColor="text-indigo-900 dark:text-indigo-100"
+            footerColor="text-indigo-700 dark:text-indigo-300"
+          />
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                  Working pattern inputs
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calculator
+                    className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                    aria-hidden="true"
+                  />
+                  Working Pattern Inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullSalary">Full-time salary (£)</Label>
-                    <Input
-                      id="fullSalary"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="500"
-                      value={inputs.fullSalary}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          fullSalary: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="fullTimeHours">Full-time hours per week</Label>
-                    <Input
-                      id="fullTimeHours"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="0.5"
-                      value={inputs.fullTimeHours}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          fullTimeHours: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="actualHours">Your hours per week</Label>
-                    <Slider
-                      id="actualHours"
-                      className="mt-3"
-                      value={[Number(inputs.actualHours)]}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          actualHours: Number(value[0].toFixed(1)),
-                        }))
-                      }
-                      min={5}
-                      max={inputs.fullTimeHours > 0 ? Math.max(inputs.fullTimeHours, 5) : 40}
-                      step={0.5}
-                    />
-                    <div className="flex justify-between text-sm text-indigo-700 dark:text-indigo-200">
-                      <span>5</span>
-                      <span>{inputs.actualHours.toFixed(1)}</span>
-                      <span>{inputs.fullTimeHours > 0 ? Math.max(inputs.fullTimeHours, 5) : 40}</span>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullSalary">Full-time salary (£)</Label>
+                      <Input
+                        id="fullSalary"
+                        inputMode="decimal"
+                        value={inputs.fullSalary}
+                        onChange={handleInputChange('fullSalary')}
+                        placeholder="e.g. 38,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fullTimeHours">Full-time hours per week</Label>
+                      <Input
+                        id="fullTimeHours"
+                        inputMode="decimal"
+                        value={inputs.fullTimeHours}
+                        onChange={handleInputChange('fullTimeHours')}
+                        placeholder="e.g. 37.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="actualHours">Your hours per week</Label>
+                      <Input
+                        id="actualHours"
+                        inputMode="decimal"
+                        value={inputs.actualHours}
+                        onChange={handleInputChange('actualHours')}
+                        placeholder="e.g. 28"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fullTimeDays">Full-time days per week</Label>
+                      <Input
+                        id="fullTimeDays"
+                        inputMode="decimal"
+                        value={inputs.fullTimeDays}
+                        onChange={handleInputChange('fullTimeDays')}
+                        placeholder="e.g. 5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="actualDays">Your days per week</Label>
+                      <Input
+                        id="actualDays"
+                        inputMode="decimal"
+                        value={inputs.actualDays}
+                        onChange={handleInputChange('actualDays')}
+                        placeholder="e.g. 4"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contractWeeks">Paid weeks in contract</Label>
+                      <Input
+                        id="contractWeeks"
+                        inputMode="numeric"
+                        value={inputs.contractWeeks}
+                        onChange={handleInputChange('contractWeeks')}
+                        placeholder="e.g. 46"
+                      />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contractWeeks">Paid weeks in contract</Label>
-                    <Slider
-                      id="contractWeeks"
-                      className="mt-3"
-                      value={[Number(inputs.contractWeeks)]}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          contractWeeks: Number(value[0].toFixed(0)),
-                        }))
-                      }
-                      min={4}
-                      max={52}
-                      step={1}
-                    />
-                    <div className="flex justify-between text-sm text-indigo-700 dark:text-indigo-200">
-                      <span>4</span>
-                      <span>{inputs.contractWeeks}</span>
-                      <span>52</span>
-                    </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate Pro Rata Salary
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="fullTimeDays">Full-time days per week</Label>
-                    <Input
-                      id="fullTimeDays"
-                      type="number"
-                      inputMode="decimal"
-                      min="1"
-                      max="7"
-                      step="0.1"
-                      value={inputs.fullTimeDays}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          fullTimeDays: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="actualDays">Your days per week</Label>
-                    <Input
-                      id="actualDays"
-                      type="number"
-                      inputMode="decimal"
-                      min="1"
-                      max="7"
-                      step="0.1"
-                      value={inputs.actualDays}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          actualDays: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full" onClick={resetAll}>
-                  Reset to default pattern
-                </Button>
+                </form>
               </CardContent>
             </Card>
+
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter full-time and your working pattern details, then press{' '}
+                    <span className="font-semibold">Calculate Pro Rata Salary</span> to see your
+                    equivalent part-time pay.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-indigo-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-indigo-900/30 dark:text-indigo-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BadgePercent
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-200"
+                          aria-hidden="true"
+                        />
+                        Pro Rata Salary Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">FTE match</p>
+                        <p className="text-2xl font-semibold">
+                          {numberFormatter.format(results.hoursRatio * 100)}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Contract fraction
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {numberFormatter.format(results.contractFraction * 100)}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Annualised salary
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.fteEquivalent)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Contract pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.contractPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Monthly (annualised)
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.annualisedMonthlyPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                          Monthly (contract)
+                        </p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.contractMonthlyPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Weekly pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.weeklyPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Daily pay</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.dailyPay)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-indigo-900 dark:text-indigo-200">Hourly rate</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.partTimeHourlyRate)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="pro-rata-salary"
+                          title="Pro Rata Salary Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                        <LineChart
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Salary Breakdown
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Pro Rata Salary Breakdown" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                        <BookOpen
+                          className="h-5 w-5 text-indigo-600 dark:text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        Important Notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        This calculator provides an estimate based on your inputs. Always refer to
+                        your employment contract for the exact terms and conditions regarding your
+                        salary and working pattern.
+                      </p>
+                      <p>
+                        Tax and National Insurance deductions are not included in this calculation.
+                        Use a take-home pay calculator for a full net pay estimate.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <Card className="border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calculator className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
-                  Pro rata salary breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">FTE match</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {numberFormatter.format(results.hoursRatio * 100)}%
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Hours vs full-time</p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Contract fraction</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {numberFormatter.format(results.contractFraction * 100)}%
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {results.contractWeeks} weeks of pay
-                  </p>
-                </div>
-                <div className="rounded-md border border-indigo-200 bg-indigo-50 p-4 text-center dark:border-indigo-800 dark:bg-indigo-900/30">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">Annualised salary</p>
-                  <p className="text-2xl font-semibold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter.format(results.fteEquivalent)}
-                  </p>
-                  <p className="text-xs text-indigo-600 dark:text-indigo-200">
-                    Annual salary calculator output
-                  </p>
-                </div>
-                <div className="rounded-md border border-indigo-200 bg-indigo-50 p-4 text-center dark:border-indigo-800 dark:bg-indigo-900/30">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">Contract pay</p>
-                  <p className="text-2xl font-semibold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter.format(results.contractPay)}
-                  </p>
-                  <p className="text-xs text-indigo-600 dark:text-indigo-200">
-                    Paid over {numberFormatter.format(results.contractMonths)} months
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Monthly (annualised)</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.annualisedMonthlyPay)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Monthly (contract)</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.contractMonthlyPay)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Weekly</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.weeklyPay)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Daily</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.dailyPay)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-indigo-200 bg-indigo-50 p-4 text-center dark:border-indigo-800 dark:bg-indigo-900/30 md:col-span-2">
-                  <p className="text-sm text-indigo-700 dark:text-indigo-200">Hourly rate</p>
-                  <p className="text-2xl font-semibold text-indigo-900 dark:text-indigo-100">
-                    {currencyFormatter.format(results.partTimeHourlyRate)}
-                  </p>
-                  <p className="text-xs text-indigo-600 dark:text-indigo-200">
-                    Hourly rate to salary conversion stays consistent
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={proRataFaqs} />
+          </section>
 
-            <Card className="border border-indigo-200 bg-indigo-50 text-slate-900 shadow-md dark:border-indigo-900 dark:bg-indigo-900/30 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <BadgePercent className="h-5 w-5 text-indigo-700 dark:text-indigo-300" />
-                  Contract snapshot
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <p>
-                  Hours match {numberFormatter.format(results.hoursRatio * 100)}% of the full-time
-                  schedule across {inputs.actualDays} days per week. That is equivalent to{' '}
-                  {numberFormatter.format(results.contractFraction * 100)}% of annual pay when you are
-                  on contract for {results.contractWeeks} paid weeks.
-                </p>
-                <p>
-                  The salary converter shows a total contract value of{' '}
-                  {currencyFormatter.format(results.contractPay)}, or{' '}
-                  {currencyFormatter.format(results.contractMonthlyPay)} per month if the employer pays
-                  evenly across the period.
-                </p>
-              </CardContent>
-            </Card>
-
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Salary converter planning tips
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Use the hourly rate to salary comparison to judge whether extra shifts or compressed
-                hours make sense. The yearly salary calculator perspective lets you benchmark offers
-                against full-time colleagues without losing sight of part-year income.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Coordinate with other work benefits
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Pair the calculator output with pension or bonus details so you understand the complete
-                reward package before signing a flexible contract.
-              </p>
-            </section>
-          </div>
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
       </CalculatorWrapper>
-
-      <section className="bg-white py-12 dark:bg-gray-950">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={proRataFaqs} />
-        </div>
-      </section>
     </div>
   );
 }
