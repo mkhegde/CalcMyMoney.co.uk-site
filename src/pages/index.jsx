@@ -244,6 +244,17 @@ function LegacyCostOfLivingRedirect() {
   return <Navigate to={COST_OF_LIVING_BASE_PATH} replace />;
 }
 
+function LegacyCalculatorRedirect() {
+  const location = useLocation();
+  const pathname = location.pathname || '';
+  const remainder = pathname.replace(/^\/+calculators\/?/, '');
+  const normalisedRemainder = remainder.replace(/^\/+/, '');
+  const targetPath = normalisedRemainder ? `/${normalisedRemainder}` : '/';
+  const search = location.search || '';
+  const hash = normalisedRemainder ? location.hash || '' : location.hash || '#calculators';
+  return <Navigate to={`${targetPath}${search}${hash}`} replace />;
+}
+
 // Helper for Layout current page label
 function _getCurrentPage(pathname) {
   const normalizedPath = _normalizeSlug(pathname || '/');
@@ -397,6 +408,8 @@ function PagesContent() {
           {Object.entries(LEGACY_REDIRECTS).map(([from, to]) => (
             <Route key={`legacy:${from}`} path={from} element={<Navigate to={to} replace />} />
           ))}
+
+          <Route path="/calculators/*" element={<LegacyCalculatorRedirect />} />
 
           {/* Static/Blog/Data */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />

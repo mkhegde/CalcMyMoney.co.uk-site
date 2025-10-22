@@ -220,11 +220,31 @@ for (const file of calculatorFiles) {
 
   const keywords = listingInfo?.keywords || [];
 
+  const buildPublicUrl = (value) => {
+    const raw = typeof value === 'string' ? value.trim() : '';
+    const withLeadingSlash = raw ? (raw.startsWith('/') ? raw : `/${raw}`) : '';
+
+    if (!withLeadingSlash) {
+      return slug ? `/${slug}` : '/';
+    }
+
+    if (withLeadingSlash === '/calculators') {
+      return '/';
+    }
+
+    if (withLeadingSlash.startsWith('/calculators/')) {
+      const stripped = withLeadingSlash.replace(/^\/calculators\//, '/');
+      return stripped === '' ? '/' : stripped;
+    }
+
+    return withLeadingSlash;
+  };
+
   calculatorsByCategory.get(categorySlug).push({
     slug,
     name,
     description,
-    url: `/calculators/${slug}`,
+    url: buildPublicUrl(`/calculators/${slug}`),
     page: `calculators/${slug}`,
     keywords,
     status: 'active',
