@@ -17,7 +17,17 @@ function normalizePath(path = '/') {
   if (!value) return '/';
 
   const prefixed = value.startsWith('/') ? value : `/${value}`;
-  const normalised = prefixed.replace(/\/+$/, '');
+  let normalised = prefixed.replace(/\/+$/, '');
+  if (!normalised) return '/';
+
+  if (normalised === '/calculators') {
+    return '/';
+  }
+
+  if (normalised.startsWith('/calculators/')) {
+    normalised = normalised.replace(/^\/calculators/, '') || '/';
+  }
+
   return normalised || '/';
 }
 
