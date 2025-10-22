@@ -160,7 +160,7 @@ const _allCalcs = calculatorCategories.flatMap((cat) =>
 );
 
 // Vite glob loader for pages
-const pageModules = import.meta.glob('./*.jsx');
+const pageModules = import.meta.glob('./**/*.jsx');
 const _loadPage = (pageName) => {
   if (!pageName) return null;
   const key = `./${pageName}.jsx`;
