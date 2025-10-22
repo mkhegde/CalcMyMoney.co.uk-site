@@ -4,6 +4,25 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .calculator-hero {
+    @apply bg-slate-50 py-12 text-slate-900 dark:bg-slate-900 dark:text-slate-100;
+    @apply border-b border-slate-200 dark:border-slate-800;
+  }
+
+  .calculator-hero__content {
+    @apply mx-auto flex max-w-4xl flex-col gap-4 px-4 text-left sm:px-6 lg:px-8;
+  }
+
+  .calculator-hero__title {
+    @apply text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100;
+  }
+
+  .calculator-hero__description {
+    @apply text-base leading-relaxed text-slate-600 dark:text-slate-300;
+  }
+}
+
 @layer base {
   :root {
     /* Typography */
@@ -163,5 +182,11 @@
       background-size: 220% 160%, 180% 160%, cover;
       background-position: 35% -10%, 80% -20%, center;
     }
+  }
+}
+
+@media print {
+  .calculator-hero {
+    display: none !important;
   }
 }
