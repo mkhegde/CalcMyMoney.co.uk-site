@@ -1,27 +1,22 @@
 import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { Calculator, PiggyBank, TrendingUp, Target } from 'lucide-react';
 
-import Heading from '@/components/common/Heading';
+import StandardCalculatorLayout from '@/components/calculators/StandardCalculatorLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
-import FAQSection from '@/components/calculators/FAQSection';
-import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
-import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
-import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
 import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
-import { createCalculatorWebPageSchema, createCalculatorBreadcrumbs } from '@/utils/calculatorSchema.js';
 import { sanitiseNumber } from '@/utils/sanitiseNumber.js';
 
 const CALCULATOR_NAME = 'FIRE Calculator';
-const canonicalUrl = 'https://www.calcmymoney.co.uk/fire-calculator';
+const pagePath = '/fire-calculator';
+const canonicalUrl = `https://www.calcmymoney.co.uk${pagePath}`;
 const keywords = getCalculatorKeywords('FIRE Calculator');
+
+const pageTitle = 'FIRE Calculator | Financial Independence Timeline';
 
 const metaDescription =
   'Map your route to financial independence with the UK FIRE calculator. Estimate your FIRE number, project portfolio growth, and see how contributions affect the time to retire early.';
@@ -89,20 +84,6 @@ const relatedCalculators = [
     description: 'Turn large milestones into manageable monthly targets.',
   },
 ];
-
-const webPageSchema = createCalculatorWebPageSchema({
-  name: CALCULATOR_NAME,
-  description: metaDescription,
-  url: canonicalUrl,
-  keywords,
-});
-
-const breadcrumbSchema = createCalculatorBreadcrumbs({
-  name: CALCULATOR_NAME,
-  url: canonicalUrl,
-});
-
-const faqStructuredData = faqSchema(fireFaqs);
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -265,39 +246,40 @@ export default function FireCalculatorPage() {
   const showResults = hasCalculated && results?.valid;
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>{`${CALCULATOR_NAME} | Financial Independence Timeline`}</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        {keywords.length > 0 ? <meta name="keywords" content={keywords.join(', ')} /> : null}
-      </Helmet>
-      <JsonLd data={webPageSchema} />
-      <JsonLd data={breadcrumbSchema} />
-      <JsonLd data={faqStructuredData} />
-
-      <section className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            FIRE Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
-            Map your path to financial independence, estimate your FIRE number, and monitor how close you are to exiting the rat race.
-          </p>
-        </div>
-      </section>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <EmotionalHook
-          title="Freedom is a finance decision away"
-          message="Intentional saving and investing turn work optional into a date you can mark on the calendar. Run the numbers often and let the results guide your next move."
-          quote="The goal isn’t more money. The goal is living life on your terms."
-          author="Chris Brogan"
-        />
-      </div>
-
-      <CalculatorWrapper className="bg-white dark:bg-gray-950">
-        <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+    <StandardCalculatorLayout
+      seo={{
+        title: pageTitle,
+        description: metaDescription,
+        canonical: canonicalUrl,
+        keywords,
+      }}
+      schemaConfig={{
+        path: pagePath,
+        name: CALCULATOR_NAME,
+        description: metaDescription,
+        breadcrumbs: [
+          { name: 'Home', url: '/' },
+          { name: 'Savings & Investments Calculators', url: '/calculators#savings-investments' },
+          { name: CALCULATOR_NAME, url: pagePath },
+        ],
+      }}
+      icon={PiggyBank}
+      title={CALCULATOR_NAME}
+      description="Map your path to financial independence, estimate your FIRE number, and monitor how close you are to exiting the rat race."
+      intro={{
+        title: 'Freedom is a finance decision away',
+        body:
+          'Intentional saving and investing turn work optional into a date you can mark on the calendar. Run the numbers often and let the results guide your next move.',
+      }}
+      quote={{
+        text: 'The goal isn’t more money. The goal is living life on your terms.',
+        author: 'Chris Brogan',
+      }}
+      faqs={fireFaqs}
+      directoryLinks={directoryLinks}
+      relatedCalculators={relatedCalculators}
+    >
+      <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
           <Card className="border border-emerald-200 dark:border-emerald-900 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-semibold">
@@ -426,8 +408,8 @@ export default function FireCalculatorPage() {
             </CardContent>
           </Card>
 
-          {showResults ? (
-            <div className="space-y-6">
+        {showResults ? (
+          <div className="space-y-6">
               <Card className="border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-900 dark:text-emerald-100">
@@ -533,36 +515,24 @@ export default function FireCalculatorPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
-                <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
-                  <Target className="h-5 w-5 text-emerald-500" aria-hidden="true" />
-                  <p className="text-sm">
-                    {hasCalculated && results?.message ? (
-                      results.message
-                    ) : (
-                      <>
-                        Enter your portfolio, contributions, and desired lifestyle spending, then press{' '}
-                        <strong>Calculate</strong> to see how close you are to financial independence.
-                      </>
-                    )}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-sm">
+            <CardContent className="flex items-center gap-3 text-slate-700 dark:text-slate-200 py-6">
+              <Target className="h-5 w-5 text-emerald-500" aria-hidden="true" />
+              <p className="text-sm">
+                {hasCalculated && results?.message ? (
+                  results.message
+                ) : (
+                  <>
+                    Enter your portfolio, contributions, and desired lifestyle spending, then press{' '}
+                    <strong>Calculate</strong> to see how close you are to financial independence.
+                  </>
+                )}
+              </p>
+            </CardContent>
+          </Card>
         </div>
-      </CalculatorWrapper>
-
-      <section className="bg-white dark:bg-gray-950 py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FAQSection faqs={fireFaqs} />
-        </div>
-      </section>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+      )}
       </div>
-    </div>
+    </StandardCalculatorLayout>
   );
 }

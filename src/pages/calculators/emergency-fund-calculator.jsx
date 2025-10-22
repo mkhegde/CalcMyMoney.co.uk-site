@@ -276,12 +276,12 @@ export default function EmergencyFundCalculatorPage() {
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-slate-900 via-teal-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
+      <section className="calculator-hero">
+        <div className="calculator-hero__content">
+          <Heading as="h1" size="h1" weight="bold" className="calculator-hero__title">
             Emergency Fund Calculator
           </Heading>
-          <p className="text-lg md:text-xl text-teal-100">
+          <p className="calculator-hero__description">
             Build a resilient financial cushion that keeps the lights on when life suddenly changes.
           </p>
         </div>
