@@ -1031,7 +1031,11 @@ const rawCategories = [
       createCalculatorEntry(
         'Break-Even Calculator',
         'BreakEvenCalculator',
-        'Calculate contribution margin, break-even units, and sales needed for profit.'
+        'Calculate contribution margin, break-even units, and sales needed for profit.',
+        undefined,
+        {
+          page: 'calculators/break-even-calculator',
+        }
       ),
       createCalculatorEntry(
         'Commission Calculator',
