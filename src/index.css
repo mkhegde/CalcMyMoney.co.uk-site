@@ -184,3 +184,9 @@
     }
   }
 }
+
+@media print {
+  .calculator-hero {
+    display: none !important;
+  }
+}
