@@ -20,8 +20,26 @@ const toSlug = (value = '') =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
+const trimSlashes = (value = '') =>
+  typeof value === 'string' ? value.trim().replace(/^\/+|\/+$/g, '') : '';
+
+const ensureLeadingSlash = (value = '') => {
+  if (typeof value !== 'string') return '';
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return '';
+  const normalized = trimmedValue.replace(/^\/+|\/+$/g, '');
+  return normalized ? `/${normalized}` : '/';
+};
+
+const toCalculatorPagePath = (value = '') => {
+  const trimmed = trimSlashes(value);
+  if (!trimmed) return '';
+  return trimmed.startsWith('calculators/') ? trimmed : `calculators/${trimmed}`;
+};
+
 const createCalculatorEntry = (name, pageName, description, keywords = [], options = {}) => {
   const baseKeywords = [...(MAPPED_KEYWORDS[name] || []), ...keywords];
+  const resolvedUrl = ensureLeadingSlash(options.url || createPageUrl(pageName));
   const entry = {
     name,
     pageName,
@@ -30,11 +48,16 @@ const createCalculatorEntry = (name, pageName, description, keywords = [], optio
     status: options.status || 'active',
     tags: Array.isArray(options.tags) ? options.tags : [],
     keywords: baseKeywords,
-    url: options.url || createPageUrl(pageName),
+    url: resolvedUrl,
   };
 
-  if (options.page) {
-    entry.page = options.page;
+  const rawPagePath =
+    typeof options.page === 'string' && options.page.trim()
+      ? options.page
+      : resolvedUrl;
+  const inferredPage = toCalculatorPagePath(rawPagePath);
+  if (inferredPage) {
+    entry.page = inferredPage;
   }
 
   return entry;
@@ -1031,7 +1054,11 @@ const rawCategories = [
       createCalculatorEntry(
         'Break-Even Calculator',
         'BreakEvenCalculator',
-        'Calculate contribution margin, break-even units, and sales needed for profit.'
+        'Calculate contribution margin, break-even units, and sales needed for profit.',
+        undefined,
+        {
+          page: 'calculators/break-even-calculator',
+        }
       ),
       createCalculatorEntry(
         'Commission Calculator',
