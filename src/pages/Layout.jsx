@@ -22,6 +22,7 @@ import { SeoProvider } from '@/components/seo/SeoContext';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 
 import Heading from '@/components/common/Heading';
+import { getCategoryIcon } from '@/components/data/calculatorIcons.js';
 
 const LazyCalculatorIndex = lazy(() => import('../components/general/CalculatorIndex.jsx'));
 const LazyRelatedAuto = lazy(() => import('@/components/calculators/RelatedAuto.jsx'));
@@ -774,7 +775,9 @@ export default function Layout({ children, currentPageName }) {
                     <div className="space-y-2" style={{ minHeight: '320px' }}>
                       <h3 className="mb-3 font-semibold text-foreground">Browse Calculators</h3>
                       {!loadingCalculatorCategories ? (
-                        calculatorCategories.map((category) => (
+                        calculatorCategories.map((category) => {
+                          const Icon = getCategoryIcon(category.slug);
+                          return (
                           <Collapsible
                             key={category.slug}
                             open={openCategories[category.slug]}
@@ -782,7 +785,7 @@ export default function Layout({ children, currentPageName }) {
                           >
                             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg p-2 text-left transition-colors hover:bg-neutral-soft">
                               <div className="flex items-center gap-2 text-muted-foreground">
-                                <category.icon className="h-4 w-4" />
+                                <Icon className="h-4 w-4" />
                                 <span className="font-medium text-foreground">{category.name}</span>
                               </div>
                               {openCategories[category.slug] ? (
@@ -820,7 +823,8 @@ export default function Layout({ children, currentPageName }) {
                               ))}
                             </CollapsibleContent>
                           </Collapsible>
-                        ))
+                        );
+                        })
                       ) : (
                         <div className="space-y-3">
                           {Array.from({ length: 3 }).map((_, index) => (

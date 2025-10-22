@@ -2,20 +2,7 @@ import { useLocation } from 'react-router-dom';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import {
-  Search,
-  Calculator,
-  TrendingUp,
-  Users,
-  ExternalLink,
-  CreditCard,
-  Wallet,
-  Zap,
-  Briefcase,
-  PoundSterling,
-  Home as HomeIcon,
-  PiggyBank,
-} from 'lucide-react';
+import { Search, Calculator, TrendingUp, Users, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
@@ -24,20 +11,9 @@ import { useSeo } from '@/components/seo/SeoContext';
 import Heading from '@/components/common/Heading';
 import { calculatorCategories as DEFAULT_DIRECTORY_CATEGORIES } from '../components/data/calculatorConfig.js';
 import { getMappedKeywords } from '@/components/seo/keywordMappings';
+import { getCategoryIcon } from '@/components/data/calculatorIcons.js';
 
 const DEFAULT_STATS = { total: 0, active: 0, categories: 0 };
-
-const ICONS_BY_SLUG = {
-  'mortgages-property': HomeIcon,
-  'tax-income': PoundSterling,
-  'retirement-pensions': TrendingUp,
-  'savings-investments': PiggyBank,
-  'debt-loans': CreditCard,
-  'budgeting-planning': Wallet,
-  'business-freelancing': Briefcase,
-  'utilities-tools': Zap,
-  'family-lifestyle': Users,
-};
 
 const pageTitle = 'UK Salary, Tax & Mortgage Calculators (2025/26) | CalcMyMoney';
 const metaDescription =
@@ -114,7 +90,7 @@ export default function Home() {
   const fallbackHubCards = useMemo(
     () =>
       DEFAULT_DIRECTORY_CATEGORIES.map((category) => {
-        const Icon = ICONS_BY_SLUG[category.slug] || Calculator;
+        const Icon = getCategoryIcon(category.slug) || Calculator;
         return {
           title: category.name,
           icon: Icon,
@@ -135,7 +111,7 @@ export default function Home() {
     if (!calcData.categories.length) return fallbackHubCards;
     return directoryCategories.map((category) => ({
       title: category.name,
-      icon: category.icon || ICONS_BY_SLUG[category.slug] || Calculator,
+      icon: getCategoryIcon(category.slug) || Calculator,
       link: `#${category.slug}`,
       description: category.description,
     }));
@@ -368,68 +344,71 @@ export default function Home() {
           </div>
 
           {/* Calculator Categories */}
-          {showAllCalculators ? (
+          {showAllCalculators && (
             categoriesLoaded ? (
               <div className="space-y-12">
-                {directoryCategories.map((category) => (
-                  <div key={category.slug} id={category.slug} className="scroll-mt-20">
-                    {/* Category Header */}
-                    <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
-                      <category.icon className="h-8 w-8 text-primary" />
-                      <div>
-                        <Heading as="h3" size="h3" weight="bold" className="text-foreground">
-                          {category.name}
-                        </Heading>
-                        <p className="body text-muted-foreground">{category.description}</p>
+                {directoryCategories.map((category) => {
+                  const Icon = getCategoryIcon(category.slug);
+                  return (
+                    <div key={category.slug} id={category.slug} className="scroll-mt-20">
+                      {/* Category Header */}
+                      <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
+                        <Icon className="h-8 w-8 text-primary" />
+                        <div>
+                          <Heading as="h3" size="h3" weight="bold" className="text-foreground">
+                            {category.name}
+                          </Heading>
+                          <p className="body text-muted-foreground">{category.description}</p>
+                        </div>
+                      </div>
+
+                      {/* Sub-categories and Calculators */}
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {category.subCategories.map((subCategory) => (
+                          <div key={subCategory.name} className="space-y-3">
+                            <Heading
+                              as="h4"
+                              size="h3"
+                              className="border-l-4 border-primary pl-3 text-foreground"
+                            >
+                              {subCategory.name}
+                            </Heading>
+                            <div className="space-y-2 pl-3">
+                              {subCategory.calculators
+                                .filter((calc) => showAllCalculators || calc.status === 'active')
+                                .map((calc, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between group"
+                                  >
+                                    {calc.status === 'active' ? (
+                                      <Link
+                                        to={calc.url}
+                                        onMouseEnter={() => calc.page && prefetchPage(calc.page)}
+                                        onFocus={() => calc.page && prefetchPage(calc.page)}
+                                        className="flex-1 body font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                                      >
+                                        {calc.name}
+                                      </Link>
+                                    ) : (
+                                      <span className="flex-1 body text-muted-foreground/60">
+                                        {calc.name}
+                                      </span>
+                                    )}
+                                    {(calc.status === 'planned' || calc.status === 'pending') && (
+                                      <Badge variant="secondary" className="caption">
+                                        Coming Soon
+                                      </Badge>
+                                    )}
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-
-                    {/* Sub-categories and Calculators */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                      {category.subCategories.map((subCategory) => (
-                        <div key={subCategory.name} className="space-y-3">
-                          <Heading
-                            as="h4"
-                            size="h3"
-                            className="border-l-4 border-primary pl-3 text-foreground"
-                          >
-                            {subCategory.name}
-                          </Heading>
-                          <div className="space-y-2 pl-3">
-                            {subCategory.calculators
-                              .filter((calc) => showAllCalculators || calc.status === 'active')
-                              .map((calc, index) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center justify-between group"
-                                >
-                                  {calc.status === 'active' ? (
-                                    <Link
-                                      to={calc.url}
-                                      onMouseEnter={() => calc.page && prefetchPage(calc.page)}
-                                      onFocus={() => calc.page && prefetchPage(calc.page)}
-                                      className="flex-1 body font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-                                    >
-                                      {calc.name}
-                                    </Link>
-                                  ) : (
-                                    <span className="flex-1 body text-muted-foreground/60">
-                                      {calc.name}
-                                    </span>
-                                  )}
-                                  {(calc.status === 'planned' || calc.status === 'pending') && (
-                                    <Badge variant="secondary" className="caption">
-                                      Coming Soon
-                                    </Badge>
-                                  )}
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="space-y-12">
@@ -470,7 +449,9 @@ export default function Home() {
                 ))}
               </div>
             )
-          ) : (
+          )}
+
+          {!showAllCalculators && (
             <div className="text-center text-muted-foreground">
               Expand the directory to explore every calculator we offer.
             </div>
