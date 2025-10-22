@@ -6,7 +6,7 @@
 
 @layer components {
   .calculator-hero {
-    @apply bg-slate-50 py-12 text-slate-900 dark:bg-slate-900 dark:text-slate-100;
+    @apply non-printable bg-slate-50 py-12 text-slate-900 dark:bg-slate-900 dark:text-slate-100;
     @apply border-b border-slate-200 dark:border-slate-800;
   }
 
