@@ -42,7 +42,26 @@ export default function SeoHead({
       computedCanonical = undefined;
     }
   }
-  const canonicalHref = canonical || computedCanonical;
+  const normaliseCanonicalHref = (href) => {
+    if (!href || typeof href !== 'string') return href;
+    try {
+      const url = new URL(href, 'https://www.calcmymoney.co.uk');
+      const host = url.hostname || '';
+      if (host && host !== 'www.calcmymoney.co.uk' && host !== 'calcmymoney.co.uk') {
+        return href;
+      }
+
+      if (url.pathname && url.pathname.startsWith('/calculators/')) {
+        url.pathname = url.pathname.replace(/^\/calculators/, '') || '/';
+      }
+
+      return url.toString();
+    } catch (error) {
+      return href;
+    }
+  };
+
+  const canonicalHref = normaliseCanonicalHref(canonical || computedCanonical);
 
   const resolvedOgTitle = ogTitle || title;
   const resolvedOgDescription = ogDescription || description;

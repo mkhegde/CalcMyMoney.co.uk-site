@@ -13,7 +13,7 @@ export const generatedCalculatorCatalog = [
         "slug": "brrrr-calculator",
         "name": "BRRRR Calculator",
         "description": "Run the BRRRR calculator to plan buy, refurbish, rent, refinance, repeat strategies for UK property. Compare capital costs, refinance proceeds, and rental cash flow before recycling funds into the next purchase.",
-        "url": "/calculators/brrrr-calculator",
+        "url": "/brrrr-calculator",
         "page": "calculators/brrrr-calculator",
         "keywords": [
           "brrrr calculator",
@@ -25,7 +25,7 @@ export const generatedCalculatorCatalog = [
         "slug": "buy-to-let-mortgage-calculator",
         "name": "Buy-to-Let Mortgage Calculator",
         "description": "Work out deposits, stamp duty, rental coverage and yields with the UK buy-to-let mortgage calculator. Stress test your rent against lender coverage rules before you apply.",
-        "url": "/calculators/buy-to-let-mortgage-calculator",
+        "url": "/buy-to-let-mortgage-calculator",
         "page": "calculators/buy-to-let-mortgage-calculator",
         "keywords": [
           "buy to let mortgage calculator",
@@ -40,7 +40,7 @@ export const generatedCalculatorCatalog = [
         "slug": "down-payment-calculator",
         "name": "Down Payment Calculator",
         "description": "Plan your UK house deposit with our down payment calculator. Map savings, investment growth, and timelines so you can move into your new home sooner.",
-        "url": "/calculators/down-payment-calculator",
+        "url": "/down-payment-calculator",
         "page": "calculators/down-payment-calculator",
         "keywords": [
           "down payment calculator",
@@ -55,7 +55,7 @@ export const generatedCalculatorCatalog = [
         "slug": "first-time-buyer-calculator",
         "name": "First Time Buyer Calculator",
         "description": "Size your first home deposit, lending multiple, and mortgage repayments with our UK first time buyer calculator before you make an offer.",
-        "url": "/calculators/first-time-buyer-calculator",
+        "url": "/first-time-buyer-calculator",
         "page": "calculators/first-time-buyer-calculator",
         "keywords": [],
         "status": "active"
@@ -64,7 +64,7 @@ export const generatedCalculatorCatalog = [
         "slug": "home-equity-loan-calculator",
         "name": "Home Equity Loan Calculator",
         "description": "Estimate how much equity you can release, potential HELOC repayments, and the total interest cost before comparing lender offers.",
-        "url": "/calculators/home-equity-loan-calculator",
+        "url": "/home-equity-loan-calculator",
         "page": "calculators/home-equity-loan-calculator",
         "keywords": [
           "home equity loan calculator",
@@ -76,7 +76,7 @@ export const generatedCalculatorCatalog = [
         "slug": "mortgage-affordability-calculator",
         "name": "Mortgage Affordability Calculator",
         "description": "Use our UK mortgage affordability calculator to see how much mortgage you can afford, balance mortgage affordability against debts, and plan your deposit strategy.",
-        "url": "/calculators/mortgage-affordability-calculator",
+        "url": "/mortgage-affordability-calculator",
         "page": "calculators/mortgage-affordability-calculator",
         "keywords": [
           "mortgage affordability calculator",
@@ -89,7 +89,7 @@ export const generatedCalculatorCatalog = [
         "slug": "mortgage-calculator",
         "name": "Mortgage Calculator",
         "description": "Use our UK mortgage calculator to estimate monthly repayments, total interest, and amortisation schedule. Plan your home loan with confidence.",
-        "url": "/calculators/mortgage-calculator",
+        "url": "/mortgage-calculator",
         "page": "calculators/mortgage-calculator",
         "keywords": [
           "mortgage calculator",
@@ -104,7 +104,7 @@ export const generatedCalculatorCatalog = [
         "slug": "mortgage-comparison-calculator",
         "name": "Mortgage Comparison Calculator",
         "description": "Use our UK mortgage comparison calculator to compare mortgage rates, view repayments side by side, and see the total cost of two mortgage deals before you decide.",
-        "url": "/calculators/mortgage-comparison-calculator",
+        "url": "/mortgage-comparison-calculator",
         "page": "calculators/mortgage-comparison-calculator",
         "keywords": [
           "mortgage comparison calculator",
@@ -117,7 +117,7 @@ export const generatedCalculatorCatalog = [
         "slug": "mortgage-repayment-calculator",
         "name": "Mortgage Repayment Calculator",
         "description": "Use our UK mortgage repayment calculator to plan your mortgage allocation, test repayment scenarios, and understand how overpayments change the mortgage repayment schedule.",
-        "url": "/calculators/mortgage-repayment-calculator",
+        "url": "/mortgage-repayment-calculator",
         "page": "calculators/mortgage-repayment-calculator",
         "keywords": [
           "mortgage repayment calculator",
@@ -130,7 +130,7 @@ export const generatedCalculatorCatalog = [
         "slug": "property-flipping-calculator",
         "name": "Property Flipping Calculator",
         "description": "Use our UK property flipping calculator to estimate return on investment (ROI), renovation costs, and gross profit for your house flipping projects.",
-        "url": "/calculators/property-flipping-calculator",
+        "url": "/property-flipping-calculator",
         "page": "calculators/property-flipping-calculator",
         "keywords": [
           "property flipping calculator",
@@ -145,7 +145,7 @@ export const generatedCalculatorCatalog = [
         "slug": "remortgage-calculator",
         "name": "Remortgage Calculator",
         "description": "Compare your current UK mortgage with a new deal, including monthly payments, fees, ERCs, and the break-even point to see if remortgaging saves money.",
-        "url": "/calculators/remortgage-calculator",
+        "url": "/remortgage-calculator",
         "page": "calculators/remortgage-calculator",
         "keywords": [],
         "status": "active"
@@ -154,7 +154,7 @@ export const generatedCalculatorCatalog = [
         "slug": "rent-to-buy-calculator",
         "name": "Rent to Buy Calculator",
         "description": "Model rent-to-buy agreements in the UK by projecting rent credits, future property value, deposit at completion, and mortgage payments before exercising the option to buy.",
-        "url": "/calculators/rent-to-buy-calculator",
+        "url": "/rent-to-buy-calculator",
         "page": "calculators/rent-to-buy-calculator",
         "keywords": [
           "rent to buy calculator",
@@ -169,7 +169,7 @@ export const generatedCalculatorCatalog = [
         "slug": "rent-vs-buy-calculator",
         "name": "Rent vs Buy Calculator",
         "description": "Weigh the long-term costs of renting against buying in the UK by modelling rent inflation, mortgage costs, maintenance, and opportunity cost to find your break-even year.",
-        "url": "/calculators/rent-vs-buy-calculator",
+        "url": "/rent-vs-buy-calculator",
         "page": "calculators/rent-vs-buy-calculator",
         "keywords": [
           "rent vs buy calculator",
@@ -183,7 +183,7 @@ export const generatedCalculatorCatalog = [
         "slug": "rental-yield-calculator",
         "name": "Rental Yield Calculator",
         "description": "Analyse buy-to-let returns in the UK by combining rent, void periods, letting fees, maintenance, and mortgage interest to calculate gross, net, and cash-on-cash yield.",
-        "url": "/calculators/rental-yield-calculator",
+        "url": "/rental-yield-calculator",
         "page": "calculators/rental-yield-calculator",
         "keywords": [
           "rental yield calculator",
@@ -198,7 +198,7 @@ export const generatedCalculatorCatalog = [
         "slug": "reverse-mortgage-calculator",
         "name": "Reverse Mortgage Calculator",
         "description": "Estimate equity release from a UK lifetime mortgage by modelling property value, age, loan-to-value limits, fees, drawdown, and future interest to see remaining equity.",
-        "url": "/calculators/reverse-mortgage-calculator",
+        "url": "/reverse-mortgage-calculator",
         "page": "calculators/reverse-mortgage-calculator",
         "keywords": [
           "reverse mortgage calculator",
@@ -213,7 +213,7 @@ export const generatedCalculatorCatalog = [
         "slug": "sdlt-calculator",
         "name": "SDLT Calculator",
         "description": "Estimate UK Stamp Duty Land Tax (SDLT) for residential purchases. Compare standard, first-time buyer, and additional property rates with our SDLT calculator.",
-        "url": "/calculators/sdlt-calculator",
+        "url": "/sdlt-calculator",
         "page": "calculators/sdlt-calculator",
         "keywords": [],
         "status": "active"
@@ -229,7 +229,7 @@ export const generatedCalculatorCatalog = [
         "slug": "capital-gains-tax-calculator",
         "name": "Capital Gains Tax Calculator",
         "description": "Estimate UK capital gains tax on property or shares. This CGT calculator applies the allowance, losses, and unused basic-rate band to show how much tax you owe.",
-        "url": "/calculators/capital-gains-tax-calculator",
+        "url": "/capital-gains-tax-calculator",
         "page": "calculators/capital-gains-tax-calculator",
         "keywords": [],
         "status": "active"
@@ -238,7 +238,7 @@ export const generatedCalculatorCatalog = [
         "slug": "commission-calculator",
         "name": "Commission Calculator",
         "description": "Plan UK sales commissions with base and accelerator rates. Calculate commission draw recovery, team bonus, and total take-home pay.",
-        "url": "/calculators/commission-calculator",
+        "url": "/commission-calculator",
         "page": "calculators/commission-calculator",
         "keywords": [
           "commission calculator",
@@ -251,7 +251,7 @@ export const generatedCalculatorCatalog = [
         "slug": "council-tax-calculator",
         "name": "Council Tax Calculator",
         "description": "Estimate UK council tax by band, local authority rate, parish precepts, and discounts. Understand your annual, monthly, and weekly bills.",
-        "url": "/calculators/council-tax-calculator",
+        "url": "/council-tax-calculator",
         "page": "calculators/council-tax-calculator",
         "keywords": [],
         "status": "active"
@@ -260,7 +260,7 @@ export const generatedCalculatorCatalog = [
         "slug": "dividend-tax-calculator",
         "name": "Dividend Tax Calculator",
         "description": "Estimate UK dividend tax for the 2025/26 tax year, see how the dividend allowance is used, and combine salary, dividends, and pension contributions for smarter tax planning.",
-        "url": "/calculators/dividend-tax-calculator",
+        "url": "/dividend-tax-calculator",
         "page": "calculators/dividend-tax-calculator",
         "keywords": [],
         "status": "active"
@@ -269,7 +269,7 @@ export const generatedCalculatorCatalog = [
         "slug": "effective-tax-rate-calculator",
         "name": "Effective Tax Rate Calculator",
         "description": "Work out your UK effective tax rate by combining income tax, National Insurance, and other deductions. Compare gross income with take-home pay in minutes.",
-        "url": "/calculators/effective-tax-rate-calculator",
+        "url": "/effective-tax-rate-calculator",
         "page": "calculators/effective-tax-rate-calculator",
         "keywords": [],
         "status": "active"
@@ -278,7 +278,7 @@ export const generatedCalculatorCatalog = [
         "slug": "gross-to-net-calculator",
         "name": "Gross To Net Calculator",
         "description": "Convert UK gross salary into take-home pay, factoring Income Tax, National Insurance, workplace pension contributions, and student loan repayments.",
-        "url": "/calculators/gross-to-net-calculator",
+        "url": "/gross-to-net-calculator",
         "page": "calculators/gross-to-net-calculator",
         "keywords": [],
         "status": "active"
@@ -287,7 +287,7 @@ export const generatedCalculatorCatalog = [
         "slug": "holiday-pay-calculator",
         "name": "Holiday Pay Calculator",
         "description": "Calculate UK statutory holiday pay for salaried and irregular-hours workers, including regular overtime and bonuses.",
-        "url": "/calculators/holiday-pay-calculator",
+        "url": "/holiday-pay-calculator",
         "page": "calculators/holiday-pay-calculator",
         "keywords": [
           "holiday pay calculator"
@@ -298,7 +298,7 @@ export const generatedCalculatorCatalog = [
         "slug": "hourly-to-annual-salary-calculator",
         "name": "Hourly to Annual Salary Calculator",
         "description": "Convert hourly pay into annual, monthly, weekly, and daily earnings. Include paid overtime to understand your true earning power.",
-        "url": "/calculators/hourly-to-annual-salary-calculator",
+        "url": "/hourly-to-annual-salary-calculator",
         "page": "calculators/hourly-to-annual-salary-calculator",
         "keywords": [
           "hourly to annual salary calculator",
@@ -311,7 +311,7 @@ export const generatedCalculatorCatalog = [
         "slug": "income-tax-calculator",
         "name": "Income Tax Calculator",
         "description": "Estimate UK Income Tax, National Insurance, pension contributions, and optional Student Loan repayments to reveal your net income for the 2025/26 tax year.",
-        "url": "/calculators/income-tax-calculator",
+        "url": "/income-tax-calculator",
         "page": "calculators/income-tax-calculator",
         "keywords": [],
         "status": "active"
@@ -320,7 +320,7 @@ export const generatedCalculatorCatalog = [
         "slug": "inheritance-tax-calculator",
         "name": "Inheritance Tax Calculator",
         "description": "Estimate UK inheritance tax liability using nil-rate bands, residence allowances, charitable gifts, and debt deductions.",
-        "url": "/calculators/inheritance-tax-calculator",
+        "url": "/inheritance-tax-calculator",
         "page": "calculators/inheritance-tax-calculator",
         "keywords": [],
         "status": "active"
@@ -329,7 +329,7 @@ export const generatedCalculatorCatalog = [
         "slug": "maternity-pay-calculator",
         "name": "Maternity Pay Calculator",
         "description": "Estimate Statutory Maternity Pay (SMP) for UK employees. Calculate maternity allowance, confirm eligibility, and plan your finances during maternity leave.",
-        "url": "/calculators/maternity-pay-calculator",
+        "url": "/maternity-pay-calculator",
         "page": "calculators/maternity-pay-calculator",
         "keywords": [],
         "status": "active"
@@ -338,7 +338,7 @@ export const generatedCalculatorCatalog = [
         "slug": "minimum-wage-calculator",
         "name": "Minimum Wage Calculator",
         "description": "Check UK minimum wage and National Living Wage rates across age brackets. Project hourly, weekly, monthly, and annual earnings to ensure compliance.",
-        "url": "/calculators/minimum-wage-calculator",
+        "url": "/minimum-wage-calculator",
         "page": "calculators/minimum-wage-calculator",
         "keywords": [],
         "status": "active"
@@ -347,7 +347,7 @@ export const generatedCalculatorCatalog = [
         "slug": "national-insurance-calculator",
         "name": "National Insurance Calculator",
         "description": "Use our UK National Insurance calculator to estimate NI contributions, understand NI rates, and see the impact on your take-home pay.",
-        "url": "/calculators/national-insurance-calculator",
+        "url": "/national-insurance-calculator",
         "page": "calculators/national-insurance-calculator",
         "keywords": [],
         "status": "active"
@@ -356,7 +356,7 @@ export const generatedCalculatorCatalog = [
         "slug": "net-income-uk-calculator",
         "name": "Net Income UK Calculator",
         "description": "Use our UK net income calculator to reveal take-home pay, compare scenarios, and see how tax and NI deductions change your paycheque.",
-        "url": "/calculators/net-income-uk-calculator",
+        "url": "/net-income-uk-calculator",
         "page": "calculators/net-income-uk-calculator",
         "keywords": [],
         "status": "active"
@@ -365,7 +365,7 @@ export const generatedCalculatorCatalog = [
         "slug": "ni-calculator",
         "name": "NI Calculator",
         "description": "Use our UK NI calculator to estimate National Insurance contributions, compare scenarios for salary sacrifice, and plan deductions with this national insurance calculator.",
-        "url": "/calculators/ni-calculator",
+        "url": "/ni-calculator",
         "page": "calculators/ni-calculator",
         "keywords": [],
         "status": "active"
@@ -374,7 +374,7 @@ export const generatedCalculatorCatalog = [
         "slug": "overtime-bonus-calculator",
         "name": "Overtime & Bonus Calculator",
         "description": "Use our UK overtime and bonus calculator to plan extra pay, compare scenarios, and project your take-home pay after tax.",
-        "url": "/calculators/overtime-bonus-calculator",
+        "url": "/overtime-bonus-calculator",
         "page": "calculators/overtime-bonus-calculator",
         "keywords": [
           "overtime and bonus calculator",
@@ -386,7 +386,7 @@ export const generatedCalculatorCatalog = [
         "slug": "overtime-pay-calculator",
         "name": "Overtime Pay Calculator",
         "description": "Use our UK overtime pay calculator to estimate extra earnings from overtime hours, understand overtime rules, and project gross vs net pay.",
-        "url": "/calculators/overtime-pay-calculator",
+        "url": "/overtime-pay-calculator",
         "page": "calculators/overtime-pay-calculator",
         "keywords": [
           "overtime pay calculator"
@@ -397,7 +397,7 @@ export const generatedCalculatorCatalog = [
         "slug": "overtime-rate-calculator",
         "name": "Overtime Rate Calculator",
         "description": "Use our UK overtime rate calculator to work out your overtime multiplier, time and a half, and double time rates from salary or hourly pay.",
-        "url": "/calculators/overtime-rate-calculator",
+        "url": "/overtime-rate-calculator",
         "page": "calculators/overtime-rate-calculator",
         "keywords": [
           "overtime rate calculator"
@@ -408,7 +408,7 @@ export const generatedCalculatorCatalog = [
         "slug": "paye-calculator",
         "name": "PAYE Calculator",
         "description": "Use our UK PAYE calculator to check income tax, NI, and student loan deductions so the PAYE calculator shows your true take-home pay each payday.",
-        "url": "/calculators/paye-calculator",
+        "url": "/paye-calculator",
         "page": "calculators/paye-calculator",
         "keywords": [],
         "status": "active"
@@ -417,7 +417,7 @@ export const generatedCalculatorCatalog = [
         "slug": "payroll-calculator",
         "name": "Payroll Calculator",
         "description": "Use our UK payroll calculator to estimate PAYE deductions, NI, pensions, and net pay to understand your payslip breakdown.",
-        "url": "/calculators/payroll-calculator",
+        "url": "/payroll-calculator",
         "page": "calculators/payroll-calculator",
         "keywords": [],
         "status": "active"
@@ -426,7 +426,7 @@ export const generatedCalculatorCatalog = [
         "slug": "personal-allowance-calculator",
         "name": "Personal Allowance Calculator",
         "description": "Use our UK personal allowance calculator to estimate your personal allowance, adjust for tax reliefs, and understand how high income affects tapering.",
-        "url": "/calculators/personal-allowance-calculator",
+        "url": "/personal-allowance-calculator",
         "page": "calculators/personal-allowance-calculator",
         "keywords": [],
         "status": "active"
@@ -435,7 +435,7 @@ export const generatedCalculatorCatalog = [
         "slug": "pro-rata-salary-calculator",
         "name": "Pro Rata Salary Calculator",
         "description": "Use our UK pro rata salary calculator to convert a full-time salary into the exact pay for your part-time contract. Understand FTE and flexible working.",
-        "url": "/calculators/pro-rata-salary-calculator",
+        "url": "/pro-rata-salary-calculator",
         "page": "calculators/pro-rata-salary-calculator",
         "keywords": [
           "pro rata calculator",
@@ -450,7 +450,7 @@ export const generatedCalculatorCatalog = [
         "slug": "property-tax-calculator",
         "name": "Property Tax Calculator",
         "description": "Use our UK property tax calculator to estimate stamp duty (SDLT), first-time buyer relief, and surcharges for additional properties or non-UK residents.",
-        "url": "/calculators/property-tax-calculator",
+        "url": "/property-tax-calculator",
         "page": "calculators/property-tax-calculator",
         "keywords": [],
         "status": "active"
@@ -459,7 +459,7 @@ export const generatedCalculatorCatalog = [
         "slug": "redundancy-pay-calculator",
         "name": "Redundancy Pay Calculator",
         "description": "Estimate UK statutory redundancy pay, enhanced packages, and the tax-free allowance so you can plan finances with confidence after job loss.",
-        "url": "/calculators/redundancy-pay-calculator",
+        "url": "/redundancy-pay-calculator",
         "page": "calculators/redundancy-pay-calculator",
         "keywords": [],
         "status": "active"
@@ -468,7 +468,7 @@ export const generatedCalculatorCatalog = [
         "slug": "salary-calculator",
         "name": "Salary Calculator",
         "description": "Convert an annual salary into monthly, weekly, and hourly rates with UK salary calculator tools. Include bonuses, overtime, and pension deductions for an accurate pay picture.",
-        "url": "/calculators/salary-calculator",
+        "url": "/salary-calculator",
         "page": "calculators/salary-calculator",
         "keywords": [],
         "status": "active"
@@ -477,7 +477,7 @@ export const generatedCalculatorCatalog = [
         "slug": "salary-sacrifice-calculator",
         "name": "Salary Sacrifice Calculator",
         "description": "Model UK salary sacrifice scenarios for pensions. Compare take-home pay before and after sacrificing salary, tax savings, and employer pension boosts.",
-        "url": "/calculators/salary-sacrifice-calculator",
+        "url": "/salary-sacrifice-calculator",
         "page": "calculators/salary-sacrifice-calculator",
         "keywords": [],
         "status": "active"
@@ -486,7 +486,7 @@ export const generatedCalculatorCatalog = [
         "slug": "self-assessment-calculator",
         "name": "Self Assessment Calculator",
         "description": "Estimate your UK self assessment tax bill. Include trading income, allowable expenses, Class 2 and Class 4 National Insurance, and payments on account.",
-        "url": "/calculators/self-assessment-calculator",
+        "url": "/self-assessment-calculator",
         "page": "calculators/self-assessment-calculator",
         "keywords": [],
         "status": "active"
@@ -495,7 +495,7 @@ export const generatedCalculatorCatalog = [
         "slug": "severance-pay-calculator",
         "name": "Severance Pay Calculator",
         "description": "Estimate your UK severance package including salary continuation, bonuses, holiday pay, and taxable amounts. Understand how much of your package may be tax-free.",
-        "url": "/calculators/severance-pay-calculator",
+        "url": "/severance-pay-calculator",
         "page": "calculators/severance-pay-calculator",
         "keywords": [
           "severance pay calculator",
@@ -508,7 +508,7 @@ export const generatedCalculatorCatalog = [
         "slug": "take-home-pay-calculator",
         "name": "Take Home Pay Calculator",
         "description": "Estimate UK take-home pay by breaking down income tax, National Insurance, pension contributions, and student loan repayments.",
-        "url": "/calculators/take-home-pay-calculator",
+        "url": "/take-home-pay-calculator",
         "page": "calculators/take-home-pay-calculator",
         "keywords": [],
         "status": "active"
@@ -517,7 +517,7 @@ export const generatedCalculatorCatalog = [
         "slug": "tax-refund-calculator",
         "name": "Tax Refund Calculator",
         "description": "Estimate potential HMRC tax refunds by comparing PAYE tax paid with expected liability and allowable expenses.",
-        "url": "/calculators/tax-refund-calculator",
+        "url": "/tax-refund-calculator",
         "page": "calculators/tax-refund-calculator",
         "keywords": [],
         "status": "active"
@@ -526,7 +526,7 @@ export const generatedCalculatorCatalog = [
         "slug": "yearly-income-calculator",
         "name": "Yearly Income Calculator",
         "description": "Convert hourly pay, overtime, and bonuses into annual, monthly, weekly, and daily figures with the UK yearly income calculator.",
-        "url": "/calculators/yearly-income-calculator",
+        "url": "/yearly-income-calculator",
         "page": "calculators/yearly-income-calculator",
         "keywords": [
           "yearly income calculator",
@@ -548,7 +548,7 @@ export const generatedCalculatorCatalog = [
         "slug": "annuity-calculator",
         "name": "Annuity Calculator",
         "description": "Plan guaranteed retirement income with the UK annuity calculator. Compare variable, immediate, and deferred annuity outcomes to see how long your pension pot will provide steady income.",
-        "url": "/calculators/annuity-calculator",
+        "url": "/annuity-calculator",
         "page": "calculators/annuity-calculator",
         "keywords": [
           "annuity calculator",
@@ -563,7 +563,7 @@ export const generatedCalculatorCatalog = [
         "slug": "fire-calculator",
         "name": "FIRE Calculator",
         "description": "Map your route to financial independence with the UK FIRE calculator. Estimate your FIRE number, project portfolio growth, and see how contributions affect the time to retire early.",
-        "url": "/calculators/fire-calculator",
+        "url": "/fire-calculator",
         "page": "calculators/fire-calculator",
         "keywords": [
           "fire calculator",
@@ -575,7 +575,7 @@ export const generatedCalculatorCatalog = [
         "slug": "pension-calculator",
         "name": "Pension Calculator",
         "description": "Use our UK pension calculator to project retirement savings, compare options, and balance private and workplace pension contributions.",
-        "url": "/calculators/pension-calculator",
+        "url": "/pension-calculator",
         "page": "calculators/pension-calculator",
         "keywords": [
           "pension calculator",
@@ -590,7 +590,7 @@ export const generatedCalculatorCatalog = [
         "slug": "pension-contribution-calculator",
         "name": "Pension Contribution Calculator",
         "description": "Use our UK pension contribution calculator to model workplace pension amounts, employer match, and tax relief to inform pension planning.",
-        "url": "/calculators/pension-contribution-calculator",
+        "url": "/pension-contribution-calculator",
         "page": "calculators/pension-contribution-calculator",
         "keywords": [],
         "status": "active"
@@ -599,7 +599,7 @@ export const generatedCalculatorCatalog = [
         "slug": "retirement-calculator",
         "name": "Retirement Calculator",
         "description": "Plan UK retirement goals by projecting pension growth, contributions, inflation, and withdrawal rates to estimate sustainable income, pot requirements, and any funding gap.",
-        "url": "/calculators/retirement-calculator",
+        "url": "/retirement-calculator",
         "page": "calculators/retirement-calculator",
         "keywords": [
           "pension calculator",
@@ -614,7 +614,7 @@ export const generatedCalculatorCatalog = [
         "slug": "retirement-savings-calculator",
         "name": "Retirement Savings Calculator",
         "description": "Project retirement savings growth in the UK with monthly and employer contributions, salary increases, investment returns, and withdrawal planning to meet your income goals.",
-        "url": "/calculators/retirement-savings-calculator",
+        "url": "/retirement-savings-calculator",
         "page": "calculators/retirement-savings-calculator",
         "keywords": [
           "retirement savings calculator",
@@ -635,7 +635,7 @@ export const generatedCalculatorCatalog = [
         "slug": "compound-interest-calculator",
         "name": "Compound Interest Calculator",
         "description": "Project UK savings growth with compound interest. Model lump sums, monthly contributions, contribution increases, and daily or monthly compounding.",
-        "url": "/calculators/compound-interest-calculator",
+        "url": "/compound-interest-calculator",
         "page": "calculators/compound-interest-calculator",
         "keywords": [
           "compound interest calculator",
@@ -650,7 +650,7 @@ export const generatedCalculatorCatalog = [
         "slug": "future-value-calculator",
         "name": "Future Value Calculator",
         "description": "Project the future value of UK savings and investments by combining compound interest with regular contributions and realistic time horizons.",
-        "url": "/calculators/future-value-calculator",
+        "url": "/future-value-calculator",
         "page": "calculators/future-value-calculator",
         "keywords": [
           "future value calculator",
@@ -662,7 +662,7 @@ export const generatedCalculatorCatalog = [
         "slug": "inflation-calculator",
         "name": "Inflation Calculator",
         "description": "See how UK inflation erodes purchasing power. Estimate the future cost of today’s spending or the present value of future goals.",
-        "url": "/calculators/inflation-calculator",
+        "url": "/inflation-calculator",
         "page": "calculators/inflation-calculator",
         "keywords": [
           "inflation calculator",
@@ -676,7 +676,7 @@ export const generatedCalculatorCatalog = [
         "slug": "investment-calculator",
         "name": "Investment Calculator",
         "description": "Project the future value of UK investments with compound growth, contribution increases, and annual top-ups.",
-        "url": "/calculators/investment-calculator",
+        "url": "/investment-calculator",
         "page": "calculators/investment-calculator",
         "keywords": [],
         "status": "active"
@@ -685,7 +685,7 @@ export const generatedCalculatorCatalog = [
         "slug": "isa-calculator",
         "name": "ISA Calculator",
         "description": "Plan ISA contributions, Lifetime ISA bonuses, and tax-free investment growth using the latest UK allowances.",
-        "url": "/calculators/isa-calculator",
+        "url": "/isa-calculator",
         "page": "calculators/isa-calculator",
         "keywords": [
           "isa calculator",
@@ -699,7 +699,7 @@ export const generatedCalculatorCatalog = [
         "slug": "percentage-change-calculator",
         "name": "Percentage Change Calculator",
         "description": "Use our UK percentage change calculator to measure percentage increase, percentage decrease, and percent difference for investments, pricing, or KPIs.",
-        "url": "/calculators/percentage-change-calculator",
+        "url": "/percentage-change-calculator",
         "page": "calculators/percentage-change-calculator",
         "keywords": [
           "percentage change calculator",
@@ -714,7 +714,7 @@ export const generatedCalculatorCatalog = [
         "slug": "present-value-calculator",
         "name": "Present Value Calculator",
         "description": "Use our UK present value calculator to discount cash flows, calculate net present value (NPV), and compare investments with precision.",
-        "url": "/calculators/present-value-calculator",
+        "url": "/present-value-calculator",
         "page": "calculators/present-value-calculator",
         "keywords": [
           "present value calculator",
@@ -729,7 +729,7 @@ export const generatedCalculatorCatalog = [
         "slug": "roi-calculator",
         "name": "ROI Calculator",
         "description": "Work out return on investment (ROI), compound annual growth rate (CAGR), and investment multiples with our UK-focused ROI calculator.",
-        "url": "/calculators/roi-calculator",
+        "url": "/roi-calculator",
         "page": "calculators/roi-calculator",
         "keywords": [
           "roi calculator",
@@ -743,7 +743,7 @@ export const generatedCalculatorCatalog = [
         "slug": "rule-of-72-calculator",
         "name": "Rule Of 72 Calculator",
         "description": "Estimate how quickly investments could double with the UK-focused rule of 72 calculator. Model annual growth, contributions, and compound interest timelines.",
-        "url": "/calculators/rule-of-72-calculator",
+        "url": "/rule-of-72-calculator",
         "page": "calculators/rule-of-72-calculator",
         "keywords": [],
         "status": "active"
@@ -752,7 +752,7 @@ export const generatedCalculatorCatalog = [
         "slug": "savings-calculator",
         "name": "Savings Calculator",
         "description": "Project savings balances with our UK savings calculator. Combine monthly contributions, compound interest, and inflation assumptions to hit your financial goals.",
-        "url": "/calculators/savings-calculator",
+        "url": "/savings-calculator",
         "page": "calculators/savings-calculator",
         "keywords": [
           "savings calculator",
@@ -766,7 +766,7 @@ export const generatedCalculatorCatalog = [
         "slug": "savings-goal-calculator",
         "name": "Savings Goal Calculator",
         "description": "Plan your UK savings goal with monthly contributions and compound interest. Estimate the time to target and interest earned with our savings goal calculator.",
-        "url": "/calculators/savings-goal-calculator",
+        "url": "/savings-goal-calculator",
         "page": "calculators/savings-goal-calculator",
         "keywords": [],
         "status": "active"
@@ -775,7 +775,7 @@ export const generatedCalculatorCatalog = [
         "slug": "time-value-of-money-calculator",
         "name": "Time Value of Money Calculator",
         "description": "Discount or project cash flows with the UK-focused time value of money calculator. Solve for present value, future value, or annuity outcomes.",
-        "url": "/calculators/time-value-of-money-calculator",
+        "url": "/time-value-of-money-calculator",
         "page": "calculators/time-value-of-money-calculator",
         "keywords": [
           "time value of money calculator",
@@ -797,7 +797,7 @@ export const generatedCalculatorCatalog = [
         "slug": "amortization-calculator",
         "name": "Amortization Calculator",
         "description": "Model monthly repayments with the UK-focused amortisation calculator, create a clear loan amortization schedule, and understand interest versus principal at every step.",
-        "url": "/calculators/amortization-calculator",
+        "url": "/amortization-calculator",
         "page": "calculators/amortization-calculator",
         "keywords": [
           "loan amortization calculator",
@@ -812,7 +812,7 @@ export const generatedCalculatorCatalog = [
         "slug": "average-daily-balance-calculator",
         "name": "Average Daily Balance Calculator",
         "description": "Estimate the average daily balance for your UK credit card, model the finance charge for the billing cycle, and plan earlier payments to minimise interest.",
-        "url": "/calculators/average-daily-balance-calculator",
+        "url": "/average-daily-balance-calculator",
         "page": "calculators/average-daily-balance-calculator",
         "keywords": [
           "average daily balance calculator",
@@ -827,7 +827,7 @@ export const generatedCalculatorCatalog = [
         "slug": "car-finance-calculator",
         "name": "Car Finance Calculator",
         "description": "Work out UK car finance repayments, total interest, and balloon options. Compare dealer versus bank finance before you sign your next car agreement.",
-        "url": "/calculators/car-finance-calculator",
+        "url": "/car-finance-calculator",
         "page": "calculators/car-finance-calculator",
         "keywords": [
           "car finance calculator",
@@ -842,7 +842,7 @@ export const generatedCalculatorCatalog = [
         "slug": "car-loan-calculator",
         "name": "Car Loan Calculator",
         "description": "Estimate monthly car loan repayments, total interest, and payoff time. Compare new and used car finance options with the UK car loan calculator.",
-        "url": "/calculators/car-loan-calculator",
+        "url": "/car-loan-calculator",
         "page": "calculators/car-loan-calculator",
         "keywords": [
           "car loan calculator",
@@ -857,7 +857,7 @@ export const generatedCalculatorCatalog = [
         "slug": "car-payment-calculator",
         "name": "Car Payment Calculator",
         "description": "Estimate monthly car loan payments, total interest, and affordability with the UK car payment calculator. See how deposit and term choices change the repayments.",
-        "url": "/calculators/car-payment-calculator",
+        "url": "/car-payment-calculator",
         "page": "calculators/car-payment-calculator",
         "keywords": [
           "car payment calculator",
@@ -872,7 +872,7 @@ export const generatedCalculatorCatalog = [
         "slug": "credit-card-repayment-calculator",
         "name": "Credit Card Repayment Calculator",
         "description": "See how long it takes to repay UK credit card debt. Compare minimum payments versus fixed payments, total interest, and payoff dates.",
-        "url": "/calculators/credit-card-repayment-calculator",
+        "url": "/credit-card-repayment-calculator",
         "page": "calculators/credit-card-repayment-calculator",
         "keywords": [
           "credit card repayment calculator",
@@ -884,7 +884,7 @@ export const generatedCalculatorCatalog = [
         "slug": "debt-calculator",
         "name": "Debt Calculator",
         "description": "Use our UK debt calculator to map repayment dates, interest costs, and the impact of extra payments so you can clear balances with confidence.",
-        "url": "/calculators/debt-calculator",
+        "url": "/debt-calculator",
         "page": "calculators/debt-calculator",
         "keywords": [
           "debt calculator",
@@ -897,7 +897,7 @@ export const generatedCalculatorCatalog = [
         "slug": "debt-to-income-ratio-calculator",
         "name": "Debt to Income Ratio Calculator",
         "description": "Measure your UK debt to income ratio, understand how lenders view your affordability, and see how extra repayments can bring your DTI into a safer range.",
-        "url": "/calculators/debt-to-income-ratio-calculator",
+        "url": "/debt-to-income-ratio-calculator",
         "page": "calculators/debt-to-income-ratio-calculator",
         "keywords": [
           "debt to income ratio calculator",
@@ -910,7 +910,7 @@ export const generatedCalculatorCatalog = [
         "slug": "loan-comparison-calculator",
         "name": "Loan Comparison Calculator",
         "description": "Use the loan comparison calculator to weigh two UK personal loans side-by-side. Compare monthly repayments, total interest, APR-style costs, and fees before you apply.",
-        "url": "/calculators/loan-comparison-calculator",
+        "url": "/loan-comparison-calculator",
         "page": "calculators/loan-comparison-calculator",
         "keywords": [
           "loan comparison calculator",
@@ -922,7 +922,7 @@ export const generatedCalculatorCatalog = [
         "slug": "loan-repayment-calculator",
         "name": "Loan Repayment Calculator",
         "description": "Use the UK loan repayment calculator to model monthly payments, total interest, and payoff dates. Add extra payments to see how quickly you can clear personal, car, or consolidation loans.",
-        "url": "/calculators/loan-repayment-calculator",
+        "url": "/loan-repayment-calculator",
         "page": "calculators/loan-repayment-calculator",
         "keywords": [
           "loan repayment calculator",
@@ -937,7 +937,7 @@ export const generatedCalculatorCatalog = [
         "slug": "personal-loan-calculator",
         "name": "Personal Loan Calculator",
         "description": "Use our UK personal loan calculator to model monthly payments, compare terms, and explore interest rate scenarios before you apply.",
-        "url": "/calculators/personal-loan-calculator",
+        "url": "/personal-loan-calculator",
         "page": "calculators/personal-loan-calculator",
         "keywords": [],
         "status": "active"
@@ -946,7 +946,7 @@ export const generatedCalculatorCatalog = [
         "slug": "student-loan-repayment-calculator",
         "name": "Student Loan Repayment Calculator",
         "description": "Estimate UK student loan repayments under Plan 1, Plan 2, Plan 4, Plan 5, or Postgraduate. Model salary growth, monthly payments, and potential write-off year.",
-        "url": "/calculators/student-loan-repayment-calculator",
+        "url": "/student-loan-repayment-calculator",
         "page": "calculators/student-loan-repayment-calculator",
         "keywords": [
           "student loan repayment calculator",
@@ -966,7 +966,7 @@ export const generatedCalculatorCatalog = [
         "slug": "budget-calculator",
         "name": "Budget Calculator",
         "description": "Build your UK monthly budget by balancing income, bills, savings, and debt repayments. See your cash surplus and savings rate instantly.",
-        "url": "/calculators/budget-calculator",
+        "url": "/budget-calculator",
         "page": "calculators/budget-calculator",
         "keywords": [],
         "status": "active"
@@ -975,7 +975,7 @@ export const generatedCalculatorCatalog = [
         "slug": "budget-planner",
         "name": "Budget Planner",
         "description": "Create a realistic monthly budget calculator plan. Track income, compare spending categories, and see how much you can direct to savings with our UK-focused budget planner.",
-        "url": "/calculators/budget-planner",
+        "url": "/budget-planner",
         "page": "calculators/budget-planner",
         "keywords": [
           "monthly budget calculator",
@@ -987,7 +987,7 @@ export const generatedCalculatorCatalog = [
         "slug": "car-cost-calculator",
         "name": "Car Cost Calculator",
         "description": "Reveal the true monthly cost of running your car. Calculate finance, fuel, insurance, tax, and maintenance with the UK car cost calculator.",
-        "url": "/calculators/car-cost-calculator",
+        "url": "/car-cost-calculator",
         "page": "calculators/car-cost-calculator",
         "keywords": [
           "car cost calculator"
@@ -998,7 +998,7 @@ export const generatedCalculatorCatalog = [
         "slug": "commute-cost-calculator",
         "name": "Commute Cost Calculator",
         "description": "Estimate your UK commute cost by car, train, bus, or bike. Compare daily, monthly, and yearly travel expenses including parking, fuel, and extras.",
-        "url": "/calculators/commute-cost-calculator",
+        "url": "/commute-cost-calculator",
         "page": "calculators/commute-cost-calculator",
         "keywords": [
           "commute cost calculator"
@@ -1009,7 +1009,7 @@ export const generatedCalculatorCatalog = [
         "slug": "cost-of-living-calculator",
         "name": "Cost of Living Calculator",
         "description": "Estimate your monthly and annual UK living costs. Compare housing, utilities, groceries, transport, and lifestyle spending for any city.",
-        "url": "/calculators/cost-of-living-calculator",
+        "url": "/cost-of-living-calculator",
         "page": "calculators/cost-of-living-calculator",
         "keywords": [
           "cost of living",
@@ -1023,7 +1023,7 @@ export const generatedCalculatorCatalog = [
         "slug": "discount-calculator",
         "name": "Discount Calculator",
         "description": "Stack voucher codes, calculate percentage savings, and compare basket totals with this UK discount calculator before you head to checkout.",
-        "url": "/calculators/discount-calculator",
+        "url": "/discount-calculator",
         "page": "calculators/discount-calculator",
         "keywords": [
           "discount calculator",
@@ -1038,7 +1038,7 @@ export const generatedCalculatorCatalog = [
         "slug": "emergency-fund-calculator",
         "name": "Emergency Fund Calculator",
         "description": "Calculate your UK emergency fund target based on essential monthly expenses, savings progress, and planned contributions. Build a resilient buffer before life throws a curve ball.",
-        "url": "/calculators/emergency-fund-calculator",
+        "url": "/emergency-fund-calculator",
         "page": "calculators/emergency-fund-calculator",
         "keywords": [
           "emergency fund calculator",
@@ -1050,7 +1050,7 @@ export const generatedCalculatorCatalog = [
         "slug": "net-worth-calculator",
         "name": "Net Worth Calculator",
         "description": "Use our UK net worth calculator to track assets, compare progress, and keep your financial snapshot updated each quarter.",
-        "url": "/calculators/net-worth-calculator",
+        "url": "/net-worth-calculator",
         "page": "calculators/net-worth-calculator",
         "keywords": [
           "net worth calculator",
@@ -1062,7 +1062,7 @@ export const generatedCalculatorCatalog = [
         "slug": "personal-finance-calculator",
         "name": "Personal Finance Calculator",
         "description": "Use our UK personal finance calculator as a budget planner and tracker to map income, expenses, and savings goals. Manage your money with confidence.",
-        "url": "/calculators/personal-finance-calculator",
+        "url": "/personal-finance-calculator",
         "page": "calculators/personal-finance-calculator",
         "keywords": [
           "personal finance software",
@@ -1077,7 +1077,7 @@ export const generatedCalculatorCatalog = [
         "slug": "subscription-cost-calculator",
         "name": "Subscription Cost Calculator",
         "description": "Audit direct debits, compare annual versus monthly billing, and project price rises with our UK subscription cost calculator.",
-        "url": "/calculators/subscription-cost-calculator",
+        "url": "/subscription-cost-calculator",
         "page": "calculators/subscription-cost-calculator",
         "keywords": [
           "subscription cost calculator",
@@ -1091,7 +1091,7 @@ export const generatedCalculatorCatalog = [
         "slug": "weekly-budget-planner",
         "name": "Weekly Budget Planner",
         "description": "Plan weekly income, expenses, and savings goals with the UK weekly budget planner. Export your budget to stay on track every pay cycle.",
-        "url": "/calculators/weekly-budget-planner",
+        "url": "/weekly-budget-planner",
         "page": "calculators/weekly-budget-planner",
         "keywords": [
           "weekly budget planner",
@@ -1107,7 +1107,7 @@ export const generatedCalculatorCatalog = [
         "slug": "zero-based-budgeting-calculator",
         "name": "Zero Based Budgeting Calculator",
         "description": "Build a UK zero-based budget by allocating every pound of income to spending, savings, or debt. Track planned versus actual amounts and export the results.",
-        "url": "/calculators/zero-based-budgeting-calculator",
+        "url": "/zero-based-budgeting-calculator",
         "page": "calculators/zero-based-budgeting-calculator",
         "keywords": [
           "zero based budgeting calculator",
@@ -1130,7 +1130,7 @@ export const generatedCalculatorCatalog = [
         "slug": "break-even-calculator",
         "name": "Break Even Calculator",
         "description": "Calculate your break-even point in units and sales revenue. Model fixed costs, contribution margin, and target profit to plan pricing or sales pushes.",
-        "url": "/calculators/break-even-calculator",
+        "url": "/break-even-calculator",
         "page": "calculators/break-even-calculator",
         "keywords": [],
         "status": "active"
@@ -1139,7 +1139,7 @@ export const generatedCalculatorCatalog = [
         "slug": "business-loan-calculator",
         "name": "Business Loan Calculator",
         "description": "Work out monthly repayments for a UK business loan, including total interest and the impact of optional overpayments and arrangement fees.",
-        "url": "/calculators/business-loan-calculator",
+        "url": "/business-loan-calculator",
         "page": "calculators/business-loan-calculator",
         "keywords": [],
         "status": "active"
@@ -1148,7 +1148,7 @@ export const generatedCalculatorCatalog = [
         "slug": "contractor-calculator",
         "name": "Contractor Calculator",
         "description": "Estimate UK contractor take-home pay using day rate, salary, dividends, expenses, pension contributions, and company costs.",
-        "url": "/calculators/contractor-calculator",
+        "url": "/contractor-calculator",
         "page": "calculators/contractor-calculator",
         "keywords": [],
         "status": "active"
@@ -1157,7 +1157,7 @@ export const generatedCalculatorCatalog = [
         "slug": "corporation-tax-calculator",
         "name": "Corporation Tax Calculator",
         "description": "Estimate UK corporation tax with allowances, marginal relief, and associated companies. See your effective tax rate and post-tax profit instantly.",
-        "url": "/calculators/corporation-tax-calculator",
+        "url": "/corporation-tax-calculator",
         "page": "calculators/corporation-tax-calculator",
         "keywords": [],
         "status": "active"
@@ -1166,7 +1166,7 @@ export const generatedCalculatorCatalog = [
         "slug": "freelancer-day-rate-calculator",
         "name": "Freelancer Day Rate Calculator",
         "description": "Convert your annual freelance income goals into profitable UK day and hourly rates by factoring overheads, utilisation, and planned profit.",
-        "url": "/calculators/freelancer-day-rate-calculator",
+        "url": "/freelancer-day-rate-calculator",
         "page": "calculators/freelancer-day-rate-calculator",
         "keywords": [],
         "status": "active"
@@ -1175,7 +1175,7 @@ export const generatedCalculatorCatalog = [
         "slug": "vat-calculator",
         "name": "VAT Calculator",
         "description": "Add, remove, or compare VAT at UK rates including 20%, 5%, and 0%. Export the VAT breakdown for invoices or VAT return reconciliations.",
-        "url": "/calculators/vat-calculator",
+        "url": "/vat-calculator",
         "page": "calculators/vat-calculator",
         "keywords": [],
         "status": "active"
@@ -1191,7 +1191,7 @@ export const generatedCalculatorCatalog = [
         "slug": "currency-converter",
         "name": "Currency Converter Calculator",
         "description": "Convert currencies using mid-market exchange rates. Enter an amount and see the converted value for popular GBP pairs.",
-        "url": "/calculators/currency-converter",
+        "url": "/currency-converter",
         "page": "calculators/currency-converter",
         "keywords": [],
         "status": "active"
@@ -1200,7 +1200,7 @@ export const generatedCalculatorCatalog = [
         "slug": "energy-bill-calculator",
         "name": "Energy Bill Calculator",
         "description": "Estimate monthly and annual UK energy bills by combining electricity and gas usage, standing charges, VAT, and smoothing buffers.",
-        "url": "/calculators/energy-bill-calculator",
+        "url": "/energy-bill-calculator",
         "page": "calculators/energy-bill-calculator",
         "keywords": [],
         "status": "active"
@@ -1209,7 +1209,7 @@ export const generatedCalculatorCatalog = [
         "slug": "fuel-cost-calculator",
         "name": "Fuel Cost Calculator",
         "description": "Estimate UK road trip fuel spend by combining journey distance, fuel economy, and current pump prices. Split the total between passengers in seconds.",
-        "url": "/calculators/fuel-cost-calculator",
+        "url": "/fuel-cost-calculator",
         "page": "calculators/fuel-cost-calculator",
         "keywords": [
           "fuel cost calculator",
@@ -1224,7 +1224,7 @@ export const generatedCalculatorCatalog = [
         "slug": "household-bills-splitter",
         "name": "Household Bills Splitter",
         "description": "Split rent, utilities, and shared subscriptions fairly. Calculate who owes what based on agreed contribution percentages.",
-        "url": "/calculators/household-bills-splitter",
+        "url": "/household-bills-splitter",
         "page": "calculators/household-bills-splitter",
         "keywords": [
           "household bills splitter"
@@ -1235,7 +1235,7 @@ export const generatedCalculatorCatalog = [
         "slug": "price-per-unit-calculator",
         "name": "Price Per Unit Calculator",
         "description": "Use our UK price per unit calculator to track cost of living changes and power your budgeting decisions every shop. Compare grocery costs efficiently.",
-        "url": "/calculators/price-per-unit-calculator",
+        "url": "/price-per-unit-calculator",
         "page": "calculators/price-per-unit-calculator",
         "keywords": [
           "price calculator",
@@ -1250,7 +1250,7 @@ export const generatedCalculatorCatalog = [
         "slug": "tip-calculator",
         "name": "Tip Calculator",
         "description": "Split restaurant bills, add a tip, and remove UK service charges with the interactive tip calculator. Share the totals instantly with your group.",
-        "url": "/calculators/tip-calculator",
+        "url": "/tip-calculator",
         "page": "calculators/tip-calculator",
         "keywords": [
           "tip calculator",
@@ -1272,7 +1272,7 @@ export const generatedCalculatorCatalog = [
         "slug": "child-benefit-calculator",
         "name": "Child Benefit Calculator",
         "description": "Estimate weekly, monthly, and annual UK Child Benefit, including the High Income Child Benefit Charge. Check how much you keep in 2024/25 with our Child Benefit calculator.",
-        "url": "/calculators/child-benefit-calculator",
+        "url": "/child-benefit-calculator",
         "page": "calculators/child-benefit-calculator",
         "keywords": [
           "child benefit calculator",
@@ -1286,7 +1286,7 @@ export const generatedCalculatorCatalog = [
         "slug": "childcare-cost-calculator",
         "name": "Childcare Cost Calculator",
         "description": "Plan nursery, childminder, and wraparound care fees with this UK childcare cost calculator. See the impact of government support on your monthly cash flow.",
-        "url": "/calculators/childcare-cost-calculator",
+        "url": "/childcare-cost-calculator",
         "page": "calculators/childcare-cost-calculator",
         "keywords": [
           "childcare cost calculator",
@@ -1299,7 +1299,7 @@ export const generatedCalculatorCatalog = [
         "slug": "dream-lifestyle-calculator",
         "name": "Dream Lifestyle Calculator",
         "description": "Put a realistic price tag on your dream lifestyle. Estimate monthly spending, build in savings buffers, and set the pre-tax income you need to live life on your terms.",
-        "url": "/calculators/dream-lifestyle-calculator",
+        "url": "/dream-lifestyle-calculator",
         "page": "calculators/dream-lifestyle-calculator",
         "keywords": [],
         "status": "active"
@@ -1308,7 +1308,7 @@ export const generatedCalculatorCatalog = [
         "slug": "travel-budget-calculator",
         "name": "Travel Budget Calculator",
         "description": "Plan UK and overseas trips with the travel budget calculator. Estimate flights, accommodation, daily spending, and contingency buffers for every traveller.",
-        "url": "/calculators/travel-budget-calculator",
+        "url": "/travel-budget-calculator",
         "page": "calculators/travel-budget-calculator",
         "keywords": [
           "travel budget calculator",
@@ -1322,7 +1322,7 @@ export const generatedCalculatorCatalog = [
         "slug": "wedding-budget-calculator",
         "name": "Wedding Budget Calculator",
         "description": "Plan venue, catering, and supplier costs with the UK wedding budget calculator. Track deposits, committed spend, and gift contributions in one place.",
-        "url": "/calculators/wedding-budget-calculator",
+        "url": "/wedding-budget-calculator",
         "page": "calculators/wedding-budget-calculator",
         "keywords": [
           "wedding budget calculator",

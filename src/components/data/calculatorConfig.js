@@ -9,6 +9,31 @@ const ensureLeadingSlash = (value = '') => {
   return normalised ? `/${normalised}` : '/';
 };
 
+const normalisePublicUrl = (value = '') => {
+  if (typeof value !== 'string') return '/';
+  const trimmed = value.trim();
+  if (!trimmed) return '/';
+
+  let normalised = trimmed.startsWith('/') ? trimmed : `/${trimmed.replace(/^\/+/, '')}`;
+  if (normalised !== '/' && normalised.endsWith('/')) {
+    normalised = normalised.replace(/\/+$/, '');
+    if (!normalised) {
+      normalised = '/';
+    }
+  }
+
+  if (normalised === '/calculators') {
+    return '/';
+  }
+
+  if (normalised.startsWith('/calculators/')) {
+    const withoutPrefix = normalised.slice('/calculators'.length);
+    return withoutPrefix ? ensureLeadingSlash(withoutPrefix) : '/';
+  }
+
+  return normalised;
+};
+
 const normalisePagePath = (value = '') => {
   if (typeof value !== 'string') return '';
   const trimmed = value.trim().replace(/^\/+/, '');
@@ -32,7 +57,8 @@ const addCategoryTag = (categorySlug, tags = []) => {
 
 const normaliseCalculator = (categorySlug, calculator) => {
   const name = calculator?.name?.trim() || 'Calculator';
-  const url = ensureLeadingSlash(calculator?.url || `/calculators/${calculator?.slug || ''}`);
+  const slug = calculator?.slug || '';
+  const url = normalisePublicUrl(calculator?.url || calculator?.page || slug);
   const page = normalisePagePath(calculator?.page || calculator?.slug || url.replace(/^\//, ''));
   return {
     ...calculator,

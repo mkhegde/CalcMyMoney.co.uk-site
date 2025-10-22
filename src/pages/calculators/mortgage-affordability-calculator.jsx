@@ -20,8 +20,8 @@ const ResultBreakdownChart = React.lazy(
   () => import('@/components/calculators/ResultBreakdownChart.jsx')
 );
 
-const pagePath = '/calculators/mortgage-affordability-calculator';
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/mortgage-affordability-calculator';
+const pagePath = '/mortgage-affordability-calculator';
+const canonicalUrl = `https://www.calcmymoney.co.uk${pagePath}`;
 const pageTitle = 'Mortgage Affordability Calculator UK | How Much Mortgage Can I Afford';
 const metaDescription =
   'Use our UK mortgage affordability calculator to see how much mortgage you can afford, balance mortgage affordability against debts, and plan your deposit strategy.';
