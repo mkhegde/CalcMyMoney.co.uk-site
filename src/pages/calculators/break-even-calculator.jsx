@@ -210,7 +210,7 @@ export default function BreakEvenCalculatorPage() {
       setCsvData(buildCsv(computed));
       setHasCalculated(true);
     }
-  }, [hasCalculated]);*** End Patch
+  }, [hasCalculated]);
 
   return (
     <div className="bg-slate-50 dark:bg-slate-900">
