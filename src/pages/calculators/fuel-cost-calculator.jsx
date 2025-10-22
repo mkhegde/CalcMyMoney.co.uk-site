@@ -249,12 +249,12 @@ export default function FuelCostCalculatorPage() {
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-amber-900 via-slate-900 to-amber-900 py-16 text-white">
+      <section className="calculator-hero">
         <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
+          <Heading as="h1" size="h1" weight="bold" className="calculator-hero__title">
             Fuel Cost Calculator
           </Heading>
-          <p className="text-lg md:text-xl text-amber-100">
+          <p className="calculator-hero__description">
             Estimate real-world fuel spend before you set off and split the bill fairly with passengers.
           </p>
         </div>

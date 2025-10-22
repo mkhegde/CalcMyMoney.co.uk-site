@@ -1,516 +1,563 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Calculator, Calendar, Clock, Coins, BarChart3 } from 'lucide-react';
-
+import React, { useCallback, useMemo, useState, Suspense } from 'react';
+import SeoHead from '@/components/seo/SeoHead';
+import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
+import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import Heading from '@/components/common/Heading';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
+import ExportActions from '@/components/calculators/ExportActions';
+import DirectoryLinks from '@/components/calculators/DirectoryLinks';
+import RelatedCalculators from '@/components/calculators/RelatedCalculators';
+import EmotionalHook from '@/components/calculators/EmotionalHook';
+import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Calculator, Calendar, Clock, Coins, BarChart3, BookOpen } from 'lucide-react';
 
-const keywords = [
-  'salary calculator',
-  'annual salary calculator',
-  'gross pay calculator',
-  'yearly salary calculator',
-  'hourly wage calculator',
-  'monthly salary calculator',
-  'hourly rate calculator',
-  'wages calculator',
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
+
+const pagePath = '/calculators/salary-calculator';
+const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/salary-calculator';
+const pageTitle = 'Salary Calculator UK | Annual, Monthly & Hourly Pay Breakdown';
+const metaDescription =
+  'Convert an annual salary into monthly, weekly, and hourly rates with UK salary calculator tools. Include bonuses, overtime, and pension deductions for an accurate pay picture.';
+const keywords = getMappedKeywords('Salary Calculator');
+
+const faqItems = [
+  {
+    question: 'How can I include irregular bonuses?',
+    answer:
+      'Average bonus payments across the year and enter the total here. Recalculate whenever commissions or bonus structures change to keep your budget accurate.',
+  },
+  {
+    question: 'Does this include pension salary sacrifice?',
+    answer:
+      'Yes. Toggle the pension contribution type to model percentage or fixed deductions. For true salary sacrifice savings, combine with the salary sacrifice calculator to estimate tax and NI relief.',
+  },
+  {
+    question: 'How should I treat overtime?',
+    answer:
+      'Enter the typical overtime hours per week and the enhanced hourly rate. The calculator multiplies this across the weeks worked each year so you can compare total remuneration packages.',
+  },
 ];
 
-const metaDescription =
-  'Use the salary calculator with annual salary calculator tools to convert gross pay, compare hourly wage calculator results, and plan monthly salary cash flow.';
+const emotionalMessage =
+  'Bring clarity to your payslip. Understand how each element of your package contributes to take-home pay so you can negotiate with confidence and budget calmly.';
+const emotionalQuote = {
+  text: 'Beware of little expenses; a small leak will sink a great ship.',
+  author: 'Benjamin Franklin',
+};
 
-const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/salary-calculator';
-const schemaKeywords = keywords.slice(0, 5);
+const directoryLinks = [
+  {
+    url: '/#income-tax',
+    label: 'Explore salary & tax calculators',
+    description: 'Break down PAYE, NI, and student loans for every job offer.',
+  },
+  {
+    url: '/calculators/take-home-pay-calculator',
+    label: 'Take-Home Pay Calculator',
+    description: 'Project net pay after income tax, National Insurance, and pensions.',
+  },
+  {
+    url: '/calculators/salary-sacrifice-calculator',
+    label: 'Salary Sacrifice Calculator',
+    description: 'See how pension sacrifice changes tax, NI, and employer top-ups.',
+  },
+];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
   currency: 'GBP',
-  minimumFractionDigits: 0,
-});
-
-const numberFormatter = new Intl.NumberFormat('en-GB', {
   minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
 });
 
 const defaultInputs = {
-  annualSalary: 42000,
-  weeksPerYear: 52,
-  hoursPerWeek: 37.5,
-  paidDaysPerWeek: 5,
-  bonus: 2500,
-  overtimeHours: 5,
-  overtimeRate: 22,
-  pensionContribution: 5,
+  annualSalary: '42,000',
+  weeksPerYear: '52',
+  hoursPerWeek: '37.5',
+  paidDaysPerWeek: '5',
+  bonus: '2,500',
+  overtimeHours: '5',
+  overtimeRate: '22',
+  pensionContribution: '5',
   pensionType: 'percentage',
 };
 
-const salaryFaqs = [
-  {
-    question: 'How do I use this salary calculator with irregular bonuses?',
-    answer:
-      'Enter the typical annual bonus in the bonus field. If bonuses vary, average the last few years or run multiple scenarios so you can see best- and worst-case cash flow.',
-  },
-  {
-    question: 'What about unpaid leave or zero-hours contracts?',
-    answer:
-      'Adjust the weeks worked each year or the hours per week slider to reflect realistic patterns. The calculator instantly updates the hourly wage calculator outputs so you can compare contracts.',
-  },
-  {
-    question: 'How accurate is the overtime estimate?',
-    answer:
-      'The overtime feature multiplies hours by the overtime rate and spreads the value across the year. Update the figures whenever shift patterns change to keep the wage projections up to date.',
-  },
-];
+const parseNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/,/g, '').trim();
+  const numeric = Number.parseFloat(cleaned);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
 
-const calculateSalaryBreakdown = ({
-  annualSalary,
-  weeksPerYear,
-  hoursPerWeek,
-  paidDaysPerWeek,
-  bonus,
-  overtimeHours,
-  overtimeRate,
-  pensionContribution,
-  pensionType,
-}) => {
-  const baseAnnual = Math.max(annualSalary, 0);
-  const annualBonus = Math.max(bonus, 0);
-  const overtimeValue = Math.max(overtimeHours, 0) * Math.max(overtimeRate, 0) * Math.max(weeksPerYear, 0);
-  const totalAnnualGross = baseAnnual + annualBonus + overtimeValue;
+const calculateSalaryBreakdown = (inputs) => {
+  const annualSalary = Math.max(parseNumber(inputs.annualSalary), 0);
+  const weeksPerYear = Math.max(parseNumber(inputs.weeksPerYear), 1);
+  const hoursPerWeek = Math.max(parseNumber(inputs.hoursPerWeek), 0.1);
+  const paidDaysPerWeek = Math.max(parseNumber(inputs.paidDaysPerWeek), 0.1);
+  const bonus = Math.max(parseNumber(inputs.bonus), 0);
+  const overtimeHours = Math.max(parseNumber(inputs.overtimeHours), 0);
+  const overtimeRate = Math.max(parseNumber(inputs.overtimeRate), 0);
+  const pensionContribution = Math.max(parseNumber(inputs.pensionContribution), 0);
+  const pensionType = inputs.pensionType === 'fixed' ? 'fixed' : 'percentage';
+
+  const overtimeValue = overtimeHours * overtimeRate * weeksPerYear;
+  const totalAnnualGross = annualSalary + bonus + overtimeValue;
 
   const pensionDeduction =
     pensionType === 'percentage'
-      ? (totalAnnualGross * Math.max(pensionContribution, 0)) / 100
-      : Math.max(pensionContribution, 0);
+      ? (totalAnnualGross * pensionContribution) / 100
+      : pensionContribution;
+
   const adjustedAnnual = Math.max(totalAnnualGross - pensionDeduction, 0);
 
-  const monthsPerYear = 12;
-  const monthlyGross = adjustedAnnual / monthsPerYear;
-  const weeklyGross = adjustedAnnual / Math.max(weeksPerYear, 1);
-  const dailyGross = weeklyGross / Math.max(paidDaysPerWeek, 1);
-  const hourlyGross = weeklyGross / Math.max(hoursPerWeek, 1);
+  const monthlyGross = adjustedAnnual / 12;
+  const weeklyGross = adjustedAnnual / weeksPerYear;
+  const dailyGross = weeklyGross / paidDaysPerWeek;
+  const hourlyGross = weeklyGross / hoursPerWeek;
 
-  const baseHourlyRate = baseAnnual / (Math.max(weeksPerYear, 1) * Math.max(hoursPerWeek, 1));
-  const overtimePremium = hourlyGross - baseHourlyRate;
+  const baseHourlyRate = annualSalary / (weeksPerYear * hoursPerWeek);
+  const hourlyWithExtras = adjustedAnnual / (weeksPerYear * hoursPerWeek);
+  const overtimePremium = overtimeRate - baseHourlyRate;
 
   return {
+    annualSalary,
+    bonus,
+    overtimeHours,
+    overtimeRate,
+    overtimeValue,
     totalAnnualGross,
+    pensionDeduction,
     adjustedAnnual,
     monthlyGross,
     weeklyGross,
     dailyGross,
     hourlyGross,
     baseHourlyRate,
+    hourlyWithExtras,
     overtimePremium,
-    pensionDeduction,
-    overtimeValue,
-    annualBonus,
+    pensionType,
+    pensionContribution,
   };
+};
+
+const buildCsvData = (results, inputs) => {
+  if (!results) return null;
+
+  return [
+    ['Input', 'Value'],
+    ['Base annual salary (£)', inputs.annualSalary],
+    ['Annual bonus (£)', inputs.bonus],
+    ['Weeks worked per year', inputs.weeksPerYear],
+    ['Paid days per week', inputs.paidDaysPerWeek],
+    ['Hours per week', inputs.hoursPerWeek],
+    ['Overtime hours per week', inputs.overtimeHours],
+    ['Overtime hourly rate (£)', inputs.overtimeRate],
+    [
+      'Pension contribution',
+      results.pensionType === 'percentage'
+        ? `${inputs.pensionContribution}%`
+        : currencyFormatter.format(results.pensionContribution),
+    ],
+    [],
+    ['Output', 'Value'],
+    ['Total annual gross (£)', currencyFormatter.format(results.totalAnnualGross)],
+    ['Pension deduction (£)', currencyFormatter.format(results.pensionDeduction)],
+    ['Adjusted annual (£)', currencyFormatter.format(results.adjustedAnnual)],
+    ['Monthly gross (£)', currencyFormatter.format(results.monthlyGross)],
+    ['Weekly gross (£)', currencyFormatter.format(results.weeklyGross)],
+    ['Daily gross (£)', currencyFormatter.format(results.dailyGross)],
+    ['Hourly gross (£)', currencyFormatter.format(results.hourlyGross)],
+    ['Base hourly rate (£)', currencyFormatter.format(results.baseHourlyRate)],
+    ['Overtime value (£)', currencyFormatter.format(results.overtimeValue)],
+  ];
+};
+
+const buildChartData = (results) => {
+  if (!results) return [];
+  return [
+    { name: 'Base salary', value: results.annualSalary, color: '#0ea5e9' },
+    { name: 'Bonus', value: results.bonus, color: '#6366f1' },
+    { name: 'Overtime earnings', value: results.overtimeValue, color: '#f97316' },
+    { name: 'Pension deduction', value: results.pensionDeduction, color: '#22c55e' },
+  ].filter((segment) => segment.value > 0);
 };
 
 export default function SalaryCalculatorPage() {
   const [inputs, setInputs] = useState(defaultInputs);
+  const [hasCalculated, setHasCalculated] = useState(false);
+  const [results, setResults] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  const results = useMemo(
-    () =>
-      calculateSalaryBreakdown({
-        annualSalary: Number(inputs.annualSalary) || 0,
-        weeksPerYear: Number(inputs.weeksPerYear) || 0,
-        hoursPerWeek: Number(inputs.hoursPerWeek) || 0,
-        paidDaysPerWeek: Number(inputs.paidDaysPerWeek) || 0,
-        bonus: Number(inputs.bonus) || 0,
-        overtimeHours: Number(inputs.overtimeHours) || 0,
-        overtimeRate: Number(inputs.overtimeRate) || 0,
-        pensionContribution: Number(inputs.pensionContribution) || 0,
-        pensionType: inputs.pensionType,
-      }),
+  const relatedCalculators = useMemo(() => getRelatedCalculators(pagePath), []);
+
+  const schema = useCalculatorSchema({
+    origin: 'https://www.calcmymoney.co.uk',
+    path: pagePath,
+    name: 'Salary Calculator',
+    description: metaDescription,
+    breadcrumbs: [
+      { name: 'Home', url: '/' },
+      { name: 'Salary & Tax Calculators', url: '/calculators#income-tax' },
+      { name: 'Salary Calculator', url: pagePath },
+    ],
+    faq: faqItems,
+  });
+
+  const handleInputChange = useCallback(
+    (field) => (event) => {
+      const { value } = event.target;
+      setInputs((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const computed = calculateSalaryBreakdown(inputs);
+      setResults(computed);
+      setHasCalculated(true);
+      setCsvData(buildCsvData(computed, inputs));
+    },
     [inputs]
   );
 
-  const resetAll = () => setInputs(defaultInputs);
+  const handleReset = useCallback(() => {
+    setInputs(defaultInputs);
+    setHasCalculated(false);
+    setResults(null);
+    setCsvData(null);
+  }, []);
+
+  const chartData = useMemo(() => buildChartData(results), [results]);
 
   return (
-    <div className="bg-white dark:bg-gray-950">
-      <Helmet>
-        <title>Salary Calculator | Annual Salary Calculator</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:title" content="Salary Calculator | Annual Salary Calculator" />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Calc My Money" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Salary Calculator | Annual Salary Calculator" />
-        <meta name="twitter:description" content={metaDescription} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebPage',
-              name: 'Salary Calculator',
-              url: canonicalUrl,
-              description: metaDescription,
-              keywords: schemaKeywords,
-              inLanguage: 'en-GB',
-              potentialAction: {
-                '@type': 'Action',
-                name: 'Convert income with an annual salary calculator',
-                target: canonicalUrl,
-              },
-            }),
-          }}
-        />
-      </Helmet>
-
-      <section className="bg-gradient-to-r from-sky-900 via-slate-900 to-sky-900 py-16 text-white">
-        <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
-            Salary Calculator
-          </Heading>
-          <p className="text-lg md:text-xl text-sky-100">
-            Translate gross pay into monthly, weekly, and hourly values while factoring bonuses, overtime,
-            and pension deductions.
-          </p>
-        </div>
-      </section>
+    <div className="bg-slate-50 dark:bg-slate-900">
+      <SeoHead
+        title={pageTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        ogTitle={pageTitle}
+        ogDescription={metaDescription}
+        ogUrl={canonicalUrl}
+        ogType="website"
+        ogSiteName="CalcMyMoney UK"
+        ogLocale="en_GB"
+        twitterTitle={pageTitle}
+        twitterDescription={metaDescription}
+        keywords={keywords}
+        articleTags={keywords}
+        jsonLd={schema}
+      />
 
       <CalculatorWrapper>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <div className="space-y-6">
-            <Card className="border border-sky-200 bg-white text-slate-900 shadow-md dark:border-sky-900 dark:bg-slate-950 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calendar className="h-5 w-5 text-sky-600 dark:text-sky-300" />
-                  Base pay inputs
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="annualSalary">Base annual salary (£)</Label>
-                    <Input
-                      id="annualSalary"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="500"
-                      value={inputs.annualSalary}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          annualSalary: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bonus">Annual bonus (£)</Label>
-                    <Input
-                      id="bonus"
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      step="100"
-                      value={inputs.bonus}
-                      onChange={(event) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          bonus: Number(event.target.value) || 0,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weeksPerYear">Weeks worked per year</Label>
-                    <Slider
-                      id="weeksPerYear"
-                      className="mt-3"
-                      value={[Number(inputs.weeksPerYear)]}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          weeksPerYear: Number(value[0].toFixed(0)),
-                        }))
-                      }
-                      min={40}
-                      max={52}
-                      step={1}
-                    />
-                    <div className="flex justify-between text-sm text-sky-700 dark:text-sky-200">
-                      <span>40</span>
-                      <span>{inputs.weeksPerYear}</span>
-                      <span>52</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="paidDaysPerWeek">Paid days per week</Label>
-                    <Slider
-                      id="paidDaysPerWeek"
-                      className="mt-3"
-                      value={[Number(inputs.paidDaysPerWeek)]}
-                      onValueChange={(value) =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          paidDaysPerWeek: Number(value[0].toFixed(1)),
-                        }))
-                      }
-                      min={3}
-                      max={6}
-                      step={0.5}
-                    />
-                    <div className="flex justify-between text-sm text-sky-700 dark:text-sky-200">
-                      <span>3</span>
-                      <span>{numberFormatter.format(inputs.paidDaysPerWeek)}</span>
-                      <span>6</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="space-y-10">
+          <header className="space-y-6 text-slate-900 dark:text-slate-100">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-600/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200">
+                <Calculator className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <Heading as="h1" size="h1" className="!mb-0">
+                Salary Calculator UK
+              </Heading>
+            </div>
+            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300">
+              Convert between annual, monthly, weekly, daily, and hourly pay. Include bonuses,
+              overtime, and pension deductions to understand the full value of your package.
+            </p>
+          </header>
 
-            <Card className="border border-sky-200 bg-sky-50 text-slate-900 shadow-md dark:border-sky-900 dark:bg-sky-900/30 dark:text-slate-100">
+          <EmotionalHook
+            message={emotionalMessage}
+            quote={emotionalQuote}
+            icon={<Coins className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            iconColor="text-sky-600 dark:text-sky-300"
+            borderColor="border-sky-200 dark:border-sky-800/60"
+            bgColor="bg-sky-50/70 dark:bg-sky-900/40"
+            textColor="text-sky-900 dark:text-sky-100"
+            footerColor="text-sky-700 dark:text-sky-300"
+          />
+
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+            <Card className="border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Clock className="h-5 w-5 text-sky-700 dark:text-sky-300" />
-                  Overtime and pension
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Calendar className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                  Pay inputs
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="hoursPerWeek">Hours per week</Label>
-                  <Slider
-                    id="hoursPerWeek"
-                    className="mt-3"
-                    value={[Number(inputs.hoursPerWeek)]}
-                    onValueChange={(value) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        hoursPerWeek: Number(value[0].toFixed(1)),
-                      }))
-                    }
-                    min={20}
-                    max={48}
-                    step={0.5}
-                  />
-                  <div className="flex justify-between text-sm text-sky-700 dark:text-sky-200">
-                    <span>20</span>
-                    <span>{numberFormatter.format(inputs.hoursPerWeek)}</span>
-                    <span>48</span>
+              <CardContent>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="annualSalary">Base annual salary (£)</Label>
+                      <Input
+                        id="annualSalary"
+                        inputMode="decimal"
+                        value={inputs.annualSalary}
+                        onChange={handleInputChange('annualSalary')}
+                        placeholder="e.g. 42,000"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="bonus">Annual bonus (£)</Label>
+                      <Input
+                        id="bonus"
+                        inputMode="decimal"
+                        value={inputs.bonus}
+                        onChange={handleInputChange('bonus')}
+                        placeholder="e.g. 2,500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="weeksPerYear">Weeks worked per year</Label>
+                      <Input
+                        id="weeksPerYear"
+                        inputMode="decimal"
+                        value={inputs.weeksPerYear}
+                        onChange={handleInputChange('weeksPerYear')}
+                        placeholder="e.g. 52"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="paidDaysPerWeek">Paid days per week</Label>
+                      <Input
+                        id="paidDaysPerWeek"
+                        inputMode="decimal"
+                        value={inputs.paidDaysPerWeek}
+                        onChange={handleInputChange('paidDaysPerWeek')}
+                        placeholder="e.g. 5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hoursPerWeek">Hours per week</Label>
+                      <Input
+                        id="hoursPerWeek"
+                        inputMode="decimal"
+                        value={inputs.hoursPerWeek}
+                        onChange={handleInputChange('hoursPerWeek')}
+                        placeholder="e.g. 37.5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="overtimeHours">Overtime hours per week</Label>
+                      <Input
+                        id="overtimeHours"
+                        inputMode="decimal"
+                        value={inputs.overtimeHours}
+                        onChange={handleInputChange('overtimeHours')}
+                        placeholder="e.g. 5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="overtimeRate">Overtime hourly rate (£)</Label>
+                      <Input
+                        id="overtimeRate"
+                        inputMode="decimal"
+                        value={inputs.overtimeRate}
+                        onChange={handleInputChange('overtimeRate')}
+                        placeholder="e.g. 22"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pensionContribution">Pension contribution</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="pensionContribution"
+                          inputMode="decimal"
+                          value={inputs.pensionContribution}
+                          onChange={handleInputChange('pensionContribution')}
+                          placeholder={inputs.pensionType === 'percentage' ? 'e.g. 5' : 'e.g. 2,000'}
+                        />
+                        <select
+                          value={inputs.pensionType}
+                          onChange={(event) =>
+                            setInputs((prev) => ({ ...prev, pensionType: event.target.value }))
+                          }
+                          className="w-32 rounded-md border border-input bg-transparent px-2 text-sm"
+                        >
+                          <option value="percentage">%</option>
+                          <option value="fixed">£</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="overtimeHours">Overtime hours per week</Label>
-                  <Input
-                    id="overtimeHours"
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    inputMode="decimal"
-                    value={inputs.overtimeHours}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        overtimeHours: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="overtimeRate">Overtime rate (£ per hour)</Label>
-                  <Input
-                    id="overtimeRate"
-                    type="number"
-                    min="0"
-                    step="1"
-                    inputMode="decimal"
-                    value={inputs.overtimeRate}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        overtimeRate: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pensionContribution">
-                    Pension contribution ({inputs.pensionType === 'percentage' ? '%' : '£'})
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant={inputs.pensionType === 'percentage' ? 'default' : 'outline'}
-                      onClick={() =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          pensionType: 'percentage',
-                        }))
-                      }
-                    >
-                      %
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="flex-1">
+                      Calculate salary breakdown
                     </Button>
                     <Button
                       type="button"
-                      variant={inputs.pensionType === 'amount' ? 'default' : 'outline'}
-                      onClick={() =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          pensionType: 'amount',
-                        }))
-                      }
+                      variant="outline"
+                      onClick={handleReset}
+                      className="flex-1"
                     >
-                      £
+                      Reset inputs
                     </Button>
                   </div>
-                  <Input
-                    id="pensionContribution"
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    inputMode="decimal"
-                    value={inputs.pensionContribution}
-                    onChange={(event) =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        pensionContribution: Number(event.target.value) || 0,
-                      }))
-                    }
-                  />
-                </div>
+                </form>
               </CardContent>
             </Card>
 
-            <Button variant="outline" className="w-full" onClick={resetAll}>
-              Reset to example salary
-            </Button>
+            <div className="space-y-6">
+              {!hasCalculated && (
+                <Card className="border border-dashed border-slate-300 bg-white/70 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                  <CardContent className="py-10 text-center text-sm leading-relaxed">
+                    Enter your pay details and press
+                    <span className="font-semibold"> Calculate salary breakdown</span> to see
+                    annual, monthly, weekly, and hourly results.
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasCalculated && results && (
+                <>
+                  <Card className="border border-sky-200 bg-white shadow-sm dark:border-sky-900 dark:bg-sky-900/30 dark:text-sky-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Coins className="h-5 w-5 text-sky-600 dark:text-sky-200" aria-hidden="true" />
+                        Salary summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Adjusted annual</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.adjustedAnnual)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Total annual gross</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.totalAnnualGross)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Monthly gross</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.monthlyGross)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Weekly gross</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.weeklyGross)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Daily gross</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.dailyGross)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-sky-900 dark:text-sky-200">Pension deduction</p>
+                        <p className="text-2xl font-semibold">
+                          {currencyFormatter.format(results.pensionDeduction)}
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <ExportActions
+                          csvData={csvData}
+                          fileName="salary-breakdown"
+                          title="Salary Calculator Results"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Clock className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                        Pay rates & extras
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 sm:grid-cols-2 text-sm text-slate-600 dark:text-slate-300">
+                      <div className="space-y-1">
+                        <p className="font-medium text-slate-700 dark:text-slate-100">Hourly base rate</p>
+                        <p>{currencyFormatter.format(results.baseHourlyRate)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-medium text-slate-700 dark:text-slate-100">Hourly incl. extras</p>
+                        <p>{currencyFormatter.format(results.hourlyWithExtras)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-medium text-slate-700 dark:text-slate-100">Overtime annual value</p>
+                        <p>{currencyFormatter.format(results.overtimeValue)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-medium text-slate-700 dark:text-slate-100">Overtime premium per hour</p>
+                        <p>{currencyFormatter.format(results.overtimePremium)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-medium text-slate-700 dark:text-slate-100">Annual bonus</p>
+                        <p>{currencyFormatter.format(results.bonus)}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BarChart3 className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                        Package composition
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Salary package breakdown" />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BookOpen className="h-5 w-5 text-sky-600 dark:text-sky-300" aria-hidden="true" />
+                        Important notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                      <p>
+                        Results show gross pay before tax and National Insurance. Combine with the take-home
+                        pay calculator to understand net pay after statutory deductions.
+                      </p>
+                      <p>
+                        Pension contributions can be deducted via relief at source or salary sacrifice.
+                        Confirm which scheme your employer uses to ensure the figures match your payslip.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-6">
-            <Card className="border border-slate-200 bg-white shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Coins className="h-5 w-5 text-sky-600 dark:text-sky-300" />
-                  Gross pay calculator overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Total annual gross</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.totalAnnualGross)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Net of pension</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.adjustedAnnual)}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Pension {currencyFormatter.format(results.pensionDeduction)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-sky-200 bg-sky-50 p-4 text-center dark:border-sky-800 dark:bg-sky-900/30">
-                  <p className="text-sm text-sky-700 dark:text-sky-200">Monthly salary calculator</p>
-                  <p className="text-2xl font-semibold text-sky-900 dark:text-sky-100">
-                    {currencyFormatter.format(results.monthlyGross)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-sky-200 bg-sky-50 p-4 text-center dark:border-sky-800 dark:bg-sky-900/30">
-                  <p className="text-sm text-sky-700 dark:text-sky-200">Weekly pay</p>
-                  <p className="text-2xl font-semibold text-sky-900 dark:text-sky-100">
-                    {currencyFormatter.format(results.weeklyGross)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Daily pay</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.dailyGross)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">Hourly rate</p>
-                  <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {currencyFormatter.format(results.hourlyGross)}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Base rate {currencyFormatter.format(results.baseHourlyRate)}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <FAQSection faqs={faqItems} />
+          </section>
 
-            <Card className="border border-sky-200 bg-sky-50 text-slate-900 shadow-md dark:border-sky-900 dark:bg-sky-900/30 dark:text-slate-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <BarChart3 className="h-5 w-5 text-sky-700 dark:text-sky-300" />
-                  Yearly salary calculator drill-down
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span>Annual bonus</span>
-                  <span>{currencyFormatter.format(results.annualBonus)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Overtime value</span>
-                  <span>{currencyFormatter.format(results.overtimeValue)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Overtime premium per hour</span>
-                  <span>{currencyFormatter.format(results.overtimePremium)}</span>
-                </div>
-                <p>
-                  The yearly salary calculator view bundles guaranteed pay, bonus, and overtime into a single
-                  adjusted gross figure. Update the sliders whenever work patterns shift so your budgeting
-                  stays accurate.
-                </p>
-              </CardContent>
-            </Card>
-
-            <section className="space-y-6 rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <Heading
-                as="h2"
-                size="h2"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Hourly wage calculator confidence
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                The hourly wage calculator output helps when comparing contract roles or negotiating a move to
-                reduced hours. Track base and overtime rates so you can benchmark against market offers.
-              </p>
-              <Heading
-                as="h3"
-                size="h3"
-                weight="semibold"
-                className="text-slate-900 dark:text-slate-100"
-              >
-                Hourly rate calculator and wages calculator planning
-              </Heading>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Use the hourly rate calculator insights to set minimum acceptable pay, then layer on the wages
-                calculator breakdown to understand weekly take-home expectations including overtime.
-              </p>
-              <p className="text-base text-slate-600 dark:text-slate-300">
-                Need a full monthly salary calculator view for budgeting? Pair these figures with your net pay
-                calculations to map every bill against a reliable monthly cash flow.
-              </p>
-            </section>
-
-            <section className="rounded-md border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <FAQSection faqs={salaryFaqs} />
-            </section>
-          </div>
+          <RelatedCalculators calculators={relatedCalculators} />
+          <DirectoryLinks links={directoryLinks} />
         </div>
       </CalculatorWrapper>
     </div>

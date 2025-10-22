@@ -2,20 +2,7 @@ import { useLocation } from 'react-router-dom';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import {
-  Search,
-  Calculator,
-  TrendingUp,
-  Users,
-  ExternalLink,
-  CreditCard,
-  Wallet,
-  Zap,
-  Briefcase,
-  PoundSterling,
-  Home as HomeIcon,
-  PiggyBank,
-} from 'lucide-react';
+import { Search, Calculator, TrendingUp, Users, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
@@ -24,20 +11,9 @@ import { useSeo } from '@/components/seo/SeoContext';
 import Heading from '@/components/common/Heading';
 import { calculatorCategories as DEFAULT_DIRECTORY_CATEGORIES } from '../components/data/calculatorConfig.js';
 import { getMappedKeywords } from '@/components/seo/keywordMappings';
+import { getCategoryIcon } from '@/components/data/calculatorIcons.js';
 
 const DEFAULT_STATS = { total: 0, active: 0, categories: 0 };
-
-const ICONS_BY_SLUG = {
-  'mortgages-property': HomeIcon,
-  'tax-income': PoundSterling,
-  'retirement-pensions': TrendingUp,
-  'savings-investments': PiggyBank,
-  'debt-loans': CreditCard,
-  'budgeting-planning': Wallet,
-  'business-freelancing': Briefcase,
-  'utilities-tools': Zap,
-  'family-lifestyle': Users,
-};
 
 const pageTitle = 'UK Salary, Tax & Mortgage Calculators (2025/26) | CalcMyMoney';
 const metaDescription =
@@ -114,7 +90,7 @@ export default function Home() {
   const fallbackHubCards = useMemo(
     () =>
       DEFAULT_DIRECTORY_CATEGORIES.map((category) => {
-        const Icon = ICONS_BY_SLUG[category.slug] || Calculator;
+        const Icon = getCategoryIcon(category.slug) || Calculator;
         return {
           title: category.name,
           icon: Icon,
@@ -135,7 +111,7 @@ export default function Home() {
     if (!calcData.categories.length) return fallbackHubCards;
     return directoryCategories.map((category) => ({
       title: category.name,
-      icon: category.icon || ICONS_BY_SLUG[category.slug] || Calculator,
+      icon: getCategoryIcon(category.slug) || Calculator,
       link: `#${category.slug}`,
       description: category.description,
     }));
@@ -371,11 +347,13 @@ export default function Home() {
           {showAllCalculators ? (
             categoriesLoaded ? (
               <div className="space-y-12">
-                {directoryCategories.map((category) => (
-                  <div key={category.slug} id={category.slug} className="scroll-mt-20">
+                {directoryCategories.map((category) => {
+                  const Icon = getCategoryIcon(category.slug);
+                  return (
+                    <div key={category.slug} id={category.slug} className="scroll-mt-20">
                     {/* Category Header */}
                     <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
-                      <category.icon className="h-8 w-8 text-primary" />
+                      <Icon className="h-8 w-8 text-primary" />
                       <div>
                         <Heading as="h3" size="h3" weight="bold" className="text-foreground">
                           {category.name}
@@ -429,7 +407,8 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
-                ))}
+                );
+              })}
               </div>
             ) : (
               <div className="space-y-12">

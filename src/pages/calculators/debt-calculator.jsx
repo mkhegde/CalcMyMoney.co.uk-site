@@ -289,12 +289,12 @@ export default function DebtCalculatorPage() {
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-rose-900 via-slate-900 to-rose-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
+      <section className="calculator-hero">
+        <div className="calculator-hero__content">
+          <Heading as="h1" size="h1" weight="bold" className="calculator-hero__title">
             Debt Calculator
           </Heading>
-          <p className="text-lg md:text-xl text-rose-100">
+          <p className="calculator-hero__description">
             Map out a clear repayment plan, understand the cost of interest, and stay motivated as
             your outstanding balance falls month by month.
           </p>

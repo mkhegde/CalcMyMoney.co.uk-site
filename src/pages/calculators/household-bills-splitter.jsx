@@ -261,12 +261,12 @@ export default function HouseholdBillsSplitterPage() {
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
+      <section className="calculator-hero">
+        <div className="calculator-hero__content">
+          <Heading as="h1" size="h1" weight="bold" className="calculator-hero__title">
             Household Bills Splitter
           </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
+          <p className="calculator-hero__description">
             Share rent, utilities, and subscriptions fairly—no more chasing IOUs or guessing who owes what.
           </p>
         </div>

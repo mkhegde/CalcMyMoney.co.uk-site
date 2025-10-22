@@ -274,12 +274,12 @@ export default function FutureValueCalculatorPage() {
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
+      <section className="calculator-hero">
+        <div className="calculator-hero__content">
+          <Heading as="h1" size="h1" weight="bold" className="calculator-hero__title">
             Future Value Calculator
           </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
+          <p className="calculator-hero__description">
             Forecast how savings and investments grow when compound interest and regular contributions work together.
           </p>
         </div>
