@@ -657,34 +657,6 @@ export default function Layout({ children, currentPageName }) {
               color 0.3s ease,
               border-color 0.3s ease;
           }
-          @media print {
-            html {
-              scroll-behavior: auto;
-            }
-            .non-printable {
-              display: none !important;
-            }
-            .printable-area {
-              display: block !important;
-              width: 100% !important;
-              max-width: 100% !important;
-              flex: 1 !important;
-            }
-            .printable-grid-cols-1 {
-              grid-template-columns: 1fr !important;
-            }
-            .printable-content {
-              padding: 0 !important;
-              margin: 0 !important;
-            }
-            .print-title {
-              display: block !important;
-              text-align: center;
-              font-size: 24px;
-              font-weight: bold;
-              margin-bottom: 2rem;
-            }
-          }
         `}</style>
 
         {/* Header */}
