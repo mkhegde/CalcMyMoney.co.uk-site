@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, Suspense } from 'react';
 import SeoHead from '@/components/seo/SeoHead';
 import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import { getMappedKeywords } from '@/components/seo/keywordMappings';
@@ -15,6 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Calculator, Home, PiggyBank, Quote, BookOpen, Scale } from 'lucide-react';
+
+const ResultBreakdownChart = React.lazy(
+  () => import('@/components/calculators/ResultBreakdownChart.jsx')
+);
 
 const pagePath = '/calculators/mortgage-affordability-calculator';
 const canonicalUrl = 'https://www.calcmymoney.co.uk/calculators/mortgage-affordability-calculator';
@@ -461,7 +465,15 @@ export default function MortgageAffordabilityCalculatorPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ResultBreakdownChart data={chartData} title="Mortgage Buying Power" />
+                      <Suspense
+                        fallback={
+                          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            Loading chart…
+                          </div>
+                        }
+                      >
+                        <ResultBreakdownChart data={chartData} title="Mortgage Buying Power" />
+                      </Suspense>
                     </CardContent>
                   </Card>
                 </>
