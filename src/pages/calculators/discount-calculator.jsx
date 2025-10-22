@@ -298,12 +298,12 @@ export default function DiscountCalculatorPage() {
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-amber-900 via-slate-900 to-amber-900 py-16 text-white">
+      <section className="calculator-hero">
         <div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6 lg:px-8">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
+          <Heading as="h1" size="h1" weight="bold" className="calculator-hero__title">
             Discount Calculator
           </Heading>
-          <p className="text-lg md:text-xl text-amber-100">
+          <p className="calculator-hero__description">
             Stack promotion codes, compare seasonal sales, and make sure every basket is genuinely worth the spend.
           </p>
         </div>

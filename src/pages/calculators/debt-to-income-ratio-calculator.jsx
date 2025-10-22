@@ -268,12 +268,12 @@ export default function DebtToIncomeRatioCalculatorPage() {
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-indigo-900 via-emerald-900 to-indigo-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
+      <section className="calculator-hero">
+        <div className="calculator-hero__content">
+          <Heading as="h1" size="h1" weight="bold" className="calculator-hero__title">
             Debt to Income Ratio Calculator
           </Heading>
-          <p className="text-lg md:text-xl text-emerald-100">
+          <p className="calculator-hero__description">
             Check how much of your monthly income is committed to debt and see whether you sit
             within UK lender affordability guidelines.
           </p>

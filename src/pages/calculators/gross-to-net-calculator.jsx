@@ -265,12 +265,12 @@ export default function GrossToNetCalculatorPage() {
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={faqStructuredData} />
 
-      <section className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <Heading as="h1" size="h1" weight="bold" className="text-white">
+      <section className="calculator-hero">
+        <div className="calculator-hero__content">
+          <Heading as="h1" size="h1" weight="bold" className="calculator-hero__title">
             Gross to Net Calculator
           </Heading>
-          <p className="text-lg md:text-xl text-indigo-100">
+          <p className="calculator-hero__description">
             Understand how pension contributions, tax, NI, and student loan deductions shape your take-home pay for the UK 2025/26 tax year.
           </p>
         </div>
