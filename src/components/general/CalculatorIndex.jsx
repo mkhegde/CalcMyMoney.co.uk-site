@@ -10,14 +10,9 @@ export default function CalculatorIndex() {
         <details className="group">
           <summary className="cursor-pointer list-none">
             <div className="flex items-center justify-between bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-4 transition-colors">
-              <div>
-                <h2 className="text-lg md:text-xl font-semibold text-gray-900">
-                  Browse all calculators (A–Z by category)
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Open this index to quickly jump to any tool across the site.
-                </p>
-              </div>
+              <p className="text-sm text-gray-600">
+                Open this index to quickly jump to any tool across the site.
+              </p>
               <span className="text-blue-600 text-sm font-medium">Show/Hide</span>
             </div>
           </summary>

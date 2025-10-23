@@ -13,7 +13,88 @@ import { calculatorCategories as DEFAULT_DIRECTORY_CATEGORIES } from '../compone
 import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import { getCategoryIcon } from '@/components/data/calculatorIcons.js';
 
-const DEFAULT_STATS = { total: 0, active: 0, categories: 0 };
+const getCalculatorKey = (calculator) => calculator?.url || calculator?.page || calculator?.slug || null;
+
+const buildStaticCatalog = (categories = []) => {
+  const calculators = [];
+  const seenGlobal = new Set();
+
+  const directory = categories.map((category) => {
+    const subCategories = (category.subCategories || []).map((subCategory) => {
+      const subSeen = new Set();
+      const calculatorsWithMeta = [];
+
+      (subCategory.calculators || []).forEach((calculator) => {
+        const enrichedCalculator = {
+          ...calculator,
+          category: category.name,
+          categorySlug: category.slug,
+          subCategory: subCategory.name,
+        };
+
+        const key = getCalculatorKey(enrichedCalculator);
+        if (!key || subSeen.has(key)) {
+          return;
+        }
+
+        subSeen.add(key);
+        calculatorsWithMeta.push(enrichedCalculator);
+
+        if (!seenGlobal.has(key)) {
+          calculators.push(enrichedCalculator);
+          seenGlobal.add(key);
+        }
+      });
+
+      return {
+        ...subCategory,
+        calculators: calculatorsWithMeta,
+      };
+    });
+
+    const calculatorsForCategory = subCategories.flatMap((subCategory) => subCategory.calculators || []);
+
+    return {
+      ...category,
+      calculators: calculatorsForCategory,
+      subCategories,
+    };
+  });
+
+  return {
+    directory,
+    calculators,
+  };
+};
+
+const { directory: STATIC_DIRECTORY_CATEGORIES, calculators: STATIC_CALCULATORS } = buildStaticCatalog(
+  DEFAULT_DIRECTORY_CATEGORIES
+);
+
+const DEFAULT_STATS = {
+  total: STATIC_CALCULATORS.length,
+  active: STATIC_CALCULATORS.filter((calc) => calc.status === 'active').length,
+  categories: STATIC_DIRECTORY_CATEGORIES.length,
+};
+
+const searchCatalog = (query) => {
+  const term = String(query || '').trim().toLowerCase();
+  if (!term) {
+    return [];
+  }
+
+  return STATIC_CALCULATORS.filter((calc) => {
+    const name = String(calc?.name || '').toLowerCase();
+    const description = String(calc?.description || '').toLowerCase();
+    const keywords = Array.isArray(calc?.keywords) ? calc.keywords : [];
+
+    return (
+      name.includes(term) ||
+      description.includes(term) ||
+      keywords.some((keyword) => String(keyword || '').toLowerCase().includes(term))
+    );
+  });
+};
 
 const pageTitle = 'UK Salary, Tax & Mortgage Calculators (2025/26) | CalcMyMoney';
 const metaDescription =
@@ -26,96 +107,20 @@ export default function Home() {
   const { search, hash } = location;
   const hasQuery = new URLSearchParams(search).has('q');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [showAllCalculators, setShowAllCalculators] = useState(false);
+  const [showAllCalculators, setShowAllCalculators] = useState(true);
   const [pendingScrollSlug, setPendingScrollSlug] = useState(null);
   const lastHandledHashRef = useRef(null);
   const { setSeo, resetSeo } = useSeo();
-  const [calcData, setCalcData] = useState({
-    categories: [],
-    calculators: [],
-    stats: DEFAULT_STATS,
-    searchFn: null,
-    loading: true,
-  });
 
-  useEffect(() => {
-    let cancelled = false;
-    import('../components/data/calculatorConfig.js')
-      .then((mod) => {
-        if (cancelled) return;
-        setCalcData({
-          categories: mod?.calculatorCategories || [],
-          calculators: mod?.allCalculators || [],
-          stats: mod?.getCalculatorStats ? mod.getCalculatorStats() : DEFAULT_STATS,
-          searchFn: mod?.searchCalculators || null,
-          loading: false,
-        });
-      })
-      .catch((error) => {
-        if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.error('Failed to load calculator catalog', error);
-        }
-        setCalcData((prev) => ({ ...prev, loading: false }));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const stats = calcData.stats;
-  const isCatalogLoading = calcData.loading;
-  const categoriesLoaded = calcData.categories.length > 0;
-
-  // Handle search
-  useEffect(() => {
-    if (!calcData.searchFn) {
-      setSearchResults([]);
-      return;
-    }
-
-    if (searchQuery.trim()) {
-      const results = calcData.searchFn(searchQuery);
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
-    }
-  }, [searchQuery, calcData.searchFn]);
+  const directoryCategories = useMemo(() => STATIC_DIRECTORY_CATEGORIES, []);
+  const stats = useMemo(() => DEFAULT_STATS, []);
+  const isCatalogLoading = false;
+  const categoriesLoaded = directoryCategories.length > 0;
+  const searchResults = useMemo(() => searchCatalog(searchQuery), [searchQuery]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
-
-  const fallbackHubCards = useMemo(
-    () =>
-      DEFAULT_DIRECTORY_CATEGORIES.map((category) => {
-        const Icon = getCategoryIcon(category.slug) || Calculator;
-        return {
-          title: category.name,
-          icon: Icon,
-          link: `#${category.slug}`,
-          description: category.description,
-        };
-      }),
-    []
-  );
-
-  const directoryCategories = useMemo(() => {
-    if (!calcData.categories.length) return DEFAULT_DIRECTORY_CATEGORIES;
-    const map = new Map(calcData.categories.map((category) => [category.slug, category]));
-    return DEFAULT_DIRECTORY_CATEGORIES.map((category) => map.get(category.slug) || category);
-  }, [calcData.categories]);
-
-  const hubCards = useMemo(() => {
-    if (!calcData.categories.length) return fallbackHubCards;
-    return directoryCategories.map((category) => ({
-      title: category.name,
-      icon: getCategoryIcon(category.slug) || Calculator,
-      link: `#${category.slug}`,
-      description: category.description,
-    }));
-  }, [calcData.categories, directoryCategories, fallbackHubCards]);
 
   useEffect(() => {
     const origin =
@@ -228,9 +233,10 @@ export default function Home() {
                             key={index}
                             to={calc.url}
                             className="block rounded-lg p-3 transition-colors hover:bg-muted"
+                            onMouseEnter={() => calc.page && prefetchPage(calc.page)}
+                            onFocus={() => calc.page && prefetchPage(calc.page)}
                             onClick={() => {
                               setSearchQuery('');
-                              setSearchResults([]);
                             }}
                           >
                             <div className="flex items-center justify-between">
@@ -292,39 +298,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hub Cards Section */}
-      <div className="relative z-10 -mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {hubCards.map((card, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={(event) => {
-                event.preventDefault();
-                const slug = card.link.startsWith('#') ? card.link.slice(1) : card.link;
-                setPendingScrollSlug(slug);
-                setShowAllCalculators(true);
-              }}
-              className="group block w-full transform rounded-lg border border-card-muted bg-card p-6 text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-            >
-              <div className="flex items-center gap-4 mb-2">
-                <div className="rounded-full bg-pill p-3 text-pill-foreground">
-                  <card.icon className="h-6 w-6" />
-                </div>
-                <Heading
-                  as="h3"
-                  size="h3"
-                  className="text-foreground transition-colors group-hover:text-primary"
-                >
-                  {card.title}
-                </Heading>
-              </div>
-              <p className="body text-muted-foreground">{card.description}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Complete Calculator Directory */}
       <div className="bg-neutral-soft py-16" id="calculator-directory">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -351,64 +324,64 @@ export default function Home() {
                   const Icon = getCategoryIcon(category.slug);
                   return (
                     <div key={category.slug} id={category.slug} className="scroll-mt-20">
-                    {/* Category Header */}
-                    <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
-                      <Icon className="h-8 w-8 text-primary" />
-                      <div>
-                        <Heading as="h3" size="h3" weight="bold" className="text-foreground">
-                          {category.name}
-                        </Heading>
-                        <p className="body text-muted-foreground">{category.description}</p>
+                      {/* Category Header */}
+                      <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
+                        <Icon className="h-8 w-8 text-primary" />
+                        <div>
+                          <Heading as="h3" size="h3" weight="bold" className="text-foreground">
+                            {category.name}
+                          </Heading>
+                          <p className="body text-muted-foreground">{category.description}</p>
+                        </div>
+                      </div>
+
+                      {/* Sub-categories and Calculators */}
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {category.subCategories.map((subCategory) => (
+                          <div key={subCategory.name} className="space-y-3">
+                            <Heading
+                              as="h4"
+                              size="h3"
+                              className="border-l-4 border-primary pl-3 text-foreground"
+                            >
+                              {subCategory.name}
+                            </Heading>
+                            <div className="space-y-2 pl-3">
+                              {subCategory.calculators
+                                .filter((calc) => showAllCalculators || calc.status === 'active')
+                                .map((calc, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between group"
+                                  >
+                                    {calc.status === 'active' ? (
+                                      <Link
+                                        to={calc.url}
+                                        onMouseEnter={() => calc.page && prefetchPage(calc.page)}
+                                        onFocus={() => calc.page && prefetchPage(calc.page)}
+                                        className="flex-1 body font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                                      >
+                                        {calc.name}
+                                      </Link>
+                                    ) : (
+                                      <span className="flex-1 body text-muted-foreground/60">
+                                        {calc.name}
+                                      </span>
+                                    )}
+                                    {(calc.status === 'planned' || calc.status === 'pending') && (
+                                      <Badge variant="secondary" className="caption">
+                                        Coming Soon
+                                      </Badge>
+                                    )}
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-
-                    {/* Sub-categories and Calculators */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                      {category.subCategories.map((subCategory) => (
-                        <div key={subCategory.name} className="space-y-3">
-                          <Heading
-                            as="h4"
-                            size="h3"
-                            className="border-l-4 border-primary pl-3 text-foreground"
-                          >
-                            {subCategory.name}
-                          </Heading>
-                          <div className="space-y-2 pl-3">
-                            {subCategory.calculators
-                              .filter((calc) => showAllCalculators || calc.status === 'active')
-                              .map((calc, index) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center justify-between group"
-                                >
-                                  {calc.status === 'active' ? (
-                                    <Link
-                                      to={calc.url}
-                                      onMouseEnter={() => calc.page && prefetchPage(calc.page)}
-                                      onFocus={() => calc.page && prefetchPage(calc.page)}
-                                      className="flex-1 body font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-                                    >
-                                      {calc.name}
-                                    </Link>
-                                  ) : (
-                                    <span className="flex-1 body text-muted-foreground/60">
-                                      {calc.name}
-                                    </span>
-                                  )}
-                                  {(calc.status === 'planned' || calc.status === 'pending') && (
-                                    <Badge variant="secondary" className="caption">
-                                      Coming Soon
-                                    </Badge>
-                                  )}
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
               </div>
             ) : (
               <div className="space-y-12">
