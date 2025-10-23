@@ -1,12 +1,11 @@
 import { useLocation } from 'react-router-dom';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Search, Calculator, TrendingUp, Users, ExternalLink } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
-import { prefetchPage } from '@/utils/prefetchPage';
 import { useSeo } from '@/components/seo/SeoContext';
 import Heading from '@/components/common/Heading';
 import { calculatorCategories as DEFAULT_DIRECTORY_CATEGORIES } from '../components/data/calculatorConfig.js';
@@ -23,13 +22,10 @@ const keywords = getMappedKeywords('Home');
 
 export default function Home() {
   const location = useLocation();
-  const { search, hash } = location;
+  const { search } = location;
   const hasQuery = new URLSearchParams(search).has('q');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [showAllCalculators, setShowAllCalculators] = useState(false);
-  const [pendingScrollSlug, setPendingScrollSlug] = useState(null);
-  const lastHandledHashRef = useRef(null);
   const { setSeo, resetSeo } = useSeo();
   const [calcData, setCalcData] = useState({
     categories: [],
@@ -66,7 +62,6 @@ export default function Home() {
 
   const stats = calcData.stats;
   const isCatalogLoading = calcData.loading;
-  const categoriesLoaded = calcData.categories.length > 0;
 
   // Handle search
   useEffect(() => {
@@ -127,42 +122,6 @@ export default function Home() {
       resetSeo();
     };
   }, [hasQuery, setSeo, resetSeo]);
-
-  useEffect(() => {
-    if (!showAllCalculators || !pendingScrollSlug) {
-      return;
-    }
-
-    if (typeof document === 'undefined') {
-      return;
-    }
-
-    const target = document.getElementById(pendingScrollSlug);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-    setPendingScrollSlug(null);
-  }, [showAllCalculators, pendingScrollSlug]);
-
-  useEffect(() => {
-    if (!hash) {
-      lastHandledHashRef.current = null;
-      return;
-    }
-
-    const slug = hash.replace(/^#/, '').trim();
-    if (!slug) {
-      return;
-    }
-
-    if (lastHandledHashRef.current === slug) {
-      return;
-    }
-
-    lastHandledHashRef.current = slug;
-    setShowAllCalculators(true);
-    setPendingScrollSlug(slug);
-  }, [hash]);
 
   return (
     <div className="bg-background text-foreground">
