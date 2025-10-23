@@ -9,9 +9,11 @@ import {
   Sparkles,
   FileDown,
   FileSpreadsheet,
+  Eraser,
 } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
+import { PrivacyAssuranceBanner } from '@/components/alerts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -146,6 +148,29 @@ const stepIcons = {
 
 const fallbackData = MONEY_BLUEPRINT_DEFAULT_DATA;
 
+const createInitialTouchedState = () => ({
+  basics: {},
+  priorities: {},
+  habits: {},
+  summary: {},
+});
+
+const createInitialSubmitAttempts = () => ({
+  basics: 0,
+  priorities: 0,
+  habits: 0,
+  summary: 0,
+});
+
+const PRIVACY_NOTICE_INTRO =
+  'We never store your Money Blueprint answers on our servers. Everything stays on this device unless you export or share it yourself.';
+const CLEAR_CONTROLS_NOTE =
+  'Use the Start over or Clear step options whenever you want to wipe answers mid-session.';
+const PRIVACY_NOTICE_SUMMARY =
+  'Even after generating a share code, your answers remain on this device. Use Start over or Clear step to wipe them, or clear your browser data to remove everything.';
+const PROFESSIONAL_ADVICE_NOTICE =
+  'This planner offers educational guidance only. Speak with a regulated financial adviser for personalised recommendations before making financial decisions.';
+
 const formatCurrency = (value) => {
   if (!value) return 'Not set';
   const numeric = Number.parseFloat(String(value).replace(/,/g, ''));
@@ -167,6 +192,7 @@ export default function MyMoneyBlueprint() {
     steps,
     currentStep,
     currentStepIndex,
+    currentStepId,
     isFirstStep,
     isLastStep,
     progressPercent,
@@ -176,6 +202,7 @@ export default function MyMoneyBlueprint() {
     completedAt,
     reportId,
     updateStepData,
+    clearStepData,
     nextStep,
     previousStep,
     goToStep,
@@ -219,18 +246,8 @@ export default function MyMoneyBlueprint() {
     return `money-blueprint-${slug}`;
   }, [reportId]);
 
-  const [touchedFields, setTouchedFields] = React.useState({
-    basics: {},
-    priorities: {},
-    habits: {},
-    summary: {},
-  });
-  const [submitAttempts, setSubmitAttempts] = React.useState({
-    basics: 0,
-    priorities: 0,
-    habits: 0,
-    summary: 0,
-  });
+  const [touchedFields, setTouchedFields] = React.useState(createInitialTouchedState);
+  const [submitAttempts, setSubmitAttempts] = React.useState(createInitialSubmitAttempts);
 
   const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
   const [isGeneratingCsv, setIsGeneratingCsv] = React.useState(false);
@@ -321,11 +338,33 @@ export default function MyMoneyBlueprint() {
 
   const handleReset = React.useCallback(() => {
     reset();
+    setTouchedFields(createInitialTouchedState());
+    setSubmitAttempts(createInitialSubmitAttempts());
     toast({
       title: 'Wizard reset',
       description: 'All answers cleared. Start fresh whenever you are ready.',
     });
   }, [reset, toast]);
+
+  const handleClearCurrentStep = React.useCallback(() => {
+    if (!currentStepId) return;
+
+    clearStepData(currentStepId);
+    setTouchedFields((prev) => ({
+      ...prev,
+      [currentStepId]: {},
+    }));
+    setSubmitAttempts((prev) => ({
+      ...prev,
+      [currentStepId]: 0,
+    }));
+
+    const label = currentStep?.title || 'Step';
+    toast({
+      title: 'Step cleared',
+      description: `${label} answers removed for this session.`,
+    });
+  }, [clearStepData, currentStep, currentStepId, toast]);
 
   const handleNext = React.useCallback(() => {
     if (!currentStep) {
@@ -550,6 +589,14 @@ export default function MyMoneyBlueprint() {
     return (
       <div className="space-y-6">
         <StepGuidance {...guidance} />
+
+        <PrivacyAssuranceBanner
+          title="You're in control of this session"
+          description={`${PRIVACY_NOTICE_INTRO} ${CLEAR_CONTROLS_NOTE}`}
+          className="shadow-sm"
+        >
+          <p className="font-medium">{PROFESSIONAL_ADVICE_NOTICE}</p>
+        </PrivacyAssuranceBanner>
 
         <div className="grid gap-2">
           <Label htmlFor="planName" className={cn(planNameError ? 'text-destructive' : '')}>
@@ -1069,6 +1116,14 @@ export default function MyMoneyBlueprint() {
       <div className="space-y-6">
         <StepGuidance {...guidance} />
 
+        <PrivacyAssuranceBanner
+          title="Before you share your blueprint"
+          description={PRIVACY_NOTICE_SUMMARY}
+          className="shadow-sm"
+        >
+          <p className="font-medium">{PROFESSIONAL_ADVICE_NOTICE}</p>
+        </PrivacyAssuranceBanner>
+
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">
@@ -1371,14 +1426,25 @@ export default function MyMoneyBlueprint() {
           nextLabel="Next step"
           finishLabel={isComplete ? 'Share blueprint' : 'Generate blueprint'}
           leftSlot={
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleReset}
-              className="gap-2 px-0 text-muted-foreground hover:text-foreground"
-            >
-              <RefreshCcw className="h-4 w-4" /> Start over
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleReset}
+                className="gap-2 px-0 text-muted-foreground hover:text-foreground"
+              >
+                <RefreshCcw className="h-4 w-4" /> Start over
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleClearCurrentStep}
+                className="gap-2 px-0 text-muted-foreground hover:text-foreground"
+                disabled={!currentStepId}
+              >
+                <Eraser className="h-4 w-4" /> Clear step
+              </Button>
+            </>
           }
         >
           <span className="font-semibold text-foreground">
