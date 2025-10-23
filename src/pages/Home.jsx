@@ -12,7 +12,37 @@ import { calculatorCategories as DEFAULT_DIRECTORY_CATEGORIES } from '../compone
 import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import { getCategoryIcon } from '@/components/data/calculatorIcons.js';
 
-const DEFAULT_STATS = { total: 0, active: 0, categories: 0 };
+const flattenCalculators = (categories = []) =>
+  categories.flatMap((category) =>
+    (category.subCategories || []).flatMap((subCategory) => subCategory.calculators || [])
+  );
+
+const DEFAULT_CALCULATORS = flattenCalculators(DEFAULT_DIRECTORY_CATEGORIES);
+
+const DEFAULT_STATS = {
+  total: DEFAULT_CALCULATORS.length,
+  active: DEFAULT_CALCULATORS.filter((calc) => calc.status === 'active').length,
+  categories: DEFAULT_DIRECTORY_CATEGORIES.length,
+};
+
+const fallbackSearch = (query) => {
+  const term = String(query || '').trim().toLowerCase();
+  if (!term) {
+    return [];
+  }
+
+  return DEFAULT_CALCULATORS.filter((calc) => {
+    const name = String(calc?.name || '').toLowerCase();
+    const description = String(calc?.description || '').toLowerCase();
+    const keywords = Array.isArray(calc?.keywords) ? calc.keywords : [];
+
+    return (
+      name.includes(term) ||
+      description.includes(term) ||
+      keywords.some((keyword) => String(keyword || '').toLowerCase().includes(term))
+    );
+  });
+};
 
 const pageTitle = 'UK Salary, Tax & Mortgage Calculators (2025/26) | CalcMyMoney';
 const metaDescription =
@@ -26,12 +56,15 @@ export default function Home() {
   const hasQuery = new URLSearchParams(search).has('q');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [showAllCalculators, setShowAllCalculators] = useState(true);
+  const [pendingScrollSlug, setPendingScrollSlug] = useState(null);
+  const lastHandledHashRef = useRef(null);
   const { setSeo, resetSeo } = useSeo();
   const [calcData, setCalcData] = useState({
-    categories: [],
-    calculators: [],
+    categories: DEFAULT_DIRECTORY_CATEGORIES,
+    calculators: DEFAULT_CALCULATORS,
     stats: DEFAULT_STATS,
-    searchFn: null,
+    searchFn: fallbackSearch,
     loading: true,
   });
 
@@ -40,13 +73,15 @@ export default function Home() {
     import('../components/data/calculatorConfig.js')
       .then((mod) => {
         if (cancelled) return;
-        setCalcData({
-          categories: mod?.calculatorCategories || [],
-          calculators: mod?.allCalculators || [],
-          stats: mod?.getCalculatorStats ? mod.getCalculatorStats() : DEFAULT_STATS,
-          searchFn: mod?.searchCalculators || null,
+        setCalcData((prev) => ({
+          categories: mod?.calculatorCategories?.length
+            ? mod.calculatorCategories
+            : prev.categories,
+          calculators: mod?.allCalculators?.length ? mod.allCalculators : prev.calculators,
+          stats: mod?.getCalculatorStats ? mod.getCalculatorStats() : prev.stats,
+          searchFn: mod?.searchCalculators || prev.searchFn,
           loading: false,
-        });
+        }));
       })
       .catch((error) => {
         if (import.meta.env.DEV) {
@@ -61,7 +96,8 @@ export default function Home() {
   }, []);
 
   const stats = calcData.stats;
-  const isCatalogLoading = calcData.loading;
+  const isCatalogLoading = calcData.loading && calcData.calculators.length === 0;
+  const categoriesLoaded = calcData.categories.length > 0;
 
   // Handle search
   useEffect(() => {
