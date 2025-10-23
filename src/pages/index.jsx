@@ -31,6 +31,7 @@ const Methodology = lazy(() => import('./Methodology.jsx'));
 const About = lazy(() => import('./About.jsx'));
 const SelfAssessmentGuide = lazy(() => import('./SelfAssessmentGuide.jsx'));
 const LinkToUs = lazy(() => import('./LinkToUs.jsx'));
+const MyMoneyBlueprint = lazy(() => import('./MyMoneyBlueprint.jsx'));
 
 // Legacy redirects (old path -> new path)
 const LEGACY_REDIRECTS = {
@@ -152,6 +153,7 @@ const PAGES = {
   About,
   SelfAssessmentGuide,
   LinkToUs,
+  MyMoneyBlueprint,
 };
 
 // Flatten calculators from config
@@ -435,6 +437,7 @@ function PagesContent() {
           <Route path="/about" element={<About />} />
           <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
           <Route path="/link-to-us" element={<LinkToUs />} />
+          <Route path="/my-money-blueprint" element={<MyMoneyBlueprint />} />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />

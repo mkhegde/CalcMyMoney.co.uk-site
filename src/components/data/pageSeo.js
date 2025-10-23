@@ -9,6 +9,11 @@ export const pageSeo = {
     description:
       'Explore our financial resources and guides on Calculate My Money. Learn about tax, savings, investments, and personal finance in the UK.',
   },
+  MyMoneyBlueprint: {
+    title: 'My Money Blueprint Wizard | Personalised UK Action Plan',
+    description:
+      'Build an anonymised Money Blueprint in minutes. Follow the guided wizard to capture your goals, habits, and create a shareable report code.',
+  },
   Blog: {
     title: 'Financial Blog | Insights & Articles - Calculate My Money',
     description:
