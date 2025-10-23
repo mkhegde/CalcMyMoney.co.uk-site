@@ -1188,15 +1188,6 @@ export const generatedCalculatorCatalog = [
     "description": "Handy everyday calculators for bills, conversions, and splitting shared household costs.",
     "calculators": [
       {
-        "slug": "currency-converter",
-        "name": "Currency Converter Calculator",
-        "description": "Convert currencies using mid-market exchange rates. Enter an amount and see the converted value for popular GBP pairs.",
-        "url": "/currency-converter",
-        "page": "calculators/currency-converter",
-        "keywords": [],
-        "status": "active"
-      },
-      {
         "slug": "energy-bill-calculator",
         "name": "Energy Bill Calculator",
         "description": "Estimate monthly and annual UK energy bills by combining electricity and gas usage, standing charges, VAT, and smoothing buffers.",
