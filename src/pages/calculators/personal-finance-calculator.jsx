@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -106,24 +105,6 @@ const emotionalQuote = {
   text: 'A budget is telling your money where to go instead of wondering where it went.',
   author: 'Dave Ramsey',
 };
-
-const directoryLinks = [
-  {
-    url: '/#budgeting-planning',
-    label: 'Explore all budgeting & planning calculators',
-    description: 'Coordinate spending plans, short-term goals, and day-to-day money decisions.',
-  },
-  {
-    url: '/budget-calculator',
-    label: 'Build a monthly budget',
-    description: 'Allocate income across bills, savings, and lifestyle categories each month.',
-  },
-  {
-    url: '/savings-goal-calculator',
-    label: 'Set your savings goals',
-    description: 'Track progress towards your financial milestones.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -723,8 +704,7 @@ export default function PersonalFinanceCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

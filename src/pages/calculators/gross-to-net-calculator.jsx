@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -65,24 +64,6 @@ const faqItems = [
     question: 'Can I enter monthly or weekly salaries?',
     answer:
       'Convert your wage to an annual figure (for example, monthly × 12). The outputs show annual, monthly, weekly, and daily take-home pay to help you budget.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Quickly jump to every tax, salary, and savings calculator available.',
-  },
-  {
-    label: 'Tax & income tools',
-    url: '/#tax-income',
-    description: 'Explore PAYE, dividend, and take-home pay calculators for every scenario.',
-  },
-  {
-    label: 'PAYE calculator',
-    url: '/paye-calculator',
-    description: 'Break down PAYE deductions and net pay per payslip.',
   },
 ];
 
@@ -474,8 +455,7 @@ export default function GrossToNetCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

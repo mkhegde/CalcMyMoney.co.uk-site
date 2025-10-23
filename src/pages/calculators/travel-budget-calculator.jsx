@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'Live with no excuses and travel with no regrets.',
   author: 'Oscar Wilde',
 };
-
-const directoryLinks = [
-  {
-    url: '/#budgeting',
-    label: 'See all budgeting calculators',
-    description: 'Balance holiday costs with your day-to-day spending plans and savings goals.',
-  },
-  {
-    url: '/calculators/savings-goal-calculator',
-    label: 'Savings Goal Calculator',
-    description: 'Work out how much to save each month to fund your next getaway.',
-  },
-  {
-    url: '/calculators/subscription-cost-calculator',
-    label: 'Subscription Cost Calculator',
-    description: 'Trim unused subscriptions to free up cash for travel treats.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -586,8 +567,7 @@ export default function TravelBudgetCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

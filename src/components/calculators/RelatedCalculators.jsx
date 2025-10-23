@@ -19,10 +19,17 @@ export default function RelatedCalculators({ calculators = [] }) {
   if (!list.length) return null;
 
   return (
-    <section aria-labelledby="related-tools" className="bg-white dark:bg-gray-900 py-12 non-printable" data-related-calculators="1">
+    <section
+      aria-labelledby="related-calculators"
+      className="bg-white dark:bg-gray-900 py-12 non-printable"
+      data-related-calculators="1"
+    >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 id="related-tools" className="text-2xl font-bold text-center text-gray-900 dark:text-gray-100 mb-8">
-          Related Financial Tools
+        <h2
+          id="related-calculators"
+          className="text-2xl font-bold text-center text-gray-900 dark:text-gray-100 mb-8"
+        >
+          Related Calculators
         </h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {list.map((calc, index) => (

@@ -49,23 +49,6 @@ const fireFaqs = [
   },
 ];
 
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Explore the full suite of UK financial planning calculators.',
-  },
-  {
-    label: 'Savings & investments tools',
-    url: '/#savings-investments',
-    description: 'Optimise investment growth, ISA planning, and long-term saving.',
-  },
-  {
-    label: 'Budgeting & planning hub',
-    url: '/#budgeting-planning',
-    description: 'Align day-to-day spending with financial independence goals.',
-  },
-];
 
 const relatedCalculators = [
   {
@@ -276,7 +259,6 @@ export default function FireCalculatorPage() {
         author: 'Chris Brogan',
       }}
       faqs={fireFaqs}
-      directoryLinks={directoryLinks}
       relatedCalculators={relatedCalculators}
     >
       <div className="grid gap-8 lg:grid-cols-[360px_1fr]">

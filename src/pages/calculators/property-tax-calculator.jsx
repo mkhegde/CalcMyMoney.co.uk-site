@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -64,24 +63,6 @@ const emotionalQuote = {
   text: "Buy land, they're not making it anymore.",
   author: 'Mark Twain',
 };
-
-const directoryLinks = [
-  {
-    url: '/#property-mortgage',
-    label: 'Explore all property & mortgage calculators',
-    description: 'Compare mortgages, yields, and affordability tools in one place.',
-  },
-  {
-    url: '/remortgage-calculator',
-    label: 'Remortgage Calculator',
-    description: 'Check whether switching deals offsets fees with lower repayments.',
-  },
-  {
-    url: '/rental-yield-calculator',
-    label: 'Rental Yield Calculator',
-    description: 'Benchmark rental returns after fees, voids, and finance costs.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -537,8 +518,7 @@ export default function PropertyTaxCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -57,24 +56,6 @@ const emotionalQuote = {
   text: 'The ache for home lives in all of us.',
   author: 'Maya Angelou',
 };
-
-const directoryLinks = [
-  {
-    url: '/#property-mortgage',
-    label: 'Property & mortgage calculators',
-    description: 'Plan deposits, compare mortgages, and model home-buying costs in minutes.',
-  },
-  {
-    url: '/calculators/mortgage-calculator',
-    label: 'Mortgage Repayment Calculator',
-    description: 'Estimate monthly repayments for your chosen loan amount and term.',
-  },
-  {
-    url: '/calculators/property-tax-calculator',
-    label: 'Property Tax Calculator',
-    description: 'Check ongoing property taxes alongside your stamp duty bill.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -520,8 +501,7 @@ export default function SDLTCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

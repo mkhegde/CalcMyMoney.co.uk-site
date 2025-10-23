@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -65,24 +64,6 @@ const faqItems = [
     question: 'Which interest rate should I use?',
     answer:
       'Use an average annual return based on your investment mix. For a conservative estimate, try a lower rate or reduce the timescale to see how risk impacts your long-term goals.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Discover every savings, mortgage, and tax calculator on Calc My Money.',
-  },
-  {
-    label: 'Savings & investments tools',
-    url: '/#savings-investments',
-    description: 'Optimise ISA allowances, compound growth, and long-term wealth goals.',
-  },
-  {
-    label: 'Retirement savings planner',
-    url: '/retirement-savings-calculator',
-    description: 'Translate your future value into retirement-ready income.',
   },
 ];
 
@@ -504,8 +485,7 @@ export default function FutureValueCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

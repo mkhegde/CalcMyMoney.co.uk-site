@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -51,24 +50,6 @@ const emotionalQuote = {
   text: 'Beware of little expenses; a small leak will sink a great ship.',
   author: 'Benjamin Franklin',
 };
-
-const directoryLinks = [
-  {
-    url: '/#tax-national-insurance',
-    label: 'Explore all tax & National Insurance calculators',
-    description: 'From income tax to VAT, understand your tax obligations.',
-  },
-  {
-    url: '/income-tax-calculator',
-    label: 'Calculate your income tax',
-    description: 'Estimate your income tax liability based on your annual earnings.',
-  },
-  {
-    url: '/take-home-pay-calculator',
-    label: 'Check your take-home pay',
-    description: 'See your net income after tax and National Insurance.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -540,8 +521,7 @@ export default function NetIncomeUKCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

@@ -7,7 +7,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -60,25 +59,6 @@ const emotionalQuote = {
   text: 'The greatest wealth is health.',
   author: 'Virgil',
 };
-
-const directoryLinks = [
-  {
-    url: '/#retirement-pensions',
-    label: 'Explore all retirement & pension calculators',
-    description: 'Plan retirement ages, pension withdrawals, and contribution strategies.',
-  },
-  {
-    url: '/pension-calculator',
-    label: 'Pension Calculator',
-    description: 'Project future pension values and retirement income.',
-  },
-  {
-    url: '/salary-sacrifice-calculator',
-    label: 'Salary Sacrifice Calculator',
-    description:
-      'Model tax savings and employer contributions when using salary sacrifice for pensions.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -527,8 +507,7 @@ export default function PensionContributionCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

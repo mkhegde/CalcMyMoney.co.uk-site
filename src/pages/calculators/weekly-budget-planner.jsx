@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -55,24 +54,6 @@ const emotionalQuote = {
   text: 'A budget tells us what we can’t afford, but it doesn’t keep us from buying it.',
   author: 'William Feather',
 };
-
-const directoryLinks = [
-  {
-    url: '/#budgeting',
-    label: 'Explore budgeting calculators',
-    description: 'Balance everyday spending with savings and debt payoff tools.',
-  },
-  {
-    url: '/calculators/zero-based-budgeting-calculator',
-    label: 'Zero-Based Budgeting Calculator',
-    description: 'Give every pound a job and match spending to income precisely.',
-  },
-  {
-    url: '/calculators/take-home-pay-calculator',
-    label: 'Take-Home Pay Calculator',
-    description: 'Check the net income you have to plug into this weekly plan.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -481,8 +462,7 @@ export default function WeeklyBudgetPlannerPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

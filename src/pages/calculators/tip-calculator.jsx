@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'Feeling gratitude and not expressing it is like wrapping a present and not giving it.',
   author: 'William Arthur Ward',
 };
-
-const directoryLinks = [
-  {
-    url: '/#budgeting',
-    label: 'Explore budgeting tools',
-    description: 'Track eating-out spending alongside groceries, travel, and personal treats.',
-  },
-  {
-    url: '/calculators/travel-budget-calculator',
-    label: 'Travel Budget Calculator',
-    description: 'Plan holiday spending, including meals and experiences, before you fly.',
-  },
-  {
-    url: '/calculators/weekly-budget-planner',
-    label: 'Weekly Budget Planner',
-    description: 'Balance hospitality treats with your weekly spending limit.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -515,8 +496,7 @@ export default function TipCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

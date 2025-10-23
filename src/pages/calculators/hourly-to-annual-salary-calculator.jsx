@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -49,24 +48,6 @@ const faqItems = [
     question: 'Can I reverse the calculation to find an hourly rate?',
     answer:
       'Yes. Enter your annual salary in the hourly rate field, set hours and weeks, then look at the “effective hourly rate” in the results to cross-check your pay.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Compare every salary, tax, and savings calculator we provide.',
-  },
-  {
-    label: 'Employment & payroll tools',
-    url: '/#employment',
-    description: 'Manage overtime, holiday pay, and take-home projections with confidence.',
-  },
-  {
-    label: 'Gross to net calculator',
-    url: '/gross-to-net-calculator',
-    description: 'Turn your annual salary into net pay after deductions.',
   },
 ];
 
@@ -430,8 +411,7 @@ export default function HourlyToAnnualSalaryCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

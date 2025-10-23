@@ -8,7 +8,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,24 +65,6 @@ const faqItems = [
     question: 'Why might the cheapest monthly payment not be the best loan?',
     answer:
       'Longer terms lower the monthly payment but extend the repayment period, increasing total interest paid. Balance affordability now with the total cost over the lifetime of the loan.',
-  },
-];
-
-const directoryLinks = [
-  {
-    url: '/#debt-loans',
-    label: 'Explore all debt & loan calculators',
-    description: 'From credit cards to mortgages, compare the tools that keep borrowing in check.',
-  },
-  {
-    url: '/mortgage-calculator',
-    label: 'Plan your mortgage repayments',
-    description: 'Stress test UK mortgage deals and understand combined loan commitments.',
-  },
-  {
-    url: '/net-income-uk-calculator',
-    label: 'Check your net income after tax',
-    description: 'See what you can comfortably afford once PAYE, NI, and pensions are deducted.',
   },
 ];
 
@@ -581,8 +562,7 @@ export default function LoanComparisonCalculatorPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <DirectoryLinks links={directoryLinks} />
-              </CardContent>
+</CardContent>
             </Card>
           </section>
 

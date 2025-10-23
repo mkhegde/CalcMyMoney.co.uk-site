@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -52,24 +51,6 @@ const faqItems = [
     question: 'How often should we review our split?',
     answer:
       'Review whenever someone moves in or out, a new subscription is added, or incomes change. Keeping the split up to date prevents awkward conversations later.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Find every cost of living, salary, and savings calculator in one place.',
-  },
-  {
-    label: 'Budgeting & planning tools',
-    url: '/#budgeting-planning',
-    description: 'Build a shared household budget that keeps bills and savings balanced.',
-  },
-  {
-    label: 'Commute cost calculator',
-    url: '/commute-cost-calculator',
-    description: 'Compare transport costs if housemates have different travel needs.',
   },
 ];
 
@@ -458,8 +439,7 @@ export default function HouseholdBillsSplitterPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

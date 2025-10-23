@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -51,24 +50,6 @@ const faqItems = [
     question: 'Why add a profit margin on top of income goals?',
     answer:
       'Adding a margin helps you future-proof your business, cover quiet months, and reinvest in growth. Without it you only break even when everything goes to plan.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Explore every UK money calculator in one place.',
-  },
-  {
-    label: 'Business & freelancing tools',
-    url: '/#business-freelancing',
-    description: 'Price projects, estimate taxes, and manage cash flow with specialist tools.',
-  },
-  {
-    label: 'Take-home pay calculator',
-    url: '/take-home-pay-calculator',
-    description: 'Compare employee and contractor net pay before setting your rates.',
   },
 ];
 
@@ -519,8 +500,7 @@ export default function FreelancerDayRateCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

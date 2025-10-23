@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -51,26 +50,6 @@ const emotionalQuote = {
   text: 'An investment in knowledge pays the best interest.',
   author: 'Benjamin Franklin',
 };
-
-const directoryLinks = [
-  {
-    url: '/#tax-income',
-    label: 'Explore all tax & income calculators',
-    description:
-      'Understand deductions, take-home pay, and tax liabilities on every type of income.',
-  },
-  {
-    url: '/national-insurance-calculator',
-    label: 'National Insurance Calculator',
-    description: 'Estimate NI contributions and see the impact on your take-home pay.',
-  },
-  {
-    url: '/take-home-pay-calculator',
-    label: 'Take-Home Pay Calculator',
-    description:
-      'Understand the impact of pension, benefits, and salary sacrifice on take-home pay.',
-  },
-];
 
 const NI_BANDS = [
   { min: 0, max: 12570, rate: 0 },
@@ -451,8 +430,7 @@ export default function NiCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

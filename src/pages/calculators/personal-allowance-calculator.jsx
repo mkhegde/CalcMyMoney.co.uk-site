@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -58,25 +57,6 @@ const emotionalQuote = {
   text: 'The avoidance of taxes is the only intellectual pursuit that still carries any reward.',
   author: 'John Maynard Keynes',
 };
-
-const directoryLinks = [
-  {
-    url: '/#tax-income',
-    label: 'Explore all tax & income calculators',
-    description:
-      'Understand deductions, take-home pay, and tax liabilities on every type of income.',
-  },
-  {
-    url: '/income-tax-calculator',
-    label: 'Income Tax Calculator',
-    description: 'Estimate your income tax liability based on your annual earnings.',
-  },
-  {
-    url: '/national-insurance-calculator',
-    label: 'National Insurance Calculator',
-    description: 'Estimate NI contributions and see the impact on your take-home pay.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -552,8 +532,7 @@ export default function PersonalAllowanceCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

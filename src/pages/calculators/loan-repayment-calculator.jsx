@@ -8,7 +8,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,24 +55,6 @@ const faqItems = [
     question: 'What does the amortisation schedule show?',
     answer:
       'Each row splits the payment into interest and principal, showing how much balance remains after every instalment. Early payments are interest-heavy, but the principal share quickly grows.',
-  },
-];
-
-const directoryLinks = [
-  {
-    url: '/#debt-loans',
-    label: 'Debt & loan calculators directory',
-    description: 'Compare consolidation plans, repayment strategies, and interest-saving tactics.',
-  },
-  {
-    url: '/loan-comparison-calculator',
-    label: 'Compare two personal loans',
-    description: 'Check total repayments, APR-style costs, and fees side-by-side before applying.',
-  },
-  {
-    url: '/budget-planner',
-    label: 'Build a monthly budget that funds repayments',
-    description: 'Track household cash flow so extra loan payments stay realistic.',
   },
 ];
 
@@ -547,8 +528,7 @@ export default function LoanRepaymentCalculatorPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <DirectoryLinks links={directoryLinks} />
-              </CardContent>
+</CardContent>
             </Card>
           </section>
 

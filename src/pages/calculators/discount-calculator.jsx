@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -62,24 +61,6 @@ const discountFaqs = [
     question: 'How do I compare a fixed amount saving with a percentage code?',
     answer:
       'Add both offers to the list and enable them one at a time. The effective discount rate will update instantly, helping you see which code saves more on your basket.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Jump into every UK calculator available on Calc My Money.',
-  },
-  {
-    label: 'Budgeting & planning tools',
-    url: '/#budgeting-planning',
-    description: 'Balance your spending with savings goals before the next sale.',
-  },
-  {
-    label: 'Utilities & household savings',
-    url: '/#utilities-tools',
-    description: 'Compare energy, transport, and subscription costs in one place.',
   },
 ];
 
@@ -562,8 +543,7 @@ export default function DiscountCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );
