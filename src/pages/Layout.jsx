@@ -572,14 +572,15 @@ export default function Layout({ children, currentPageName }) {
     }
   }, [currentPageName]);
 
-  const mainNavLinks = [
-    { name: 'All Calculators', url: createPageUrl('home') },
-    { name: 'Job Salaries', url: createPageUrl('job-salaries') },
-    { name: 'Cost of Living', url: createPageUrl('cost-of-living') },
-    { name: 'Financial Stats', url: createPageUrl('uk-financial-stats') },
-    { name: 'Blog', url: createPageUrl('blog') },
-    { name: 'Resources', url: createPageUrl('resources') },
-  ];
+    const mainNavLinks = [
+      { name: 'All Calculators', url: createPageUrl('home') },
+      { name: 'Job Salaries', url: createPageUrl('job-salaries') },
+      { name: 'Cost of Living', url: createPageUrl('cost-of-living') },
+      { name: 'Financial Stats', url: createPageUrl('uk-financial-stats') },
+      { name: 'My Money Blueprint', url: createPageUrl('my-money-blueprint') },
+      { name: 'Blog', url: createPageUrl('blog') },
+      { name: 'Resources', url: createPageUrl('resources') },
+    ];
 
   const isActiveLink = useCallback(
     (url) => {

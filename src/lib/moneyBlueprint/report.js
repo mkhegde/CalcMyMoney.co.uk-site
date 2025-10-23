@@ -1,20 +1,3 @@
-let cachedPdfLib;
-
-async function loadPdfLib() {
-  if (cachedPdfLib) {
-    return cachedPdfLib;
-  }
-
-  const module = await import('pdf-lib');
-  cachedPdfLib = {
-    PDFDocument: module.PDFDocument,
-    StandardFonts: module.StandardFonts,
-    rgb: module.rgb,
-  };
-
-  return cachedPdfLib;
-}
-
 const INCOME_FREQUENCY_LABELS = {
   monthly: 'Monthly',
   'four-weekly': 'Every 4 weeks',
@@ -125,6 +108,8 @@ const DEFAULT_DATA = {
 
 const DEFAULT_PAGE_SIZE = [595.28, 841.89];
 const DEFAULT_PAGE_MARGIN = 48;
+const DEFAULT_LINE_HEIGHT = 16;
+const DEFAULT_FONT_SIZE = 12;
 
 function parseNumber(value) {
   if (value == null) return null;
@@ -196,9 +181,7 @@ export function buildMoneyBlueprintDataset(report = {}, options = {}) {
     : new Date();
 
   const goalAreas = Array.isArray(priorities.goalAreas) ? priorities.goalAreas : [];
-  const goalLabels = goalAreas
-    .map((goal) => PRIORITY_LABELS[goal] || goal)
-    .filter(Boolean);
+  const goalLabels = goalAreas.map((goal) => PRIORITY_LABELS[goal] || goal).filter(Boolean);
 
   return {
     basics,
@@ -219,7 +202,9 @@ export function buildMoneyBlueprintDataset(report = {}, options = {}) {
       netIncomeLabel: netIncomeValue != null ? formatCurrency(netIncomeValue) : 'Not set',
       annualIncome,
       annualIncomeLabel:
-        annualIncome != null ? formatCurrency(annualIncome, { maximumFractionDigits: 0 }) : 'Not available',
+        annualIncome != null
+          ? formatCurrency(annualIncome, { maximumFractionDigits: 0 })
+          : 'Not available',
       monthlyIncome,
       monthlyIncomeLabel:
         monthlyIncome != null
@@ -261,14 +246,9 @@ function sanitizePdfText(value) {
   return String(value ?? '')
     .replace(/\r/g, '')
     .replace(/\t/g, '  ')
-    .replace(/[\u0080-\uFFFF]/g, (char) => replacements[char] ?? '?');
-}
-
-function escapePdfText(text) {
-  return sanitizePdfText(text)
-    .replace(/\\/g, '\\\\')
-    .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)');
+    .replace(/\n/g, ' ')
+    .replace(/[\u0080-\uFFFF]/g, (char) => replacements[char] ?? '?')
+    .trim();
 }
 
 function wrapText(content, maxWidth) {
@@ -317,30 +297,10 @@ function appendWrappedLines(target, text, { indent = '', maxWidth = 88 } = {}) {
   });
 }
 
-export async function generateMoneyBlueprintPdf(report = {}, options = {}) {
-  const dataset = buildMoneyBlueprintDataset(report, options);
-  const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
-  const pdfDoc = await PDFDocument.create();
-  const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const title = options.title || 'My Money Blueprint';
-
-  const pageContext = createPageContext(pdfDoc, options.pageSize || BASE_PAGE_SIZE);
-  const lineHeight = 16;
-  const sectionSpacing = 28;
-  const contentWidth = pageContext.page.getSize().width - PAGE_MARGIN * 2;
-
-  const drawHeading = (text, size = 20) => {
-    pageContext.ensureSpace(size + 6);
-    pageContext.page.drawText(text, {
-      x: PAGE_MARGIN,
-      y: pageContext.cursor,
-      size,
-      font: boldFont,
-      color: rgb(0.1, 0.1, 0.1),
-    });
-    pageContext.cursor -= size + 6;
-  };
+function addHeading(lines, text) {
+  lines.push('');
+  appendWrappedLines(lines, text.toUpperCase(), { indent: '' });
+}
 
 function addKeyValue(lines, label, value) {
   appendWrappedLines(lines, `${label}: ${value}`, { indent: '  ' });
@@ -352,7 +312,7 @@ function addParagraph(lines, text, options = {}) {
 
 function addBulletList(lines, items) {
   if (!Array.isArray(items) || items.length === 0) {
-    appendWrappedLines(lines, '- None', { indent: '    ' });
+    appendWrappedLines(lines, '- None selected', { indent: '    ' });
     return;
   }
 
@@ -366,52 +326,72 @@ function buildPdfLines(dataset, title) {
   lines.push(sanitizePdfText(title || 'My Money Blueprint'));
   lines.push('');
   appendWrappedLines(lines, 'Personalised summary of your Money Blueprint answers.', { indent: '' });
+  appendWrappedLines(
+    lines,
+    'For education and entertainment only — speak to a qualified adviser before acting on this information.',
+    { indent: '' }
+  );
+  appendWrappedLines(
+    lines,
+    'We do not store your answers. Keep exports safe and refresh the page to clear your Money Blueprint.',
+    { indent: '' }
+  );
   lines.push('');
 
   addHeading(lines, 'Report details');
-  addKeyValue('Report code', dataset.meta.formattedReportId || 'Not yet generated');
-  addKeyValue('Generated on', dataset.meta.generatedAtLabel);
-  addKeyValue('Status', dataset.meta.status === 'completed' ? 'Completed' : 'In progress');
+  addKeyValue(lines, 'Report code', dataset.meta.formattedReportId || 'Not yet generated');
+  addKeyValue(lines, 'Generated on', dataset.meta.generatedAtLabel);
+  addKeyValue(
+    lines,
+    'Status',
+    dataset.meta.status === 'completed' ? 'Completed' : 'In progress'
+  );
   lines.push('');
 
   addHeading(lines, 'Household snapshot');
-  addKeyValue('Plan nickname', dataset.basics.planName?.trim() || 'Not set');
-  addKeyValue('Household size', dataset.meta.householdSize);
-  addKeyValue('Net income', `${dataset.meta.netIncomeLabel} (${dataset.meta.frequencyLabel})`);
-  addKeyValue('Monthly equivalent', dataset.meta.monthlyIncomeLabel);
-  addKeyValue('Annual equivalent', dataset.meta.annualIncomeLabel);
-  addKeyValue('Region', dataset.meta.regionLabel);
-  addKeyValue('Primary focus', dataset.meta.focusLabel);
+  addKeyValue(lines, 'Plan nickname', dataset.basics.planName?.trim() || 'Not set');
+  addKeyValue(lines, 'Household size', dataset.meta.householdSize);
+  addKeyValue(
+    lines,
+    'Net income',
+    `${dataset.meta.netIncomeLabel} (${dataset.meta.frequencyLabel})`
+  );
+  addKeyValue(lines, 'Monthly equivalent', dataset.meta.monthlyIncomeLabel);
+  addKeyValue(lines, 'Annual equivalent', dataset.meta.annualIncomeLabel);
+  addKeyValue(lines, 'Region', dataset.meta.regionLabel);
+  addKeyValue(lines, 'Primary focus', dataset.meta.focusLabel);
   lines.push('');
 
   addHeading(lines, 'Priorities & milestones');
   if (dataset.meta.goalLabels.length > 0) {
-    appendWrappedLines(lines, 'Goal areas selected:', { indent: '  ' });
+    addParagraph(lines, 'Goal areas selected:');
     addBulletList(lines, dataset.meta.goalLabels);
   } else {
     addParagraph(lines, 'Goal areas selected: None selected yet.');
   }
-  addKeyValue('Headline goal', dataset.priorities.topGoal?.trim() || 'Not provided');
+  addKeyValue(lines, 'Headline goal', dataset.priorities.topGoal?.trim() || 'Not provided');
   addKeyValue(
+    lines,
     'Target amount',
     dataset.priorities.savingsTarget
       ? formatCurrency(dataset.priorities.savingsTarget)
       : 'Optional'
   );
   addKeyValue(
+    lines,
     'Ideal timeframe',
     TIMELINE_LABELS[dataset.priorities.timeline] || dataset.priorities.timeline || 'Not set'
   );
   lines.push('');
 
   addHeading(lines, 'Habits & resilience');
-  addKeyValue('Budgeting style', dataset.meta.budgetingStyle);
+  addKeyValue(lines, 'Budgeting style', dataset.meta.budgetingStyle);
   if (dataset.meta.budgetingStyleDescription) {
     addParagraph(lines, dataset.meta.budgetingStyleDescription);
   }
-  addKeyValue('Confidence level', dataset.meta.confidenceLabel);
-  addKeyValue('Check-in cadence', dataset.meta.checkInLabel);
-  addKeyValue('Emergency fund cover', dataset.meta.emergencyFundLabel);
+  addKeyValue(lines, 'Confidence level', dataset.meta.confidenceLabel);
+  addKeyValue(lines, 'Check-in cadence', dataset.meta.checkInLabel);
+  addKeyValue(lines, 'Emergency fund cover', dataset.meta.emergencyFundLabel);
   addParagraph(
     lines,
     `Notes: ${
@@ -422,8 +402,20 @@ function buildPdfLines(dataset, title) {
   lines.push('');
 
   addHeading(lines, 'Sharing preferences');
-  addKeyValue('Reminder email', dataset.meta.shareEmail || 'Not provided');
-  addKeyValue('Reminder consent', dataset.meta.consent ? 'Yes, send reminders' : 'No reminder consent');
+  addKeyValue(lines, 'Reminder email', dataset.meta.shareEmail || 'Not provided');
+  addKeyValue(
+    lines,
+    'Reminder consent',
+    dataset.meta.consent ? 'Yes, send reminders' : 'No reminder consent'
+  );
+  lines.push('');
+
+  addHeading(lines, 'Friendly reminders');
+  addBulletList(lines, [
+    'This Money Blueprint is not personalised financial advice.',
+    'Speak to a regulated financial adviser before making important decisions.',
+    'Refreshing or closing this page clears your responses — keep any exports safe.',
+  ]);
 
   return lines;
 }
@@ -443,8 +435,8 @@ function chunkLines(lines, perPage) {
 }
 
 function createPageContent(pageLines, layout) {
-  const fontSize = layout.fontSize ?? 12;
-  const lineHeight = layout.lineHeight ?? 16;
+  const fontSize = layout.fontSize ?? DEFAULT_FONT_SIZE;
+  const lineHeight = layout.lineHeight ?? DEFAULT_LINE_HEIGHT;
   const margin = layout.margin ?? DEFAULT_PAGE_MARGIN;
   const pageHeight = layout.pageHeight ?? DEFAULT_PAGE_SIZE[1];
   const startY = (layout.startY ?? pageHeight - margin).toFixed(2);
@@ -455,7 +447,10 @@ function createPageContent(pageLines, layout) {
   content += `1 0 0 1 ${margin.toFixed(2)} ${startY} Tm\n`;
 
   pageLines.forEach((line, index) => {
-    const escaped = escapePdfText(line ?? '');
+    const escaped = sanitizePdfText(line ?? '')
+      .replace(/\\/g, '\\\\')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)');
     if (index === 0) {
       content += `(${escaped}) Tj\n`;
     } else {
@@ -483,8 +478,8 @@ function createPdfDocument(lines, options = {}) {
   const pageWidth = Number.isFinite(pageSize?.[0]) ? pageSize[0] : DEFAULT_PAGE_SIZE[0];
   const pageHeight = Number.isFinite(pageSize?.[1]) ? pageSize[1] : DEFAULT_PAGE_SIZE[1];
   const margin = Number.isFinite(options.margin) ? options.margin : DEFAULT_PAGE_MARGIN;
-  const lineHeight = Number.isFinite(options.lineHeight) ? options.lineHeight : 16;
-  const fontSize = Number.isFinite(options.fontSize) ? options.fontSize : 12;
+  const lineHeight = Number.isFinite(options.lineHeight) ? options.lineHeight : DEFAULT_LINE_HEIGHT;
+  const fontSize = Number.isFinite(options.fontSize) ? options.fontSize : DEFAULT_FONT_SIZE;
   const linesPerPage = Math.max(1, Math.floor((pageHeight - margin * 2) / lineHeight));
   const pages = chunkLines(lines, linesPerPage);
 
@@ -630,7 +625,8 @@ export function buildMoneyBlueprintCsvRows(report = {}, options = {}) {
     [
       'Habits',
       'Notes',
-      dataset.habits.additionalNotes?.trim() || 'Use this space to record habits, triggers or wins you want to remember.',
+      dataset.habits.additionalNotes?.trim() ||
+        'Use this space to record habits, triggers or wins you want to remember.',
     ],
     ['Sharing', 'Reminder email', dataset.meta.shareEmail || 'Not provided'],
     ['Sharing', 'Reminder consent', dataset.meta.consent ? 'Yes' : 'No'],
