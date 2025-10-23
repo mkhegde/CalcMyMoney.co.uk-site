@@ -104,7 +104,6 @@ const manualCategoryAssignments = {
   'energy-bill-calculator': 'utilities-tools',
   'fuel-cost-calculator': 'utilities-tools',
   'price-per-unit-calculator': 'utilities-tools',
-  'currency-converter': 'utilities-tools',
   'tip-calculator': 'utilities-tools',
   'emergency-fund-calculator': 'budgeting-planning',
   'net-worth-calculator': 'budgeting-planning',
