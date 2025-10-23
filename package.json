@@ -15,6 +15,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
+    "test": "node --test \"src/__tests__/**/*.test.js\"",
     "gen:images": "sharp ./logo-high-res.webp --width 32 --output public/logo-32.webp --format webp && sharp ./logo-high-res.webp --width 64 --output public/logo-64.webp --format webp && sharp ./logo-high-res.webp --width 128 --output public/logo-128.webp --format webp && sharp ./logo-high-res.webp --width 64 --output public/logo-64.avif --format avif && sharp ./logo-high-res.webp --width 16 --output public/favicon-16x16.png --format png && sharp ./logo-high-res.webp --width 32 --output public/favicon-32x32.png --format png && sharp ./logo-high-res.webp --width 180 --output public/apple-touch-icon.png --format png && sharp ./logo-high-res.webp --width 192 --output public/icon-192.png --format png && sharp ./logo-high-res.webp --width 512 --output public/icon-512.png --format png"
   },
   "dependencies": {

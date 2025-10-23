@@ -1,4 +1,4 @@
-import { createMoneyBlueprintInsights, normaliseMoneyBlueprintData } from './insights';
+import { createMoneyBlueprintInsights, normaliseMoneyBlueprintData } from './insights.js';
 
 export const MONEY_BLUEPRINT_DISCLAIMER =
   'This summary is educational and not financial advice. Speak to a regulated financial adviser for personalised guidance.';

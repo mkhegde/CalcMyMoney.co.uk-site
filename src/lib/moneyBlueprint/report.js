@@ -1,4 +1,19 @@
-import { MONEY_BLUEPRINT_DEFAULT_DATA } from '@/hooks/use-money-blueprint-wizard';
+let cachedPdfLib;
+
+async function loadPdfLib() {
+  if (cachedPdfLib) {
+    return cachedPdfLib;
+  }
+
+  const module = await import('pdf-lib');
+  cachedPdfLib = {
+    PDFDocument: module.PDFDocument,
+    StandardFonts: module.StandardFonts,
+    rgb: module.rgb,
+  };
+
+  return cachedPdfLib;
+}
 
 const INCOME_FREQUENCY_LABELS = {
   monthly: 'Monthly',
@@ -80,7 +95,7 @@ const EMERGENCY_FUND_LABELS = {
   '6+': 'More than 6 months',
 };
 
-const DEFAULT_DATA = MONEY_BLUEPRINT_DEFAULT_DATA || {
+const DEFAULT_DATA = {
   basics: {
     planName: '',
     householdSize: '',
@@ -302,12 +317,30 @@ function appendWrappedLines(target, text, { indent = '', maxWidth = 88 } = {}) {
   });
 }
 
-function addHeading(lines, text) {
-  const heading = sanitizePdfText(text).trim() || 'Section';
-  const underline = '-'.repeat(Math.min(Math.max(heading.length, 4), 72));
-  lines.push(heading);
-  lines.push(underline);
-}
+export async function generateMoneyBlueprintPdf(report = {}, options = {}) {
+  const dataset = buildMoneyBlueprintDataset(report, options);
+  const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
+  const pdfDoc = await PDFDocument.create();
+  const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const title = options.title || 'My Money Blueprint';
+
+  const pageContext = createPageContext(pdfDoc, options.pageSize || BASE_PAGE_SIZE);
+  const lineHeight = 16;
+  const sectionSpacing = 28;
+  const contentWidth = pageContext.page.getSize().width - PAGE_MARGIN * 2;
+
+  const drawHeading = (text, size = 20) => {
+    pageContext.ensureSpace(size + 6);
+    pageContext.page.drawText(text, {
+      x: PAGE_MARGIN,
+      y: pageContext.cursor,
+      size,
+      font: boldFont,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+    pageContext.cursor -= size + 6;
+  };
 
 function addKeyValue(lines, label, value) {
   appendWrappedLines(lines, `${label}: ${value}`, { indent: '  ' });

@@ -16,6 +16,15 @@ npm run dev
 npm run build
 ```
 
+## Testing
+
+```bash
+npm test
+```
+
+The test suite relies on Node's built-in test runner and focuses on the Money
+Blueprint data validation, AI prompt construction, and export utilities.
+
 ## UK Financial Stats data sources
 
 The `/api/uk-financial-stats` endpoint aggregates publicly available statistics from:
@@ -40,3 +49,10 @@ by setting the `SITE_URL` environment variable when invoking the script (e.g.
 `SITE_URL=https://staging.calcmymoney.co.uk npm run sitemap`).
 
 For more information and support, please contact Base44 support at app@base44.com.
+
+## Money Blueprint export & AI dependencies
+
+Money Blueprint PDF and CSV exports are powered by [`pdf-lib`](https://github.com/Hopding/pdf-lib),
+while AI summarisation requests are sent through the [`@base44/sdk`](https://www.npmjs.com/package/@base44/sdk).
+Ensure these dependencies remain available in deployment environments so the
+report generation workflow works end-to-end.
