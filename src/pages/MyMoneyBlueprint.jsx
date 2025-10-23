@@ -7,6 +7,8 @@ import {
   RefreshCcw,
   Copy,
   Sparkles,
+  FileDown,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 import Heading from '@/components/common/Heading';
@@ -36,6 +38,10 @@ import {
   MONEY_BLUEPRINT_GUIDANCE,
   validateMoneyBlueprintStep,
 } from '@/lib/moneyBlueprint/schema';
+import {
+  generateMoneyBlueprintPdf,
+  generateMoneyBlueprintCsv,
+} from '@/lib/moneyBlueprint/report';
 import { cn } from '@/lib/utils';
 
 const regionOptions = [
@@ -195,6 +201,24 @@ export default function MyMoneyBlueprint() {
     [data?.summary]
   );
 
+  const blueprintReport = React.useMemo(
+    () => ({
+      basics,
+      priorities,
+      habits,
+      summary,
+      reportId,
+      completedAt,
+      status,
+    }),
+    [basics, priorities, habits, summary, reportId, completedAt, status]
+  );
+
+  const fileBaseName = React.useMemo(() => {
+    const slug = reportId ? reportId.replace(/\s+/g, '').toLowerCase() : 'draft';
+    return `money-blueprint-${slug}`;
+  }, [reportId]);
+
   const [touchedFields, setTouchedFields] = React.useState({
     basics: {},
     priorities: {},
@@ -207,6 +231,9 @@ export default function MyMoneyBlueprint() {
     habits: 0,
     summary: 0,
   });
+
+  const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
+  const [isGeneratingCsv, setIsGeneratingCsv] = React.useState(false);
 
   const stepValidations = React.useMemo(
     () => ({
@@ -383,6 +410,100 @@ export default function MyMoneyBlueprint() {
       });
     }
   }, [reportId, formatReportId, toast]);
+
+  const downloadBlob = React.useCallback((blob, filename) => {
+    if (!blob) return false;
+    if (typeof window === 'undefined' || typeof document === 'undefined' || typeof URL === 'undefined') {
+      return false;
+    }
+
+    try {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return true;
+    } catch (error) {
+      if (import.meta?.env?.DEV) {
+        // eslint-disable-next-line no-console
+        console.error('Money Blueprint download failed', error);
+      }
+      return false;
+    }
+  }, []);
+
+  const handleDownloadPdf = React.useCallback(async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const { blob, bytes } = await generateMoneyBlueprintPdf(blueprintReport, {
+        title: basics.planName?.trim() || 'My Money Blueprint',
+      });
+      const pdfBlob =
+        blob ||
+        (bytes && typeof Blob !== 'undefined'
+          ? new Blob([bytes], { type: 'application/pdf' })
+          : null);
+
+      if (!pdfBlob || !downloadBlob(pdfBlob, `${fileBaseName}.pdf`)) {
+        throw new Error('pdf-download-unsupported');
+      }
+
+      toast({
+        title: 'PDF downloaded',
+        description: 'Your Money Blueprint summary has been saved as a PDF.',
+      });
+    } catch (error) {
+      if (import.meta?.env?.DEV) {
+        // eslint-disable-next-line no-console
+        console.error('Money Blueprint PDF export failed', error);
+      }
+      toast({
+        title: 'PDF download failed',
+        description: 'We could not prepare the PDF. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  }, [basics.planName, blueprintReport, downloadBlob, fileBaseName, toast]);
+
+  const handleDownloadCsv = React.useCallback(() => {
+    setIsGeneratingCsv(true);
+    try {
+      const { blob, csv } = generateMoneyBlueprintCsv(blueprintReport);
+      const csvBlob =
+        blob ||
+        (typeof Blob !== 'undefined'
+          ? new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
+          : null);
+
+      if (!csvBlob || !downloadBlob(csvBlob, `${fileBaseName}.csv`)) {
+        throw new Error('csv-download-unsupported');
+      }
+
+      toast({
+        title: 'CSV downloaded',
+        description: 'Your Money Blueprint answers have been exported to CSV.',
+      });
+    } catch (error) {
+      if (import.meta?.env?.DEV) {
+        // eslint-disable-next-line no-console
+        console.error('Money Blueprint CSV export failed', error);
+      }
+      toast({
+        title: 'CSV download failed',
+        description: 'We could not prepare the CSV. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingCsv(false);
+    }
+  }, [blueprintReport, downloadBlob, fileBaseName, toast]);
 
   const handlePriorityToggle = React.useCallback(
     (value) => (checked) => {
@@ -971,6 +1092,32 @@ export default function MyMoneyBlueprint() {
               </Badge>
               <Button variant="outline" size="sm" className="gap-2" onClick={handleCopyReportId}>
                 <Copy className="h-4 w-4" /> Copy share code
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border/60 bg-muted/40 p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">Save a copy</p>
+              <p className="text-xs text-muted-foreground">
+                Download your Money Blueprint as a PDF summary or CSV data export.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button onClick={handleDownloadPdf} disabled={isGeneratingPdf} className="gap-2">
+                <FileDown className="h-4 w-4" />
+                {isGeneratingPdf ? 'Preparing PDF…' : 'Download PDF'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleDownloadCsv}
+                disabled={isGeneratingCsv}
+                className="gap-2"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                {isGeneratingCsv ? 'Preparing CSV…' : 'Download CSV'}
               </Button>
             </div>
           </div>
