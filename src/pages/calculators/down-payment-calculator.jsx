@@ -79,23 +79,6 @@ const downPaymentFaqs = [
   },
 ];
 
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Jump into every UK calculator on Calc My Money.',
-  },
-  {
-    label: 'Mortgages & property hub',
-    url: '/#mortgages-property',
-    description: 'Compare repayments, affordability, and landlord yields in one place.',
-  },
-  {
-    label: 'Savings & investments tools',
-    url: '/#savings-investments',
-    description: 'Track ISA allowances, compound growth, and long-term saving goals.',
-  },
-];
 
 const relatedCalculators = [
   {
@@ -328,7 +311,6 @@ export default function DownPaymentCalculatorPage() {
         author: 'Chinese Proverb',
       }}
       faqs={downPaymentFaqs}
-      directoryLinks={directoryLinks}
       relatedCalculators={relatedCalculators}
     >
       <div className="grid gap-8 lg:grid-cols-[360px_1fr]">

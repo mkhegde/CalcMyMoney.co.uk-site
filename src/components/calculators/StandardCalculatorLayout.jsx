@@ -6,7 +6,6 @@ import useCalculatorSchema from '@/components/seo/useCalculatorSchema';
 import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 
 const DEFAULT_ORIGIN = 'https://www.calcmymoney.co.uk';
@@ -49,7 +48,6 @@ export default function StandardCalculatorLayout({
   quote,
   children,
   faqs,
-  directoryLinks,
   relatedCalculators,
 }) {
   const seoProps = buildSeoProps(seo);
@@ -62,7 +60,6 @@ export default function StandardCalculatorLayout({
 
   const hasIntroContent = intro?.title || intro?.body || quote?.text;
   const hasFaqs = Array.isArray(faqs) && faqs.length > 0;
-  const hasDirectoryLinks = Array.isArray(directoryLinks) && directoryLinks.length > 0;
   const hasRelatedCalculators =
     Array.isArray(relatedCalculators) && relatedCalculators.length > 0;
 
@@ -125,8 +122,6 @@ export default function StandardCalculatorLayout({
               <FAQSection faqs={faqs} />
             </section>
           ) : null}
-
-          {hasDirectoryLinks ? <DirectoryLinks links={directoryLinks} /> : null}
 
           {hasRelatedCalculators ? (
             <RelatedCalculators calculators={relatedCalculators} />

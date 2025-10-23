@@ -48,23 +48,6 @@ const faqItems = [
   },
 ];
 
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Explore every employment, tax, and payroll calculator in one hub.',
-  },
-  {
-    label: 'Employment & payroll tools',
-    url: '/#employment',
-    description: 'Manage payroll costs, overtime, and benefits for UK teams.',
-  },
-  {
-    label: 'Overtime pay calculator',
-    url: '/overtime-pay-calculator',
-    description: 'Check hourly overtime rates before adding them to the holiday pay average.',
-  },
-];
 
 const relatedCalculators = [
   {
@@ -222,7 +205,6 @@ export default function HolidayPayCalculatorPage() {
         author: 'Richard Branson',
       }}
       faqs={faqItems}
-      directoryLinks={directoryLinks}
       relatedCalculators={relatedCalculators}
     >
       <div className="grid gap-8 lg:grid-cols-[360px_1fr]">

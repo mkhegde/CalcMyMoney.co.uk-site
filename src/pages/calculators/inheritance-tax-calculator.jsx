@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -51,24 +50,6 @@ const faqItems = [
     question: 'Are charitable gifts deductible?',
     answer:
       'Yes. Charitable legacies reduce the taxable estate. Giving at least 10% of the net estate to charity can also reduce the IHT rate from 40% to 36%—factor that in with advice if relevant.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Access every tax, savings, and property calculator in one place.',
-  },
-  {
-    label: 'Tax & income tools',
-    url: '/#tax-income',
-    description: 'Model PAYE, capital gains, and dividend tax alongside inheritance planning.',
-  },
-  {
-    label: 'Capital Gains Tax Calculator',
-    url: '/capital-gains-tax-calculator',
-    description: 'Plan property or investment disposals before gifting assets.',
   },
 ];
 
@@ -478,8 +459,7 @@ export default function InheritanceTaxCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

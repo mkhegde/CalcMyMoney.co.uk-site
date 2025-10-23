@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -63,24 +62,6 @@ const emotionalQuote = {
   text: 'Someone is sitting in the shade today because someone planted a tree a long time ago.',
   author: 'Warren Buffett',
 };
-
-const directoryLinks = [
-  {
-    url: '/#investing',
-    label: 'Browse all investing calculators',
-    description: 'Compare asset growth, risk, and opportunity cost across our full toolkit.',
-  },
-  {
-    url: '/calculators/compound-interest-calculator',
-    label: 'Compound Interest Calculator',
-    description: 'Project savings growth with monthly contributions and inflation assumptions.',
-  },
-  {
-    url: '/calculators/investment-calculator',
-    label: 'Investment Growth Calculator',
-    description: 'Model portfolio balances with blended rates, fees, and contribution changes.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -563,8 +544,7 @@ export default function ROICalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

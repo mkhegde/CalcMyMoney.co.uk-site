@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -55,24 +54,6 @@ const energyFaqs = [
     question: 'What is the smoothing buffer?',
     answer:
       'Direct debit plans often collect a little extra each month to cover winter spikes. Add an optional buffer if your supplier uses bill smoothing.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Explore every UK calculator on Calc My Money.',
-  },
-  {
-    label: 'Utilities & household tools',
-    url: '/#utilities-tools',
-    description: 'Compare broadband, fuel, and living costs alongside energy.',
-  },
-  {
-    label: 'Budgeting & planning hub',
-    url: '/#budgeting-planning',
-    description: 'Fold your energy estimate into a realistic monthly budget.',
   },
 ];
 
@@ -515,8 +496,7 @@ export default function EnergyBillCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

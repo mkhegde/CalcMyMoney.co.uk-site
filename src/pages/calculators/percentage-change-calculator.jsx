@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -59,24 +58,6 @@ const emotionalQuote = {
   text: 'Change is the only constant in life.',
   author: 'Heraclitus',
 };
-
-const directoryLinks = [
-  {
-    url: '/#budgeting-planning',
-    label: 'Explore all budgeting & planning calculators',
-    description: 'Coordinate spending plans, short-term goals, and day-to-day money decisions.',
-  },
-  {
-    url: '/salary-increase-calculator',
-    label: 'Salary Increase Calculator',
-    description: 'Calculate the impact of a salary increase on your take-home pay.',
-  },
-  {
-    url: '/inflation-calculator',
-    label: 'Inflation Calculator',
-    description: 'Measure how prices change over time and estimate future purchasing power.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -501,8 +482,7 @@ export default function PercentageChangeCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

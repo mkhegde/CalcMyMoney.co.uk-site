@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -50,24 +49,6 @@ const emotionalQuote = {
   text: "Wealth is not about having a lot of money; it's about having a lot of options.",
   author: 'Chris Rock',
 };
-
-const directoryLinks = [
-  {
-    url: '/#savings-investments',
-    label: 'Explore all savings & investment calculators',
-    description: 'Track growth, optimise allowances, and compare investment strategies.',
-  },
-  {
-    url: '/budget-calculator',
-    label: 'Build a monthly budget',
-    description: 'Allocate income across bills, savings, and lifestyle categories.',
-  },
-  {
-    url: '/retirement-savings-calculator',
-    label: 'Plan your retirement savings',
-    description: 'Project future pension values and retirement income.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -480,8 +461,7 @@ export default function NetWorthCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

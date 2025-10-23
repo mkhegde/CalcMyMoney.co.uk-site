@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'Do something today that your future self will thank you for.',
   author: 'Sean Patrick Flanery',
 };
-
-const directoryLinks = [
-  {
-    url: '/#savings',
-    label: 'Explore savings & budgeting tools',
-    description: 'Plan emergency funds, holiday savings, and monthly budgets all in one place.',
-  },
-  {
-    url: '/calculators/savings-goal-calculator',
-    label: 'Savings Goal Calculator',
-    description: 'Work out how long it will take to reach your next savings milestone.',
-  },
-  {
-    url: '/calculators/compound-interest-calculator',
-    label: 'Compound Interest Calculator',
-    description: 'Compare different rates and compounding frequencies side by side.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -552,8 +533,7 @@ export default function SavingsCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

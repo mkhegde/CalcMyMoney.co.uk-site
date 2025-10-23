@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -73,24 +72,6 @@ const dividendFaqs = [
     question: 'Can I reduce my dividend tax bill by spreading payouts?',
     answer:
       'Yes. Splitting dividends across tax years or between shareholders lets each person use their £1,000 allowance and lower rate bands, helping to reduce overall tax.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'See every UK calculator available on Calc My Money.',
-  },
-  {
-    label: 'Tax & income planning tools',
-    url: '/#tax-income',
-    description: 'Optimise salary, dividends, and allowances across the UK tax system.',
-  },
-  {
-    label: 'Savings & investments hub',
-    url: '/#savings-investments',
-    description: 'Track compounding, ISA allowances, and long-term investment growth.',
   },
 ];
 
@@ -526,8 +507,7 @@ export default function DividendTaxCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

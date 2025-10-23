@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -62,24 +61,6 @@ const emotionalQuote = {
   text: 'A penny saved is a penny earned.',
   author: 'Benjamin Franklin',
 };
-
-const directoryLinks = [
-  {
-    url: '/#income',
-    label: 'Browse income & tax tools',
-    description: 'Cross-check PAYE, dividend, and self-employed scenarios in one hub.',
-  },
-  {
-    url: '/calculators/self-assessment-calculator',
-    label: 'Self Assessment Tax Calculator',
-    description: 'Model payments on account and balancing payments for freelance income.',
-  },
-  {
-    url: '/calculators/take-home-pay-calculator',
-    label: 'Take-Home Pay Calculator',
-    description: 'See how annual refunds change your monthly budget.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -528,8 +509,7 @@ export default function TaxRefundCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

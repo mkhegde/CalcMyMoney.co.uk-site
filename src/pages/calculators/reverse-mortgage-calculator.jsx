@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'Planning is bringing the future into the present so that you can do something about it now.',
   author: 'Alan Lakein',
 };
-
-const directoryLinks = [
-  {
-    url: '/#retirement-pensions',
-    label: 'Retirement & later-life tools',
-    description: 'Explore pension projections, annuities, and drawdown planning alongside equity release.',
-  },
-  {
-    url: '/mortgage-calculator',
-    label: 'Mortgage Calculator',
-    description: 'Compare traditional mortgages if downsizing or refinancing.',
-  },
-  {
-    url: '/property-tax-calculator',
-    label: 'Property Tax Calculator',
-    description: 'Plan SDLT obligations if you intend to move or gift property.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -482,8 +463,7 @@ export default function ReverseMortgageCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

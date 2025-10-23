@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'A budget is telling your money where to go instead of wondering where it went.',
   author: 'Dave Ramsey',
 };
-
-const directoryLinks = [
-  {
-    url: '/#property-mortgage',
-    label: 'See all mortgage tools',
-    description: 'Explore affordability, overpayment, and property investment calculators.',
-  },
-  {
-    url: '/mortgage-repayment-calculator',
-    label: 'Mortgage Repayment Calculator',
-    description: 'Check repayments and interest costs at your current or future rate.',
-  },
-  {
-    url: '/mortgage-affordability-calculator',
-    label: 'Mortgage Affordability Calculator',
-    description: 'Estimate how much you can borrow before agreeing to a new deal.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -496,8 +477,7 @@ export default function RemortgageCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

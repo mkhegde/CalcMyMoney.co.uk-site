@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -64,24 +63,6 @@ const emotionalQuote = {
   text: 'Beware of little expenses; a small leak will sink a great ship.',
   author: 'Benjamin Franklin',
 };
-
-const directoryLinks = [
-  {
-    url: '/#budgeting',
-    label: 'See all budgeting & spending tools',
-    description: 'Balance income, savings, and outgoings across our full budgeting toolkit.',
-  },
-  {
-    url: '/calculators/weekly-budget-planner',
-    label: 'Weekly Budget Planner',
-    description: 'Turn your subscription audit into a weekly spending plan you can stick to.',
-  },
-  {
-    url: '/calculators/take-home-pay-calculator',
-    label: 'Take-Home Pay Calculator',
-    description: 'Check the net income that actually lands in your bank each month.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -598,8 +579,7 @@ export default function SubscriptionCostCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

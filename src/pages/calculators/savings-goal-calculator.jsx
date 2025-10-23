@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'A goal without a plan is just a wish.',
   author: 'Antoine de Saint-Exupéry',
 };
-
-const directoryLinks = [
-  {
-    url: '/#savings',
-    label: 'Savings & budgeting calculators',
-    description: 'Build an emergency fund, plan holidays, and monitor your budget in one hub.',
-  },
-  {
-    url: '/calculators/savings-calculator',
-    label: 'Savings Calculator',
-    description: 'Project balances over time with compound interest and inflation adjustments.',
-  },
-  {
-    url: '/calculators/travel-budget-calculator',
-    label: 'Travel Budget Calculator',
-    description: 'Turn your savings goal into a detailed trip budget and spending plan.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -478,8 +459,7 @@ export default function SavingsGoalCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'The best way to predict the future is to create it.',
   author: 'Peter Drucker',
 };
-
-const directoryLinks = [
-  {
-    url: '/#property-mortgage',
-    label: 'Browse property calculators',
-    description: 'Compare mortgages, yields, and affordability tools for every stage.',
-  },
-  {
-    url: '/buy-to-let-mortgage-calculator',
-    label: 'Buy-to-Let Mortgage Calculator',
-    description: 'Check rent coverage and deposit requirements for investment properties.',
-  },
-  {
-    url: '/mortgage-affordability-calculator',
-    label: 'Mortgage Affordability Calculator',
-    description: 'Estimate how much you can borrow once you exercise your option.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -516,8 +497,7 @@ export default function RentToBuyCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -64,24 +63,6 @@ const emotionalQuote = {
   text: 'Education is the most powerful weapon which you can use to change the world.',
   author: 'Nelson Mandela',
 };
-
-const directoryLinks = [
-  {
-    url: '/#income-tax',
-    label: 'Income & tax calculators',
-    description: 'See how PAYE, National Insurance, and student loans interact on your payslip.',
-  },
-  {
-    url: '/calculators/take-home-pay-calculator',
-    label: 'Take-Home Pay Calculator',
-    description: 'Estimate net pay after tax, NI, pensions, and student loan deductions.',
-  },
-  {
-    url: '/calculators/salary-calculator',
-    label: 'Salary Calculator',
-    description: 'Convert annual salaries into monthly, weekly, and hourly figures.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -508,8 +489,7 @@ export default function StudentLoanRepaymentCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

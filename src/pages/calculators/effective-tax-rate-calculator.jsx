@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -49,24 +48,6 @@ const faqItems = [
     question: 'Should I include student loan or workplace share deductions?',
     answer:
       'Student loans are not taxes but they do affect take-home pay. You can add them to the “Other payroll taxes” input to see their impact on your effective rate.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Find every UK calculator to support your financial planning.',
-  },
-  {
-    label: 'Tax & income planning tools',
-    url: '/#tax-income',
-    description: 'Model PAYE, dividends, and self-employment taxes in one place.',
-  },
-  {
-    label: 'Budgeting & planning hub',
-    url: '/#budgeting-planning',
-    description: 'Connect your tax rate to monthly budgeting and lifestyle goals.',
   },
 ];
 
@@ -448,8 +429,7 @@ export default function EffectiveTaxRateCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

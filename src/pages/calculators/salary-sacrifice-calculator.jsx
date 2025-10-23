@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -64,24 +63,6 @@ const emotionalQuote = {
   text: 'The best investment you can make is an investment in yourself.',
   author: 'Warren Buffett',
 };
-
-const directoryLinks = [
-  {
-    url: '/#income-tax',
-    label: 'Browse salary & tax calculators',
-    description: 'Understand PAYE, NI, and allowances across every pay scenario.',
-  },
-  {
-    url: '/calculators/take-home-pay-calculator',
-    label: 'Take-Home Pay Calculator',
-    description: 'Estimate net pay after income tax, National Insurance, and pensions.',
-  },
-  {
-    url: '/calculators/pension-calculator',
-    label: 'Pension Calculator',
-    description: 'Project retirement income using your boosted pension contributions.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -657,8 +638,7 @@ export default function SalarySacrificeCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

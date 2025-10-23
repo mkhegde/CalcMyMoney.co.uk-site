@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'Success is the sum of small efforts, repeated day in and day out.',
   author: 'Robert Collier',
 };
-
-const directoryLinks = [
-  {
-    url: '/#income',
-    label: 'Explore salary & income tools',
-    description: 'See your take-home pay, pension impact, and overtime breakdown in one hub.',
-  },
-  {
-    url: '/calculators/salary-calculator',
-    label: 'Salary Calculator',
-    description: 'Combine salary, overtime, and bonuses with tax-ready outputs.',
-  },
-  {
-    url: '/calculators/take-home-pay-calculator',
-    label: 'Take-Home Pay Calculator',
-    description: 'Understand how gross income converts to net pay after tax and NI.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -459,8 +440,7 @@ export default function YearlyIncomeCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

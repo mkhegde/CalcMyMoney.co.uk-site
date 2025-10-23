@@ -7,7 +7,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -55,24 +54,6 @@ const emotionalQuote = {
   text: 'The best way to predict the future is to create it.',
   author: 'Peter Drucker',
 };
-
-const directoryLinks = [
-  {
-    url: '/#employment-income',
-    label: 'Explore all employment & income calculators',
-    description: 'From salary to tax, understand your earnings and financial obligations.',
-  },
-  {
-    url: '/salary-calculator',
-    label: 'Calculate your salary',
-    description: 'Estimate your gross and net pay based on your annual salary.',
-  },
-  {
-    url: '/take-home-pay-calculator',
-    label: 'Check your take-home pay',
-    description: 'See how your income changes after tax and National Insurance.',
-  },
-];
 
 const wageRates = {
   '21+ (National Living Wage)': 11.44,
@@ -395,8 +376,7 @@ export default function MinimumWageCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

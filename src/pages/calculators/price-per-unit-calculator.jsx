@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -67,25 +66,6 @@ const emotionalQuote = {
   text: 'A penny saved is a penny earned.',
   author: 'Benjamin Franklin',
 };
-
-const directoryLinks = [
-  {
-    url: '/#budgeting-planning',
-    label: 'Explore all budgeting & planning calculators',
-    description: 'Coordinate spending plans, short-term goals, and day-to-day money decisions.',
-  },
-  {
-    url: '/budget-calculator',
-    label: 'Build a monthly budget',
-    description: 'Allocate income across bills, savings, and lifestyle categories each month.',
-  },
-  {
-    url: '/cost-of-living-calculator',
-    label: 'Cost of Living Calculator',
-    description:
-      'Compare monthly spending across housing, utilities, transport, and lifestyle costs.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -562,8 +542,7 @@ export default function PricePerUnitCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

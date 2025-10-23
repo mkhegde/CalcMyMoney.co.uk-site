@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'Love recognises no barriers.',
   author: 'Maya Angelou',
 };
-
-const directoryLinks = [
-  {
-    url: '/#budgeting',
-    label: 'Explore budgeting calculators',
-    description: 'Balance your wedding plans with everyday budgets and savings goals.',
-  },
-  {
-    url: '/calculators/savings-goal-calculator',
-    label: 'Savings Goal Calculator',
-    description: 'Work out how much to save each month for the big day.',
-  },
-  {
-    url: '/calculators/travel-budget-calculator',
-    label: 'Travel Budget Calculator',
-    description: 'Plan your honeymoon budget alongside the main celebration.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -519,8 +500,7 @@ export default function WeddingBudgetCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

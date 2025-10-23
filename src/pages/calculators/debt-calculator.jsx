@@ -12,7 +12,6 @@ import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import { JsonLd, faqSchema } from '@/components/seo/JsonLd.jsx';
 import { getCalculatorKeywords } from '@/components/data/calculatorKeywords.js';
@@ -150,24 +149,6 @@ const debtCalculatorFaqs = [
     question: 'What if my repayments are below the minimum agreed with the lender?',
     answer:
       'If your repayment is set below the contractual minimum, the calculator will flag that the balance is not reducing. Increase the payment until you see a valid payoff date, or speak with your lender about a repayment plan.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Jump to every UK money tool available on Calc My Money.',
-  },
-  {
-    label: 'Debt & borrowing calculators',
-    url: '/#debt-loans',
-    description: 'Compare repayment planners designed for loans, cards, and overdrafts.',
-  },
-  {
-    label: 'Savings & emergency fund tools',
-    url: '/emergency-fund-calculator',
-    description: 'Balance debt repayments with a healthy emergency buffer.',
   },
 ];
 
@@ -528,8 +509,7 @@ export default function DebtCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

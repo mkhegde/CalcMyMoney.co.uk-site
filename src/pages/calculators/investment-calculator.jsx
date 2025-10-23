@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -58,24 +57,6 @@ const faqItems = [
     question: 'Do the calculations allow for charges or inflation?',
     answer:
       'This calculator models growth before fees and inflation. Run scenarios with lower returns to reflect platform charges or rising costs.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Access every ISA, pension, and budgeting calculator we provide.',
-  },
-  {
-    label: 'Savings & investments tools',
-    url: '/#savings-investments',
-    description: 'Fine-tune your compounding strategy alongside ISA and pension planners.',
-  },
-  {
-    label: 'Future Value Calculator',
-    url: '/future-value-calculator',
-    description: 'See how simple compound interest compares with more detailed projections.',
   },
 ];
 
@@ -547,8 +528,7 @@ export default function InvestmentCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

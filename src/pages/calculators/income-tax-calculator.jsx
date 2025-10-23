@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -64,24 +63,6 @@ const faqItems = [
     question: 'Can I include Student Loan deductions?',
     answer:
       'Select “Yes” for Student Loan plan 2 to see how repayments affect your take-home pay. Add plan 1 or postgraduate calculations manually if needed.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Jump to every tax, salary, mortgage, and savings calculator we host.',
-  },
-  {
-    label: 'Tax & income tools',
-    url: '/#tax-income',
-    description: 'Understand PAYE, dividends, and take-home pay from every angle.',
-  },
-  {
-    label: 'Gross to net calculator',
-    url: '/gross-to-net-calculator',
-    description: 'Convert gross salary to net pay with pension and student loan deductions.',
   },
 ];
 
@@ -462,8 +443,7 @@ export default function IncomeTaxCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -53,24 +52,6 @@ const buyerFaqs = [
     question: 'How much deposit should I aim for?',
     answer:
       'A 10% to 15% deposit unlocks more products and sharper interest rates. Adjust the target LTV slider to see how much extra cash is needed to hit each tier.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Jump straight to every UK money calculator in one place.',
-  },
-  {
-    label: 'Mortgages & property tools',
-    url: '/#mortgages-property',
-    description: 'Compare repayments, deposits, and landlord yields with tailored tools.',
-  },
-  {
-    label: 'Deposit savings planner',
-    url: '/down-payment-calculator',
-    description: 'Build the cash buffer you need alongside boosting affordability.',
   },
 ];
 
@@ -636,8 +617,7 @@ export default function FirstTimeBuyerCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

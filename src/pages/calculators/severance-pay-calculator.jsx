@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'The future depends on what you do today.',
   author: 'Mahatma Gandhi',
 };
-
-const directoryLinks = [
-  {
-    url: '/#income-tax',
-    label: 'Income & employment calculators',
-    description: 'Plan your finances during a career transition with our salary and tax tools.',
-  },
-  {
-    url: '/calculators/redundancy-pay-calculator',
-    label: 'Redundancy Pay Calculator',
-    description: 'Check statutory redundancy entitlement alongside negotiated severance.',
-  },
-  {
-    url: '/calculators/take-home-pay-calculator',
-    label: 'Take-Home Pay Calculator',
-    description: 'Estimate net pay for your next role after tax and pension deductions.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -489,8 +470,7 @@ export default function SeverancePayCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'Beware of little expenses; a small leak will sink a great ship.',
   author: 'Benjamin Franklin',
 };
-
-const directoryLinks = [
-  {
-    url: '/#income-tax',
-    label: 'Income & tax calculators',
-    description: 'Model PAYE, self-employment, and dividend income side by side.',
-  },
-  {
-    url: '/calculators/tax-and-ni-calculator',
-    label: 'Tax and NI Calculator',
-    description: 'Compare PAYE deductions with your self assessment projection.',
-  },
-  {
-    url: '/calculators/salary-sacrifice-calculator',
-    label: 'Salary Sacrifice Calculator',
-    description: 'See how pension contributions change your taxable income.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -499,8 +480,7 @@ export default function SelfAssessmentCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import ExportActions from '@/components/calculators/ExportActions';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
 import { getRelatedCalculators } from '@/utils/getRelatedCalculators';
@@ -56,24 +55,6 @@ const emotionalQuote = {
   text: 'Look after the pennies and the pounds will look after themselves.',
   author: 'Traditional UK proverb',
 };
-
-const directoryLinks = [
-  {
-    url: '/#tax',
-    label: 'Explore UK tax calculators',
-    description: 'From PAYE to corporation tax, stay compliant with our full tax toolkit.',
-  },
-  {
-    url: '/calculators/tax-and-ni-calculator',
-    label: 'Tax & NI Calculator',
-    description: 'Cross-check PAYE deductions alongside VAT obligations for cash-flow planning.',
-  },
-  {
-    url: '/calculators/self-assessment-calculator',
-    label: 'Self Assessment Tax Calculator',
-    description: 'Estimate income tax and payments on account for sole traders.',
-  },
-];
 
 const currencyFormatter = new Intl.NumberFormat('en-GB', {
   style: 'currency',
@@ -435,8 +416,7 @@ export default function VATCalculatorPage() {
           </section>
 
           <RelatedCalculators calculators={relatedCalculators} />
-          <DirectoryLinks links={directoryLinks} />
-        </div>
+</div>
       </CalculatorWrapper>
     </div>
   );

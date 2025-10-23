@@ -6,7 +6,6 @@ import Heading from '@/components/common/Heading';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -57,24 +56,6 @@ const faqItems = [
     question: 'Where should I store my emergency fund?',
     answer:
       'Use a secure, easy-access savings account. Competitive interest is helpful, but capital safety and quick access matter most in an emergency.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Discover every UK calculator to support your financial wellbeing.',
-  },
-  {
-    label: 'Budgeting & planning tools',
-    url: '/#budgeting-planning',
-    description: 'Keep spending aligned with your emergency fund goals.',
-  },
-  {
-    label: 'Savings & investments hub',
-    url: '/#savings-investments',
-    description: 'Grow long-term reserves once your emergency buffer is secure.',
   },
 ];
 
@@ -518,8 +499,7 @@ export default function EmergencyFundCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );

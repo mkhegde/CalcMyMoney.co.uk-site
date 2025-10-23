@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import CalculatorWrapper from '@/components/calculators/CalculatorWrapper';
 import FAQSection from '@/components/calculators/FAQSection';
 import EmotionalHook from '@/components/calculators/EmotionalHook';
-import DirectoryLinks from '@/components/calculators/DirectoryLinks';
 import RelatedCalculators from '@/components/calculators/RelatedCalculators';
 import ExportActions from '@/components/calculators/ExportActions';
 import ResultBreakdownChart from '@/components/calculators/ResultBreakdownChart';
@@ -131,24 +130,6 @@ const dtiFaqs = [
     question: 'How can I improve my debt to income ratio quickly?',
     answer:
       'Focus on reducing revolving balances such as credit cards, consolidating to lower rates, or boosting income with overtime and side gigs. Recalculate your DTI after each change to see how close you are to your goal.',
-  },
-];
-
-const directoryLinks = [
-  {
-    label: 'Browse the full calculator directory',
-    url: '/#calculator-directory',
-    description: 'Discover every UK money tool to support your financial decisions.',
-  },
-  {
-    label: 'Debt & loans planning tools',
-    url: '/#debt-loans',
-    description: 'Explore calculators covering repayments, consolidation, and affordability.',
-  },
-  {
-    label: 'Mortgage affordability hub',
-    url: '/#mortgages-property',
-    description: 'Stress-test your application before speaking with a UK broker or lender.',
   },
 ];
 
@@ -458,8 +439,7 @@ export default function DebtToIncomeRatioCalculatorPage() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 pb-16">
-        <DirectoryLinks links={directoryLinks} />
-        <RelatedCalculators calculators={relatedCalculators} />
+<RelatedCalculators calculators={relatedCalculators} />
       </div>
     </div>
   );
