@@ -13,7 +13,37 @@ import { calculatorCategories as DEFAULT_DIRECTORY_CATEGORIES } from '../compone
 import { getMappedKeywords } from '@/components/seo/keywordMappings';
 import { getCategoryIcon } from '@/components/data/calculatorIcons.js';
 
-const DEFAULT_STATS = { total: 0, active: 0, categories: 0 };
+const flattenCalculators = (categories = []) =>
+  categories.flatMap((category) =>
+    (category.subCategories || []).flatMap((subCategory) => subCategory.calculators || [])
+  );
+
+const DEFAULT_CALCULATORS = flattenCalculators(DEFAULT_DIRECTORY_CATEGORIES);
+
+const DEFAULT_STATS = {
+  total: DEFAULT_CALCULATORS.length,
+  active: DEFAULT_CALCULATORS.filter((calc) => calc.status === 'active').length,
+  categories: DEFAULT_DIRECTORY_CATEGORIES.length,
+};
+
+const fallbackSearch = (query) => {
+  const term = String(query || '').trim().toLowerCase();
+  if (!term) {
+    return [];
+  }
+
+  return DEFAULT_CALCULATORS.filter((calc) => {
+    const name = String(calc?.name || '').toLowerCase();
+    const description = String(calc?.description || '').toLowerCase();
+    const keywords = Array.isArray(calc?.keywords) ? calc.keywords : [];
+
+    return (
+      name.includes(term) ||
+      description.includes(term) ||
+      keywords.some((keyword) => String(keyword || '').toLowerCase().includes(term))
+    );
+  });
+};
 
 const pageTitle = 'UK Salary, Tax & Mortgage Calculators (2025/26) | CalcMyMoney';
 const metaDescription =
@@ -27,15 +57,15 @@ export default function Home() {
   const hasQuery = new URLSearchParams(search).has('q');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [showAllCalculators, setShowAllCalculators] = useState(false);
+  const [showAllCalculators, setShowAllCalculators] = useState(true);
   const [pendingScrollSlug, setPendingScrollSlug] = useState(null);
   const lastHandledHashRef = useRef(null);
   const { setSeo, resetSeo } = useSeo();
   const [calcData, setCalcData] = useState({
-    categories: [],
-    calculators: [],
+    categories: DEFAULT_DIRECTORY_CATEGORIES,
+    calculators: DEFAULT_CALCULATORS,
     stats: DEFAULT_STATS,
-    searchFn: null,
+    searchFn: fallbackSearch,
     loading: true,
   });
 
@@ -44,13 +74,15 @@ export default function Home() {
     import('../components/data/calculatorConfig.js')
       .then((mod) => {
         if (cancelled) return;
-        setCalcData({
-          categories: mod?.calculatorCategories || [],
-          calculators: mod?.allCalculators || [],
-          stats: mod?.getCalculatorStats ? mod.getCalculatorStats() : DEFAULT_STATS,
-          searchFn: mod?.searchCalculators || null,
+        setCalcData((prev) => ({
+          categories: mod?.calculatorCategories?.length
+            ? mod.calculatorCategories
+            : prev.categories,
+          calculators: mod?.allCalculators?.length ? mod.allCalculators : prev.calculators,
+          stats: mod?.getCalculatorStats ? mod.getCalculatorStats() : prev.stats,
+          searchFn: mod?.searchCalculators || prev.searchFn,
           loading: false,
-        });
+        }));
       })
       .catch((error) => {
         if (import.meta.env.DEV) {
@@ -65,7 +97,7 @@ export default function Home() {
   }, []);
 
   const stats = calcData.stats;
-  const isCatalogLoading = calcData.loading;
+  const isCatalogLoading = calcData.loading && calcData.calculators.length === 0;
   const categoriesLoaded = calcData.categories.length > 0;
 
   // Handle search
@@ -87,35 +119,11 @@ export default function Home() {
     setSearchQuery(e.target.value);
   };
 
-  const fallbackHubCards = useMemo(
-    () =>
-      DEFAULT_DIRECTORY_CATEGORIES.map((category) => {
-        const Icon = getCategoryIcon(category.slug) || Calculator;
-        return {
-          title: category.name,
-          icon: Icon,
-          link: `#${category.slug}`,
-          description: category.description,
-        };
-      }),
-    []
-  );
-
   const directoryCategories = useMemo(() => {
     if (!calcData.categories.length) return DEFAULT_DIRECTORY_CATEGORIES;
     const map = new Map(calcData.categories.map((category) => [category.slug, category]));
     return DEFAULT_DIRECTORY_CATEGORIES.map((category) => map.get(category.slug) || category);
   }, [calcData.categories]);
-
-  const hubCards = useMemo(() => {
-    if (!calcData.categories.length) return fallbackHubCards;
-    return directoryCategories.map((category) => ({
-      title: category.name,
-      icon: getCategoryIcon(category.slug) || Calculator,
-      link: `#${category.slug}`,
-      description: category.description,
-    }));
-  }, [calcData.categories, directoryCategories, fallbackHubCards]);
 
   useEffect(() => {
     const origin =
@@ -289,39 +297,6 @@ export default function Home() {
               )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Hub Cards Section */}
-      <div className="relative z-10 -mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {hubCards.map((card, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={(event) => {
-                event.preventDefault();
-                const slug = card.link.startsWith('#') ? card.link.slice(1) : card.link;
-                setPendingScrollSlug(slug);
-                setShowAllCalculators(true);
-              }}
-              className="group block w-full transform rounded-lg border border-card-muted bg-card p-6 text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-            >
-              <div className="flex items-center gap-4 mb-2">
-                <div className="rounded-full bg-pill p-3 text-pill-foreground">
-                  <card.icon className="h-6 w-6" />
-                </div>
-                <Heading
-                  as="h3"
-                  size="h3"
-                  className="text-foreground transition-colors group-hover:text-primary"
-                >
-                  {card.title}
-                </Heading>
-              </div>
-              <p className="body text-muted-foreground">{card.description}</p>
-            </button>
-          ))}
         </div>
       </div>
 
