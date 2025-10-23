@@ -1,5 +1,19 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import { MONEY_BLUEPRINT_DEFAULT_DATA } from '@/hooks/use-money-blueprint-wizard';
+let cachedPdfLib;
+
+async function loadPdfLib() {
+  if (cachedPdfLib) {
+    return cachedPdfLib;
+  }
+
+  const module = await import('pdf-lib');
+  cachedPdfLib = {
+    PDFDocument: module.PDFDocument,
+    StandardFonts: module.StandardFonts,
+    rgb: module.rgb,
+  };
+
+  return cachedPdfLib;
+}
 
 const INCOME_FREQUENCY_LABELS = {
   monthly: 'Monthly',
@@ -81,7 +95,7 @@ const EMERGENCY_FUND_LABELS = {
   '6+': 'More than 6 months',
 };
 
-const DEFAULT_DATA = MONEY_BLUEPRINT_DEFAULT_DATA || {
+const DEFAULT_DATA = {
   basics: {
     planName: '',
     householdSize: '',
@@ -294,6 +308,7 @@ function createPageContext(pdfDoc, pageSize = BASE_PAGE_SIZE) {
 
 export async function generateMoneyBlueprintPdf(report = {}, options = {}) {
   const dataset = buildMoneyBlueprintDataset(report, options);
+  const { PDFDocument, StandardFonts, rgb } = await loadPdfLib();
   const pdfDoc = await PDFDocument.create();
   const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);

@@ -1,137 +1,254 @@
-import { z } from 'zod';
-
 const numericPattern = /^(\d+)([\.,]\d{1,2})?$/;
+const emailPattern = /^(?:[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})$/i;
 
 const coerceNumberString = (value) => value.replace(/,/g, '').replace(/\s+/g, '');
 
-const basicsSchema = z
-  .object({
-    planName: z
-      .string()
-      .trim()
-      .refine((value) => value.length === 0 || value.length >= 3, {
-        message: 'Give your blueprint a nickname of at least 3 characters or leave it blank.',
-      }),
-    householdSize: z
-      .string({ required_error: 'Enter how many people rely on this plan.' })
-      .trim()
-      .min(1, 'Enter how many people rely on this plan.')
-      .refine((value) => /^\d+$/.test(value), {
-        message: 'Use whole numbers when counting people.',
-      })
-      .refine((value) => Number.parseInt(value, 10) >= 1 && Number.parseInt(value, 10) <= 12, {
-        message: 'Enter a household size between 1 and 12.',
-      }),
-    netIncome: z
-      .string({ required_error: 'Enter your combined take-home pay.' })
-      .trim()
-      .min(1, 'Enter your combined take-home pay.')
-      .transform((value) => coerceNumberString(value))
-      .refine((value) => numericPattern.test(value), {
-        message: 'Use numbers only, you can include up to 2 decimal places.',
-      })
-      .refine((value) => Number.parseFloat(value) > 0, {
-        message: 'Enter an amount greater than zero.',
-      }),
-    incomeFrequency: z
-      .string({ required_error: 'Choose how often you receive this income.' })
-      .trim()
-      .min(1, 'Choose how often you receive this income.'),
-    region: z
-      .string({ required_error: 'Pick the region you live in.' })
-      .trim()
-      .min(1, 'Pick the region you live in.'),
-    focus: z
-      .string({ required_error: 'Select the money focus guiding your blueprint.' })
-      .trim()
-      .min(1, 'Select the money focus guiding your blueprint.'),
-  })
-  .strict();
-
-const prioritiesSchema = z
-  .object({
-    goalAreas: z
-      .array(z.string().trim().min(1))
-      .min(1, 'Select at least one goal area to continue.'),
-    topGoal: z
-      .string({ required_error: 'Describe your number one outcome.' })
-      .trim()
-      .min(10, 'Describe your number one outcome using at least 10 characters.'),
-    savingsTarget: z
-      .string()
-      .trim()
-      .refine((value) => value.length === 0 || numericPattern.test(coerceNumberString(value)), {
-        message: 'Use numbers only, you can include up to 2 decimal places.',
-      })
-      .refine((value) => value.length === 0 || Number.parseFloat(coerceNumberString(value)) > 0, {
-        message: 'Enter an amount greater than zero or leave this blank.',
-      }),
-    timeline: z
-      .string({ required_error: 'Choose the timeline that fits your goal.' })
-      .trim()
-      .min(1, 'Choose the timeline that fits your goal.'),
-  })
-  .strict();
-
-const habitsSchema = z
-  .object({
-    budgetingStyle: z
-      .string({ required_error: 'Select the budgeting style that fits best.' })
-      .trim()
-      .min(1, 'Select the budgeting style that fits best.'),
-    checkInFrequency: z
-      .string({ required_error: 'Choose how often you review your money.' })
-      .trim()
-      .min(1, 'Choose how often you review your money.'),
-    emergencyFundMonths: z
-      .string({ required_error: 'Share how many months your emergency fund covers.' })
-      .trim()
-      .min(1, 'Share how many months your emergency fund covers.'),
-    confidenceLevel: z
-      .string({ required_error: 'Tell us how confident you feel about money right now.' })
-      .trim()
-      .min(1, 'Tell us how confident you feel about money right now.'),
-    additionalNotes: z
-      .string()
-      .trim()
-      .refine((value) => value.length <= 800, {
-        message: 'Keep notes under 800 characters.',
-      }),
-  })
-  .strict();
-
-const summarySchema = z
-  .object({
-    shareEmail: z
-      .string()
-      .trim()
-      .refine(
-        (value) => value.length === 0 || /^(?:[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})$/i.test(value),
-        {
-          message: 'Enter a valid email address or leave this blank.',
-        }
-      ),
-    consentToContact: z.boolean(),
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    if (value.consentToContact && value.shareEmail.length === 0) {
-      ctx.addIssue({
-        path: ['shareEmail'],
-        code: z.ZodIssueCode.custom,
-        message: 'Add your email so we can send the reminder.',
-      });
-    }
-  });
-
-export const moneyBlueprintStepSchemas = {
-  basics: basicsSchema,
-  priorities: prioritiesSchema,
-  habits: habitsSchema,
-  summary: summarySchema,
+const toTrimmedString = (value) => {
+  if (value == null) return '';
+  return String(value).trim();
 };
 
-export const moneyBlueprintSchema = z.object(moneyBlueprintStepSchemas).strict();
+const normaliseGoalAreas = (value) => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean);
+};
+
+const createIssue = (field, message) => ({ path: [field], code: 'custom', message });
+
+const buildResult = (errors, issues, data) => ({
+  result: {
+    success: Object.keys(errors).length === 0,
+    errors,
+    issues,
+  },
+  data,
+});
+
+const validateBasics = (values = {}) => {
+  const errors = {};
+  const issues = [];
+
+  const planName = toTrimmedString(values.planName ?? '');
+  const householdSizeRaw = toTrimmedString(values.householdSize ?? '');
+  const incomeRaw = toTrimmedString(values.netIncome ?? '');
+  const incomeFrequency = toTrimmedString(values.incomeFrequency ?? '');
+  const region = toTrimmedString(values.region ?? '');
+  const focus = toTrimmedString(values.focus ?? '');
+
+  if (planName && planName.length < 3) {
+    errors.planName = 'Give your blueprint a nickname of at least 3 characters or leave it blank.';
+    issues.push(createIssue('planName', errors.planName));
+  }
+
+  if (!householdSizeRaw) {
+    errors.householdSize = 'Enter how many people rely on this plan.';
+    issues.push(createIssue('householdSize', errors.householdSize));
+  } else if (!/^\d+$/.test(householdSizeRaw)) {
+    errors.householdSize = 'Use whole numbers when counting people.';
+    issues.push(createIssue('householdSize', errors.householdSize));
+  } else {
+    const householdSizeValue = Number.parseInt(householdSizeRaw, 10);
+    if (householdSizeValue < 1 || householdSizeValue > 12) {
+      errors.householdSize = 'Enter a household size between 1 and 12.';
+      issues.push(createIssue('householdSize', errors.householdSize));
+    }
+  }
+
+  let netIncome = incomeRaw;
+  if (!incomeRaw) {
+    errors.netIncome = 'Enter your combined take-home pay.';
+    issues.push(createIssue('netIncome', errors.netIncome));
+  } else {
+    const coerced = coerceNumberString(incomeRaw);
+    netIncome = coerced;
+    if (!numericPattern.test(coerced)) {
+      errors.netIncome = 'Use numbers only, you can include up to 2 decimal places.';
+      issues.push(createIssue('netIncome', errors.netIncome));
+    } else if (Number.parseFloat(coerced) <= 0) {
+      errors.netIncome = 'Enter an amount greater than zero.';
+      issues.push(createIssue('netIncome', errors.netIncome));
+    }
+  }
+
+  if (!incomeFrequency) {
+    errors.incomeFrequency = 'Choose how often you receive this income.';
+    issues.push(createIssue('incomeFrequency', errors.incomeFrequency));
+  }
+
+  if (!region) {
+    errors.region = 'Pick the region you live in.';
+    issues.push(createIssue('region', errors.region));
+  }
+
+  if (!focus) {
+    errors.focus = 'Select the money focus guiding your blueprint.';
+    issues.push(createIssue('focus', errors.focus));
+  }
+
+  return buildResult(errors, issues, {
+    planName,
+    householdSize: householdSizeRaw,
+    netIncome,
+    incomeFrequency,
+    region,
+    focus,
+  });
+};
+
+const validatePriorities = (values = {}) => {
+  const errors = {};
+  const issues = [];
+
+  const goalAreas = normaliseGoalAreas(values.goalAreas);
+  const topGoalRaw = values.topGoal;
+  const topGoal = toTrimmedString(values.topGoal ?? '');
+  const savingsTargetRaw = toTrimmedString(values.savingsTarget ?? '');
+  const timeline = toTrimmedString(values.timeline ?? '');
+
+  if (goalAreas.length === 0) {
+    errors.goalAreas = 'Select at least one goal area to continue.';
+    issues.push(createIssue('goalAreas', errors.goalAreas));
+  }
+
+  if (topGoalRaw === undefined) {
+    errors.topGoal = 'Describe your number one outcome.';
+    issues.push(createIssue('topGoal', errors.topGoal));
+  } else if (topGoal.length < 10) {
+    errors.topGoal = 'Describe your number one outcome using at least 10 characters.';
+    issues.push(createIssue('topGoal', errors.topGoal));
+  }
+
+  if (savingsTargetRaw) {
+    const coerced = coerceNumberString(savingsTargetRaw);
+    if (!numericPattern.test(coerced)) {
+      errors.savingsTarget = 'Use numbers only, you can include up to 2 decimal places.';
+      issues.push(createIssue('savingsTarget', errors.savingsTarget));
+    } else if (Number.parseFloat(coerced) <= 0) {
+      errors.savingsTarget = 'Enter an amount greater than zero or leave this blank.';
+      issues.push(createIssue('savingsTarget', errors.savingsTarget));
+    }
+  }
+
+  if (!timeline) {
+    errors.timeline = 'Choose the timeline that fits your goal.';
+    issues.push(createIssue('timeline', errors.timeline));
+  }
+
+  return buildResult(errors, issues, {
+    goalAreas,
+    topGoal,
+    savingsTarget: savingsTargetRaw,
+    timeline,
+  });
+};
+
+const validateHabits = (values = {}) => {
+  const errors = {};
+  const issues = [];
+
+  const budgetingStyle = toTrimmedString(values.budgetingStyle ?? '');
+  const checkInFrequency = toTrimmedString(values.checkInFrequency ?? '');
+  const emergencyFundMonths = toTrimmedString(values.emergencyFundMonths ?? '');
+  const confidenceLevel = toTrimmedString(values.confidenceLevel ?? '');
+  const additionalNotes = toTrimmedString(values.additionalNotes ?? '');
+
+  if (!budgetingStyle) {
+    errors.budgetingStyle = 'Select the budgeting style that fits best.';
+    issues.push(createIssue('budgetingStyle', errors.budgetingStyle));
+  }
+
+  if (!checkInFrequency) {
+    errors.checkInFrequency = 'Choose how often you review your money.';
+    issues.push(createIssue('checkInFrequency', errors.checkInFrequency));
+  }
+
+  if (!emergencyFundMonths) {
+    errors.emergencyFundMonths = 'Share how many months your emergency fund covers.';
+    issues.push(createIssue('emergencyFundMonths', errors.emergencyFundMonths));
+  }
+
+  if (!confidenceLevel) {
+    errors.confidenceLevel = 'Tell us how confident you feel about money right now.';
+    issues.push(createIssue('confidenceLevel', errors.confidenceLevel));
+  }
+
+  if (additionalNotes.length > 800) {
+    errors.additionalNotes = 'Keep notes under 800 characters.';
+    issues.push(createIssue('additionalNotes', errors.additionalNotes));
+  }
+
+  return buildResult(errors, issues, {
+    budgetingStyle,
+    checkInFrequency,
+    emergencyFundMonths,
+    confidenceLevel,
+    additionalNotes,
+  });
+};
+
+const validateSummary = (values = {}) => {
+  const errors = {};
+  const issues = [];
+
+  const shareEmail = toTrimmedString(values.shareEmail ?? '');
+  const consentToContact = Boolean(values.consentToContact);
+
+  if (shareEmail && !emailPattern.test(shareEmail)) {
+    errors.shareEmail = 'Enter a valid email address or leave this blank.';
+    issues.push(createIssue('shareEmail', errors.shareEmail));
+  }
+
+  if (consentToContact && shareEmail.length === 0) {
+    errors.shareEmail = 'Add your email so we can send the reminder.';
+    issues.push(createIssue('shareEmail', errors.shareEmail));
+  }
+
+  return buildResult(errors, issues, {
+    shareEmail,
+    consentToContact,
+  });
+};
+
+const moneyBlueprintStepValidators = {
+  basics: validateBasics,
+  priorities: validatePriorities,
+  habits: validateHabits,
+  summary: validateSummary,
+};
+
+export const moneyBlueprintStepSchemas = moneyBlueprintStepValidators;
+
+export const moneyBlueprintSchema = {
+  safeParse(input = {}) {
+    const data = input ?? {};
+    const parsed = {};
+    const issues = [];
+    let success = true;
+
+    for (const [stepId, validator] of Object.entries(moneyBlueprintStepValidators)) {
+      const { result, data: stepData } = validator(data[stepId] ?? {});
+      parsed[stepId] = stepData;
+      if (!result.success) {
+        success = false;
+        result.issues.forEach((issue) => {
+          issues.push({
+            path: [stepId, ...(issue.path ?? [])],
+            code: issue.code ?? 'custom',
+            message: issue.message,
+          });
+        });
+      }
+    }
+
+    if (success) {
+      return { success: true, data: parsed };
+    }
+
+    return { success: false, error: { issues } };
+  },
+};
 
 export const MONEY_BLUEPRINT_GUIDANCE = {
   basics: {
@@ -169,25 +286,13 @@ export const MONEY_BLUEPRINT_GUIDANCE = {
 };
 
 export function validateMoneyBlueprintStep(stepId, stepData) {
-  const schema = moneyBlueprintStepSchemas[stepId];
-  if (!schema) {
+  const validator = moneyBlueprintStepValidators[stepId];
+  if (!validator) {
     return { success: true, errors: {}, issues: [] };
   }
 
-  const result = schema.safeParse(stepData ?? {});
-  if (result.success) {
-    return { success: true, errors: {}, issues: [] };
-  }
-
-  const errors = {};
-  result.error.issues.forEach((issue) => {
-    const field = issue.path?.[0] ?? 'root';
-    if (!errors[field]) {
-      errors[field] = issue.message;
-    }
-  });
-
-  return { success: false, errors, issues: result.error.issues };
+  const { result } = validator(stepData ?? {});
+  return result;
 }
 
 export function validateMoneyBlueprint(data) {
