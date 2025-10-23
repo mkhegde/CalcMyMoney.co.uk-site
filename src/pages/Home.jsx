@@ -87,35 +87,11 @@ export default function Home() {
     setSearchQuery(e.target.value);
   };
 
-  const fallbackHubCards = useMemo(
-    () =>
-      DEFAULT_DIRECTORY_CATEGORIES.map((category) => {
-        const Icon = getCategoryIcon(category.slug) || Calculator;
-        return {
-          title: category.name,
-          icon: Icon,
-          link: `#${category.slug}`,
-          description: category.description,
-        };
-      }),
-    []
-  );
-
   const directoryCategories = useMemo(() => {
     if (!calcData.categories.length) return DEFAULT_DIRECTORY_CATEGORIES;
     const map = new Map(calcData.categories.map((category) => [category.slug, category]));
     return DEFAULT_DIRECTORY_CATEGORIES.map((category) => map.get(category.slug) || category);
   }, [calcData.categories]);
-
-  const hubCards = useMemo(() => {
-    if (!calcData.categories.length) return fallbackHubCards;
-    return directoryCategories.map((category) => ({
-      title: category.name,
-      icon: getCategoryIcon(category.slug) || Calculator,
-      link: `#${category.slug}`,
-      description: category.description,
-    }));
-  }, [calcData.categories, directoryCategories, fallbackHubCards]);
 
   useEffect(() => {
     const origin =
@@ -289,39 +265,6 @@ export default function Home() {
               )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Hub Cards Section */}
-      <div className="relative z-10 -mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {hubCards.map((card, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={(event) => {
-                event.preventDefault();
-                const slug = card.link.startsWith('#') ? card.link.slice(1) : card.link;
-                setPendingScrollSlug(slug);
-                setShowAllCalculators(true);
-              }}
-              className="group block w-full transform rounded-lg border border-card-muted bg-card p-6 text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-            >
-              <div className="flex items-center gap-4 mb-2">
-                <div className="rounded-full bg-pill p-3 text-pill-foreground">
-                  <card.icon className="h-6 w-6" />
-                </div>
-                <Heading
-                  as="h3"
-                  size="h3"
-                  className="text-foreground transition-colors group-hover:text-primary"
-                >
-                  {card.title}
-                </Heading>
-              </div>
-              <p className="body text-muted-foreground">{card.description}</p>
-            </button>
-          ))}
         </div>
       </div>
 
