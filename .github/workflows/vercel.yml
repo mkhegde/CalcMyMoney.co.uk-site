@@ -2,13 +2,7 @@ name: Vercel CI/CD
 
 on:
   push:
-    branches: [ main, preview ]   # main => prod, preview => preview
-  workflow_dispatch:              # manual run if you ever need it
-    inputs:
-      environment:
-        description: "preview or prod"
-        required: true
-        default: "preview"
+    branches: [ main, preview ]   # main → prod, preview → preview
 
 jobs:
   deploy:
@@ -29,13 +23,13 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install deps
+      - name: Install dependencies
         run: npm ci
 
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
 
-      # Decide environment: main => production, preview => preview
+      # Decide environment based on branch
       - name: Set environment
         id: env
         run: |
@@ -47,18 +41,23 @@ jobs:
             echo "VERCEL_ENV=preview" >> $GITHUB_OUTPUT
           fi
 
-      # Pull linking + env for the chosen environment
-      - name: vercel pull
+      # Pull correct environment config and link
+      - name: Vercel pull
         run: vercel pull --yes --environment=${{ steps.env.outputs.VERCEL_ENV }} --token="$VERCEL_TOKEN"
 
-      # Build on GitHub (not on Vercel)
-      - name: vercel build
-        run: vercel build
+      # Build matching environment (fix for mismatch)
+      - name: Vercel build
+        run: |
+          if [ "${{ steps.env.outputs.MODE }}" = "prod" ]; then
+            vercel build --prod
+          else
+            vercel build
+          fi
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       # Deploy prebuilt output
-      - name: Deploy
+      - name: Deploy to Vercel
         run: |
           if [ "${{ steps.env.outputs.MODE }}" = "prod" ]; then
             vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
