@@ -197,6 +197,33 @@ export function useMoneyBlueprintWizard(options = {}) {
     [status]
   );
 
+  const clearStepData = React.useCallback(
+    (stepId) => {
+      if (!stepId) return;
+
+      setData((prev) => {
+        const base = getInitialData();
+        const next = { ...(prev ?? {}) };
+        next[stepId] = cloneData(base?.[stepId] ?? {});
+        return next;
+      });
+
+      if (status === 'completed') {
+        setStatus('collecting');
+        setCompletedAt(null);
+      }
+    },
+    [getInitialData, status]
+  );
+
+  const clearAllData = React.useCallback(() => {
+    setData(getInitialData());
+    if (status === 'completed') {
+      setStatus('collecting');
+      setCompletedAt(null);
+    }
+  }, [getInitialData, status]);
+
   const goToStep = React.useCallback(
     (index) => {
       if (typeof index !== 'number' || Number.isNaN(index)) return;
@@ -261,6 +288,8 @@ export function useMoneyBlueprintWizard(options = {}) {
     completedAt,
     reportId,
     updateStepData,
+    clearStepData,
+    clearAllData,
     goToStep,
     nextStep,
     previousStep,
