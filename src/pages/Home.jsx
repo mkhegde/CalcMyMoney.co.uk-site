@@ -82,35 +82,11 @@ export default function Home() {
     setSearchQuery(e.target.value);
   };
 
-  const fallbackHubCards = useMemo(
-    () =>
-      DEFAULT_DIRECTORY_CATEGORIES.map((category) => {
-        const Icon = getCategoryIcon(category.slug) || Calculator;
-        return {
-          title: category.name,
-          icon: Icon,
-          link: `#${category.slug}`,
-          description: category.description,
-        };
-      }),
-    []
-  );
-
   const directoryCategories = useMemo(() => {
     if (!calcData.categories.length) return DEFAULT_DIRECTORY_CATEGORIES;
     const map = new Map(calcData.categories.map((category) => [category.slug, category]));
     return DEFAULT_DIRECTORY_CATEGORIES.map((category) => map.get(category.slug) || category);
   }, [calcData.categories]);
-
-  const hubCards = useMemo(() => {
-    if (!calcData.categories.length) return fallbackHubCards;
-    return directoryCategories.map((category) => ({
-      title: category.name,
-      icon: getCategoryIcon(category.slug) || Calculator,
-      link: `#${category.slug}`,
-      description: category.description,
-    }));
-  }, [calcData.categories, directoryCategories, fallbackHubCards]);
 
   useEffect(() => {
     const origin =
@@ -251,33 +227,137 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hub Cards Section */}
-      <div className="relative z-10 -mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {hubCards.map((card, index) => (
-            <div
-              key={index}
-              className="group block w-full transform rounded-lg border border-card-muted bg-card p-6 text-left shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl"
+      {/* Complete Calculator Directory */}
+      <div className="bg-neutral-soft py-16" id="calculator-directory">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <Heading as="h2" size="h2" weight="bold" underline className="text-foreground mb-4">
+              Complete Calculator Directory
+            </Heading>
+            <p className="mb-6 lead text-muted-foreground">
+              Browse all {stats.total} financial calculators organized by category
+            </p>
+            <button
+              onClick={() => setShowAllCalculators(!showAllCalculators)}
+              className="font-medium text-primary transition-colors hover:text-primary/80"
             >
-              <div className="flex items-center gap-4 mb-2">
-                <div className="rounded-full bg-pill p-3 text-pill-foreground">
-                  <card.icon className="h-6 w-6" />
-                </div>
-                <Heading
-                  as="h3"
-                  size="h3"
-                  className="text-foreground transition-colors group-hover:text-primary"
-                >
-                  {card.title}
-                </Heading>
+              {showAllCalculators ? 'Hide' : 'Show'} All Calculators
+            </button>
+          </div>
+
+          {/* Calculator Categories */}
+          {showAllCalculators ? (
+            categoriesLoaded ? (
+              <div className="space-y-12">
+                {directoryCategories.map((category) => {
+                  const Icon = getCategoryIcon(category.slug);
+                  return (
+                    <div key={category.slug} id={category.slug} className="scroll-mt-20">
+                    {/* Category Header */}
+                    <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
+                      <Icon className="h-8 w-8 text-primary" />
+                      <div>
+                        <Heading as="h3" size="h3" weight="bold" className="text-foreground">
+                          {category.name}
+                        </Heading>
+                        <p className="body text-muted-foreground">{category.description}</p>
+                      </div>
+                    </div>
+
+                    {/* Sub-categories and Calculators */}
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {category.subCategories.map((subCategory) => (
+                        <div key={subCategory.name} className="space-y-3">
+                          <Heading
+                            as="h4"
+                            size="h3"
+                            className="border-l-4 border-primary pl-3 text-foreground"
+                          >
+                            {subCategory.name}
+                          </Heading>
+                          <div className="space-y-2 pl-3">
+                            {subCategory.calculators
+                              .filter((calc) => showAllCalculators || calc.status === 'active')
+                              .map((calc, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between group"
+                                >
+                                  {calc.status === 'active' ? (
+                                    <Link
+                                      to={calc.url}
+                                      onMouseEnter={() => calc.page && prefetchPage(calc.page)}
+                                      onFocus={() => calc.page && prefetchPage(calc.page)}
+                                      className="flex-1 body font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+                                    >
+                                      {calc.name}
+                                    </Link>
+                                  ) : (
+                                    <span className="flex-1 body text-muted-foreground/60">
+                                      {calc.name}
+                                    </span>
+                                  )}
+                                  {(calc.status === 'planned' || calc.status === 'pending') && (
+                                    <Badge variant="secondary" className="caption">
+                                      Coming Soon
+                                    </Badge>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
               </div>
-              <p className="body text-muted-foreground">{card.description}</p>
+            ) : (
+              <div className="space-y-12">
+                {Array.from({ length: 4 }).map((_, categoryIndex) => (
+                  <div
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={`category-skeleton-${categoryIndex}`}
+                    className="scroll-mt-20"
+                  >
+                    <div className="mb-6 flex items-center gap-4 border-b-2 border-card-muted pb-3">
+                      <div className="h-8 w-8 rounded-full bg-muted-foreground/20 animate-pulse" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-40 rounded bg-muted-foreground/20 animate-pulse" />
+                        <div className="h-3 w-64 rounded bg-muted-foreground/10 animate-pulse" />
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {Array.from({ length: 3 }).map((_, subIndex) => (
+                        <div
+                          // eslint-disable-next-line react/no-array-index-key
+                          key={`subcategory-skeleton-${categoryIndex}-${subIndex}`}
+                          className="space-y-3"
+                        >
+                          <div className="h-4 w-32 rounded bg-muted-foreground/20 animate-pulse" />
+                          <div className="space-y-2 pl-3">
+                            {Array.from({ length: 4 }).map((_, calcIndex) => (
+                              <div
+                                // eslint-disable-next-line react/no-array-index-key
+                                key={`calc-skeleton-${categoryIndex}-${subIndex}-${calcIndex}`}
+                                className="h-3 w-3/4 rounded bg-muted-foreground/15 animate-pulse"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : (
+            <div className="text-center text-muted-foreground">
+              Expand the directory to explore every calculator we offer.
             </div>
-          ))}
+          )}
         </div>
       </div>
-
-      
     </div>
   );
 }
