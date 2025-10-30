@@ -87,12 +87,4 @@ const QuestionnaireForm = ({ formData, handleChange, handleSubmit, isLoading }) 
   );
 };
 
-export default QuestionnaireForm;```
-
----
-
-After you update this file, your form will look much cleaner and will be a great foundation for you to add the rest of the questionnaire fields.
-
-Once you have updated the file and are happy with how the form looks, we can move on to the final and most exciting step: **Styling the Report Display.**
-
-Let me know when you're ready.
+export default QuestionnaireForm;
