@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import QuestionnaireForm from './QuestionnaireForm';
 import ReportDisplay from './ReportDisplay'; // We will create this next
 
-const FinancialBlueprintPage = () => {
+const MyMoneyBlueprint = () => {
   // State to hold all the user's answers
   const [formData, setFormData] = useState({
     grossAnnualIncome: 65000,
