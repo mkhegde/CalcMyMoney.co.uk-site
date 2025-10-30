@@ -15,7 +15,7 @@ const paths = {
   debt: '/debt-calculator',
   financialStats: '/uk-financial-stats',
   taxCalculator: '/tax-calculator-uk',
-  myMoneyBlueprint: '/my-money-blueprint', // <-- ADD THIS for financial blueprint
+  myMoneyBlueprint: '/my-money-blueprint',
 };
 
 export default paths;
