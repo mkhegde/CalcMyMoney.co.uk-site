@@ -6,6 +6,7 @@ import { createPageUrl } from '../utils/createPageUrl';
 import { calculatorCategories } from '../components/data/calculatorConfig.js';
 import { ukCities, createSlug } from '../components/data/seo-data';
 import NotFound from './NotFound';
+import paths from '../paths'; // Ensure paths are imported
 
 // --- STATIC PAGES (lazy-loaded info pages) ---
 const Home = lazy(() => import('./Home.jsx'));
@@ -31,7 +32,8 @@ const Methodology = lazy(() => import('./Methodology.jsx'));
 const About = lazy(() => import('./About.jsx'));
 const SelfAssessmentGuide = lazy(() => import('./SelfAssessmentGuide.jsx'));
 const LinkToUs = lazy(() => import('./LinkToUs.jsx'));
-const MyMoneyBlueprint = lazy(() => import('./MyMoneyBlueprint.jsx'));
+// Correctly import your new component
+const MyMoneyBlueprint = lazy(() => import('./financial-blueprint/MyMoneyBlueprint.jsx'));
 
 // Legacy redirects (old path -> new path)
 const LEGACY_REDIRECTS = {
@@ -232,6 +234,9 @@ const _slugToPageName = (() => {
     });
   }
 
+  // Manually register our new page slug
+  _registerSlug(map, paths.myMoneyBlueprint, 'MyMoneyBlueprint');
+
   return map;
 })();
 
@@ -371,7 +376,7 @@ function PagesContent() {
           <Route path="/present-value-calculator" element={<LazyPresentValueCalculator />} />
           <Route path="/price-per-unit-calculator" element={<LazyPricePerUnitCalculator />} />
           <Route path="/pro-rata-salary-calculator" element={<LazyProRataSalaryCalculator />} />
-          <Route path="/property-flipping-calculator" element={<LazyPropertyFlippingCalculator />} />
+          <Route path="/property-flipping-calculator" element={<LazyPropertyFppingCalculator />} />
           <Route path="/property-tax-calculator" element={<LazyPropertyTaxCalculator />} />
           <Route path="/rent-to-buy-calculator" element={<LazyRentToBuyCalculator />} />
           <Route path="/rent-vs-buy-calculator" element={<LazyRentVsBuyCalculator />} />
@@ -437,7 +442,9 @@ function PagesContent() {
           <Route path="/about" element={<About />} />
           <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
           <Route path="/link-to-us" element={<LinkToUs />} />
-          <Route path="/my-money-blueprint" element={<MyMoneyBlueprint />} />
+          
+          {/* CORRECTLY ADDED ROUTE FOR YOUR NEW PAGE */}
+          <Route path={paths.myMoneyBlueprint} element={<MyMoneyBlueprint />} />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
