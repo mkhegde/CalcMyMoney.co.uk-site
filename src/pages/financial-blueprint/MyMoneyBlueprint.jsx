@@ -1,4 +1,4 @@
-// src/pages/financial-blueprint/FinancialBlueprintPage.jsx
+// src/pages/financial-blueprint/MyMoneyBlueprint.jsx
 
 import React, { useState } from 'react';
 import QuestionnaireForm from './QuestionnaireForm';
@@ -11,8 +11,8 @@ const MyMoneyBlueprint = () => {
     monthlyEssentialExpenses: 2000,
     // We use a nested object for liabilities, just like in our prompt
     liabilities: {
-        creditCardDebt: 2000
-    }
+      creditCardDebt: 2000,
+    },
     // You can add all other fields from the questionnaire here
   });
 
@@ -29,19 +29,19 @@ const MyMoneyBlueprint = () => {
     
     // This handles nested objects (like 'liabilities.creditCardDebt')
     if (name.includes('.')) {
-        const [outerKey, innerKey] = name.split('.');
-        setFormData(prevData => ({
-            ...prevData,
-            [outerKey]: {
-                ...prevData[outerKey],
-                [innerKey]: value
-            }
-        }));
+      const [outerKey, innerKey] = name.split('.');
+      setFormData((prevData) => ({
+        ...prevData,
+        [outerKey]: {
+          ...prevData[outerKey],
+          [innerKey]: value,
+        },
+      }));
     } else {
-        setFormData({
-            ...formData,
-            [name]: value,
-        });
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
     }
   };
 
@@ -95,4 +95,4 @@ const MyMoneyBlueprint = () => {
   );
 };
 
-export default FinancialBlueprintPage;
+export default MyMoneyBlueprint;
