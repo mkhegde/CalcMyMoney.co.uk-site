@@ -5,6 +5,7 @@ import { pageSeo } from '../components/data/pageSeo';
 import { createPageUrl } from '../utils/createPageUrl';
 import { calculatorCategories } from '../components/data/calculatorConfig.js';
 import { ukCities, createSlug } from '../components/data/seo-data';
+import paths from '../paths'; // <-- ADD THIS IMPORT for financial blueprint
 import NotFound from './NotFound';
 
 // --- STATIC PAGES (lazy-loaded info pages) ---
