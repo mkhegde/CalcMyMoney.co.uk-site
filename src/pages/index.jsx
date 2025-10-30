@@ -32,7 +32,7 @@ const Methodology = lazy(() => import('./Methodology.jsx'));
 const About = lazy(() => import('./About.jsx'));
 const SelfAssessmentGuide = lazy(() => import('./SelfAssessmentGuide.jsx'));
 const LinkToUs = lazy(() => import('./LinkToUs.jsx'));
-const MyMoneyBlueprint = lazy(() => import('./MyMoneyBlueprint.jsx'));
+const MyMoneyBlueprint = lazy(() => import('./financial-blueprint/MyMoneyBlueprint.jsx'));
 
 // Legacy redirects (old path -> new path)
 const LEGACY_REDIRECTS = {
@@ -439,7 +439,7 @@ function PagesContent() {
           <Route path="/self-assessment-guide" element={<SelfAssessmentGuide />} />
           <Route path="/link-to-us" element={<LinkToUs />} />
           <Route path="/my-money-blueprint" element={<MyMoneyBlueprint />} />
-
+          <Route path={paths.myMoneyBlueprint} element={<Layout currentPageName="My Money Blueprint"><MyMoneyBlueprint />
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
