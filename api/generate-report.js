@@ -1,6 +1,5 @@
 // Filename: /api/generate-report.js
-// ** FINAL ATTEMPT: Using specific 'gemini-1.0-pro' model on the 'v1beta' endpoint. **
-// ** Also corrected the JSON response parsing logic. **
+// ** FINAL VERSION: Switched to use the OpenAI API **
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -16,52 +15,49 @@ export default async function handler(req, res) {
     }
 
     const prompt = buildLLMPrompt(userData);
-    const apiKey = process.env.LLM_API_KEY;
+    // --- CHANGE 1: Using the new environment variable for the OpenAI key ---
+    const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
-      console.error('LLM_API_KEY is not set in environment variables.');
+      console.error('OPENAI_API_KEY is not set in environment variables.');
       return res.status(500).json({ error: 'Server configuration error.' });
     }
 
-    // --- THIS IS THE FINAL CHANGE ---
-    // Using the specific model name 'gemini-1.0-pro' on the 'v1beta' endpoint.
-    const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`;
+    // --- CHANGE 2: The API endpoint is now OpenAI's chat completions URL ---
+    const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
 
+    // --- CHANGE 3: The request body structure is specific to OpenAI ---
     const requestBody = {
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
+      // Using gpt-3.5-turbo as it's fast, reliable, and cost-effective.
+      model: "gpt-3.5-turbo", 
+      messages: [{ 
+        role: "user", 
+        content: prompt 
       }],
-      // The 'generationConfig' is supported by v1beta, so we can add it back
-      // to ensure the response is always JSON.
-      generationConfig: {
-        responseMimeType: "application/json",
-      }
+      // This tells newer OpenAI models to guarantee the output is valid JSON
+      response_format: { "type": "json_object" }, 
     };
 
     const response = await fetch(apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // --- CHANGE 4: Authentication uses a "Bearer" token ---
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('Google AI API Error Body:', errorBody);
-      throw new Error(`Google AI API request failed with status ${response.status}`);
+      console.error('OpenAI API Error Body:', errorBody);
+      throw new Error(`OpenAI API request failed with status ${response.status}`);
     }
 
     const llmResult = await response.json();
-
-    // --- CORRECTED RESPONSE PARSING ---
-    if (!llmResult.candidates || !llmResult.candidates[0] || !llmResult.candidates[0].content) {
-      console.error('Unexpected response structure from Google AI:', llmResult);
-      throw new Error('Invalid response structure from AI.');
-    }
-    const reportJsonText = llmResult.candidates[0].content.parts[0].text;
+    
+    // --- CHANGE 5: The path to the response text is different for OpenAI ---
+    const reportJsonText = llmResult.choices[0].message.content;
     const reportObject = JSON.parse(reportJsonText);
 
     return res.status(200).json(reportObject);
@@ -73,7 +69,7 @@ export default async function handler(req, res) {
 }
 
 function buildLLMPrompt(userData) {
-  // This is the full, correct prompt.
+  // This prompt works perfectly for OpenAI as well. No changes needed here.
   return `
     **Role:** You are an expert financial analyst AI. Your task is to create a comprehensive, personalized, and encouraging financial health report based on the user data provided.
 
