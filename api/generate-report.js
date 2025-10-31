@@ -1,5 +1,6 @@
 // Filename: /api/generate-report.js
-// ** FINAL FIX: Corrected a syntax error (missing backtick) in the prompt string. **
+// ** FINAL ATTEMPT: Using specific 'gemini-1.0-pro' model on the 'v1beta' endpoint. **
+// ** Also corrected the JSON response parsing logic. **
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -22,8 +23,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Server configuration error.' });
     }
 
-    // Using the stable v1 endpoint for the gemini-pro model
-    const apiEndpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+    // --- THIS IS THE FINAL CHANGE ---
+    // Using the specific model name 'gemini-1.0-pro' on the 'v1beta' endpoint.
+    const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`;
 
     const requestBody = {
       contents: [{
@@ -31,6 +33,11 @@ export default async function handler(req, res) {
           text: prompt
         }]
       }],
+      // The 'generationConfig' is supported by v1beta, so we can add it back
+      // to ensure the response is always JSON.
+      generationConfig: {
+        responseMimeType: "application/json",
+      }
     };
 
     const response = await fetch(apiEndpoint, {
@@ -49,12 +56,12 @@ export default async function handler(req, res) {
 
     const llmResult = await response.json();
 
-    if (!llmResult.candidates || !llmResult.candidates.content) {
+    // --- CORRECTED RESPONSE PARSING ---
+    if (!llmResult.candidates || !llmResult.candidates[0] || !llmResult.candidates[0].content) {
       console.error('Unexpected response structure from Google AI:', llmResult);
       throw new Error('Invalid response structure from AI.');
     }
-
-    const reportJsonText = llmResult.candidates.content.parts.text;
+    const reportJsonText = llmResult.candidates[0].content.parts[0].text;
     const reportObject = JSON.parse(reportJsonText);
 
     return res.status(200).json(reportObject);
@@ -66,7 +73,7 @@ export default async function handler(req, res) {
 }
 
 function buildLLMPrompt(userData) {
-  // This is the full, correct prompt with the closing backtick.
+  // This is the full, correct prompt.
   return `
     **Role:** You are an expert financial analyst AI. Your task is to create a comprehensive, personalized, and encouraging financial health report based on the user data provided.
 
@@ -81,5 +88,5 @@ function buildLLMPrompt(userData) {
 
     **User Data:**
     ${JSON.stringify(userData, null, 2)}
-  `; // <-- The missing backtick is now here.
+  `;
 }
