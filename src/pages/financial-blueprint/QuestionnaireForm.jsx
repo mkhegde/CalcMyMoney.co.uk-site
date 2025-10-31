@@ -33,7 +33,7 @@ const QuestionnaireForm = ({ formData, handleChange, handleSubmit, isLoading }) 
             </div>
           </div>
 
-          {/* Monthly Essential Expenses Field */}
+          {/* Monthly Essential Expenses Field  */}
           <div>
             <label htmlFor="monthlyEssentialExpenses" className="block text-sm font-medium text-gray-700">
               Total Monthly Essential Expenses (£)
