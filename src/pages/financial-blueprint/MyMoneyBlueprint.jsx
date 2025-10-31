@@ -1,72 +1,53 @@
 // src/pages/financial-blueprint/MyMoneyBlueprint.jsx
 
-import React, { useState } from 'react';
+import React, auseState } from 'react';
 import QuestionnaireForm from './QuestionnaireForm';
-import ReportDisplay from './ReportDisplay'; // We will create this next
+import ReportDisplay from './ReportDisplay';
 
 const MyMoneyBlueprint = () => {
-  // State to hold all the user's answers
   const [formData, setFormData] = useState({
     grossAnnualIncome: 65000,
     monthlyEssentialExpenses: 2000,
-    // We use a nested object for liabilities, just like in our prompt
-    liabilities: {
-      creditCardDebt: 2000,
-    },
-    // You can add all other fields from the questionnaire here
+    liabilities: { creditCardDebt: 2000 }
   });
 
-  // State to hold the final report from the API
   const [reportData, setReportData] = useState(null);
-  // State to manage the loading spinner/message
   const [isLoading, setIsLoading] = useState(false);
-  // State to hold any potential errors
   const [error, setError] = useState(null);
 
-  // A single function to handle changes for ALL input fields
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // This handles nested objects (like 'liabilities.creditCardDebt')
     if (name.includes('.')) {
-      const [outerKey, innerKey] = name.split('.');
-      setFormData((prevData) => ({
-        ...prevData,
-        [outerKey]: {
-          ...prevData[outerKey],
-          [innerKey]: value,
-        },
-      }));
+        const [outerKey, innerKey] = name.split('.');
+        setFormData(prevData => ({ ...prevData, [outerKey]: { ...prevData[outerKey], [innerKey]: value }}));
     } else {
-      setFormData((prevData) => ({
-        ...prevData,
-        [name]: value,
-      }));
+        setFormData({ ...formData, [name]: value });
     }
   };
 
-  // Function to call our Vercel API
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent the browser from reloading the page
+    e.preventDefault();
     setIsLoading(true);
     setError(null);
     setReportData(null);
 
     try {
-      const response = await fetch('/api/generateReport', {
+      // --- THIS IS THE FIX ---
+      // Changed the URL to kebab-case to match the filename 'generate-report.js'
+      const response = await fetch('/api/generate-report', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        throw new Error('Something went wrong. Please try again.');
+        // Try to get a more detailed error from the API response
+        const errorData = await response.json().catch(() => ({ message: 'The analysis could not be generated. Please try again.' }));
+        throw new Error(errorData.error || 'Something went wrong. Please try again.');
       }
 
       const data = await response.json();
-      setReportData(data); // Save the report data to state
+      setReportData(data);
 
     } catch (err) {
       setError(err.message);
@@ -77,7 +58,6 @@ const MyMoneyBlueprint = () => {
 
   return (
     <div>
-      {/* If we don't have a report yet, show the form. Otherwise, show the report. */}
       {!reportData ? (
         <QuestionnaireForm
           formData={formData}
@@ -88,9 +68,7 @@ const MyMoneyBlueprint = () => {
       ) : (
         <ReportDisplay reportData={reportData} />
       )}
-
-      {/* Show an error message if something went wrong */}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="text-center text-red-600 mt-4">{error}</p>}
     </div>
   );
 };
