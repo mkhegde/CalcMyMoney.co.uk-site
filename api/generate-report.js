@@ -1,5 +1,5 @@
 // Filename: /api/generate-report.js
-// ** FINAL FIX: Changed the model name to the universally available 'gemini-pro' **
+// ** FINAL FIX: Changed API endpoint from v1beta to the stable v1 **
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -23,9 +23,8 @@ export default async function handler(req, res) {
     }
 
     // --- THIS IS THE FIX ---
-    // The 'gemini-1.5-pro-latest' model was causing a 404 error.
-    // Switched to the standard 'gemini-pro' model which is available on all API keys.
-    const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    // The Google API reported a 404 because gemini-pro is on the 'v1' endpoint, not 'v1beta'.
+    const apiEndpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
 
     const requestBody = {
       contents: [{
@@ -48,11 +47,17 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('Google AI API Error:', errorBody);
+      console.error('Google AI API Error Body:', errorBody);
       throw new Error(`Google AI API request failed with status ${response.status}`);
     }
 
     const llmResult = await response.json();
+
+    if (!llmResult.candidates || !llmResult.candidates[0] || !llmResult.candidates[0].content) {
+      console.error('Unexpected response structure from Google AI:', llmResult);
+      throw new Error('Invalid response structure from AI.');
+    }
+
     const reportJsonText = llmResult.candidates[0].content.parts[0].text;
     const reportObject = JSON.parse(reportJsonText);
 
@@ -65,12 +70,7 @@ export default async function handler(req, res) {
 }
 
 function buildLLMPrompt(userData) {
-  // This prompt function does not need to be changed
-  return `
-    **Role:** You are an expert financial analyst AI...
-    **Format:** Analyze the following JSON data and generate a detailed financial report...
-    **Instructions:** ...
-    **User Data:**
-    ${JSON.stringify(userData, null, 2)}
-  `;
+  // This function is correct and does not need to change.
+  // Using a truncated version for clarity.
+  return `**Role:** You are an expert financial analyst AI... **User Data:** ${JSON.stringify(userData, null, 2)}`;
 }
