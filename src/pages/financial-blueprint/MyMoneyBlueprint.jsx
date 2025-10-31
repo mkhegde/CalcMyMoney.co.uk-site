@@ -1,6 +1,6 @@
 // src/pages/financial-blueprint/MyMoneyBlueprint.jsx
 
-import React, auseState } from 'react';
+import React, { useState } from 'react'; // <-- THIS LINE IS NOW FIXED
 import QuestionnaireForm from './QuestionnaireForm';
 import ReportDisplay from './ReportDisplay';
 
@@ -32,8 +32,7 @@ const MyMoneyBlueprint = () => {
     setReportData(null);
 
     try {
-      // --- THIS IS THE FIX ---
-      // Changed the URL to kebab-case to match the filename 'generate-report.js'
+      // The fetch URL is correctly set to kebab-case
       const response = await fetch('/api/generate-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -41,9 +40,9 @@ const MyMoneyBlueprint = () => {
       });
 
       if (!response.ok) {
-        // Try to get a more detailed error from the API response
-        const errorData = await response.json().catch(() => ({ message: 'The analysis could not be generated. Please try again.' }));
-        throw new Error(errorData.error || 'Something went wrong. Please try again.');
+        // Try to get a more detailed error message from the API's response body
+        const errorData = await response.json().catch(() => ({})); // Use empty object as fallback
+        throw new Error(errorData.error || 'Something went wrong. Please check the server logs.');
       }
 
       const data = await response.json();
@@ -68,7 +67,7 @@ const MyMoneyBlueprint = () => {
       ) : (
         <ReportDisplay reportData={reportData} />
       )}
-      {error && <p className="text-center text-red-600 mt-4">{error}</p>}
+      {error && <p className="text-center text-red-600 mt-4 p-4">{error}</p>}
     </div>
   );
 };
