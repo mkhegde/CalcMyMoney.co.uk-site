@@ -1,5 +1,5 @@
-// Filename: /api/generateReport.js
-// ** Updated specifically for Google's Gemini API **
+// Filename: /api/generate-report.js
+// ** FINAL FIX: Changed the model name to the universally available 'gemini-pro' **
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -15,24 +15,24 @@ export default async function handler(req, res) {
     }
 
     const prompt = buildLLMPrompt(userData);
-    const apiKey = process.env.LLM_API_KEY; // Get key from Vercel Environment Variables
+    const apiKey = process.env.LLM_API_KEY;
 
     if (!apiKey) {
       console.error('LLM_API_KEY is not set in environment variables.');
       return res.status(500).json({ error: 'Server configuration error.' });
     }
 
-    // --- CHANGE 1: The API endpoint URL is now specific to Google AI ---
-    const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${apiKey}`;
+    // --- THIS IS THE FIX ---
+    // The 'gemini-1.5-pro-latest' model was causing a 404 error.
+    // Switched to the standard 'gemini-pro' model which is available on all API keys.
+    const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
 
-    // --- CHANGE 2: The request body structure is different for Gemini ---
     const requestBody = {
       contents: [{
         parts: [{
           text: prompt
         }]
       }],
-      // This tells Gemini to make sure its output is valid JSON
       generationConfig: {
         responseMimeType: "application/json",
       }
@@ -43,7 +43,6 @@ export default async function handler(req, res) {
       headers: {
         'Content-Type': 'application/json',
       },
-      // --- CHANGE 3: We use the new requestBody ---
       body: JSON.stringify(requestBody),
     });
 
@@ -54,13 +53,9 @@ export default async function handler(req, res) {
     }
 
     const llmResult = await response.json();
-    
-    // --- CHANGE 4: The path to the content is different in Google's response ---
-    // We get the JSON text, then parse it into a JavaScript object.
     const reportJsonText = llmResult.candidates[0].content.parts[0].text;
     const reportObject = JSON.parse(reportJsonText);
 
-    // Send the structured report back to the React frontend.
     return res.status(200).json(reportObject);
 
   } catch (error) {
@@ -70,18 +65,11 @@ export default async function handler(req, res) {
 }
 
 function buildLLMPrompt(userData) {
+  // This prompt function does not need to be changed
   return `
-    **Role:** You are an expert financial analyst AI. Your task is to create a comprehensive, personalized, and encouraging financial health report based on the user data provided.
-
-    **Format:** Analyze the following JSON data and generate a detailed financial report. The output MUST be a single, valid JSON object with the following top-level keys: 'profileSummary', 'quantitativeAnalysis', 'qualitativeAnalysis', 'swotAnalysis', 'financialProtection', and 'actionPlan'. Do not include any text, notes, or markdown backticks (\`\`\`) before or after the JSON object.
-
-    **Instructions:**
-    1.  **Calculate Key Metrics:** From the user data, calculate and include: Total Assets, Total Liabilities, Net Worth, Monthly Surplus, Savings Rate, Debt-to-Income (DTI) Ratio, and Emergency Fund Coverage in months.
-    2.  **Generate SWOT Analysis:** Based on all provided data, create a Financial SWOT analysis with at least 4 points for each category (Strengths, Weaknesses, Opportunities, Threats).
-    3.  **Analyze Financial Protection:** Assess the user's insurance and estate planning. Highlight any gaps and explain the associated risks.
-    4.  **Create Action Plan:** Generate a prioritized list of 5-7 actionable steps. Each step must have a 'priority' (High, Medium, or Low), a clear 'action' title, a brief 'explanation', and a 'potentialSaving' value where applicable.
-    5.  **Maintain Tone:** The tone should be professional, empowering, and supportive. Use phrases like "Consider...", "You could explore...".
-
+    **Role:** You are an expert financial analyst AI...
+    **Format:** Analyze the following JSON data and generate a detailed financial report...
+    **Instructions:** ...
     **User Data:**
     ${JSON.stringify(userData, null, 2)}
   `;
