@@ -85,11 +85,11 @@ const SurveyPage = () => {
       }
       const data = await response.json();
       setReportData(data);
-    } catch (err) => {
+    // --- THE FIX IS HERE ---
+    // The incorrect '=>' has been removed from the catch block.
+    } catch (err) {
       setError(err.message);
     } finally {
-      // --- THE FIX IS HERE ---
-      // The extra period has been removed.
       setIsLoading(false);
     }
   };
