@@ -7,14 +7,13 @@ import Step2_Income from './Step2_Income';
 import Step3_Expenses from './Step3_Expenses';
 import Step4_Assets from './Step4_Assets';
 import Step5_Liabilities from './Step5_Liabilities';
-import Step6_Protection from './Step6_Protection'; // <-- 1. IMPORT Step 6
+import Step6_Protection from './Step6_Protection';
 
 const TOTAL_STEPS = 6;
 
 const SurveyPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
 
-  // --- 2. UPDATE state with the final fields ---
   const [formData, setFormData] = useState({
     // Step 1
     blueprintFor: 'individual',
@@ -89,18 +88,26 @@ const SurveyPage = () => {
       }
       const data = await response.json();
       setReportData(data);
-    } catch (err) => {
+    // --- THE FIX IS HERE ---
+    // The invalid '=>' has been removed.
+    } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const completionPercentage = ((currentStep) / TOTAL_STEPS) * 100;
+  // Correctly calculate completion percentage for display
+  const completionPercentage = (currentStep / TOTAL_STEPS) * 100;
 
   const renderContent = () => {
     if (isLoading) {
-      return <div className="text-center p-8">Generating your report...</div>;
+      return (
+        <div className="text-center p-12">
+            <h2 className="text-2xl font-semibold">Generating Your Blueprint...</h2>
+            <p className="mt-2 text-gray-600">Our AI is analyzing your data. This may take a moment.</p>
+        </div>
+      );
     }
     if (error) {
       return <div className="text-center p-8 text-red-600">{error}</div>;
@@ -127,11 +134,10 @@ const SurveyPage = () => {
         stepContent = <Step5_Liabilities onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
         break;
       case 6:
-        // --- 3. USE the new Step 6 component ---
         stepContent = <Step6_Protection onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
         break;
       default:
-        // This case should no longer be reached
+        // This case should not be reached with the current logic
         stepContent = <div><p>Invalid Step</p></div>;
     }
 
