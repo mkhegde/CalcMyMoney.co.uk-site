@@ -2,10 +2,10 @@
 import React from 'react';
 
 const Step1_Profile = ({ onNext, formData, handleChange }) => {
-  // --- UPDATED STYLES ---
-  // Slightly darker border and a subtle background color on the input
-  const inputStyles = "mt-1 block w-full rounded-md border-gray-400 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2";
-  const selectStyles = "mt-1 block w-full rounded-md border-gray-400 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 pl-3 pr-10";
+  // --- FINAL STYLES ---
+  // Inputs now have a white background for high contrast
+  const inputStyles = "mt-1 block w-full rounded-md border-gray-400 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2";
+  const selectStyles = "mt-1 block w-full rounded-md border-gray-400 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 pl-3 pr-10";
 
   return (
     <div className="space-y-8">
@@ -14,7 +14,7 @@ const Step1_Profile = ({ onNext, formData, handleChange }) => {
         <p className="mt-2 text-gray-600">Let's start with some basic details to tailor your report.</p>
       </div>
 
-      {/* --- ADDED A BACKGROUND AND PADDING TO THE FORM AREA --- */}
+      {/* The form area has a light grey background */}
       <div className="space-y-6 rounded-lg bg-gray-50 p-6 border border-gray-200">
         {/* Blueprint For: Individual or Family */}
         <div>
