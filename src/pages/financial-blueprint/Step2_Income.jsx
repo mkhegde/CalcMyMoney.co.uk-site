@@ -1,7 +1,8 @@
 // src/pages/financial-blueprint/Step2_Income.jsx
 import React from 'react';
 
-const Step2_Income = ({ onBack, onNext, formData, handleChange }) Gt; {
+// --- THIS LINE IS NOW FIXED ---
+const Step2_Income = ({ onBack, onNext, formData, handleChange }) => {
   // We reuse the exact same styles from Step 1 for perfect consistency
   const inputStyles = "mt-1 block w-full rounded-md border-gray-400 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2";
 
