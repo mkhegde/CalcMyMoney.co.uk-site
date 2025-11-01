@@ -48,7 +48,6 @@ const SurveyPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // --- RESTORED FULL LOGIC FOR ALL HANDLERS ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevData => ({
@@ -86,10 +85,12 @@ const SurveyPage = () => {
       }
       const data = await response.json();
       setReportData(data);
-    } catch (err) {
+    } catch (err) => {
       setError(err.message);
     } finally {
-      setIsLoading(false);.
+      // --- THE FIX IS HERE ---
+      // The extra period has been removed.
+      setIsLoading(false);
     }
   };
 
