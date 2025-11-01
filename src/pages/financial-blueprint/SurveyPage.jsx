@@ -7,15 +7,14 @@ import Step2_Income from './Step2_Income';
 import Step3_Expenses from './Step3_Expenses';
 import Step4_Assets from './Step4_Assets';
 import Step5_Liabilities from './Step5_Liabilities';
-
-// Placeholder for Step 6
-const Step6 = ({ onBack, onNext }) => <div className="text-center"><h2 className="text-2xl font-bold">Step 6: Protection</h2><p className="mt-4">Protection questions will go here.</p><div className="flex justify-center gap-4 mt-6"><button onClick={onBack} className="bg-gray-300 text-gray-800 py-2 px-4 rounded-md">Back</button><button onClick={onNext} className="bg-indigo-600 text-white py-2 px-4 rounded-md">Finish & Generate Report</button></div></div>;
+import Step6_Protection from './Step6_Protection'; // <-- 1. IMPORT Step 6
 
 const TOTAL_STEPS = 6;
 
 const SurveyPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
 
+  // --- 2. UPDATE state with the final fields ---
   const [formData, setFormData] = useState({
     // Step 1
     blueprintFor: 'individual',
@@ -42,6 +41,11 @@ const SurveyPage = () => {
     mortgageBalance: '',
     creditCardDebt: '',
     otherLoans: '',
+    // Step 6
+    hasWill: 'no',
+    hasLifeInsurance: 'no',
+    hasIncomeProtection: 'no',
+    hasLPA: 'no',
   });
 
   const [reportData, setReportData] = useState(null);
@@ -85,16 +89,14 @@ const SurveyPage = () => {
       }
       const data = await response.json();
       setReportData(data);
-    // --- THE FIX IS HERE ---
-    // The incorrect '=>' has been removed from the catch block.
-    } catch (err) {
+    } catch (err) => {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const completionPercentage = ((currentStep - 1) / TOTAL_STEPS) * 100;
+  const completionPercentage = ((currentStep) / TOTAL_STEPS) * 100;
 
   const renderContent = () => {
     if (isLoading) {
@@ -125,10 +127,12 @@ const SurveyPage = () => {
         stepContent = <Step5_Liabilities onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
         break;
       case 6:
-        stepContent = <Step6 onBack={handleBack} onNext={handleNext} />;
+        // --- 3. USE the new Step 6 component ---
+        stepContent = <Step6_Protection onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
         break;
       default:
-        stepContent = <div><p>Step {currentStep}</p><button onClick={handleBack}>Back</button><button onClick={handleNext}>Finish</button></div>;
+        // This case should no longer be reached
+        stepContent = <div><p>Invalid Step</p></div>;
     }
 
     return (
