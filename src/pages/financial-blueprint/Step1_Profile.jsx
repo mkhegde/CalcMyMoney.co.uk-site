@@ -2,6 +2,9 @@
 import React from 'react';
 
 const Step1_Profile = ({ onNext, formData, handleChange }) => {
+  // A reusable style string for our input boxes
+  const inputStyles = "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2";
+
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -28,7 +31,7 @@ const Step1_Profile = ({ onNext, formData, handleChange }) => {
         {/* Location Dropdown */}
         <div>
           <label htmlFor="location" className="block text-sm font-medium text-gray-700">Where do you live?</label>
-          <select id="location" name="location" value={formData.location} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+          <select id="location" name="location" value={formData.location} onChange={handleChange} className={inputStyles}>
             <option value="england">England</option>
             <option value="scotland">Scotland</option>
             <option value="wales">Wales</option>
@@ -37,11 +40,11 @@ const Step1_Profile = ({ onNext, formData, handleChange }) => {
           <p className="mt-1 text-xs text-gray-500">This helps us apply the correct tax rules.</p>
         </div>
         
-        {/* Marital Status (Conditional) */}
+        {/* Marital Status (Conditional on 'Individual') */}
         {formData.blueprintFor === 'individual' && (
           <div>
             <label htmlFor="maritalStatus" className="block text-sm font-medium text-gray-700">What is your marital status?</label>
-            <select id="maritalStatus" name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            <select id="maritalStatus" name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} className={inputStyles}>
               <option value="single">Single</option>
               <option value="married">Married</option>
               <option value="in-partnership">In a Partnership</option>
@@ -52,13 +55,21 @@ const Step1_Profile = ({ onNext, formData, handleChange }) => {
         {/* Age */}
         <div>
           <label htmlFor="age" className="block text-sm font-medium text-gray-700">Your Age</label>
-          <input type="number" id="age" name="age" value={formData.age} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="e.g., 35" />
+          <input type="number" id="age" name="age" value={formData.age} onChange={handleChange} className={inputStyles} placeholder="e.g., 35" />
         </div>
+
+        {/* --- NEW: Partner's Age (Conditional on 'Family') --- */}
+        {formData.blueprintFor === 'family' && (
+          <div>
+            <label htmlFor="partnerAge" className="block text-sm font-medium text-gray-700">Your Partner's Age</label>
+            <input type="number" id="partnerAge" name="partnerAge" value={formData.partnerAge} onChange={handleChange} className={inputStyles} placeholder="e.g., 34" />
+          </div>
+        )}
 
         {/* Profession */}
         <div>
           <label htmlFor="profession" className="block text-sm font-medium text-gray-700">Your Profession</label>
-          <input type="text" id="profession" name="profession" value={formData.profession} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="e.g., Software Engineer" />
+          <input type="text" id="profession" name="profession" value={formData.profession} onChange={handleChange} className={inputStyles} placeholder="e.g., Software Engineer" />
         </div>
       </div>
 
