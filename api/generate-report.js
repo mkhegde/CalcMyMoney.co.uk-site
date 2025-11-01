@@ -1,5 +1,5 @@
 // Filename: /api/generate-report.js
-// ** FINAL FIX: Updated the prompt with more explicit calculation instructions for the AI. **
+// ** PRODUCTION VERSION **
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -10,12 +10,13 @@ export default async function handler(req, res) {
   try {
     const userData = req.body;
 
-    if (!userData || !userData.grossAnnualIncome) {
-      return res.status(400).json({ error: 'Incomplete user data provided.' });
+    // --- UPDATED VALIDATION ---
+    // We now check for 'yourSalary' which is a required field in our new form.
+    if (!userData || !userData.yourSalary) {
+      return res.status(400).json({ error: 'Incomplete user data provided. Salary is required.' });
     }
 
-    // This function now contains the improved prompt
-    const prompt = buildLLMPrompt(userData);
+    const prompt = buildProductionPrompt(userData);
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
@@ -61,22 +62,38 @@ export default async function handler(req, res) {
   }
 }
 
-function buildLLMPrompt(userData) {
-  // --- THIS IS THE CRITICAL UPDATE ---
+// --- THIS IS THE NEW, SOPHISTICATED PROMPT ---
+function buildProductionPrompt(userData) {
   return `
-    **Role:** You are an expert financial analyst AI. Your task is to create a comprehensive, personalized, and encouraging financial health report based on the user data provided.
+    **Role:** You are an expert UK financial analyst AI. Create a comprehensive, personalized financial health report based on the provided user data.
 
-    **Format:** Analyze the following JSON data and generate a detailed financial report. The output MUST be a single, valid JSON object with the specified top-level keys.
+    **Format:** Analyze the following 'User Data' and generate a detailed financial report. The output MUST be a single, valid JSON object with the keys: 'profileSummary', 'quantitativeAnalysis', 'swotAnalysis', and 'actionPlan'.
 
-    **Instructions:**
-    1.  **Calculate Key Metrics:** From the 'User Data' below, perform the following calculations and place the results in the 'quantitativeAnalysis' section:
-        *   'totalAssets': Calculate this by summing all numerical values in the 'assets' object from the User Data.
-        *   'totalLiabilities': Calculate this by summing all numerical values in the 'liabilities' object from the User Data.
-        *   'netWorth': Calculate this as 'totalAssets' minus 'totalLiabilities'.
-        *   (You may also calculate monthlySurplus, savingsRate, etc., if possible from the data).
-    2.  **Duplicate for Profile:** Copy the calculated 'totalAssets', 'totalLiabilities', and 'netWorth' into the 'profileSummary' section as well.
-    3.  **Generate SWOT Analysis:** Based on all provided data, create a Financial SWOT analysis with at least 4 points for each category (strengths, weaknesses, opportunities, threats).
-    4.  **Create Action Plan:** Generate a prioritized list of 5-7 actionable steps. Each step must have a 'priority' (High, Medium, or Low), a clear 'action' title, and a brief 'explanation'.
+    **Core Calculation Instructions (Perform these first):**
+    1.  **Calculate Gross Household Income:** Sum 'yourSalary', 'partnerSalary' (if it exists), ('otherIncome' * 12), and ('benefitsIncome' * 12).
+    2.  **Calculate Total Monthly Expenses:** Sum 'essentialExpenses', 'discretionaryExpenses', and ('annualExpenses' / 12).
+    3.  **Calculate Total Assets:** Sum 'cashSavings', 'pensionValue', 'propertyValue', and 'otherInvestments'. Ignore any non-numeric or empty values.
+    4.  **Calculate Total Liabilities:** Sum 'mortgageBalance', 'creditCardDebt', and 'otherLoans'. Ignore any non-numeric or empty values.
+    5.  **Calculate Net Worth:** This is Total Assets - Total Liabilities.
+
+    **JSON Output Structure:**
+
+    1.  **'profileSummary':** Create an object containing:
+        *   'blueprintFor': The user's choice (e.g., "Individual" or "Family").
+        *   'location': The user's country (e.g., "England").
+        *   'age': The user's age.
+        *   'profession': The user's profession.
+        *   'userCode': Generate a random user code like "CMMFB" followed by 6 random digits.
+
+    2.  **'quantitativeAnalysis':** Create an object containing the results of the Core Calculations:
+        *   'netWorth': The calculated Net Worth.
+        *   'totalAssets': The calculated Total Assets.
+        *   'totalLiabilities': The calculated Total Liabilities.
+        *   (Also include any other relevant metrics you can derive).
+
+    3.  **'swotAnalysis':** Create an object with four arrays ('strengths', 'weaknesses', 'opportunities', 'threats'). Each array should contain at least four distinct, insightful string points based on ALL the user's data (income, assets, debt, age, protection status, etc.). Make the analysis specific (e.g., mention the calculated Net Worth or savings rate).
+
+    4.  **'actionPlan':** Create an array of 5-7 action item objects. Each object must have 'priority' ('High', 'Medium', or 'Low'), a clear 'action' title, and a brief 'explanation'. Base these actions on the user's biggest weaknesses and opportunities identified in the SWOT analysis. For example, if 'hasWill' is 'no', a high-priority action should be "Create a Will".
 
     **User Data:**
     ${JSON.stringify(userData, null, 2)}
