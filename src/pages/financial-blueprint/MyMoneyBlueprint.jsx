@@ -1,20 +1,31 @@
 // src/pages/financial-blueprint/MyMoneyBlueprint.jsx
 
-import React, { useState } from 'react'; // <-- THIS LINE IS NOW FIXED
+import React, { useState } from 'react';
 import QuestionnaireForm from './QuestionnaireForm';
 import ReportDisplay from './ReportDisplay';
 
 const MyMoneyBlueprint = () => {
+  // --- THIS IS THE UPDATE ---
+  // We've added an 'assets' object to hold the new fields.
   const [formData, setFormData] = useState({
     grossAnnualIncome: 65000,
     monthlyEssentialExpenses: 2000,
-    liabilities: { creditCardDebt: 2000 }
+    assets: {
+        cash: 12000, // Pre-filled with example data
+        pension: 28000, // Pre-filled with example data
+    },
+    liabilities: { 
+        creditCardDebt: 2000 
+    }
   });
 
   const [reportData, setReportData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // NO CHANGE NEEDED HERE! 
+  // Our existing handleChange function is smart enough to handle nested data 
+  // like 'assets.cash' because of the `if (name.includes('.'))` logic.
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.includes('.')) {
@@ -25,29 +36,24 @@ const MyMoneyBlueprint = () => {
     }
   };
 
+  // No changes needed for handleSubmit either. It just sends the whole formData object.
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     setReportData(null);
-
     try {
-      // The fetch URL is correctly set to kebab-case
       const response = await fetch('/api/generate-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
       if (!response.ok) {
-        // Try to get a more detailed error message from the API's response body
-        const errorData = await response.json().catch(() => ({})); // Use empty object as fallback
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Something went wrong. Please check the server logs.');
       }
-
       const data = await response.json();
       setReportData(data);
-
     } catch (err) {
       setError(err.message);
     } finally {
