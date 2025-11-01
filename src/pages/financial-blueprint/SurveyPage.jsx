@@ -4,10 +4,11 @@ import ProgressBar from './ProgressBar';
 import ReportDisplay from './ReportDisplay';
 import Step1_Profile from './Step1_Profile';
 import Step2_Income from './Step2_Income';
-import Step3_Expenses from './Step3_Expenses'; // <-- 1. IMPORT Step 3
+import Step3_Expenses from './Step3_Expenses';
+import Step4_Assets from './Step4_Assets'; // <-- 1. IMPORT Step 4
 
-// --- Placeholder for Step 4 ---
-const Step4 = ({ onBack, onNext }) => <div className="text-center"><h2 className="text-2xl font-bold">Step 4: Assets</h2><p className="mt-4">Asset questions will go here.</p><div className="flex justify-center gap-4 mt-6"><button onClick={onBack} className="bg-gray-300 text-gray-800 py-2 px-4 rounded-md">Back</button><button onClick={onNext} className="bg-indigo-600 text-white py-2 px-4 rounded-md">Next</button></div></div>;
+// --- Placeholder for Step 5 ---
+const Step5 = ({ onBack, onNext }) => <div className="text-center"><h2 className="text-2xl font-bold">Step 5: Liabilities</h2><p className="mt-4">Liability questions will go here.</p><div className="flex justify-center gap-4 mt-6"><button onClick={onBack} className="bg-gray-300 text-gray-800 py-2 px-4 rounded-md">Back</button><button onClick={onNext} className="bg-indigo-600 text-white py-2 px-4 rounded-md">Next</button></div></div>;
 // ---
 
 const TOTAL_STEPS = 6;
@@ -15,7 +16,7 @@ const TOTAL_STEPS = 6;
 const SurveyPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
 
-  // --- 2. UPDATE state to include new expense fields ---
+  // --- 2. UPDATE state to include new asset fields ---
   const [formData, setFormData] = useState({
     // Step 1
     blueprintFor: 'individual',
@@ -33,6 +34,11 @@ const SurveyPage = () => {
     essentialExpenses: '',
     discretionaryExpenses: '',
     annualExpenses: '',
+    // Step 4
+    cashSavings: '',
+    pensionValue: '',
+    propertyValue: '',
+    otherInvestments: '',
   });
 
   const [reportData, setReportData] = useState(null);
@@ -59,7 +65,7 @@ const SurveyPage = () => {
     }
   };
 
-  const handleSubmit = async () => { /* ... Full logic from previous step ... */ };
+  const handleSubmit = async () => { /* ... Full logic remains the same ... */ };
 
   const completionPercentage = ((currentStep - 1) / TOTAL_STEPS) * 100;
 
@@ -77,11 +83,14 @@ const SurveyPage = () => {
         stepContent = <Step2_Income onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
         break;
       case 3:
-        // --- 3. USE the new Step 3 component ---
         stepContent = <Step3_Expenses onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
         break;
       case 4:
-        stepContent = <Step4 onBack={handleBack} onNext={handleNext} />;
+        // --- 3. USE the new Step 4 component ---
+        stepContent = <Step4_Assets onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
+        break;
+      case 5:
+        stepContent = <Step5 onBack={handleBack} onNext={handleNext} />;
         break;
       default:
         stepContent = <div><p>Step {currentStep}</p><button onClick={handleBack}>Back</button><button onClick={handleNext}>Finish</button></div>;
