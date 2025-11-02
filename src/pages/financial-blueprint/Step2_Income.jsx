@@ -3,7 +3,7 @@ import React from 'react';
 import { safeGBP, parseMoney } from '../../utils/number';
 
 // Reusable component for our new Pound Sterling inputs
-const MoneyInput = ({ label, name, value, handleChange, placeholder, helpText }) => (
+export const MoneyInput = ({ label, name, value, handleChange, placeholder, helpText }) => (
     <div>
         <label htmlFor={name} className="block text-sm font-medium text-gray-700">{label}</label>
         <div className="relative mt-1">
