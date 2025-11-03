@@ -1,5 +1,5 @@
 // Filename: /api/generate-report.js
-// ** PRODUCTION VERSION **
+// ** FINAL PRODUCTION VERSION: Pre-calculates metrics in JS for accuracy **
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -10,12 +10,39 @@ export default async function handler(req, res) {
   try {
     const userData = req.body;
 
-    // Updated validation to check for a required field from our new survey
     if (!userData || !userData.yourSalary) {
       return res.status(400).json({ error: 'Incomplete user data provided. Salary is required.' });
     }
 
-    const prompt = buildProductionPrompt(userData);
+    // --- STEP 1: PERFORM CALCULATIONS IN JAVASCRIPT ---
+    const parseNum = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
+
+    const grossAnnualIncome =
+      parseNum(userData.yourSalary) +
+      parseNum(userData.partnerSalary) +
+      parseNum(userData.otherIncome) * 12 +
+      parseNum(userData.benefitsIncome) * 12;
+    const totalAssets =
+      parseNum(userData.cashSavings) +
+      parseNum(userData.pensionValue) +
+      parseNum(userData.propertyValue) +
+      parseNum(userData.otherInvestments);
+    const totalLiabilities =
+      parseNum(userData.mortgageBalance) +
+      parseNum(userData.creditCardDebt) +
+      parseNum(userData.otherLoans);
+    const netWorth = totalAssets - totalLiabilities;
+
+    // Create an object with our reliable calculations
+    const calculatedMetrics = {
+      grossAnnualIncome,
+      totalAssets,
+      totalLiabilities,
+      netWorth,
+    };
+
+    // --- STEP 2: SEND PRE-CALCULATED DATA TO THE AI ---
+    const prompt = buildProductionPrompt(userData, calculatedMetrics);
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
@@ -24,22 +51,15 @@ export default async function handler(req, res) {
     }
 
     const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
-
     const requestBody = {
-      model: "gpt-4o", // Upgrading to a more powerful model for better calculations
-      messages: [{ 
-        role: "user", 
-        content: prompt 
-      }],
-      response_format: { "type": "json_object" },
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
     };
 
     const response = await fetch(apiEndpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify(requestBody),
     });
 
@@ -54,57 +74,36 @@ export default async function handler(req, res) {
     const reportObject = JSON.parse(reportJsonText);
 
     return res.status(200).json(reportObject);
-
   } catch (error) {
     console.error('Error in generateReport handler:', error);
     return res.status(500).json({ error: 'Failed to generate financial report.' });
   }
 }
 
-// --- THIS IS THE NEW "MASTER PROMPT" ---
-function buildProductionPrompt(userData) {
+// --- THIS IS THE NEW, SIMPLER PROMPT ---
+function buildProductionPrompt(userData, calculatedMetrics) {
   return `
-    **Role:** You are an expert UK financial analyst AI, adhering to the financial regulations and tax laws as of the 2024/2025 tax year. Your task is to create a detailed, multi-part financial report based on the provided user data.
+    **Role:** You are an expert UK financial analyst AI. Your task is to create a detailed financial report.
 
-    **Format:** Analyze the 'User Data' and generate a report as a single, valid JSON object. The root of the object must contain the following keys: 'profileSummary', 'quantitativeAnalysis', 'qualitativeAnalysis', 'financialMindset', 'financialProtection', 'swotAnalysis', and 'actionPlan'.
+    **Source Data:** You have been provided with two JSON objects: 'User Data' (the user's raw answers) and 'Calculated Metrics' (pre-calculated financial totals).
 
-    **CRITICAL CALCULATION INSTRUCTIONS (Perform these first):**
-    1.  **Gross Annual Household Income:** Sum 'yourSalary', 'partnerSalary' (if it exists and is numeric), ('otherIncome' * 12), and ('benefitsIncome' * 12).
-    2.  **Total Annual Expenses:** Sum ('essentialExpenses' * 12) and ('discretionaryExpenses' * 12), and 'annualExpenses'.
-    3.  **UK Tax Calculation:** Based on the 'Gross Annual Household Income' and the user's 'location', calculate the estimated 'incomeTax' and 'nationalInsurance' for the year.
-    4.  **Net Annual Income:** Gross Annual Household Income - incomeTax - nationalInsurance.
-    5.  **Net Monthly Income:** Net Annual Income / 12.
-    6.  **Total Monthly Expenses:** Total Annual Expenses / 12.
-    7.  **Monthly Surplus:** Net Monthly Income - Total Monthly Expenses.
-    8.  **Total Assets:** Sum 'cashSavings', 'pensionValue', 'propertyValue', and 'otherInvestments'.
-    9.  **Total Liabilities:** Sum 'mortgageBalance', 'creditCardDebt', and 'otherLoans'.
-    10. **Net Worth:** Total Assets - Total Liabilities.
-    11. **Savings Rate (%):** (Monthly Surplus / Net Monthly Income) * 100. Round to one decimal place.
-    12. **Emergency Fund Coverage (Months):** cashSavings / essentialExpenses. Round to one decimal place.
+    **CRITICAL INSTRUCTION:** For all quantitative parts of the report, you MUST use the values from the 'Calculated Metrics' object. Do NOT perform your own calculations.
 
-    **JSON OUTPUT STRUCTURE (Adhere strictly to this):**
+    **Format:** Generate a report as a single, valid JSON object with the keys: 'profileSummary', 'quantitativeAnalysis', 'swotAnalysis', and 'actionPlan'.
 
-    1.  **'profileSummary':** An object containing: 'blueprintFor', 'location', 'age', 'profession', and a generated 'userCode' (e.g., "CMMFB" + 6 random digits).
-    
-    2.  **'quantitativeAnalysis':** An object containing:
-        *   'netWorthSummary': An object with 'netWorth', 'totalAssets', 'totalLiabilities'.
-        *   'annualTax': An object with 'incomeTax', 'nationalInsurance', and 'totalTax' (sum of the two).
-        *   'incomeAndCashFlow': An object with 'grossAnnualIncome', 'netMonthlyIncome', 'monthlyExpenses', 'monthlySurplus', and a 'spendingBreakdown' object containing percentages for 'essential', 'discretionary', and 'savings' relative to Net Monthly Income.
-    
-    3.  **'qualitativeAnalysis':** An object containing any qualitative data provided by the user (e.g., 'careerStability'). For now, this can be an empty object.
-    
-    4.  **'financialMindset':** An object containing a 'profile' (e.g., "Balanced Saver") and two arrays of strings: 'strengths' and 'areasToDevelop'.
-    
-    5.  **'financialProtection':** An object containing:
-        *   'emergencyFund': An object with 'currentBalance' (cashSavings), 'targetBalance' (essentialExpenses * 6), and 'coverageInMonths'.
-        *   'insurance': An object mapping 'hasLifeInsurance', 'hasIncomeProtection' to boolean true/false.
-        *   'estatePlanning': An object mapping 'hasWill', 'hasLPA' to boolean true/false.
+    **JSON Output Structure:**
+    1.  **'profileSummary':** Create an object using the data from the 'User Data' object ('age', 'profession', etc.). Generate a random 'userCode' (e.g., "CMMFB" + 6 random digits).
 
-    6.  **'swotAnalysis':** An object with four arrays of strings ('strengths', 'weaknesses', 'opportunities', 'threats'). Each array must contain at least 4 specific, insightful points derived from ALL calculated data.
+    2.  **'quantitativeAnalysis':** Create an object. Populate 'netWorth', 'totalAssets', and 'totalLiabilities' using the corresponding values directly from the 'Calculated Metrics' object.
 
-    7.  **'actionPlan':** An array of 5-7 action item objects. Each object must have 'priority' ('High', 'Medium', 'Low'), a clear 'action' title, and a brief 'explanation'. Actions MUST be directly relevant to the user's biggest weaknesses and opportunities (e.g., if 'hasWill' is 'no', a high-priority action is to "Create a Will").
+    3.  **'swotAnalysis':** Create an object with four arrays ('strengths', 'weaknesses', 'opportunities', 'threats'). Each array must contain at least four distinct, insightful string points. Your analysis MUST be based on BOTH the 'User Data' (e.g., age, profession, protection status) AND the 'Calculated Metrics' (e.g., high net worth, low income).
+
+    4.  **'actionPlan':** Create an array of 5-7 action item objects ('priority', 'action', 'explanation'). Base these actions on the user's biggest weaknesses and opportunities identified in the SWOT analysis.
 
     **User Data:**
     ${JSON.stringify(userData, null, 2)}
+
+    **Calculated Metrics:**
+    ${JSON.stringify(calculatedMetrics, null, 2)}
   `;
 }

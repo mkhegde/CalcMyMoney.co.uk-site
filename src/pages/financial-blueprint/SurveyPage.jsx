@@ -1,69 +1,80 @@
 // src/pages/financial-blueprint/SurveyPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import ProgressBar from './ProgressBar';
 import ReportDisplay from './ReportDisplay';
+
+// Import all our schemas and components
+import { step1Schema, step2Schema, step3Schema } from './schemas';
 import Step1_Profile from './Step1_Profile';
 import Step2_Income from './Step2_Income';
 import Step3_Expenses from './Step3_Expenses';
-import Step4_Assets from './Step4_Assets';
-import Step5_Liabilities from './Step5_Liabilities';
-import Step6_Protection from './Step6_Protection';
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 8;
+
+const schemas = [step1Schema, step2Schema, step3Schema];
 
 const SurveyPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [finalData, setFinalData] = useState({});
 
-  const [formData, setFormData] = useState({
-    // Step 1
-    blueprintFor: 'individual',
-    location: 'england',
-    maritalStatus: 'single',
-    age: '',
-    partnerAge: '',
-    profession: '',
-    // Step 2
-    yourSalary: '',
-    partnerSalary: '',
-    otherIncome: '',
-    benefitsIncome: '',
-    // Step 3
-    essentialExpenses: '',
-    discretionaryExpenses: '',
-    annualExpenses: '',
-    // Step 4
-    cashSavings: '',
-    pensionValue: '',
-    propertyValue: '',
-    otherInvestments: '',
-    // Step 5
-    mortgageBalance: '',
-    creditCardDebt: '',
-    otherLoans: '',
-    // Step 6
-    hasWill: 'no',
-    hasLifeInsurance: 'no',
-    hasIncomeProtection: 'no',
-    hasLPA: 'no',
+  const currentSchema = useMemo(() => schemas[currentStep - 1], [currentStep]);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+    trigger,
+    reset,
+    getValues,
+  } = useForm({
+    resolver: zodResolver(currentSchema),
+    defaultValues: {
+      blueprintFor: 'individual',
+      location: 'england',
+      maritalStatus: 'single',
+      age: '',
+      partnerAge: '',
+      profession: '',
+      partnerProfession: '',
+      yourSalary: '',
+      partnerSalary: '',
+      otherIncome: '0',
+      benefitsIncome: '0',
+      essentialExpenses: '',
+      discretionaryExpenses: '',
+      annualExpenses: '0',
+    },
   });
+
+  useEffect(() => {
+    if (currentSchema) {
+      reset(getValues(), {
+        resolver: zodResolver(currentSchema),
+      });
+    }
+  }, [currentSchema, reset, getValues]);
 
   const [reportData, setReportData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
-  };
-
-  const handleNext = () => {
+  const processStep = (data) => {
+    setFinalData((prev) => ({ ...prev, ...data }));
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
     } else {
-      handleSubmit();
+      finalSubmit({ ...finalData, ...data });
+    }
+  };
+
+  const handleNext = async () => {
+    const isValid = await trigger();
+    if (isValid) {
+      handleSubmit(processStep)();
     }
   };
 
@@ -73,14 +84,14 @@ const SurveyPage = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const finalSubmit = async (allData) => {
     setIsLoading(true);
     setError(null);
     try {
       const response = await fetch('/api/generate-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(allData),
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -88,8 +99,6 @@ const SurveyPage = () => {
       }
       const data = await response.json();
       setReportData(data);
-    // --- THE FIX IS HERE ---
-    // The invalid '=>' has been removed.
     } catch (err) {
       setError(err.message);
     } finally {
@@ -97,15 +106,16 @@ const SurveyPage = () => {
     }
   };
 
-  // Correctly calculate completion percentage for display
   const completionPercentage = (currentStep / TOTAL_STEPS) * 100;
 
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="text-center p-12">
-            <h2 className="text-2xl font-semibold">Generating Your Blueprint...</h2>
-            <p className="mt-2 text-gray-600">Our AI is analyzing your data. This may take a moment.</p>
+          <h2 className="text-2xl font-semibold">Generating Your Blueprint...</h2>
+          <p className="mt-2 text-gray-600">
+            Our AI is analyzing your data. This may take a moment.
+          </p>
         </div>
       );
     }
@@ -116,43 +126,54 @@ const SurveyPage = () => {
       return <ReportDisplay reportData={reportData} />;
     }
 
-    let stepContent;
     switch (currentStep) {
       case 1:
-        stepContent = <Step1_Profile onNext={handleNext} formData={formData} handleChange={handleChange} />;
-        break;
+        return (
+          <Step1_Profile register={register} errors={errors} watch={watch} onNext={handleNext} />
+        );
       case 2:
-        stepContent = <Step2_Income onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
-        break;
+        return (
+          <Step2_Income
+            register={register}
+            errors={errors}
+            watch={watch}
+            onNext={handleNext}
+            onBack={handleBack}
+          />
+        );
       case 3:
-        stepContent = <Step3_Expenses onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
-        break;
-      case 4:
-        stepContent = <Step4_Assets onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
-        break;
-      case 5:
-        stepContent = <Step5_Liabilities onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
-        break;
-      case 6:
-        stepContent = <Step6_Protection onBack={handleBack} onNext={handleNext} formData={formData} handleChange={handleChange} />;
-        break;
+        return (
+          <Step3_Expenses
+            register={register}
+            errors={errors}
+            onNext={handleNext}
+            onBack={handleBack}
+          />
+        );
       default:
-        // This case should not be reached with the current logic
-        stepContent = <div><p>Invalid Step</p></div>;
+        return (
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Step {currentStep}</h2>
+            <p className="mt-4">This step has not been refactored yet.</p>
+            <button
+              type="button"
+              onClick={handleBack}
+              className="mt-6 bg-gray-300 text-gray-800 py-2 px-4 rounded-md"
+            >
+              Go Back
+            </button>
+          </div>
+        );
     }
-
-    return (
-      <>
-        <div className="mb-8">
-          <ProgressBar completion={completionPercentage} />
-        </div>
-        {stepContent}
-      </>
-    );
   };
 
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6 md:p-8 bg-white my-10 rounded-lg shadow-md">
+      {reportData || isLoading || error ? null : (
+        <div className="mb-8">
+          <ProgressBar completion={completionPercentage} />
+        </div>
+      )}
       {renderContent()}
     </div>
   );

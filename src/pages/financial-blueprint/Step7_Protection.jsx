@@ -1,28 +1,41 @@
-// src/pages/financial-blueprint/Step6_Protection.jsx
+// src/pages/financial-blueprint/Step7_Protection.jsx
 import React from 'react';
 
-// A reusable component for our Yes/No questions
 const RadioQuestion = ({ label, name, value, handleChange }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <div className="mt-2 flex gap-4">
       <label className="inline-flex items-center">
-        <input type="radio" name={name} value="yes" checked={value === 'yes'} onChange={handleChange} className="form-radio h-4 w-4 text-indigo-600"/>
+        <input
+          type="radio"
+          name={name}
+          value="yes"
+          checked={value === 'yes'}
+          onChange={handleChange}
+          className="form-radio h-4 w-4 text-indigo-600"
+        />
         <span className="ml-2">Yes</span>
       </label>
       <label className="inline-flex items-center">
-        <input type="radio" name={name} value="no" checked={value === 'no'} onChange={handleChange} className="form-radio h-4 w-4 text-indigo-600"/>
+        <input
+          type="radio"
+          name={name}
+          value="no"
+          checked={value === 'no'}
+          onChange={handleChange}
+          className="form-radio h-4 w-4 text-indigo-600"
+        />
         <span className="ml-2">No</span>
       </label>
     </div>
   </div>
 );
 
-const Step6_Protection = ({ onBack, onNext, formData, handleChange }) => {
+const Step7_Protection = ({ onBack, onNext, formData, handleChange }) => {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-bold">Step 6: Financial Protection</h2>
+        <h2 className="text-2xl font-bold">Step 7 of 7: Your Financial Protection</h2>
         <p className="mt-2 text-gray-600">Finally, let's cover your financial safety net.</p>
       </div>
 
@@ -53,17 +66,24 @@ const Step6_Protection = ({ onBack, onNext, formData, handleChange }) => {
         />
       </div>
 
-      {/* Navigation */}
       <div className="flex justify-between">
-        <button onClick={onBack} className="inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+        >
           Back
         </button>
-        <button onClick={onNext} className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
-          Finish & Generate Report
+        <button
+          type="button"
+          onClick={onNext}
+          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
+        >
+          Review Your Details
         </button>
       </div>
     </div>
   );
 };
 
-export default Step6_Protection;
+export default Step7_Protection;
