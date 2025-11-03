@@ -118,16 +118,7 @@ export const step2Schema = z
     }
   });
 
-export const step3Schema = z.object({
-  calculatedGrossAnnualIncome: moneyField('Calculated gross annual income'),
-  calculatedTaxableIncome: moneyField('Calculated taxable income'),
-  calculatedIncomeTaxAnnual: moneyField('Calculated income tax'),
-  calculatedNationalInsuranceAnnual: moneyField('Calculated National Insurance'),
-  calculatedNetAnnualIncome: moneyField('Calculated net annual income'),
-  calculatedNetMonthlyIncome: moneyField('Calculated net monthly income'),
-});
-
-export const step4Schema = z
+export const step3Schema = z
   .object({
     expensesHousing: moneyField('Housing costs'),
     expensesUtilities: moneyField('Utilities'),
@@ -156,7 +147,7 @@ export const step4Schema = z
     }
   });
 
-export const step5Schema = z.object({
+export const step4Schema = z.object({
   cashSavings: moneyField('Cash savings'),
   pensionValue: moneyField('Total pension value'),
   propertyValue: moneyField('Primary residence value'),
@@ -164,7 +155,7 @@ export const step5Schema = z.object({
   otherAssets: moneyField('Other significant assets'),
 });
 
-export const step6Schema = z
+export const step5Schema = z
   .object({
     housingStatus: z.enum(['renting', 'mortgaged', 'owned']),
     monthlyRent: moneyField('Monthly rent'),
@@ -221,7 +212,7 @@ export const step6Schema = z
     }
   });
 
-export const step7Schema = z.object({
+export const step6Schema = z.object({
   earningHabit: z.enum(['active', 'stable', 'passive'], {
     required_error: 'Please choose the option that best describes your earning habit.',
   }),
@@ -233,7 +224,7 @@ export const step7Schema = z.object({
   }),
 });
 
-export const step8Schema = z.object({
+export const step7Schema = z.object({
   hasWill: z.enum(['yes', 'no'], { required_error: 'Please confirm if you have a will.' }),
   hasLifeInsurance: z.enum(['yes', 'no'], {
     required_error: 'Please confirm if you have life insurance.',

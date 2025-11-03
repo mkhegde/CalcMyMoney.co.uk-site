@@ -1,16 +1,27 @@
 // src/pages/financial-blueprint/SurveyPage.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 
 import ProgressBar from './ProgressBar';
 import ReportDisplay from './ReportDisplay';
 
-// Import all our schemas and components
-import { step1Schema, step2Schema, step4Schema } from './schemas';
+import {
+  step1Schema,
+  step2Schema,
+  step3Schema,
+  step4Schema,
+  step5Schema,
+  step6Schema,
+  step7Schema,
+} from './schemas';
 import Step1_Profile from './Step1_Profile';
 import Step2_Income from './Step2_Income';
 import Step3_Expenses from './Step3_Expenses';
+import Step4_Assets from './Step4_Assets';
+import Step5_Liabilities from './Step5_Liabilities';
+import Step6_Mindset from './Step6_Mindset';
+import Step7_Protection from './Step7_Protection';
+import Step8_Review from './Step8_Review';
 
 const SurveyPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -19,25 +30,29 @@ const SurveyPage = () => {
     () => [
       { Component: Step1_Profile, schema: step1Schema },
       { Component: Step2_Income, schema: step2Schema },
-      { Component: Step3_Expenses, schema: step4Schema },
+      { Component: Step3_Expenses, schema: step3Schema },
+      { Component: Step4_Assets, schema: step4Schema },
+      { Component: Step5_Liabilities, schema: step5Schema },
+      { Component: Step6_Mindset, schema: step6Schema },
+      { Component: Step7_Protection, schema: step7Schema },
+      { Component: Step8_Review, schema: null, isReview: true },
     ],
     []
   );
   const totalSteps = stepConfigs.length;
   const currentIndex = Math.min(Math.max(currentStep - 1, 0), totalSteps - 1);
   const currentStepConfig = stepConfigs[currentIndex];
-  const currentSchema = useMemo(() => currentStepConfig?.schema, [currentStepConfig]);
-  const resolver = useMemo(() => (currentSchema ? zodResolver(currentSchema) : undefined), [currentSchema]);
 
   const {
     register,
-    handleSubmit,
     watch,
     formState: { errors },
-    trigger,
     control,
+    setError: setFieldError,
+    clearErrors,
+    setValue,
+    getValues,
   } = useForm({
-    resolver,
     defaultValues: {
       blueprintFor: 'individual',
       location: 'england',
@@ -65,44 +80,82 @@ const SurveyPage = () => {
       expensesLifestyle: '0',
       expensesChildcare: '0',
       specialNeedsCostsMonthly: '0',
+      cashSavings: '0',
+      pensionValue: '0',
+      propertyValue: '0',
+      otherInvestments: '0',
+      otherAssets: '0',
+      monthlyRent: '0',
+      mortgageBalance: '0',
+      mortgageMonthlyPayment: '0',
+      mortgageRemainingTermYears: '0',
+      creditCardDebt: '0',
+      otherLoans: '0',
+      studentLoanBalance: '0',
+      earningHabit: '',
+      savingHabit: '',
+      investingHabit: '',
+      hasWill: '',
+      hasLifeInsurance: '',
+      hasIncomeProtection: '',
+      hasLPA: '',
     },
     shouldUnregister: false,
   });
 
   const [reportData, setReportData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const processStep = (data) => {
-    setFinalData((prev) => ({ ...prev, ...data }));
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      finalSubmit({ ...finalData, ...data });
-    }
-  };
+  const [submissionError, setSubmissionError] = useState(null);
 
   const handleNext = async () => {
-    const isValid = await trigger();
-    if (isValid) {
-      handleSubmit(processStep)();
+    const schema = currentStepConfig?.schema;
+    if (!schema) {
+      if (currentStep < totalSteps) {
+        setCurrentStep((prev) => prev + 1);
+      }
+      return;
+    }
+
+    const values = getValues();
+    const result = await schema.safeParseAsync(values);
+
+    if (!result.success) {
+      clearErrors();
+      result.error.issues.forEach((issue) => {
+        const fieldName = issue.path.filter(Boolean).join('.');
+        if (!fieldName) {
+          return;
+        }
+        setFieldError(fieldName, { type: 'manual', message: issue.message });
+      });
+      return;
+    }
+
+    clearErrors();
+    setFinalData((prev) => ({ ...prev, ...result.data }));
+    if (currentStep < totalSteps) {
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+    if (currentStep === 1) {
+      return;
     }
+    clearErrors();
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const finalSubmit = async (allData) => {
+  const finalSubmit = async () => {
+    const latestValues = getValues();
+    const payloadSource = { ...latestValues, ...finalData };
     setIsLoading(true);
-    setError(null);
+    setSubmissionError(null);
     try {
       const payload = {
-        ...allData,
-        otherIncome: allData.otherIncomeMonthly ?? allData.otherIncome ?? '0',
-        benefitsIncome: allData.benefitsIncomeMonthly ?? allData.benefitsIncome ?? '0',
+        ...payloadSource,
+        otherIncome: payloadSource.otherIncomeMonthly ?? payloadSource.otherIncome ?? '0',
+        benefitsIncome: payloadSource.benefitsIncomeMonthly ?? payloadSource.benefitsIncome ?? '0',
       };
       const response = await fetch('/api/generate-report', {
         method: 'POST',
@@ -116,7 +169,7 @@ const SurveyPage = () => {
       const data = await response.json();
       setReportData(data);
     } catch (err) {
-      setError(err.message);
+      setSubmissionError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -135,8 +188,19 @@ const SurveyPage = () => {
         </div>
       );
     }
-    if (error) {
-      return <div className="text-center p-8 text-red-600">{error}</div>;
+    if (submissionError) {
+      return (
+        <div className="space-y-4 text-center p-8">
+          <p className="text-red-600">{submissionError}</p>
+          <button
+            type="button"
+            onClick={() => setSubmissionError(null)}
+            className="inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+          >
+            Back to review
+          </button>
+        </div>
+      );
     }
     if (reportData) {
       return <ReportDisplay reportData={reportData} />;
@@ -159,12 +223,25 @@ const SurveyPage = () => {
       );
     }
 
+    if (currentStepConfig.isReview) {
+      const reviewValues = { ...getValues(), ...finalData };
+      return (
+        <StepComponent
+          onBack={handleBack}
+          onConfirm={finalSubmit}
+          values={reviewValues}
+          isLoading={isLoading}
+        />
+      );
+    }
+
     return (
       <StepComponent
         register={register}
         control={control}
         errors={errors}
         watch={watch}
+        setValue={setValue}
         onNext={handleNext}
         onBack={handleBack}
         currentStep={currentStep}
@@ -175,7 +252,7 @@ const SurveyPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6 md:p-8 bg-white my-10 rounded-lg shadow-md">
-      {reportData || isLoading || error ? null : (
+      {reportData || isLoading || submissionError ? null : (
         <div className="mb-8">
           <ProgressBar completion={completionPercentage} />
         </div>

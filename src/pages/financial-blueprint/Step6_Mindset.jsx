@@ -1,44 +1,45 @@
-// src/pages/financial-blueprint/Step6_Mindset.jsx
 import React from 'react';
 
-// Reusable component for our new mindset questions
-const MindsetQuestion = ({ question, name, value, handleChange, options }) => (
+const radioClass = 'form-radio h-4 w-4 text-indigo-600';
+
+const MindsetQuestion = ({ question, name, options, register, error }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700">{question}</label>
+    <span className="block text-sm font-medium text-gray-700">{question}</span>
     <div className="mt-2 space-y-2">
       {options.map((option) => (
-        <label key={option.value} className="flex items-center">
-          <input
-            type="radio"
-            name={name}
-            value={option.value}
-            checked={value === option.value}
-            onChange={handleChange}
-            className="form-radio h-4 w-4 text-indigo-600"
-          />
-          <span className="ml-3 text-sm text-gray-800">{option.label}</span>
+        <label key={option.value} className="flex items-center gap-3">
+          <input type="radio" value={option.value} {...register(name)} className={radioClass} />
+          <span className="text-sm text-gray-800">{option.label}</span>
         </label>
       ))}
     </div>
+    {error ? <p className="mt-1 text-sm text-red-600">{error.message}</p> : null}
   </div>
 );
 
-const Step6_Mindset = ({ onBack, onNext, formData, handleChange }) => {
+const Step6_Mindset = ({ onBack, onNext, register, errors, currentStep, totalSteps }) => {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-bold">Step 6 of 7: Your Financial Mindset</h2>
-        <p className="mt-2 text-gray-600">How do you approach your finances?</p>
+        <h2 className="text-2xl font-bold">
+          Step {currentStep} of {totalSteps}: Your financial mindset
+        </h2>
+        <p className="mt-2 text-gray-600">
+          Help us understand how you approach earning, saving and growing your money.
+        </p>
       </div>
 
-      <div className="space-y-8 rounded-lg bg-gray-50 p-6 border border-gray-200">
+      <div className="space-y-6 rounded-lg bg-gray-50 p-6 border border-gray-200">
         <MindsetQuestion
           question="Regarding what you EARN, which best describes you?"
           name="earningHabit"
-          value={formData.earningHabit}
-          handleChange={handleChange}
+          register={register}
+          error={errors.earningHabit}
           options={[
-            { value: 'active', label: 'I actively look for ways to increase my income.' },
+            {
+              value: 'active',
+              label: 'I actively look for ways to increase my income.',
+            },
             { value: 'stable', label: 'I am content with my current, stable income.' },
             { value: 'passive', label: 'I tend not to think about my income level often.' },
           ]}
@@ -46,22 +47,22 @@ const Step6_Mindset = ({ onBack, onNext, formData, handleChange }) => {
         <MindsetQuestion
           question="Regarding what you SAVE, which best describes you?"
           name="savingHabit"
-          value={formData.savingHabit}
-          handleChange={handleChange}
+          register={register}
+          error={errors.savingHabit}
           options={[
             {
               value: 'disciplined',
               label: 'I save a set amount from every paycheck without fail.',
             },
-            { value: 'opportunistic', label: 'I save what is left over at the end of the month.' },
+            { value: 'opportunistic', label: 'I save what is left at the end of the month.' },
             { value: 'struggling', label: 'I find it difficult to save money regularly.' },
           ]}
         />
         <MindsetQuestion
           question="Regarding how you GROW your money, which best describes you?"
           name="investingHabit"
-          value={formData.investingHabit}
-          handleChange={handleChange}
+          register={register}
+          error={errors.investingHabit}
           options={[
             {
               value: 'confident',
@@ -89,7 +90,7 @@ const Step6_Mindset = ({ onBack, onNext, formData, handleChange }) => {
           onClick={onNext}
           className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
         >
-          Next
+          Continue
         </button>
       </div>
     </div>
