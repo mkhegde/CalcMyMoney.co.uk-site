@@ -1,14 +1,25 @@
 import React from 'react';
 import CurrencyInput from '@/components/form/CurrencyInput.jsx';
 
-const Step4_Expenses = ({ onBack, onNext, control, errors, watch }) => {
+const Step3_Expenses = ({
+  onBack,
+  onNext,
+  control,
+  errors,
+  watch,
+  currentStep,
+  totalSteps,
+  register,
+}) => {
   const numberOfChildren = Number(watch('numberOfChildren') || 0);
   const specialNeedsChildren = Number(watch('specialNeedsChildren') || 0);
 
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-bold">Step 4 of 9: Monthly spending snapshot</h2>
+        <h2 className="text-2xl font-bold">
+          Step {currentStep} of {totalSteps}: Monthly spending snapshot
+        </h2>
         <p className="mt-2 text-gray-600">
           Break out your core expenses. This helps highlight the biggest opportunities for savings.
         </p>
@@ -75,7 +86,7 @@ const Step4_Expenses = ({ onBack, onNext, control, errors, watch }) => {
             maximumFractionDigits={0}
           />
         ) : (
-          <input type="hidden" name="expensesChildcare" value="0" />
+          <input type="hidden" {...register('expensesChildcare')} value="0" readOnly />
         )}
 
         {specialNeedsChildren > 0 ? (
@@ -89,7 +100,7 @@ const Step4_Expenses = ({ onBack, onNext, control, errors, watch }) => {
             maximumFractionDigits={0}
           />
         ) : (
-          <input type="hidden" name="specialNeedsCostsMonthly" value="0" />
+          <input type="hidden" {...register('specialNeedsCostsMonthly')} value="0" readOnly />
         )}
       </div>
 
@@ -113,4 +124,4 @@ const Step4_Expenses = ({ onBack, onNext, control, errors, watch }) => {
   );
 };
 
-export default Step4_Expenses;
+export default Step3_Expenses;

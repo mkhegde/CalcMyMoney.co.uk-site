@@ -1,5 +1,5 @@
 // src/pages/financial-blueprint/SurveyPage.jsx
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -7,20 +7,27 @@ import ProgressBar from './ProgressBar';
 import ReportDisplay from './ReportDisplay';
 
 // Import all our schemas and components
-import { step1Schema, step2Schema, step3Schema } from './schemas';
+import { step1Schema, step2Schema, step4Schema } from './schemas';
 import Step1_Profile from './Step1_Profile';
 import Step2_Income from './Step2_Income';
 import Step3_Expenses from './Step3_Expenses';
 
-const TOTAL_STEPS = 8;
-
-const schemas = [step1Schema, step2Schema, step3Schema];
-
 const SurveyPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [finalData, setFinalData] = useState({});
-
-  const currentSchema = useMemo(() => schemas[currentStep - 1], [currentStep]);
+  const stepConfigs = useMemo(
+    () => [
+      { Component: Step1_Profile, schema: step1Schema },
+      { Component: Step2_Income, schema: step2Schema },
+      { Component: Step3_Expenses, schema: step4Schema },
+    ],
+    []
+  );
+  const totalSteps = stepConfigs.length;
+  const currentIndex = Math.min(Math.max(currentStep - 1, 0), totalSteps - 1);
+  const currentStepConfig = stepConfigs[currentIndex];
+  const currentSchema = useMemo(() => currentStepConfig?.schema, [currentStepConfig]);
+  const resolver = useMemo(() => (currentSchema ? zodResolver(currentSchema) : undefined), [currentSchema]);
 
   const {
     register,
@@ -28,35 +35,39 @@ const SurveyPage = () => {
     watch,
     formState: { errors },
     trigger,
-    reset,
-    getValues,
+    control,
   } = useForm({
-    resolver: zodResolver(currentSchema),
+    resolver,
     defaultValues: {
       blueprintFor: 'individual',
       location: 'england',
+      housingStatus: 'renting',
       maritalStatus: 'single',
       age: '',
       partnerAge: '',
       profession: '',
       partnerProfession: '',
+      numberOfChildren: '0',
+      specialNeedsChildren: '0',
+      specialNeedsSupport: '',
+      healthStatus: 'good',
+      smoker: 'no',
+      alcoholUnitsWeekly: '0',
+      tobaccoSpendWeekly: '0',
       yourSalary: '',
       partnerSalary: '',
-      otherIncome: '0',
-      benefitsIncome: '0',
-      essentialExpenses: '',
-      discretionaryExpenses: '',
-      annualExpenses: '0',
+      otherIncomeMonthly: '0',
+      benefitsIncomeMonthly: '0',
+      expensesHousing: '0',
+      expensesUtilities: '0',
+      expensesGroceries: '0',
+      expensesTransport: '0',
+      expensesLifestyle: '0',
+      expensesChildcare: '0',
+      specialNeedsCostsMonthly: '0',
     },
+    shouldUnregister: false,
   });
-
-  useEffect(() => {
-    if (currentSchema) {
-      reset(getValues(), {
-        resolver: zodResolver(currentSchema),
-      });
-    }
-  }, [currentSchema, reset, getValues]);
 
   const [reportData, setReportData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +75,7 @@ const SurveyPage = () => {
 
   const processStep = (data) => {
     setFinalData((prev) => ({ ...prev, ...data }));
-    if (currentStep < TOTAL_STEPS) {
+    if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
       finalSubmit({ ...finalData, ...data });
@@ -88,10 +99,15 @@ const SurveyPage = () => {
     setIsLoading(true);
     setError(null);
     try {
+      const payload = {
+        ...allData,
+        otherIncome: allData.otherIncomeMonthly ?? allData.otherIncome ?? '0',
+        benefitsIncome: allData.benefitsIncomeMonthly ?? allData.benefitsIncome ?? '0',
+      };
       const response = await fetch('/api/generate-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(allData),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -106,7 +122,7 @@ const SurveyPage = () => {
     }
   };
 
-  const completionPercentage = (currentStep / TOTAL_STEPS) * 100;
+  const completionPercentage = totalSteps ? (currentStep / totalSteps) * 100 : 0;
 
   const renderContent = () => {
     if (isLoading) {
@@ -126,45 +142,35 @@ const SurveyPage = () => {
       return <ReportDisplay reportData={reportData} />;
     }
 
-    switch (currentStep) {
-      case 1:
-        return (
-          <Step1_Profile register={register} errors={errors} watch={watch} onNext={handleNext} />
-        );
-      case 2:
-        return (
-          <Step2_Income
-            register={register}
-            errors={errors}
-            watch={watch}
-            onNext={handleNext}
-            onBack={handleBack}
-          />
-        );
-      case 3:
-        return (
-          <Step3_Expenses
-            register={register}
-            errors={errors}
-            onNext={handleNext}
-            onBack={handleBack}
-          />
-        );
-      default:
-        return (
-          <div className="text-center">
-            <h2 className="text-2xl font-bold">Step {currentStep}</h2>
-            <p className="mt-4">This step has not been refactored yet.</p>
-            <button
-              type="button"
-              onClick={handleBack}
-              className="mt-6 bg-gray-300 text-gray-800 py-2 px-4 rounded-md"
-            >
-              Go Back
-            </button>
-          </div>
-        );
+    const StepComponent = currentStepConfig?.Component;
+    if (!StepComponent) {
+      return (
+        <div className="text-center">
+          <h2 className="text-2xl font-bold">Step {currentStep}</h2>
+          <p className="mt-4">This step is unavailable. Please go back and try again.</p>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="mt-6 bg-gray-300 text-gray-800 py-2 px-4 rounded-md"
+          >
+            Go Back
+          </button>
+        </div>
+      );
     }
+
+    return (
+      <StepComponent
+        register={register}
+        control={control}
+        errors={errors}
+        watch={watch}
+        onNext={handleNext}
+        onBack={handleBack}
+        currentStep={currentStep}
+        totalSteps={totalSteps}
+      />
+    );
   };
 
   return (
