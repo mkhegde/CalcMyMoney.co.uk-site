@@ -29,23 +29,33 @@ export const step1Schema = z
       .number({ required_error: 'Your age is required.' })
       .min(18, { message: 'You must be at least 18 years old to continue.' })
       .max(110, { message: 'Please provide a realistic age.' }),
-    partnerAge: z.coerce
-      .number()
-      .min(18, { message: "Partner's age must be at least 18." })
-      .max(110, { message: 'Please provide a realistic partner age.' })
+    partnerAge: z
+      .preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
+        z
+          .number({ required_error: "Partner's age must be at least 18." })
+          .min(18, { message: "Partner's age must be at least 18." })
+          .max(110, { message: 'Please provide a realistic partner age.' })
+      )
       .optional(),
     profession: z
       .string({ required_error: 'Profession is required.' })
       .min(2, { message: 'Please provide a valid profession.' }),
     partnerProfession: z
-      .string()
-      .min(2, { message: "Partner's profession is required." })
+      .preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.string().min(2, { message: "Partner's profession is required." })
+      )
       .optional(),
     numberOfChildren: integerField('Number of children'),
     specialNeedsChildren: integerField('Number of children with special needs'),
     specialNeedsSupport: z
-      .string({ required_error: 'Please describe the support requirements.' })
-      .min(3, { message: 'Please add a short description of support needs.' })
+      .preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z
+          .string({ required_error: 'Please describe the support requirements.' })
+          .min(3, { message: 'Please add a short description of support needs.' })
+      )
       .optional(),
     healthStatus: z.enum(['good', 'fair', 'poor'], {
       required_error: 'Health status is required.',

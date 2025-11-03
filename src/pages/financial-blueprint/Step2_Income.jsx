@@ -33,12 +33,12 @@ export const MoneyInput = ({
   </div>
 );
 
-const Step2_Income = ({ onBack, onNext, control, errors, watch }) => {
+const Step2_Income = ({ onBack, onNext, control, errors, watch, currentStep, totalSteps }) => {
   const blueprintFor = watch('blueprintFor');
   const salary = Number(watch('yourSalary') || 0);
   const partnerSalary = blueprintFor === 'family' ? Number(watch('partnerSalary') || 0) : 0;
-  const otherIncomeMonthly = Number(watch('otherIncomeMonthly') || 0);
-  const benefitsIncomeMonthly = Number(watch('benefitsIncomeMonthly') || 0);
+  const otherIncomeMonthly = Number(watch('otherIncomeMonthly') || watch('otherIncome') || 0);
+  const benefitsIncomeMonthly = Number(watch('benefitsIncomeMonthly') || watch('benefitsIncome') || 0);
 
   const summary = useMemo(() => {
     const otherIncome = otherIncomeMonthly * 12;
@@ -56,7 +56,9 @@ const Step2_Income = ({ onBack, onNext, control, errors, watch }) => {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-bold">Step 2 of 9: Household income</h2>
+        <h2 className="text-2xl font-bold">
+          Step {currentStep} of {totalSteps}: Household income
+        </h2>
         <p className="mt-2 text-gray-600">
           Capture every source of income so we can model tax, NI, and take-home pay accurately.
         </p>
