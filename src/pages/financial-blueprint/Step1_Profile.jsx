@@ -3,7 +3,7 @@ import CurrencyInput from '@/components/form/CurrencyInput.jsx';
 
 const radioGroup = 'form-radio h-4 w-4 text-indigo-600';
 
-const Step1_Profile = ({ onNext, register, control, errors, watch }) => {
+const Step1_Profile = ({ onNext, register, control, errors, watch, currentStep, totalSteps }) => {
   const blueprintFor = watch('blueprintFor');
   const housingStatus = watch('housingStatus');
   const numberOfChildren = watch('numberOfChildren');
@@ -11,7 +11,9 @@ const Step1_Profile = ({ onNext, register, control, errors, watch }) => {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-bold">Step 1 of 9: Your Household Profile</h2>
+        <h2 className="text-2xl font-bold">
+          Step {currentStep} of {totalSteps}: Your Household Profile
+        </h2>
         <p className="mt-2 text-gray-600">
           Tell us about your current circumstances so we can tailor the blueprint to your needs.
         </p>

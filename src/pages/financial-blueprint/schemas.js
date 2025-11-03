@@ -29,23 +29,33 @@ export const step1Schema = z
       .number({ required_error: 'Your age is required.' })
       .min(18, { message: 'You must be at least 18 years old to continue.' })
       .max(110, { message: 'Please provide a realistic age.' }),
-    partnerAge: z.coerce
-      .number()
-      .min(18, { message: "Partner's age must be at least 18." })
-      .max(110, { message: 'Please provide a realistic partner age.' })
+    partnerAge: z
+      .preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
+        z
+          .number({ required_error: "Partner's age must be at least 18." })
+          .min(18, { message: "Partner's age must be at least 18." })
+          .max(110, { message: 'Please provide a realistic partner age.' })
+      )
       .optional(),
     profession: z
       .string({ required_error: 'Profession is required.' })
       .min(2, { message: 'Please provide a valid profession.' }),
     partnerProfession: z
-      .string()
-      .min(2, { message: "Partner's profession is required." })
+      .preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z.string().min(2, { message: "Partner's profession is required." })
+      )
       .optional(),
     numberOfChildren: integerField('Number of children'),
     specialNeedsChildren: integerField('Number of children with special needs'),
     specialNeedsSupport: z
-      .string({ required_error: 'Please describe the support requirements.' })
-      .min(3, { message: 'Please add a short description of support needs.' })
+      .preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : val),
+        z
+          .string({ required_error: 'Please describe the support requirements.' })
+          .min(3, { message: 'Please add a short description of support needs.' })
+      )
       .optional(),
     healthStatus: z.enum(['good', 'fair', 'poor'], {
       required_error: 'Health status is required.',
@@ -108,16 +118,7 @@ export const step2Schema = z
     }
   });
 
-export const step3Schema = z.object({
-  calculatedGrossAnnualIncome: moneyField('Calculated gross annual income'),
-  calculatedTaxableIncome: moneyField('Calculated taxable income'),
-  calculatedIncomeTaxAnnual: moneyField('Calculated income tax'),
-  calculatedNationalInsuranceAnnual: moneyField('Calculated National Insurance'),
-  calculatedNetAnnualIncome: moneyField('Calculated net annual income'),
-  calculatedNetMonthlyIncome: moneyField('Calculated net monthly income'),
-});
-
-export const step4Schema = z
+export const step3Schema = z
   .object({
     expensesHousing: moneyField('Housing costs'),
     expensesUtilities: moneyField('Utilities'),
@@ -146,7 +147,7 @@ export const step4Schema = z
     }
   });
 
-export const step5Schema = z.object({
+export const step4Schema = z.object({
   cashSavings: moneyField('Cash savings'),
   pensionValue: moneyField('Total pension value'),
   propertyValue: moneyField('Primary residence value'),
@@ -154,7 +155,7 @@ export const step5Schema = z.object({
   otherAssets: moneyField('Other significant assets'),
 });
 
-export const step6Schema = z
+export const step5Schema = z
   .object({
     housingStatus: z.enum(['renting', 'mortgaged', 'owned']),
     monthlyRent: moneyField('Monthly rent'),
@@ -211,7 +212,7 @@ export const step6Schema = z
     }
   });
 
-export const step7Schema = z.object({
+export const step6Schema = z.object({
   earningHabit: z.enum(['active', 'stable', 'passive'], {
     required_error: 'Please choose the option that best describes your earning habit.',
   }),
@@ -223,7 +224,7 @@ export const step7Schema = z.object({
   }),
 });
 
-export const step8Schema = z.object({
+export const step7Schema = z.object({
   hasWill: z.enum(['yes', 'no'], { required_error: 'Please confirm if you have a will.' }),
   hasLifeInsurance: z.enum(['yes', 'no'], {
     required_error: 'Please confirm if you have life insurance.',

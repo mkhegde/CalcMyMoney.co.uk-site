@@ -1,68 +1,60 @@
-// src/pages/financial-blueprint/Step7_Protection.jsx
 import React from 'react';
 
-const RadioQuestion = ({ label, name, value, handleChange }) => (
+const radioClass = 'form-radio h-4 w-4 text-indigo-600';
+
+const RadioQuestion = ({ label, name, register, error }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700">{label}</label>
-    <div className="mt-2 flex gap-4">
-      <label className="inline-flex items-center">
-        <input
-          type="radio"
-          name={name}
-          value="yes"
-          checked={value === 'yes'}
-          onChange={handleChange}
-          className="form-radio h-4 w-4 text-indigo-600"
-        />
-        <span className="ml-2">Yes</span>
+    <span className="block text-sm font-medium text-gray-700">{label}</span>
+    <div className="mt-2 flex gap-6">
+      <label className="inline-flex items-center gap-2">
+        <input type="radio" value="yes" {...register(name)} className={radioClass} />
+        <span>Yes</span>
       </label>
-      <label className="inline-flex items-center">
-        <input
-          type="radio"
-          name={name}
-          value="no"
-          checked={value === 'no'}
-          onChange={handleChange}
-          className="form-radio h-4 w-4 text-indigo-600"
-        />
-        <span className="ml-2">No</span>
+      <label className="inline-flex items-center gap-2">
+        <input type="radio" value="no" {...register(name)} className={radioClass} />
+        <span>No</span>
       </label>
     </div>
+    {error ? <p className="mt-1 text-sm text-red-600">{error.message}</p> : null}
   </div>
 );
 
-const Step7_Protection = ({ onBack, onNext, formData, handleChange }) => {
+const Step7_Protection = ({ onBack, onNext, register, errors, currentStep, totalSteps }) => {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-bold">Step 7 of 7: Your Financial Protection</h2>
-        <p className="mt-2 text-gray-600">Finally, let's cover your financial safety net.</p>
+        <h2 className="text-2xl font-bold">
+          Step {currentStep} of {totalSteps}: Your financial protection
+        </h2>
+        <p className="mt-2 text-gray-600">
+          Tell us about the safety nets you already have in place.
+        </p>
       </div>
 
       <div className="space-y-6 rounded-lg bg-gray-50 p-6 border border-gray-200">
         <RadioQuestion
           label="Do you have a legally valid Will?"
           name="hasWill"
-          value={formData.hasWill}
-          handleChange={handleChange}
+          register={register}
+          error={errors.hasWill}
         />
         <RadioQuestion
-          label="Do you have Life Insurance?"
+          label="Do you have life insurance?"
           name="hasLifeInsurance"
-          value={formData.hasLifeInsurance}
-          handleChange={handleChange}
+          register={register}
+          error={errors.hasLifeInsurance}
         />
         <RadioQuestion
-          label="Do you have Income Protection Insurance?"
+          label="Do you have income protection insurance?"
           name="hasIncomeProtection"
-          value={formData.hasIncomeProtection}
-          handleChange={handleChange}
+          register={register}
+          error={errors.hasIncomeProtection}
         />
         <RadioQuestion
-          label="Do you have a Lasting Power of Attorney (LPA) in place?"
+          label="Do you have a lasting power of attorney (LPA)?"
           name="hasLPA"
-          value={formData.hasLPA}
-          handleChange={handleChange}
+          register={register}
+          error={errors.hasLPA}
         />
       </div>
 
@@ -79,7 +71,7 @@ const Step7_Protection = ({ onBack, onNext, formData, handleChange }) => {
           onClick={onNext}
           className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
         >
-          Review Your Details
+          Review answers
         </button>
       </div>
     </div>
