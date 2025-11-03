@@ -1,6 +1,38 @@
 import React, { useMemo } from 'react';
 import CurrencyInput from '@/components/form/CurrencyInput.jsx';
 
+export const MoneyInput = ({
+  label,
+  name,
+  value,
+  handleChange,
+  placeholder,
+  helpText,
+}) => (
+  <div>
+    <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+      {label}
+    </label>
+    <div className="mt-1">
+      <input
+        type="number"
+        id={name}
+        name={name}
+        value={value ?? ''}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+        min={0}
+        step="any"
+        inputMode="decimal"
+      />
+    </div>
+    {helpText ? (
+      <p className="mt-1 text-sm text-gray-500">{helpText}</p>
+    ) : null}
+  </div>
+);
+
 const Step2_Income = ({ onBack, onNext, control, errors, watch }) => {
   const blueprintFor = watch('blueprintFor');
   const salary = Number(watch('yourSalary') || 0);
