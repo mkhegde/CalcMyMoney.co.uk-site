@@ -53,15 +53,24 @@ const CurrencyInput = ({
 
         const handleChange = (event) => {
           const normalised = normaliseInput(event.target.value);
-          setDisplayValue(normalised ? formatter.format(Number(normalised)) : '');
+          if (!normalised) {
+            setDisplayValue('');
+            onChange('');
+            return;
+          }
+          setDisplayValue(formatter.format(Number(normalised)));
           onChange(normalised);
         };
 
         const handleBlur = (event) => {
           const normalised = normaliseInput(event.target.value);
+          const resolvedValue = normalised === '' ? '0' : normalised;
           setDisplayValue(
-            normalised ? formatNumber(normalised, minimumFractionDigits, maximumFractionDigits) : ''
+            resolvedValue
+              ? formatNumber(resolvedValue, minimumFractionDigits, maximumFractionDigits)
+              : ''
           );
+          onChange(resolvedValue);
           onBlur();
         };
 
