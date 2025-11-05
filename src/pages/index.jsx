@@ -377,7 +377,7 @@ function PagesContent() {
           <Route path="/present-value-calculator" element={<LazyPresentValueCalculator />} />
           <Route path="/price-per-unit-calculator" element={<LazyPricePerUnitCalculator />} />
           <Route path="/pro-rata-salary-calculator" element={<LazyProRataSalaryCalculator />} />
-          <Route path="/property-flipping-calculator" element={<LazyPropertyFlippingCalculator />} />
+          <Route path="/property-flipping-calculator" element={<LazyPropertyFppingCalculator />} />
           <Route path="/property-tax-calculator" element={<LazyPropertyTaxCalculator />} />
           <Route path="/rent-to-buy-calculator" element={<LazyRentToBuyCalculator />} />
           <Route path="/rent-vs-buy-calculator" element={<LazyRentVsBuyCalculator />} />
