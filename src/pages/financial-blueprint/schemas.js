@@ -120,6 +120,7 @@ export const step2Schema = z
 
 export const step3Schema = z
   .object({
+    blueprintFor: z.enum(['individual', 'family']),
     expensesHousing: moneyField('Housing costs'),
     expensesUtilities: moneyField('Utilities'),
     expensesGroceries: moneyField('Groceries'),
@@ -129,6 +130,12 @@ export const step3Schema = z
     specialNeedsCostsMonthly: moneyField('Special needs support costs'),
     numberOfChildren: integerField('Number of children'),
     specialNeedsChildren: integerField('Number of children with special needs'),
+    emergencySavingsContributionMonthly: moneyField('Monthly emergency savings contribution'),
+    pensionContributionMonthly: moneyField('Your monthly pension contribution'),
+    partnerPensionContributionMonthly: moneyField("Partner's monthly pension contribution"),
+    isaContributionMonthly: moneyField('Monthly ISA investing'),
+    partnerIsaContributionMonthly: moneyField("Partner's monthly ISA investing"),
+    childcareVouchersMonthly: moneyField('Monthly childcare vouchers received'),
   })
   .superRefine((data, ctx) => {
     if (data.specialNeedsChildren > 0 && data.specialNeedsCostsMonthly <= 0) {
@@ -145,12 +152,37 @@ export const step3Schema = z
         message: 'Childcare costs should be zero if there are no children.',
       });
     }
+    if (data.numberOfChildren === 0 && data.childcareVouchersMonthly > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['childcareVouchersMonthly'],
+        message: 'Childcare vouchers should be zero if there are no children.',
+      });
+    }
+    if (data.blueprintFor !== 'family') {
+      if (data.partnerPensionContributionMonthly > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerPensionContributionMonthly'],
+          message: 'Partner contributions should be zero for an individual blueprint.',
+        });
+      }
+      if (data.partnerIsaContributionMonthly > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerIsaContributionMonthly'],
+          message: 'Partner ISA investing should be zero for an individual blueprint.',
+        });
+      }
+    }
   });
 
 export const step4Schema = z.object({
   cashSavings: moneyField('Cash savings'),
+  emergencyFundBalance: moneyField('Emergency fund balance'),
   pensionValue: moneyField('Total pension value'),
   propertyValue: moneyField('Primary residence value'),
+  isaInvestmentsValue: moneyField('Investments held within ISAs'),
   otherInvestments: moneyField('Other investments'),
   otherAssets: moneyField('Other significant assets'),
 });
@@ -167,6 +199,7 @@ export const step5Schema = z
     creditCardDebt: moneyField('Credit card debt'),
     otherLoans: moneyField('Other loan balances'),
     studentLoanBalance: moneyField('Student loan balance'),
+    insurancePremiumsTotalMonthly: moneyField('Total monthly insurance premiums'),
   })
   .superRefine((data, ctx) => {
     if (data.housingStatus === 'renting') {
@@ -222,17 +255,405 @@ export const step6Schema = z.object({
   investingHabit: z.enum(['confident', 'cautious', 'avoidant'], {
     required_error: 'Please choose the option that best describes your investing habit.',
   }),
+  emergencySavingsConfidence: z.enum(['comfortable', 'building', 'concerned'], {
+    required_error: 'Please share how you feel about your emergency savings.',
+  }),
 });
 
-export const step7Schema = z.object({
-  hasWill: z.enum(['yes', 'no'], { required_error: 'Please confirm if you have a will.' }),
-  hasLifeInsurance: z.enum(['yes', 'no'], {
-    required_error: 'Please confirm if you have life insurance.',
-  }),
-  hasIncomeProtection: z.enum(['yes', 'no'], {
-    required_error: 'Please confirm if you have income protection insurance.',
-  }),
-  hasLPA: z.enum(['yes', 'no'], {
-    required_error: 'Please confirm if you have a lasting power of attorney.',
-  }),
-});
+export const step7Schema = z
+  .object({
+    blueprintFor: z.enum(['individual', 'family']),
+    hasWill: z.enum(['yes', 'no'], { required_error: 'Please confirm if you have a will.' }),
+    hasLifeInsurance: z.enum(['yes', 'no'], {
+      required_error: 'Please confirm if you have life insurance.',
+    }),
+    partnerHasLifeInsurance: z.enum(['yes', 'no']).optional(),
+    lifeInsuranceBenefitAmount: moneyField('Life insurance benefit amount'),
+    partnerLifeInsuranceBenefitAmount: moneyField("Partner's life insurance benefit amount"),
+    hasIncomeProtection: z.enum(['yes', 'no'], {
+      required_error: 'Please confirm if you have income protection insurance.',
+    }),
+    partnerHasIncomeProtection: z.enum(['yes', 'no']).optional(),
+    incomeProtectionBenefitAmount: moneyField('Income protection monthly benefit'),
+    partnerIncomeProtectionBenefitAmount: moneyField("Partner's income protection monthly benefit"),
+    hasLPA: z.enum(['yes', 'no'], {
+      required_error: 'Please confirm if you have a lasting power of attorney.',
+    }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.hasLifeInsurance === 'yes' && data.lifeInsuranceBenefitAmount <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['lifeInsuranceBenefitAmount'],
+        message: 'Please share the total benefit amount for your life insurance.',
+      });
+    }
+    if (data.hasLifeInsurance !== 'yes' && data.lifeInsuranceBenefitAmount > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['lifeInsuranceBenefitAmount'],
+        message: 'Life insurance benefit should be zero if you do not have cover.',
+      });
+    }
+    if (data.blueprintFor === 'family') {
+      if (!data.partnerHasLifeInsurance) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerHasLifeInsurance'],
+          message: 'Please tell us if your partner has life insurance.',
+        });
+      }
+      if (!data.partnerHasIncomeProtection) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerHasIncomeProtection'],
+          message: 'Please tell us if your partner has income protection.',
+        });
+      }
+      if (data.partnerHasLifeInsurance === 'yes' && data.partnerLifeInsuranceBenefitAmount <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerLifeInsuranceBenefitAmount'],
+          message: 'Please share your partner’s life insurance benefit amount.',
+        });
+      }
+      if (
+        data.partnerHasLifeInsurance !== 'yes' &&
+        data.partnerLifeInsuranceBenefitAmount > 0
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerLifeInsuranceBenefitAmount'],
+          message: 'Partner life insurance benefit should be zero if they have no cover.',
+        });
+      }
+      if (
+        data.partnerHasIncomeProtection === 'yes' &&
+        data.partnerIncomeProtectionBenefitAmount <= 0
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerIncomeProtectionBenefitAmount'],
+          message: 'Please share your partner’s income protection benefit amount.',
+        });
+      }
+      if (
+        data.partnerHasIncomeProtection !== 'yes' &&
+        data.partnerIncomeProtectionBenefitAmount > 0
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerIncomeProtectionBenefitAmount'],
+          message: 'Partner income protection benefit should be zero if they have no cover.',
+        });
+      }
+    } else {
+      if (data.partnerLifeInsuranceBenefitAmount > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerLifeInsuranceBenefitAmount'],
+          message: 'Partner life insurance should be zero for an individual blueprint.',
+        });
+      }
+      if (data.partnerIncomeProtectionBenefitAmount > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerIncomeProtectionBenefitAmount'],
+          message: 'Partner income protection should be zero for an individual blueprint.',
+        });
+      }
+    }
+    if (data.hasIncomeProtection === 'yes' && data.incomeProtectionBenefitAmount <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['incomeProtectionBenefitAmount'],
+        message: 'Please share the expected monthly income protection benefit.',
+      });
+    }
+    if (data.hasIncomeProtection !== 'yes' && data.incomeProtectionBenefitAmount > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['incomeProtectionBenefitAmount'],
+        message: 'Income protection benefit should be zero if you have no cover.',
+      });
+    }
+  });
+
+export const step8Schema = z
+  .object({
+    blueprintFor: z.enum(['individual', 'family']),
+    retirementTargetAge: z.coerce
+      .number({ required_error: 'Your target retirement age is required.' })
+      .min(50, { message: 'Retirement age should be at least 50.' })
+      .max(80, { message: 'Please provide a realistic retirement age.' }),
+    partnerRetirementTargetAge: z.coerce
+      .number({ required_error: "Partner's target retirement age is required." })
+      .min(50, { message: "Partner's retirement age should be at least 50." })
+      .max(80, { message: 'Please provide a realistic retirement age for your partner.' })
+      .optional(),
+    retirementIncomeTargetMonthly: moneyField('Desired monthly retirement income'),
+    partnerRetirementIncomeTargetMonthly: moneyField(
+      "Partner's desired monthly retirement income"
+    ),
+    statePensionQualifyingYears: z.coerce
+      .number({ required_error: 'Please share your qualifying years of National Insurance.' })
+      .min(0, { message: 'Qualifying years cannot be negative.' })
+      .max(60, { message: 'Please provide a realistic number of qualifying years.' }),
+    statePensionLastStatementYear: z.coerce
+      .number({ required_error: 'Please share when you last checked your state pension.' })
+      .min(1990, { message: 'Please share a year after 1990.' })
+      .max(new Date().getFullYear(), {
+        message: 'Your last statement year cannot be in the future.',
+      }),
+    statePensionForecastAmountMonthly: moneyField('Estimated monthly state pension'),
+  })
+  .superRefine((data, ctx) => {
+    if (data.blueprintFor !== 'family') {
+      if (data.partnerRetirementTargetAge && data.partnerRetirementTargetAge > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerRetirementTargetAge'],
+          message: 'Partner retirement age should be left blank for an individual blueprint.',
+        });
+      }
+      if (data.partnerRetirementIncomeTargetMonthly > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerRetirementIncomeTargetMonthly'],
+          message: 'Partner retirement income should be zero for an individual blueprint.',
+        });
+      }
+    } else {
+      if (!data.partnerRetirementTargetAge) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerRetirementTargetAge'],
+          message: 'Please provide your partner’s target retirement age.',
+        });
+      }
+      if (data.partnerRetirementIncomeTargetMonthly <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerRetirementIncomeTargetMonthly'],
+          message: 'Please provide your partner’s desired retirement income.',
+        });
+      }
+    }
+  });
+
+const optionalProviderField = (label) =>
+  z
+    .string()
+    .trim()
+    .max(120, { message: `${label} must be 120 characters or fewer.` });
+
+const optionalNotesField = (label) =>
+  z
+    .string()
+    .trim()
+    .max(500, { message: `${label} must be 500 characters or fewer.` });
+
+export const step9Schema = z
+  .object({
+    blueprintFor: z.enum(['individual', 'family']),
+    hasLifeInsurance: z.enum(['yes', 'no']),
+    partnerHasLifeInsurance: z.enum(['yes', 'no']).optional(),
+    lifeInsuranceProvider: optionalProviderField('Life insurance provider'),
+    lifeInsuranceSumAssured: moneyField('Life insurance sum assured'),
+    lifeInsurancePremiumMonthlyDetail: moneyField('Life insurance premium (monthly)'),
+    lifeInsuranceBeneficiaryNotes: optionalNotesField('Life insurance beneficiary notes'),
+    hasIncomeProtection: z.enum(['yes', 'no']),
+    partnerHasIncomeProtection: z.enum(['yes', 'no']).optional(),
+    incomeProtectionProvider: optionalProviderField('Income protection insurer'),
+    incomeProtectionBenefitMonthly: moneyField('Income protection monthly benefit'),
+    incomeProtectionPremiumMonthlyDetail: moneyField('Income protection premium (monthly)'),
+    incomeProtectionBeneficiaryNotes: optionalNotesField('Income protection beneficiary notes'),
+    partnerLifeInsuranceProvider: optionalProviderField("Partner's life insurance provider"),
+    partnerLifeInsuranceSumAssured: moneyField("Partner's life insurance sum assured"),
+    partnerLifeInsurancePremiumMonthlyDetail: moneyField(
+      "Partner's life insurance premium (monthly)"
+    ),
+    partnerLifeInsuranceBeneficiaryNotes: optionalNotesField(
+      "Partner's life insurance beneficiary notes"
+    ),
+    partnerIncomeProtectionProvider: optionalProviderField("Partner's income protection insurer"),
+    partnerIncomeProtectionBenefitMonthly: moneyField(
+      "Partner's income protection monthly benefit"
+    ),
+    partnerIncomeProtectionPremiumMonthlyDetail: moneyField(
+      "Partner's income protection premium (monthly)"
+    ),
+    partnerIncomeProtectionBeneficiaryNotes: optionalNotesField(
+      "Partner's income protection beneficiary notes"
+    ),
+  })
+  .superRefine((data, ctx) => {
+    const ensureProvider = (condition, path, value, label) => {
+      if (condition && (!value || value.length < 2)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path,
+          message: `Please provide the ${label}.`,
+        });
+      }
+    };
+    if (data.hasLifeInsurance === 'yes') {
+      if (data.lifeInsuranceSumAssured <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['lifeInsuranceSumAssured'],
+          message: 'Please provide the total sum assured for your life insurance.',
+        });
+      }
+      ensureProvider(true, ['lifeInsuranceProvider'], data.lifeInsuranceProvider, 'life insurance provider');
+      if (data.lifeInsurancePremiumMonthlyDetail <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['lifeInsurancePremiumMonthlyDetail'],
+          message: 'Please provide your monthly life insurance premium.',
+        });
+      }
+    } else {
+      if (data.lifeInsuranceSumAssured > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['lifeInsuranceSumAssured'],
+          message: 'Sum assured should be zero if you do not have life insurance.',
+        });
+      }
+      if (data.lifeInsurancePremiumMonthlyDetail > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['lifeInsurancePremiumMonthlyDetail'],
+          message: 'Premiums should be zero if you do not have life insurance.',
+        });
+      }
+    }
+    if (data.hasIncomeProtection === 'yes') {
+      if (data.incomeProtectionBenefitMonthly <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['incomeProtectionBenefitMonthly'],
+          message: 'Please share the expected monthly income protection benefit.',
+        });
+      }
+      ensureProvider(
+        true,
+        ['incomeProtectionProvider'],
+        data.incomeProtectionProvider,
+        'income protection insurer'
+      );
+      if (data.incomeProtectionPremiumMonthlyDetail <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['incomeProtectionPremiumMonthlyDetail'],
+          message: 'Please provide your monthly income protection premium.',
+        });
+      }
+    } else {
+      if (data.incomeProtectionBenefitMonthly > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['incomeProtectionBenefitMonthly'],
+          message: 'Benefit amount should be zero if you do not have income protection.',
+        });
+      }
+      if (data.incomeProtectionPremiumMonthlyDetail > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['incomeProtectionPremiumMonthlyDetail'],
+          message: 'Premiums should be zero if you do not have income protection.',
+        });
+      }
+    }
+    if (data.blueprintFor === 'family') {
+      ensureProvider(
+        data.partnerHasLifeInsurance === 'yes',
+        ['partnerLifeInsuranceProvider'],
+        data.partnerLifeInsuranceProvider,
+        "partner's life insurance provider"
+      );
+      if (
+        data.partnerHasLifeInsurance === 'yes' &&
+        data.partnerLifeInsuranceSumAssured <= 0
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerLifeInsuranceSumAssured'],
+          message: 'Please share your partner’s life insurance sum assured.',
+        });
+      }
+      if (
+        data.partnerHasLifeInsurance === 'yes' &&
+        data.partnerLifeInsurancePremiumMonthlyDetail <= 0
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerLifeInsurancePremiumMonthlyDetail'],
+          message: 'Please share your partner’s monthly life insurance premium.',
+        });
+      }
+      if (
+        data.partnerHasLifeInsurance !== 'yes' &&
+        (data.partnerLifeInsuranceSumAssured > 0 || data.partnerLifeInsurancePremiumMonthlyDetail > 0)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerLifeInsuranceSumAssured'],
+          message: 'Partner life insurance values should be zero if they have no cover.',
+        });
+      }
+      if (
+        data.partnerHasIncomeProtection === 'yes' &&
+        data.partnerIncomeProtectionBenefitMonthly <= 0
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerIncomeProtectionBenefitMonthly'],
+          message: 'Please share your partner’s income protection benefit amount.',
+        });
+      }
+      ensureProvider(
+        data.partnerHasIncomeProtection === 'yes',
+        ['partnerIncomeProtectionProvider'],
+        data.partnerIncomeProtectionProvider,
+        "partner's income protection insurer"
+      );
+      if (
+        data.partnerHasIncomeProtection === 'yes' &&
+        data.partnerIncomeProtectionPremiumMonthlyDetail <= 0
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerIncomeProtectionPremiumMonthlyDetail'],
+          message: 'Please share your partner’s monthly income protection premium.',
+        });
+      }
+      if (
+        data.partnerHasIncomeProtection !== 'yes' &&
+        (data.partnerIncomeProtectionBenefitMonthly > 0 ||
+          data.partnerIncomeProtectionPremiumMonthlyDetail > 0)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerIncomeProtectionBenefitMonthly'],
+          message: 'Partner income protection values should be zero if they have no cover.',
+        });
+      }
+    } else {
+      if (data.partnerLifeInsuranceSumAssured > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerLifeInsuranceSumAssured'],
+          message: 'Partner values should be zero for an individual blueprint.',
+        });
+      }
+      if (data.partnerIncomeProtectionBenefitMonthly > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerIncomeProtectionBenefitMonthly'],
+          message: 'Partner values should be zero for an individual blueprint.',
+        });
+      }
+    }
+  });

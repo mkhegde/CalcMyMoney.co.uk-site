@@ -24,6 +24,16 @@ const Step4_Assets = ({ onBack, onNext, control, errors, currentStep, totalSteps
           maximumFractionDigits={0}
         />
         <CurrencyInput
+          name="emergencyFundBalance"
+          control={control}
+          label="Emergency fund balance"
+          placeholder="6,000"
+          helpText="How much is set aside specifically for emergencies."
+          error={errors.emergencyFundBalance}
+          minimumFractionDigits={0}
+          maximumFractionDigits={0}
+        />
+        <CurrencyInput
           name="pensionValue"
           control={control}
           label="Total pension value"
@@ -39,6 +49,15 @@ const Step4_Assets = ({ onBack, onNext, control, errors, currentStep, totalSteps
           label="Primary residence value"
           placeholder="250,000"
           error={errors.propertyValue}
+          minimumFractionDigits={0}
+          maximumFractionDigits={0}
+        />
+        <CurrencyInput
+          name="isaInvestmentsValue"
+          control={control}
+          label="Investments held within ISAs"
+          placeholder="20,000"
+          error={errors.isaInvestmentsValue}
           minimumFractionDigits={0}
           maximumFractionDigits={0}
         />

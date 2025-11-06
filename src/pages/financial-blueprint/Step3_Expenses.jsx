@@ -10,9 +10,19 @@ const Step3_Expenses = ({
   currentStep,
   totalSteps,
   register,
+  setValue,
 }) => {
   const numberOfChildren = Number(watch('numberOfChildren') || 0);
   const specialNeedsChildren = Number(watch('specialNeedsChildren') || 0);
+  const blueprintFor = watch('blueprintFor');
+
+  React.useEffect(() => {
+    if (blueprintFor !== 'family') {
+      const resetOptions = { shouldValidate: false, shouldDirty: false };
+      setValue('partnerPensionContributionMonthly', '0', resetOptions);
+      setValue('partnerIsaContributionMonthly', '0', resetOptions);
+    }
+  }, [blueprintFor, setValue]);
 
   return (
     <div className="space-y-8">
@@ -101,6 +111,80 @@ const Step3_Expenses = ({
           />
         ) : (
           <input type="hidden" {...register('specialNeedsCostsMonthly')} value="0" readOnly />
+        )}
+        <CurrencyInput
+          name="emergencySavingsContributionMonthly"
+          control={control}
+          label="Monthly emergency savings contribution"
+          placeholder="200"
+          helpText="Transfers into your emergency fund or rainy-day savings."
+          error={errors.emergencySavingsContributionMonthly}
+          minimumFractionDigits={0}
+          maximumFractionDigits={0}
+        />
+        <CurrencyInput
+          name="pensionContributionMonthly"
+          control={control}
+          label="Your monthly pension contributions"
+          placeholder="350"
+          helpText="Include workplace and personal pension contributions."
+          error={errors.pensionContributionMonthly}
+          minimumFractionDigits={0}
+          maximumFractionDigits={0}
+        />
+        {blueprintFor === 'family' ? (
+          <CurrencyInput
+            name="partnerPensionContributionMonthly"
+            control={control}
+            label="Partner’s monthly pension contributions"
+            placeholder="320"
+            error={errors.partnerPensionContributionMonthly}
+            minimumFractionDigits={0}
+            maximumFractionDigits={0}
+          />
+        ) : (
+          <input
+            type="hidden"
+            {...register('partnerPensionContributionMonthly')}
+            value="0"
+            readOnly
+          />
+        )}
+        <CurrencyInput
+          name="isaContributionMonthly"
+          control={control}
+          label="Monthly ISA investing"
+          placeholder="250"
+          helpText="Regular amounts invested into ISAs."
+          error={errors.isaContributionMonthly}
+          minimumFractionDigits={0}
+          maximumFractionDigits={0}
+        />
+        {blueprintFor === 'family' ? (
+          <CurrencyInput
+            name="partnerIsaContributionMonthly"
+            control={control}
+            label="Partner’s monthly ISA investing"
+            placeholder="200"
+            error={errors.partnerIsaContributionMonthly}
+            minimumFractionDigits={0}
+            maximumFractionDigits={0}
+          />
+        ) : (
+          <input type="hidden" {...register('partnerIsaContributionMonthly')} value="0" readOnly />
+        )}
+        {numberOfChildren > 0 ? (
+          <CurrencyInput
+            name="childcareVouchersMonthly"
+            control={control}
+            label="Childcare vouchers received each month"
+            placeholder="100"
+            error={errors.childcareVouchersMonthly}
+            minimumFractionDigits={0}
+            maximumFractionDigits={0}
+          />
+        ) : (
+          <input type="hidden" {...register('childcareVouchersMonthly')} value="0" readOnly />
         )}
       </div>
 

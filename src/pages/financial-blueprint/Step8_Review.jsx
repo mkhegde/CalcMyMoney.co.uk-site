@@ -38,6 +38,11 @@ const friendlyText = {
     cautious: 'Cautious / exploring',
     avoidant: 'Prefer cash savings',
   },
+  emergencySavingsConfidence: {
+    comfortable: 'Comfortable with current buffer',
+    building: 'Actively building emergency savings',
+    concerned: 'Concerned about emergency savings',
+  },
   yesNo: { yes: 'Yes', no: 'No' },
 };
 
@@ -82,11 +87,23 @@ const Step8_Review = ({ onBack, onConfirm, values, isLoading }) => {
       ['Lifestyle & entertainment', formatGBP(values.expensesLifestyle)],
       ['Childcare & education', formatGBP(values.expensesChildcare)],
       ['Special needs support', formatGBP(values.specialNeedsCostsMonthly)],
-    ],
+      ['Emergency savings contributions', formatGBP(values.emergencySavingsContributionMonthly)],
+      ['Your pension contributions', formatGBP(values.pensionContributionMonthly)],
+      values.blueprintFor === 'family'
+        ? ["Partner pension contributions", formatGBP(values.partnerPensionContributionMonthly)]
+        : null,
+      ['Monthly ISA investing', formatGBP(values.isaContributionMonthly)],
+      values.blueprintFor === 'family'
+        ? ["Partner ISA investing", formatGBP(values.partnerIsaContributionMonthly)]
+        : null,
+      ['Childcare vouchers received', formatGBP(values.childcareVouchersMonthly)],
+    ].filter(Boolean),
     assets: [
       ['Cash savings', formatGBP(values.cashSavings)],
+      ['Emergency fund balance', formatGBP(values.emergencyFundBalance)],
       ['Pension value', formatGBP(values.pensionValue)],
       ['Property value', formatGBP(values.propertyValue)],
+      ['Investments held in ISAs', formatGBP(values.isaInvestmentsValue)],
       ['Other investments', formatGBP(values.otherInvestments)],
       ['Other assets', formatGBP(values.otherAssets)],
     ],
@@ -98,18 +115,182 @@ const Step8_Review = ({ onBack, onConfirm, values, isLoading }) => {
       ['Credit card debt', formatGBP(values.creditCardDebt)],
       ['Other loans', formatGBP(values.otherLoans)],
       ['Student loan balance', formatGBP(values.studentLoanBalance)],
+      ['Insurance premiums (monthly total)', formatGBP(values.insurancePremiumsTotalMonthly)],
     ],
     mindset: [
       ['Earning habit', friendlyText.earningHabit[values.earningHabit] || values.earningHabit || '—'],
       ['Saving habit', friendlyText.savingHabit[values.savingHabit] || values.savingHabit || '—'],
       ['Investing habit', friendlyText.investingHabit[values.investingHabit] || values.investingHabit || '—'],
+      [
+        'Emergency savings confidence',
+        friendlyText.emergencySavingsConfidence[values.emergencySavingsConfidence] ||
+          values.emergencySavingsConfidence ||
+          '—',
+      ],
     ],
     protection: [
       ['Will in place', friendlyText.yesNo[values.hasWill] || values.hasWill || '—'],
       ['Life insurance', friendlyText.yesNo[values.hasLifeInsurance] || values.hasLifeInsurance || '—'],
+      [
+        'Life insurance benefit',
+        formatGBP(values.lifeInsuranceBenefitAmount, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }),
+      ],
       ['Income protection', friendlyText.yesNo[values.hasIncomeProtection] || values.hasIncomeProtection || '—'],
+      [
+        'Income protection benefit',
+        formatGBP(values.incomeProtectionBenefitAmount, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }),
+      ],
       ['Lasting power of attorney', friendlyText.yesNo[values.hasLPA] || values.hasLPA || '—'],
-    ],
+      values.blueprintFor === 'family'
+        ? [
+            'Partner life insurance',
+            friendlyText.yesNo[values.partnerHasLifeInsurance] ||
+              values.partnerHasLifeInsurance ||
+              '—',
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner life insurance benefit',
+            formatGBP(values.partnerLifeInsuranceBenefitAmount, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }),
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner income protection',
+            friendlyText.yesNo[values.partnerHasIncomeProtection] ||
+              values.partnerHasIncomeProtection ||
+              '—',
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner income protection benefit',
+            formatGBP(values.partnerIncomeProtectionBenefitAmount, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }),
+          ]
+        : null,
+    ].filter(Boolean),
+    retirement: [
+      ['Target retirement age', values.retirementTargetAge || '—'],
+      values.blueprintFor === 'family'
+        ? ["Partner target retirement age", values.partnerRetirementTargetAge || '—']
+        : null,
+      ['Desired retirement income (monthly)', formatGBP(values.retirementIncomeTargetMonthly)],
+      values.blueprintFor === 'family'
+        ? [
+            "Partner retirement income target",
+            formatGBP(values.partnerRetirementIncomeTargetMonthly),
+          ]
+        : null,
+      ['Qualifying NI years', values.statePensionQualifyingYears || '0'],
+      ['Last checked state pension', values.statePensionLastStatementYear || '—'],
+      ['Estimated state pension (monthly)', formatGBP(values.statePensionForecastAmountMonthly)],
+    ].filter(Boolean),
+    protectionDetails: [
+      [
+        'Life insurance provider',
+        values.lifeInsuranceProvider && values.lifeInsuranceProvider.trim().length > 0
+          ? values.lifeInsuranceProvider
+          : '—',
+      ],
+      ['Life insurance sum assured', formatGBP(values.lifeInsuranceSumAssured)],
+      ['Life insurance premium (monthly)', formatGBP(values.lifeInsurancePremiumMonthlyDetail)],
+      [
+        'Life insurance beneficiary notes',
+        values.lifeInsuranceBeneficiaryNotes && values.lifeInsuranceBeneficiaryNotes.trim().length > 0
+          ? values.lifeInsuranceBeneficiaryNotes
+          : '—',
+      ],
+      [
+        'Income protection insurer',
+        values.incomeProtectionProvider && values.incomeProtectionProvider.trim().length > 0
+          ? values.incomeProtectionProvider
+          : '—',
+      ],
+      ['Income protection monthly benefit', formatGBP(values.incomeProtectionBenefitMonthly)],
+      [
+        'Income protection premium (monthly)',
+        formatGBP(values.incomeProtectionPremiumMonthlyDetail),
+      ],
+      [
+        'Income protection notes',
+        values.incomeProtectionBeneficiaryNotes &&
+        values.incomeProtectionBeneficiaryNotes.trim().length > 0
+          ? values.incomeProtectionBeneficiaryNotes
+          : '—',
+      ],
+      values.blueprintFor === 'family'
+        ? [
+            'Partner life insurance provider',
+            values.partnerLifeInsuranceProvider && values.partnerLifeInsuranceProvider.trim().length > 0
+              ? values.partnerLifeInsuranceProvider
+              : '—',
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner life insurance sum assured',
+            formatGBP(values.partnerLifeInsuranceSumAssured),
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner life insurance premium (monthly)',
+            formatGBP(values.partnerLifeInsurancePremiumMonthlyDetail),
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner life insurance notes',
+            values.partnerLifeInsuranceBeneficiaryNotes &&
+            values.partnerLifeInsuranceBeneficiaryNotes.trim().length > 0
+              ? values.partnerLifeInsuranceBeneficiaryNotes
+              : '—',
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner income protection insurer',
+            values.partnerIncomeProtectionProvider &&
+            values.partnerIncomeProtectionProvider.trim().length > 0
+              ? values.partnerIncomeProtectionProvider
+              : '—',
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner income protection monthly benefit',
+            formatGBP(values.partnerIncomeProtectionBenefitMonthly),
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner income protection premium (monthly)',
+            formatGBP(values.partnerIncomeProtectionPremiumMonthlyDetail),
+          ]
+        : null,
+      values.blueprintFor === 'family'
+        ? [
+            'Partner income protection notes',
+            values.partnerIncomeProtectionBeneficiaryNotes &&
+            values.partnerIncomeProtectionBeneficiaryNotes.trim().length > 0
+              ? values.partnerIncomeProtectionBeneficiaryNotes
+              : '—',
+          ]
+        : null,
+    ].filter(Boolean),
   }), [values]);
 
   return (
@@ -147,16 +328,26 @@ const Step8_Review = ({ onBack, onConfirm, values, isLoading }) => {
             <LineItem key={label} label={label} value={value} />
           ))}
         </Section>
-        <Section title="Mindset & behaviours">
-          {summary.mindset.map(([label, value]) => (
-            <LineItem key={label} label={label} value={value} />
-          ))}
-        </Section>
-        <Section title="Protection">
-          {summary.protection.map(([label, value]) => (
-            <LineItem key={label} label={label} value={value} />
-          ))}
-        </Section>
+      <Section title="Mindset & behaviours">
+        {summary.mindset.map(([label, value]) => (
+          <LineItem key={label} label={label} value={value} />
+        ))}
+      </Section>
+      <Section title="Protection">
+        {summary.protection.map(([label, value]) => (
+          <LineItem key={label} label={label} value={value} />
+        ))}
+      </Section>
+      <Section title="Retirement goals">
+        {summary.retirement.map(([label, value]) => (
+          <LineItem key={label} label={label} value={value} />
+        ))}
+      </Section>
+      <Section title="Protection policy details">
+        {summary.protectionDetails.map(([label, value]) => (
+          <LineItem key={label} label={label} value={value} />
+        ))}
+      </Section>
       </div>
 
       <div className="flex justify-between">
