@@ -124,6 +124,16 @@ const Step5_Liabilities = ({
           minimumFractionDigits={0}
           maximumFractionDigits={0}
         />
+        <CurrencyInput
+          name="insurancePremiumsTotalMonthly"
+          control={control}
+          label="Total monthly insurance premiums"
+          placeholder="150"
+          helpText="Include life insurance, income protection and other policy costs."
+          error={errors.insurancePremiumsTotalMonthly}
+          minimumFractionDigits={0}
+          maximumFractionDigits={0}
+        />
       </div>
 
       <div className="flex justify-between">

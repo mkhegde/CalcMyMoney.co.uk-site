@@ -75,6 +75,26 @@ const Step6_Mindset = ({ onBack, onNext, register, errors, currentStep, totalSte
             { value: 'avoidant', label: 'I prefer to keep my money in cash savings accounts.' },
           ]}
         />
+        <MindsetQuestion
+          question="How do you feel about your emergency savings safety net?"
+          name="emergencySavingsConfidence"
+          register={register}
+          error={errors.emergencySavingsConfidence}
+          options={[
+            {
+              value: 'comfortable',
+              label: 'I have a healthy emergency fund that covers several months of expenses.',
+            },
+            {
+              value: 'building',
+              label: 'I’m actively building my emergency savings but not at my target yet.',
+            },
+            {
+              value: 'concerned',
+              label: 'I have little to no emergency savings and want guidance.',
+            },
+          ]}
+        />
       </div>
 
       <div className="flex justify-between">

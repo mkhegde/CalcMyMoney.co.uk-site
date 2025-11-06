@@ -13,6 +13,8 @@ import {
   step5Schema,
   step6Schema,
   step7Schema,
+  step8Schema,
+  step9Schema,
 } from './schemas';
 import Step1_Profile from './Step1_Profile';
 import Step2_Income from './Step2_Income';
@@ -21,6 +23,8 @@ import Step4_Assets from './Step4_Assets';
 import Step5_Liabilities from './Step5_Liabilities';
 import Step6_Mindset from './Step6_Mindset';
 import Step7_Protection from './Step7_Protection';
+import Step8_RetirementGoals from './Step8_RetirementGoals';
+import Step9_ProtectionDetails from './Step9_ProtectionDetails';
 import Step8_Review from './Step8_Review';
 
 const SurveyPage = () => {
@@ -35,6 +39,8 @@ const SurveyPage = () => {
       { Component: Step5_Liabilities, schema: step5Schema },
       { Component: Step6_Mindset, schema: step6Schema },
       { Component: Step7_Protection, schema: step7Schema },
+      { Component: Step8_RetirementGoals, schema: step8Schema },
+      { Component: Step9_ProtectionDetails, schema: step9Schema },
       { Component: Step8_Review, schema: null, isReview: true },
     ],
     []
@@ -80,9 +86,17 @@ const SurveyPage = () => {
       expensesLifestyle: '0',
       expensesChildcare: '0',
       specialNeedsCostsMonthly: '0',
+      emergencySavingsContributionMonthly: '0',
+      pensionContributionMonthly: '0',
+      partnerPensionContributionMonthly: '0',
+      isaContributionMonthly: '0',
+      partnerIsaContributionMonthly: '0',
+      childcareVouchersMonthly: '0',
       cashSavings: '0',
+      emergencyFundBalance: '0',
       pensionValue: '0',
       propertyValue: '0',
+      isaInvestmentsValue: '0',
       otherInvestments: '0',
       otherAssets: '0',
       monthlyRent: '0',
@@ -92,13 +106,44 @@ const SurveyPage = () => {
       creditCardDebt: '0',
       otherLoans: '0',
       studentLoanBalance: '0',
+      insurancePremiumsTotalMonthly: '0',
       earningHabit: '',
       savingHabit: '',
       investingHabit: '',
+      emergencySavingsConfidence: '',
       hasWill: '',
       hasLifeInsurance: '',
+      partnerHasLifeInsurance: 'no',
+      lifeInsuranceBenefitAmount: '0',
+      partnerLifeInsuranceBenefitAmount: '0',
       hasIncomeProtection: '',
+      partnerHasIncomeProtection: 'no',
+      incomeProtectionBenefitAmount: '0',
+      partnerIncomeProtectionBenefitAmount: '0',
       hasLPA: '',
+      retirementTargetAge: '0',
+      partnerRetirementTargetAge: '0',
+      retirementIncomeTargetMonthly: '0',
+      partnerRetirementIncomeTargetMonthly: '0',
+      statePensionQualifyingYears: '0',
+      statePensionLastStatementYear: '0',
+      statePensionForecastAmountMonthly: '0',
+      lifeInsuranceProvider: '',
+      lifeInsuranceSumAssured: '0',
+      lifeInsurancePremiumMonthlyDetail: '0',
+      lifeInsuranceBeneficiaryNotes: '',
+      incomeProtectionProvider: '',
+      incomeProtectionBenefitMonthly: '0',
+      incomeProtectionPremiumMonthlyDetail: '0',
+      incomeProtectionBeneficiaryNotes: '',
+      partnerLifeInsuranceProvider: '',
+      partnerLifeInsuranceSumAssured: '0',
+      partnerLifeInsurancePremiumMonthlyDetail: '0',
+      partnerLifeInsuranceBeneficiaryNotes: '',
+      partnerIncomeProtectionProvider: '',
+      partnerIncomeProtectionBenefitMonthly: '0',
+      partnerIncomeProtectionPremiumMonthlyDetail: '0',
+      partnerIncomeProtectionBeneficiaryNotes: '',
     },
     shouldUnregister: false,
   });
