@@ -3,8 +3,7 @@
 import React from 'react';
 import ProfileSummary from './report-components/ProfileSummary';
 import FinancialOverview from './report-components/FinancialOverview';
-import CashFlowAnalysis from './report-components/CashFlowAnalysis';
-import TaxAnalysis from './report-components/TaxAnalysis';
+import TaxAndCashflow from './report-components/TaxAndCashflow';
 import RetirementSnapshot from './report-components/RetirementSnapshot';
 import ProtectionReview from './report-components/ProtectionReview';
 import SwotAnalysis from './report-components/SwotAnalysis';
@@ -23,6 +22,7 @@ const ReportDisplay = ({ reportData }) => {
   const {
     profileSummary,
     financialOverview,
+    taxAndCashflow,
     cashFlowAnalysis,
     taxAnalysis,
     retirementSnapshot,
@@ -43,8 +43,7 @@ const ReportDisplay = ({ reportData }) => {
         {/* We pass the relevant piece of data to each component */}
         <ProfileSummary data={profileSummary} />
         <FinancialOverview data={financialOverview} />
-        <CashFlowAnalysis data={cashFlowAnalysis} />
-        <TaxAnalysis data={taxAnalysis} />
+        <TaxAndCashflow data={taxAndCashflow || (taxAnalysis || cashFlowAnalysis ? { tax: taxAnalysis, cashflow: cashFlowAnalysis } : null)} />
         <RetirementSnapshot data={retirementSnapshot} />
         <ProtectionReview data={protectionReview} />
         <SwotAnalysis data={swotAnalysis} />

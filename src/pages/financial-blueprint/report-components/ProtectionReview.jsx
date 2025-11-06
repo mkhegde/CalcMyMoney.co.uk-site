@@ -1,67 +1,75 @@
 // src/pages/financial-blueprint/report-components/ProtectionReview.jsx
 import React from 'react';
+import ReportSection from './ReportSection';
+
+const formatStatus = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return 'Not recorded';
+  }
+  return value === 'yes' || value === true ? 'In place' : 'Not in place';
+};
 
 const ProtectionReview = ({ data }) => {
-  if (!data) return null;
+  if (!data) {
+    return (
+      <ReportSection title="Protection Review">
+        <p className="text-sm text-gray-500">Protection recommendations will appear once your answers are processed.</p>
+      </ReportSection>
+    );
+  }
 
   const { coverageOverview, existingCover, gaps, priorities } = data;
 
-  const formatStatus = (value) => (value === 'yes' || value === true ? 'In place' : 'Not in place');
+  const hasExistingCover = existingCover && Object.keys(existingCover).length > 0;
+  const hasGaps = Array.isArray(gaps) && gaps.length > 0;
+  const hasPriorities = Array.isArray(priorities) && priorities.length > 0;
 
   return (
-    <section className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800">Financial Protection Review</h2>
-      <div className="rounded-lg bg-white shadow p-6 space-y-4">
-        <p className="text-gray-700 text-sm">{coverageOverview}</p>
+    <ReportSection title="Protection Review" subtitle="Assess your safety net and identify any gaps">
+      {coverageOverview ? <p className="text-sm text-gray-600">{coverageOverview}</p> : null}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div className="rounded-lg border bg-gray-50 p-4">
-            <h3 className="font-semibold text-gray-800 mb-3">Existing Cover</h3>
-            <dl className="space-y-2">
-              <div className="flex justify-between">
-                <dt className="text-gray-500">Will</dt>
-                <dd className="font-medium text-gray-900">{formatStatus(existingCover?.hasWill)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-gray-500">Life Insurance</dt>
-                <dd className="font-medium text-gray-900">{formatStatus(existingCover?.hasLifeInsurance)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-gray-500">Income Protection</dt>
-                <dd className="font-medium text-gray-900">{formatStatus(existingCover?.hasIncomeProtection)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-gray-500">Lasting Power of Attorney</dt>
-                <dd className="font-medium text-gray-900">{formatStatus(existingCover?.hasLPA)}</dd>
-              </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+          <h3 className="text-sm font-semibold text-gray-700">Existing Cover</h3>
+          {hasExistingCover ? (
+            <dl className="mt-3 space-y-2 text-sm">
+              {Object.entries(existingCover).map(([key, value]) => (
+                <div key={key} className="flex items-center justify-between">
+                  <dt className="text-gray-500">{key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase())}</dt>
+                  <dd className="font-medium text-gray-900">{formatStatus(value)}</dd>
+                </div>
+              ))}
             </dl>
-          </div>
-          <div className="rounded-lg border bg-gray-50 p-4">
-            <h3 className="font-semibold text-gray-800 mb-3">Protection Gaps</h3>
-            {Array.isArray(gaps) && gaps.length > 0 ? (
-              <ul className="space-y-1 list-disc list-inside text-gray-600">
-                {gaps.map((gap, index) => (
-                  <li key={index}>{gap}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500">No major gaps identified.</p>
-            )}
-          </div>
+          ) : (
+            <p className="mt-2 text-sm text-gray-500">Let us know what cover you already have in place.</p>
+          )}
         </div>
 
-        {Array.isArray(priorities) && priorities.length > 0 ? (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700">Priority Actions</h3>
-            <ul className="mt-2 space-y-1 list-disc list-inside text-sm text-gray-600">
-              {priorities.map((item, index) => (
-                <li key={index}>{item}</li>
+        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-amber-900">
+          <h3 className="text-sm font-semibold">Protection Gaps</h3>
+          {hasGaps ? (
+            <ul className="mt-2 space-y-1 list-disc list-inside text-sm">
+              {gaps.map((gap, index) => (
+                <li key={index}>{gap}</li>
               ))}
             </ul>
-          </div>
-        ) : null}
+          ) : (
+            <p className="mt-2 text-sm">No major gaps identified from the current information.</p>
+          )}
+        </div>
       </div>
-    </section>
+
+      {hasPriorities ? (
+        <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-indigo-900">
+          <h3 className="text-sm font-semibold">Priority Actions</h3>
+          <ul className="mt-2 space-y-1 list-disc list-inside text-sm">
+            {priorities.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </ReportSection>
   );
 };
 
