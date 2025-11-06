@@ -2,7 +2,11 @@
 
 import React from 'react';
 import ProfileSummary from './report-components/ProfileSummary';
-import QuantitativeAnalysis from './report-components/QuantitativeAnalysis';
+import FinancialOverview from './report-components/FinancialOverview';
+import CashFlowAnalysis from './report-components/CashFlowAnalysis';
+import TaxAnalysis from './report-components/TaxAnalysis';
+import RetirementSnapshot from './report-components/RetirementSnapshot';
+import ProtectionReview from './report-components/ProtectionReview';
 import SwotAnalysis from './report-components/SwotAnalysis';
 import ActionPlan from './report-components/ActionPlan';
 
@@ -16,7 +20,16 @@ const ReportDisplay = ({ reportData }) => {
   }
   
   // Destructure the data from the report for easier access
-  const { profileSummary, quantitativeAnalysis, swotAnalysis, actionPlan } = reportData;
+  const {
+    profileSummary,
+    financialOverview,
+    cashFlowAnalysis,
+    taxAnalysis,
+    retirementSnapshot,
+    protectionReview,
+    swotAnalysis,
+    actionPlan,
+  } = reportData;
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 bg-gray-50">
@@ -29,7 +42,11 @@ const ReportDisplay = ({ reportData }) => {
       <div className="space-y-8">
         {/* We pass the relevant piece of data to each component */}
         <ProfileSummary data={profileSummary} />
-        <QuantitativeAnalysis data={quantitativeAnalysis} />
+        <FinancialOverview data={financialOverview} />
+        <CashFlowAnalysis data={cashFlowAnalysis} />
+        <TaxAnalysis data={taxAnalysis} />
+        <RetirementSnapshot data={retirementSnapshot} />
+        <ProtectionReview data={protectionReview} />
         <SwotAnalysis data={swotAnalysis} />
         <ActionPlan data={actionPlan} />
       </div>

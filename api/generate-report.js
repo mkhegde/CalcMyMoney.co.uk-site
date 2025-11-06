@@ -1,6 +1,136 @@
 // Filename: /api/generate-report.js
 // ** FINAL PRODUCTION VERSION: Pre-calculates metrics in JS for accuracy **
 
+const MONEY_FIELDS = [
+  'yourSalary',
+  "partnerSalary",
+  'otherIncome',
+  'otherIncomeMonthly',
+  'benefitsIncome',
+  'benefitsIncomeMonthly',
+  'cashSavings',
+  'pensionValue',
+  'propertyValue',
+  'otherInvestments',
+  'otherAssets',
+  'monthlyRent',
+  'mortgageBalance',
+  'mortgageMonthlyPayment',
+  'creditCardDebt',
+  'otherLoans',
+  'studentLoanBalance',
+  'expensesHousing',
+  'expensesUtilities',
+  'expensesGroceries',
+  'expensesTransport',
+  'expensesLifestyle',
+  'expensesChildcare',
+  'specialNeedsCostsMonthly',
+  'tobaccoSpendWeekly',
+];
+
+const NUMBER_FIELDS = [
+  'age',
+  'partnerAge',
+  'numberOfChildren',
+  'specialNeedsChildren',
+  'mortgageRemainingTermYears',
+  'alcoholUnitsWeekly',
+];
+
+const PERSONAL_ALLOWANCE = 12570;
+const DEFAULT_RETIREMENT_AGE = 67;
+const RETIREMENT_GROWTH_RATE = 0.03;
+const SUSTAINABLE_WITHDRAWAL_RATE = 0.04;
+
+const parseMoney = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return 0;
+  }
+  const numericValue = Number.parseFloat(String(value).replace(/[^0-9.-]+/g, ''));
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
+const parseNumber = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return 0;
+  }
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
+const normaliseNumericFields = (data) => {
+  const normalised = { ...data };
+
+  MONEY_FIELDS.forEach((field) => {
+    if (Object.prototype.hasOwnProperty.call(data, field)) {
+      normalised[field] = parseMoney(data[field]);
+    } else {
+      normalised[field] = 0;
+    }
+  });
+
+  NUMBER_FIELDS.forEach((field) => {
+    if (Object.prototype.hasOwnProperty.call(data, field)) {
+      normalised[field] = parseNumber(data[field]);
+    }
+  });
+
+  return normalised;
+};
+
+const roundToTwo = (value) => Number.parseFloat(Number(value || 0).toFixed(2));
+
+const determineTaxBand = (income, region = 'england') => {
+  const incomeValue = Number.isFinite(income) ? income : 0;
+  const regionKey = region?.toLowerCase();
+
+  const bandsByRegion = {
+    england: [
+      { threshold: 125140, label: 'Additional rate (45%)' },
+      { threshold: 50270, label: 'Higher rate (40%)' },
+      { threshold: 12570, label: 'Basic rate (20%)' },
+      { threshold: 0, label: 'Within personal allowance (0%)' },
+    ],
+    wales: [
+      { threshold: 125140, label: 'Additional rate (45%)' },
+      { threshold: 50270, label: 'Higher rate (40%)' },
+      { threshold: 12570, label: 'Basic rate (20%)' },
+      { threshold: 0, label: 'Within personal allowance (0%)' },
+    ],
+    'northern-ireland': [
+      { threshold: 125140, label: 'Additional rate (45%)' },
+      { threshold: 50270, label: 'Higher rate (40%)' },
+      { threshold: 12570, label: 'Basic rate (20%)' },
+      { threshold: 0, label: 'Within personal allowance (0%)' },
+    ],
+    scotland: [
+      { threshold: 125140, label: 'Top rate (48%)' },
+      { threshold: 75000, label: 'Advanced rate (45%)' },
+      { threshold: 43663, label: 'Higher rate (42%)' },
+      { threshold: 26562, label: 'Intermediate rate (21%)' },
+      { threshold: 14877, label: 'Basic rate (20%)' },
+      { threshold: 12570, label: 'Starter rate (19%)' },
+      { threshold: 0, label: 'Within personal allowance (0%)' },
+    ],
+  };
+
+  const applicableBands = bandsByRegion[regionKey] || bandsByRegion.england;
+  const matchingBand = applicableBands.find((band) => incomeValue > band.threshold);
+  return matchingBand ? matchingBand.label : applicableBands[applicableBands.length - 1].label;
+};
+
+const determineNIBand = (income) => {
+  const value = Number.isFinite(income) ? income : 0;
+  if (value <= 12570) {
+    return 'Below primary threshold';
+  }
+  if (value <= 50270) {
+    return 'Main rate band (10%)';
+  }
+  return 'Upper earnings band (2%)';
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -10,35 +140,141 @@ export default async function handler(req, res) {
   try {
     const userData = req.body;
 
-    if (!userData || !userData.yourSalary) {
+    if (!userData || parseMoney(userData.yourSalary) <= 0) {
       return res.status(400).json({ error: 'Incomplete user data provided. Salary is required.' });
     }
 
     // --- STEP 1: PERFORM CALCULATIONS IN JAVASCRIPT ---
-    const parseNum = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
+    const normalised = normaliseNumericFields(userData);
+
+    const annualOtherIncome = normalised.otherIncome * 12;
+    const annualBenefitsIncome = normalised.benefitsIncome * 12;
 
     const grossAnnualIncome =
-      parseNum(userData.yourSalary) +
-      parseNum(userData.partnerSalary) +
-      parseNum(userData.otherIncome) * 12 +
-      parseNum(userData.benefitsIncome) * 12;
+      normalised.yourSalary +
+      normalised.partnerSalary +
+      annualOtherIncome +
+      annualBenefitsIncome;
+    const grossMonthlyIncome = grossAnnualIncome / 12;
+
     const totalAssets =
-      parseNum(userData.cashSavings) +
-      parseNum(userData.pensionValue) +
-      parseNum(userData.propertyValue) +
-      parseNum(userData.otherInvestments);
+      normalised.cashSavings +
+      normalised.pensionValue +
+      normalised.propertyValue +
+      normalised.otherInvestments +
+      normalised.otherAssets;
+
     const totalLiabilities =
-      parseNum(userData.mortgageBalance) +
-      parseNum(userData.creditCardDebt) +
-      parseNum(userData.otherLoans);
+      normalised.mortgageBalance +
+      normalised.creditCardDebt +
+      normalised.otherLoans +
+      normalised.studentLoanBalance;
+
     const netWorth = totalAssets - totalLiabilities;
+
+    const housingPaymentMonthly =
+      userData.housingStatus === 'renting'
+        ? normalised.monthlyRent
+        : normalised.mortgageMonthlyPayment;
+
+    const baseLivingCostsMonthly =
+      normalised.expensesHousing +
+      normalised.expensesUtilities +
+      normalised.expensesGroceries +
+      normalised.expensesTransport +
+      normalised.expensesLifestyle +
+      normalised.expensesChildcare +
+      normalised.specialNeedsCostsMonthly;
+
+    const discretionarySpendingMonthly = (normalised.tobaccoSpendWeekly * 52) / 12;
+
+    const totalMonthlyExpenses =
+      housingPaymentMonthly + baseLivingCostsMonthly + discretionarySpendingMonthly;
+    const totalAnnualExpenses = totalMonthlyExpenses * 12;
+
+    const disposableIncomeMonthly = grossMonthlyIncome - totalMonthlyExpenses;
+    const disposableIncomeAnnual = disposableIncomeMonthly * 12;
+    const savingsRate = grossAnnualIncome > 0 ? disposableIncomeAnnual / grossAnnualIncome : 0;
+    const emergencyFundCoverageMonths =
+      totalMonthlyExpenses > 0 ? normalised.cashSavings / totalMonthlyExpenses : 0;
+
+    const yearsToRetirement = Math.max(0, DEFAULT_RETIREMENT_AGE - normalised.age);
+    const projectedPensionPot =
+      normalised.pensionValue * Math.pow(1 + RETIREMENT_GROWTH_RATE, yearsToRetirement);
+    const sustainableAnnualDrawdown = projectedPensionPot * SUSTAINABLE_WITHDRAWAL_RATE;
+
+    const partnerProjection =
+      normalised.partnerAge > 0
+        ? {
+            yearsToRetirement: Math.max(0, DEFAULT_RETIREMENT_AGE - normalised.partnerAge),
+          }
+        : undefined;
+
+    const taxableIncomeAfterAllowance = Math.max(0, grossAnnualIncome - PERSONAL_ALLOWANCE);
 
     // Create an object with our reliable calculations
     const calculatedMetrics = {
-      grossAnnualIncome,
-      totalAssets,
-      totalLiabilities,
-      netWorth,
+      currency: 'GBP',
+      incomes: {
+        grossAnnualIncome: roundToTwo(grossAnnualIncome),
+        grossMonthlyIncome: roundToTwo(grossMonthlyIncome),
+        annualBreakdown: {
+          yourSalary: roundToTwo(normalised.yourSalary),
+          partnerSalary: roundToTwo(normalised.partnerSalary),
+          otherIncomeAnnual: roundToTwo(annualOtherIncome),
+          benefitsIncomeAnnual: roundToTwo(annualBenefitsIncome),
+        },
+        monthlyBreakdown: {
+          yourSalary: roundToTwo(normalised.yourSalary / 12),
+          partnerSalary: roundToTwo(normalised.partnerSalary / 12),
+          otherIncomeMonthly: roundToTwo(normalised.otherIncome),
+          benefitsIncomeMonthly: roundToTwo(normalised.benefitsIncome),
+        },
+      },
+      assets: {
+        total: roundToTwo(totalAssets),
+        cashSavings: roundToTwo(normalised.cashSavings),
+        pensionValue: roundToTwo(normalised.pensionValue),
+        propertyValue: roundToTwo(normalised.propertyValue),
+        otherInvestments: roundToTwo(normalised.otherInvestments),
+        otherAssets: roundToTwo(normalised.otherAssets),
+      },
+      liabilities: {
+        total: roundToTwo(totalLiabilities),
+        mortgageBalance: roundToTwo(normalised.mortgageBalance),
+        creditCardDebt: roundToTwo(normalised.creditCardDebt),
+        otherLoans: roundToTwo(normalised.otherLoans),
+        studentLoanBalance: roundToTwo(normalised.studentLoanBalance),
+      },
+      netWorth: roundToTwo(netWorth),
+      expenses: {
+        monthlyTotal: roundToTwo(totalMonthlyExpenses),
+        annualTotal: roundToTwo(totalAnnualExpenses),
+        housingPaymentMonthly: roundToTwo(housingPaymentMonthly),
+        baseLivingCostsMonthly: roundToTwo(baseLivingCostsMonthly),
+        discretionarySpendingMonthly: roundToTwo(discretionarySpendingMonthly),
+      },
+      cashFlow: {
+        disposableIncomeMonthly: roundToTwo(disposableIncomeMonthly),
+        disposableIncomeAnnual: roundToTwo(disposableIncomeAnnual),
+        savingsRate: roundToTwo(savingsRate),
+        emergencyFundCoverageMonths: roundToTwo(emergencyFundCoverageMonths),
+      },
+      retirement: {
+        targetRetirementAge: DEFAULT_RETIREMENT_AGE,
+        yearsToRetirement,
+        assumedGrowthRate: RETIREMENT_GROWTH_RATE,
+        projectedPensionPot: roundToTwo(projectedPensionPot),
+        sustainableAnnualDrawdown: roundToTwo(sustainableAnnualDrawdown),
+        ...(partnerProjection ? { partner: partnerProjection } : {}),
+      },
+      tax: {
+        region: userData.location || 'england',
+        incomeTaxBand: determineTaxBand(grossAnnualIncome, userData.location),
+        nationalInsuranceBand: determineNIBand(grossAnnualIncome),
+        personalAllowance: PERSONAL_ALLOWANCE,
+        taxableIncomeAfterAllowance: roundToTwo(taxableIncomeAfterAllowance),
+      },
     };
 
     // --- STEP 2: SEND PRE-CALCULATED DATA TO THE AI ---
@@ -80,25 +316,57 @@ export default async function handler(req, res) {
   }
 }
 
-// --- THIS IS THE NEW, SIMPLER PROMPT ---
+// --- UPDATED PRODUCTION PROMPT ---
 function buildProductionPrompt(userData, calculatedMetrics) {
   return `
-    **Role:** You are an expert UK financial analyst AI. Your task is to create a detailed financial report.
+    **Role:** You are an expert UK financial analyst AI preparing a comprehensive household blueprint.
 
-    **Source Data:** You have been provided with two JSON objects: 'User Data' (the user's raw answers) and 'Calculated Metrics' (pre-calculated financial totals).
+    **Source Data:**
+    • \'User Data\' contains the raw survey responses.
+    • \'Calculated Metrics\' contains pre-calculated income, asset, liability, cash-flow, tax, and retirement figures.
 
-    **CRITICAL INSTRUCTION:** For all quantitative parts of the report, you MUST use the values from the 'Calculated Metrics' object. Do NOT perform your own calculations.
+    **CRITICAL INSTRUCTION:**
+    • Every numeric value referenced in the report MUST be echoed exactly from \'Calculated Metrics\'. Do **not** recalculate, round, or infer new amounts.
+    • When providing commentary, explicitly restate the relevant figures (e.g., "Net worth is £X" using the provided number).
 
-    **Format:** Generate a report as a single, valid JSON object with the keys: 'profileSummary', 'quantitativeAnalysis', 'swotAnalysis', and 'actionPlan'.
+    **Output:** Return a single valid JSON object with the following top-level keys in order:
+    1. \'profileSummary\'
+    2. \'financialOverview\'
+    3. \'cashFlowAnalysis\'
+    4. \'taxAnalysis\'
+    5. \'retirementSnapshot\'
+    6. \'protectionReview\'
+    7. \'swotAnalysis\'
+    8. \'actionPlan\'
 
-    **JSON Output Structure:**
-    1.  **'profileSummary':** Create an object using the data from the 'User Data' object ('age', 'profession', etc.). Generate a random 'userCode' (e.g., "CMMFB" + 6 random digits).
+    **Detailed Requirements:**
+    • \'profileSummary\': Object with keys { userCode, headline, household, dependants, employment, location, incomeOverview, priorities }. userCode must follow the format "CMMFB" + 6 digits. Reference incomes from calculatedMetrics.incomes.
 
-    2.  **'quantitativeAnalysis':** Create an object. Populate 'netWorth', 'totalAssets', and 'totalLiabilities' using the corresponding values directly from the 'Calculated Metrics' object.
+    • \'financialOverview\': Object with structure {
+        netWorth: { value, insight },
+        assets: { total, commentary, breakdown },
+        liabilities: { total, commentary, breakdown }
+      }.
+      breakdown objects must echo calculatedMetrics.assets and calculatedMetrics.liabilities fields (cashSavings, pensionValue, propertyValue, otherInvestments, otherAssets, mortgageBalance, creditCardDebt, otherLoans, studentLoanBalance).
 
-    3.  **'swotAnalysis':** Create an object with four arrays ('strengths', 'weaknesses', 'opportunities', 'threats'). Each array must contain at least four distinct, insightful string points. Your analysis MUST be based on BOTH the 'User Data' (e.g., age, profession, protection status) AND the 'Calculated Metrics' (e.g., high net worth, low income).
+    • \'cashFlowAnalysis\': Object with {
+        incomeSummary: { grossAnnualIncome, grossMonthlyIncome, annualBreakdown, monthlyBreakdown, commentary }, where annualBreakdown must include yourSalary, partnerSalary, otherIncomeAnnual, benefitsIncomeAnnual and monthlyBreakdown must include yourSalary, partnerSalary, otherIncomeMonthly, benefitsIncomeMonthly from calculatedMetrics.incomes,
+        expenseSummary: { monthlyTotal, annualTotal, detail, commentary }, where detail must include housingPaymentMonthly, baseLivingCostsMonthly, discretionarySpendingMonthly values from calculatedMetrics.expenses,
+        disposableIncome: { monthly, annual, savingsRate, emergencyFundCoverageMonths, commentary }
+      }.
+      Use the corresponding figures from calculatedMetrics.incomes, calculatedMetrics.expenses, and calculatedMetrics.cashFlow.
 
-    4.  **'actionPlan':** Create an array of 5-7 action item objects ('priority', 'action', 'explanation'). Base these actions on the user's biggest weaknesses and opportunities identified in the SWOT analysis.
+    • \'taxAnalysis\': Object with { summary, taxBand, nationalInsuranceBand, figures, recommendations } where figures includes { region, personalAllowance, taxableIncomeAfterAllowance, incomeTaxBand, nationalInsuranceBand } from calculatedMetrics.tax.
+
+    • \'retirementSnapshot\': Object with { readinessSummary, yearsToRetirement, projectedPensionPot, sustainableAnnualDrawdown, assumptions, nextSteps }. Use calculatedMetrics.retirement exactly, and include a partner object with yearsToRetirement if calculatedMetrics.retirement.partner exists.
+
+    • \'protectionReview\': Object with { coverageOverview, existingCover, gaps, priorities }. existingCover must mirror the yes/no protection answers from User Data (hasWill, hasLifeInsurance, hasIncomeProtection, hasLPA). Gaps and priorities must align with those answers and the emergency fund coverage from calculatedMetrics.cashFlow.emergencyFundCoverageMonths.
+
+    • \'swotAnalysis\': Object with arrays { strengths, weaknesses, opportunities, threats }. Each array requires at least four concise, insight-driven points referencing both survey context and calculated metrics.
+
+    • \'actionPlan\': Array of 5-7 objects with keys { priority, action, explanation, potentialSaving }. Priorities must align with the SWOT analysis and the quantitative metrics (e.g., emergency fund months, liabilities, tax band). Use GBP figures from calculated metrics when quoting potentialSaving.
+
+    **Tone & Style:** Professional, actionable, and specific. Always cite the exact numeric values when relevant.
 
     **User Data:**
     ${JSON.stringify(userData, null, 2)}
