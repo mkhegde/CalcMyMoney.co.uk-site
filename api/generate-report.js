@@ -13,9 +13,8 @@ const MONEY_FIELDS = [
   'propertyValue',
   'otherInvestments',
   'otherAssets',
-  'monthlyRent',
   'mortgageBalance',
-  'mortgageMonthlyPayment',
+  'housingPaymentMonthly',
   'creditCardDebt',
   'otherLoans',
   'studentLoanBalance',
@@ -35,6 +34,7 @@ const NUMBER_FIELDS = [
   'numberOfChildren',
   'specialNeedsChildren',
   'mortgageRemainingTermYears',
+  'mortgageInterestRatePercent',
   'alcoholUnitsWeekly',
 ];
 
@@ -172,13 +172,34 @@ export default async function handler(req, res) {
 
     const netWorth = totalAssets - totalLiabilities;
 
-    const housingPaymentMonthly =
-      userData.housingStatus === 'renting'
-        ? normalised.monthlyRent
-        : normalised.mortgageMonthlyPayment;
+    const mortgageInterestRatePercent = Number.isFinite(normalised.mortgageInterestRatePercent)
+      ? normalised.mortgageInterestRatePercent
+      : 0;
+    const mortgageRemainingTermYears = Math.max(0, normalised.mortgageRemainingTermYears || 0);
+    const mortgageRemainingTermMonths = Math.round(mortgageRemainingTermYears * 12);
+    const mortgageMonthlyRate = mortgageInterestRatePercent > 0 ? mortgageInterestRatePercent / 100 / 12 : 0;
+    const estimatedMortgagePayment =
+      userData.housingStatus === 'mortgaged' && normalised.mortgageBalance > 0 && mortgageRemainingTermMonths > 0
+        ? mortgageMonthlyRate > 0
+          ? normalised.mortgageBalance *
+            (mortgageMonthlyRate / (1 - Math.pow(1 + mortgageMonthlyRate, -mortgageRemainingTermMonths)))
+          : normalised.mortgageBalance / mortgageRemainingTermMonths
+        : 0;
+
+    const housingPaymentMonthly = (() => {
+      if (normalised.housingPaymentMonthly > 0) {
+        return normalised.housingPaymentMonthly;
+      }
+      if (normalised.expensesHousing > 0) {
+        return normalised.expensesHousing;
+      }
+      if (userData.housingStatus === 'mortgaged') {
+        return estimatedMortgagePayment;
+      }
+      return 0;
+    })();
 
     const baseLivingCostsMonthly =
-      normalised.expensesHousing +
       normalised.expensesUtilities +
       normalised.expensesGroceries +
       normalised.expensesTransport +
@@ -245,6 +266,18 @@ export default async function handler(req, res) {
         creditCardDebt: roundToTwo(normalised.creditCardDebt),
         otherLoans: roundToTwo(normalised.otherLoans),
         studentLoanBalance: roundToTwo(normalised.studentLoanBalance),
+        ...(userData.housingStatus === 'mortgaged'
+          ? {
+              mortgageDetails: {
+                interestRateAnnualPercent: roundToTwo(mortgageInterestRatePercent),
+                remainingTermYears: roundToTwo(mortgageRemainingTermYears),
+                remainingTermMonths: mortgageRemainingTermMonths,
+                amortizationHorizonMonths: mortgageRemainingTermMonths,
+                amortizationHorizonYears: roundToTwo(mortgageRemainingTermMonths / 12),
+                estimatedMonthlyDebtService: roundToTwo(estimatedMortgagePayment),
+              },
+            }
+          : {}),
       },
       netWorth: roundToTwo(netWorth),
       expenses: {
@@ -253,6 +286,9 @@ export default async function handler(req, res) {
         housingPaymentMonthly: roundToTwo(housingPaymentMonthly),
         baseLivingCostsMonthly: roundToTwo(baseLivingCostsMonthly),
         discretionarySpendingMonthly: roundToTwo(discretionarySpendingMonthly),
+        ...(userData.housingStatus === 'mortgaged'
+          ? { mortgageDebtServiceMonthly: roundToTwo(estimatedMortgagePayment) }
+          : {}),
       },
       cashFlow: {
         disposableIncomeMonthly: roundToTwo(disposableIncomeMonthly),

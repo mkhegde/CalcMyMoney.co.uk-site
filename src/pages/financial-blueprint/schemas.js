@@ -121,6 +121,7 @@ export const step2Schema = z
 export const step3Schema = z
   .object({
     blueprintFor: z.enum(['individual', 'family']),
+    housingStatus: z.enum(['renting', 'mortgaged', 'owned']),
     expensesHousing: moneyField('Housing costs'),
     expensesUtilities: moneyField('Utilities'),
     expensesGroceries: moneyField('Groceries'),
@@ -143,6 +144,13 @@ export const step3Schema = z
         code: z.ZodIssueCode.custom,
         path: ['specialNeedsCostsMonthly'],
         message: 'Please provide monthly spending on special needs support.',
+      });
+    }
+    if (data.housingStatus !== 'owned' && data.expensesHousing <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['expensesHousing'],
+        message: 'Please provide your monthly rent or mortgage costs.',
       });
     }
     if (data.numberOfChildren === 0 && data.expensesChildcare > 0) {
@@ -190,9 +198,11 @@ export const step4Schema = z.object({
 export const step5Schema = z
   .object({
     housingStatus: z.enum(['renting', 'mortgaged', 'owned']),
-    monthlyRent: moneyField('Monthly rent'),
     mortgageBalance: moneyField('Outstanding mortgage balance'),
-    mortgageMonthlyPayment: moneyField('Monthly mortgage payment'),
+    mortgageInterestRatePercent: z.coerce
+      .number({ required_error: 'Mortgage interest rate is required.' })
+      .min(0, { message: 'Mortgage interest rate cannot be negative.' })
+      .max(100, { message: 'Mortgage interest rate should be below 100%.' }),
     mortgageRemainingTermYears: z.coerce
       .number({ required_error: 'Mortgage remaining term is required.' })
       .min(0, { message: 'Mortgage term cannot be negative.' }),
@@ -202,22 +212,6 @@ export const step5Schema = z
     insurancePremiumsTotalMonthly: moneyField('Total monthly insurance premiums'),
   })
   .superRefine((data, ctx) => {
-    if (data.housingStatus === 'renting') {
-      if (data.monthlyRent <= 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['monthlyRent'],
-          message: 'Please enter your monthly rent.',
-        });
-      }
-      if (data.mortgageBalance > 0 || data.mortgageMonthlyPayment > 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['mortgageBalance'],
-          message: 'Mortgage values should be zero if you are renting.',
-        });
-      }
-    }
     if (data.housingStatus === 'mortgaged') {
       if (data.mortgageBalance <= 0) {
         ctx.addIssue({
@@ -226,20 +220,27 @@ export const step5Schema = z
           message: 'Please provide your outstanding mortgage balance.',
         });
       }
-      if (data.mortgageMonthlyPayment <= 0) {
+      if (data.mortgageInterestRatePercent <= 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: ['mortgageMonthlyPayment'],
-          message: 'Please provide your monthly mortgage payment.',
+          path: ['mortgageInterestRatePercent'],
+          message: 'Please provide your current mortgage interest rate.',
         });
       }
-    }
-    if (data.housingStatus === 'owned') {
-      if (data.mortgageBalance > 0 || data.mortgageMonthlyPayment > 0) {
+      if (data.mortgageRemainingTermYears <= 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['mortgageBalance'],
-          message: 'Mortgage fields should be zero if the property is owned outright.',
+          message: 'Please share how many years are left on your mortgage.',
+        });
+      }
+    }
+    if (data.housingStatus !== 'mortgaged') {
+      if (data.mortgageBalance > 0 || data.mortgageInterestRatePercent > 0 || data.mortgageRemainingTermYears > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['mortgageBalance'],
+          message: 'Mortgage details should be zero if you do not have a mortgage.',
         });
       }
     }
