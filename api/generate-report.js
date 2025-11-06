@@ -345,7 +345,52 @@ export default async function handler(req, res) {
     const reportJsonText = llmResult.choices[0].message.content;
     const reportObject = JSON.parse(reportJsonText);
 
-    return res.status(200).json(reportObject);
+    const netAnnualIncome = grossAnnualIncome - totalAnnualExpenses;
+    const netMonthlyIncome = netAnnualIncome / 12;
+    const monthlySurplus = disposableIncomeMonthly;
+    const monthlyDeficit = monthlySurplus < 0 ? Math.abs(monthlySurplus) : 0;
+    const debtToIncomeRatio = grossAnnualIncome > 0 ? totalLiabilities / grossAnnualIncome : null;
+    const retirementShortfallAnnual = Math.max(0, totalAnnualExpenses - sustainableAnnualDrawdown);
+    const retirementShortfallMonthly = retirementShortfallAnnual / 12;
+
+    const quantitativeAnalysis = {
+      income: {
+        grossAnnual: roundToTwo(grossAnnualIncome),
+        grossMonthly: roundToTwo(grossMonthlyIncome),
+        netAnnual: roundToTwo(netAnnualIncome),
+        netMonthly: roundToTwo(netMonthlyIncome),
+      },
+      cashflow: {
+        monthlySurplus: roundToTwo(monthlySurplus),
+        monthlyDeficit: roundToTwo(monthlyDeficit),
+        annualExpenses: roundToTwo(totalAnnualExpenses),
+        monthlyExpenses: roundToTwo(totalMonthlyExpenses),
+        savingsRate: roundToTwo(savingsRate),
+        emergencyFundCoverageMonths: roundToTwo(emergencyFundCoverageMonths),
+      },
+      debt: {
+        totalLiabilities: roundToTwo(totalLiabilities),
+        debtToIncomeRatio: debtToIncomeRatio !== null ? roundToTwo(debtToIncomeRatio) : null,
+      },
+      taxes: {
+        region: calculatedMetrics.tax.region,
+        incomeTaxBand: calculatedMetrics.tax.incomeTaxBand,
+        nationalInsuranceBand: calculatedMetrics.tax.nationalInsuranceBand,
+        personalAllowance: calculatedMetrics.tax.personalAllowance,
+        taxableIncomeAfterAllowance: calculatedMetrics.tax.taxableIncomeAfterAllowance,
+      },
+      retirement: {
+        projectedPensionPot: roundToTwo(projectedPensionPot),
+        sustainableAnnualDrawdown: roundToTwo(sustainableAnnualDrawdown),
+        retirementShortfallAnnual: roundToTwo(retirementShortfallAnnual),
+        retirementShortfallMonthly: roundToTwo(retirementShortfallMonthly),
+      },
+    };
+
+    return res.status(200).json({
+      ...reportObject,
+      quantitativeAnalysis,
+    });
   } catch (error) {
     console.error('Error in generateReport handler:', error);
     return res.status(500).json({ error: 'Failed to generate financial report.' });
