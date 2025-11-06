@@ -13,7 +13,7 @@
     "sitemap": "node scripts/generate-sitemap.mjs",
     "seo:assert": "node scripts/seo-assert.mjs",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "node --test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

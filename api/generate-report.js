@@ -81,6 +81,220 @@ const normaliseNumericFields = (data) => {
 
 const roundToTwo = (value) => Number.parseFloat(Number(value || 0).toFixed(2));
 
+const computeQuantitativeMetrics = (normalised, userData = {}) => {
+  const annualOtherIncome = normalised.otherIncome * 12;
+  const annualBenefitsIncome = normalised.benefitsIncome * 12;
+
+  const grossAnnualIncome =
+    normalised.yourSalary +
+    normalised.partnerSalary +
+    annualOtherIncome +
+    annualBenefitsIncome;
+  const grossMonthlyIncome = grossAnnualIncome / 12;
+
+  const totalAssets =
+    normalised.cashSavings +
+    normalised.pensionValue +
+    normalised.propertyValue +
+    normalised.otherInvestments +
+    normalised.otherAssets;
+
+  const totalLiabilities =
+    normalised.mortgageBalance +
+    normalised.creditCardDebt +
+    normalised.otherLoans +
+    normalised.studentLoanBalance;
+
+  const netWorth = totalAssets - totalLiabilities;
+
+  const mortgageInterestRatePercent = Number.isFinite(normalised.mortgageInterestRatePercent)
+    ? normalised.mortgageInterestRatePercent
+    : 0;
+  const mortgageRemainingTermYears = Math.max(0, normalised.mortgageRemainingTermYears || 0);
+  const mortgageRemainingTermMonths = Math.round(mortgageRemainingTermYears * 12);
+  const mortgageMonthlyRate = mortgageInterestRatePercent > 0 ? mortgageInterestRatePercent / 100 / 12 : 0;
+  const estimatedMortgagePayment =
+    userData.housingStatus === 'mortgaged' && normalised.mortgageBalance > 0 && mortgageRemainingTermMonths > 0
+      ? mortgageMonthlyRate > 0
+        ? normalised.mortgageBalance *
+          (mortgageMonthlyRate / (1 - Math.pow(1 + mortgageMonthlyRate, -mortgageRemainingTermMonths)))
+        : normalised.mortgageBalance / mortgageRemainingTermMonths
+      : 0;
+
+  const housingPaymentMonthly = (() => {
+    if (normalised.housingPaymentMonthly > 0) {
+      return normalised.housingPaymentMonthly;
+    }
+    if (normalised.expensesHousing > 0) {
+      return normalised.expensesHousing;
+    }
+    if (userData.housingStatus === 'mortgaged') {
+      return estimatedMortgagePayment;
+    }
+    return 0;
+  })();
+
+  const baseLivingCostsMonthly =
+    normalised.expensesUtilities +
+    normalised.expensesGroceries +
+    normalised.expensesTransport +
+    normalised.expensesLifestyle +
+    normalised.expensesChildcare +
+    normalised.specialNeedsCostsMonthly;
+
+  const discretionarySpendingMonthly = (normalised.tobaccoSpendWeekly * 52) / 12;
+
+  const totalMonthlyExpenses =
+    housingPaymentMonthly + baseLivingCostsMonthly + discretionarySpendingMonthly;
+  const totalAnnualExpenses = totalMonthlyExpenses * 12;
+
+  const disposableIncomeMonthly = grossMonthlyIncome - totalMonthlyExpenses;
+  const disposableIncomeAnnual = disposableIncomeMonthly * 12;
+  const savingsRate = grossAnnualIncome > 0 ? disposableIncomeAnnual / grossAnnualIncome : 0;
+  const emergencyFundCoverageMonths =
+    totalMonthlyExpenses > 0 ? normalised.cashSavings / totalMonthlyExpenses : 0;
+
+  const yearsToRetirement = Math.max(0, DEFAULT_RETIREMENT_AGE - normalised.age);
+  const projectedPensionPot =
+    normalised.pensionValue * Math.pow(1 + RETIREMENT_GROWTH_RATE, yearsToRetirement);
+  const sustainableAnnualDrawdown = projectedPensionPot * SUSTAINABLE_WITHDRAWAL_RATE;
+
+  const partnerProjection =
+    normalised.partnerAge > 0
+      ? {
+          yearsToRetirement: Math.max(0, DEFAULT_RETIREMENT_AGE - normalised.partnerAge),
+        }
+      : undefined;
+
+  const taxableIncomeAfterAllowance = Math.max(0, grossAnnualIncome - PERSONAL_ALLOWANCE);
+
+  const calculatedMetrics = {
+    currency: 'GBP',
+    incomes: {
+      grossAnnualIncome: roundToTwo(grossAnnualIncome),
+      grossMonthlyIncome: roundToTwo(grossMonthlyIncome),
+      annualBreakdown: {
+        yourSalary: roundToTwo(normalised.yourSalary),
+        partnerSalary: roundToTwo(normalised.partnerSalary),
+        otherIncomeAnnual: roundToTwo(annualOtherIncome),
+        benefitsIncomeAnnual: roundToTwo(annualBenefitsIncome),
+      },
+      monthlyBreakdown: {
+        yourSalary: roundToTwo(normalised.yourSalary / 12),
+        partnerSalary: roundToTwo(normalised.partnerSalary / 12),
+        otherIncomeMonthly: roundToTwo(normalised.otherIncome),
+        benefitsIncomeMonthly: roundToTwo(normalised.benefitsIncome),
+      },
+    },
+    assets: {
+      total: roundToTwo(totalAssets),
+      cashSavings: roundToTwo(normalised.cashSavings),
+      pensionValue: roundToTwo(normalised.pensionValue),
+      propertyValue: roundToTwo(normalised.propertyValue),
+      otherInvestments: roundToTwo(normalised.otherInvestments),
+      otherAssets: roundToTwo(normalised.otherAssets),
+    },
+    liabilities: {
+      total: roundToTwo(totalLiabilities),
+      mortgageBalance: roundToTwo(normalised.mortgageBalance),
+      creditCardDebt: roundToTwo(normalised.creditCardDebt),
+      otherLoans: roundToTwo(normalised.otherLoans),
+      studentLoanBalance: roundToTwo(normalised.studentLoanBalance),
+      ...(userData.housingStatus === 'mortgaged'
+        ? {
+            mortgageDetails: {
+              interestRateAnnualPercent: roundToTwo(mortgageInterestRatePercent),
+              remainingTermYears: roundToTwo(mortgageRemainingTermYears),
+              remainingTermMonths: mortgageRemainingTermMonths,
+              amortizationHorizonMonths: mortgageRemainingTermMonths,
+              amortizationHorizonYears: roundToTwo(mortgageRemainingTermMonths / 12),
+              estimatedMonthlyDebtService: roundToTwo(estimatedMortgagePayment),
+            },
+          }
+        : {}),
+    },
+    netWorth: roundToTwo(netWorth),
+    expenses: {
+      monthlyTotal: roundToTwo(totalMonthlyExpenses),
+      annualTotal: roundToTwo(totalAnnualExpenses),
+      housingPaymentMonthly: roundToTwo(housingPaymentMonthly),
+      baseLivingCostsMonthly: roundToTwo(baseLivingCostsMonthly),
+      discretionarySpendingMonthly: roundToTwo(discretionarySpendingMonthly),
+      ...(userData.housingStatus === 'mortgaged'
+        ? { mortgageDebtServiceMonthly: roundToTwo(estimatedMortgagePayment) }
+        : {}),
+    },
+    cashFlow: {
+      disposableIncomeMonthly: roundToTwo(disposableIncomeMonthly),
+      disposableIncomeAnnual: roundToTwo(disposableIncomeAnnual),
+      savingsRate: roundToTwo(savingsRate),
+      emergencyFundCoverageMonths: roundToTwo(emergencyFundCoverageMonths),
+    },
+    retirement: {
+      targetRetirementAge: DEFAULT_RETIREMENT_AGE,
+      yearsToRetirement,
+      assumedGrowthRate: RETIREMENT_GROWTH_RATE,
+      projectedPensionPot: roundToTwo(projectedPensionPot),
+      sustainableAnnualDrawdown: roundToTwo(sustainableAnnualDrawdown),
+      ...(partnerProjection ? { partner: partnerProjection } : {}),
+    },
+    tax: {
+      region: userData.location || 'england',
+      incomeTaxBand: determineTaxBand(grossAnnualIncome, userData.location),
+      nationalInsuranceBand: determineNIBand(grossAnnualIncome),
+      personalAllowance: PERSONAL_ALLOWANCE,
+      taxableIncomeAfterAllowance: roundToTwo(taxableIncomeAfterAllowance),
+    },
+  };
+
+  const netAnnualIncome = grossAnnualIncome - totalAnnualExpenses;
+  const netMonthlyIncome = netAnnualIncome / 12;
+  const monthlySurplus = disposableIncomeMonthly;
+  const monthlyDeficit = monthlySurplus < 0 ? Math.abs(monthlySurplus) : 0;
+  const debtToIncomeRatio = grossAnnualIncome > 0 ? totalLiabilities / grossAnnualIncome : null;
+  const retirementShortfallAnnual = Math.max(0, totalAnnualExpenses - sustainableAnnualDrawdown);
+  const retirementShortfallMonthly = retirementShortfallAnnual / 12;
+
+  const quantitativeAnalysis = {
+    income: {
+      grossAnnual: roundToTwo(grossAnnualIncome),
+      grossMonthly: roundToTwo(grossMonthlyIncome),
+      netAnnual: roundToTwo(netAnnualIncome),
+      netMonthly: roundToTwo(netMonthlyIncome),
+    },
+    cashflow: {
+      monthlySurplus: roundToTwo(monthlySurplus),
+      monthlyDeficit: roundToTwo(monthlyDeficit),
+      annualExpenses: roundToTwo(totalAnnualExpenses),
+      monthlyExpenses: roundToTwo(totalMonthlyExpenses),
+      savingsRate: roundToTwo(savingsRate),
+      emergencyFundCoverageMonths: roundToTwo(emergencyFundCoverageMonths),
+    },
+    debt: {
+      totalLiabilities: roundToTwo(totalLiabilities),
+      debtToIncomeRatio: debtToIncomeRatio !== null ? roundToTwo(debtToIncomeRatio) : null,
+    },
+    taxes: {
+      region: calculatedMetrics.tax.region,
+      incomeTaxBand: calculatedMetrics.tax.incomeTaxBand,
+      nationalInsuranceBand: calculatedMetrics.tax.nationalInsuranceBand,
+      personalAllowance: calculatedMetrics.tax.personalAllowance,
+      taxableIncomeAfterAllowance: calculatedMetrics.tax.taxableIncomeAfterAllowance,
+    },
+    retirement: {
+      projectedPensionPot: roundToTwo(projectedPensionPot),
+      sustainableAnnualDrawdown: roundToTwo(sustainableAnnualDrawdown),
+      retirementShortfallAnnual: roundToTwo(retirementShortfallAnnual),
+      retirementShortfallMonthly: roundToTwo(retirementShortfallMonthly),
+    },
+  };
+
+  return {
+    calculatedMetrics,
+    quantitativeAnalysis,
+  };
+};
+
 const determineTaxBand = (income, region = 'england') => {
   const incomeValue = Number.isFinite(income) ? income : 0;
   const regionKey = region?.toLowerCase();
@@ -147,171 +361,7 @@ export default async function handler(req, res) {
     // --- STEP 1: PERFORM CALCULATIONS IN JAVASCRIPT ---
     const normalised = normaliseNumericFields(userData);
 
-    const annualOtherIncome = normalised.otherIncome * 12;
-    const annualBenefitsIncome = normalised.benefitsIncome * 12;
-
-    const grossAnnualIncome =
-      normalised.yourSalary +
-      normalised.partnerSalary +
-      annualOtherIncome +
-      annualBenefitsIncome;
-    const grossMonthlyIncome = grossAnnualIncome / 12;
-
-    const totalAssets =
-      normalised.cashSavings +
-      normalised.pensionValue +
-      normalised.propertyValue +
-      normalised.otherInvestments +
-      normalised.otherAssets;
-
-    const totalLiabilities =
-      normalised.mortgageBalance +
-      normalised.creditCardDebt +
-      normalised.otherLoans +
-      normalised.studentLoanBalance;
-
-    const netWorth = totalAssets - totalLiabilities;
-
-    const mortgageInterestRatePercent = Number.isFinite(normalised.mortgageInterestRatePercent)
-      ? normalised.mortgageInterestRatePercent
-      : 0;
-    const mortgageRemainingTermYears = Math.max(0, normalised.mortgageRemainingTermYears || 0);
-    const mortgageRemainingTermMonths = Math.round(mortgageRemainingTermYears * 12);
-    const mortgageMonthlyRate = mortgageInterestRatePercent > 0 ? mortgageInterestRatePercent / 100 / 12 : 0;
-    const estimatedMortgagePayment =
-      userData.housingStatus === 'mortgaged' && normalised.mortgageBalance > 0 && mortgageRemainingTermMonths > 0
-        ? mortgageMonthlyRate > 0
-          ? normalised.mortgageBalance *
-            (mortgageMonthlyRate / (1 - Math.pow(1 + mortgageMonthlyRate, -mortgageRemainingTermMonths)))
-          : normalised.mortgageBalance / mortgageRemainingTermMonths
-        : 0;
-
-    const housingPaymentMonthly = (() => {
-      if (normalised.housingPaymentMonthly > 0) {
-        return normalised.housingPaymentMonthly;
-      }
-      if (normalised.expensesHousing > 0) {
-        return normalised.expensesHousing;
-      }
-      if (userData.housingStatus === 'mortgaged') {
-        return estimatedMortgagePayment;
-      }
-      return 0;
-    })();
-
-    const baseLivingCostsMonthly =
-      normalised.expensesUtilities +
-      normalised.expensesGroceries +
-      normalised.expensesTransport +
-      normalised.expensesLifestyle +
-      normalised.expensesChildcare +
-      normalised.specialNeedsCostsMonthly;
-
-    const discretionarySpendingMonthly = (normalised.tobaccoSpendWeekly * 52) / 12;
-
-    const totalMonthlyExpenses =
-      housingPaymentMonthly + baseLivingCostsMonthly + discretionarySpendingMonthly;
-    const totalAnnualExpenses = totalMonthlyExpenses * 12;
-
-    const disposableIncomeMonthly = grossMonthlyIncome - totalMonthlyExpenses;
-    const disposableIncomeAnnual = disposableIncomeMonthly * 12;
-    const savingsRate = grossAnnualIncome > 0 ? disposableIncomeAnnual / grossAnnualIncome : 0;
-    const emergencyFundCoverageMonths =
-      totalMonthlyExpenses > 0 ? normalised.cashSavings / totalMonthlyExpenses : 0;
-
-    const yearsToRetirement = Math.max(0, DEFAULT_RETIREMENT_AGE - normalised.age);
-    const projectedPensionPot =
-      normalised.pensionValue * Math.pow(1 + RETIREMENT_GROWTH_RATE, yearsToRetirement);
-    const sustainableAnnualDrawdown = projectedPensionPot * SUSTAINABLE_WITHDRAWAL_RATE;
-
-    const partnerProjection =
-      normalised.partnerAge > 0
-        ? {
-            yearsToRetirement: Math.max(0, DEFAULT_RETIREMENT_AGE - normalised.partnerAge),
-          }
-        : undefined;
-
-    const taxableIncomeAfterAllowance = Math.max(0, grossAnnualIncome - PERSONAL_ALLOWANCE);
-
-    // Create an object with our reliable calculations
-    const calculatedMetrics = {
-      currency: 'GBP',
-      incomes: {
-        grossAnnualIncome: roundToTwo(grossAnnualIncome),
-        grossMonthlyIncome: roundToTwo(grossMonthlyIncome),
-        annualBreakdown: {
-          yourSalary: roundToTwo(normalised.yourSalary),
-          partnerSalary: roundToTwo(normalised.partnerSalary),
-          otherIncomeAnnual: roundToTwo(annualOtherIncome),
-          benefitsIncomeAnnual: roundToTwo(annualBenefitsIncome),
-        },
-        monthlyBreakdown: {
-          yourSalary: roundToTwo(normalised.yourSalary / 12),
-          partnerSalary: roundToTwo(normalised.partnerSalary / 12),
-          otherIncomeMonthly: roundToTwo(normalised.otherIncome),
-          benefitsIncomeMonthly: roundToTwo(normalised.benefitsIncome),
-        },
-      },
-      assets: {
-        total: roundToTwo(totalAssets),
-        cashSavings: roundToTwo(normalised.cashSavings),
-        pensionValue: roundToTwo(normalised.pensionValue),
-        propertyValue: roundToTwo(normalised.propertyValue),
-        otherInvestments: roundToTwo(normalised.otherInvestments),
-        otherAssets: roundToTwo(normalised.otherAssets),
-      },
-      liabilities: {
-        total: roundToTwo(totalLiabilities),
-        mortgageBalance: roundToTwo(normalised.mortgageBalance),
-        creditCardDebt: roundToTwo(normalised.creditCardDebt),
-        otherLoans: roundToTwo(normalised.otherLoans),
-        studentLoanBalance: roundToTwo(normalised.studentLoanBalance),
-        ...(userData.housingStatus === 'mortgaged'
-          ? {
-              mortgageDetails: {
-                interestRateAnnualPercent: roundToTwo(mortgageInterestRatePercent),
-                remainingTermYears: roundToTwo(mortgageRemainingTermYears),
-                remainingTermMonths: mortgageRemainingTermMonths,
-                amortizationHorizonMonths: mortgageRemainingTermMonths,
-                amortizationHorizonYears: roundToTwo(mortgageRemainingTermMonths / 12),
-                estimatedMonthlyDebtService: roundToTwo(estimatedMortgagePayment),
-              },
-            }
-          : {}),
-      },
-      netWorth: roundToTwo(netWorth),
-      expenses: {
-        monthlyTotal: roundToTwo(totalMonthlyExpenses),
-        annualTotal: roundToTwo(totalAnnualExpenses),
-        housingPaymentMonthly: roundToTwo(housingPaymentMonthly),
-        baseLivingCostsMonthly: roundToTwo(baseLivingCostsMonthly),
-        discretionarySpendingMonthly: roundToTwo(discretionarySpendingMonthly),
-        ...(userData.housingStatus === 'mortgaged'
-          ? { mortgageDebtServiceMonthly: roundToTwo(estimatedMortgagePayment) }
-          : {}),
-      },
-      cashFlow: {
-        disposableIncomeMonthly: roundToTwo(disposableIncomeMonthly),
-        disposableIncomeAnnual: roundToTwo(disposableIncomeAnnual),
-        savingsRate: roundToTwo(savingsRate),
-        emergencyFundCoverageMonths: roundToTwo(emergencyFundCoverageMonths),
-      },
-      retirement: {
-        targetRetirementAge: DEFAULT_RETIREMENT_AGE,
-        yearsToRetirement,
-        assumedGrowthRate: RETIREMENT_GROWTH_RATE,
-        projectedPensionPot: roundToTwo(projectedPensionPot),
-        sustainableAnnualDrawdown: roundToTwo(sustainableAnnualDrawdown),
-        ...(partnerProjection ? { partner: partnerProjection } : {}),
-      },
-      tax: {
-        region: userData.location || 'england',
-        incomeTaxBand: determineTaxBand(grossAnnualIncome, userData.location),
-        nationalInsuranceBand: determineNIBand(grossAnnualIncome),
-        personalAllowance: PERSONAL_ALLOWANCE,
-        taxableIncomeAfterAllowance: roundToTwo(taxableIncomeAfterAllowance),
-      },
-    };
+    const { calculatedMetrics, quantitativeAnalysis } = computeQuantitativeMetrics(normalised, userData);
 
     // --- STEP 2: SEND PRE-CALCULATED DATA TO THE AI ---
     const prompt = buildProductionPrompt(userData, calculatedMetrics);
@@ -344,48 +394,6 @@ export default async function handler(req, res) {
     const llmResult = await response.json();
     const reportJsonText = llmResult.choices[0].message.content;
     const reportObject = JSON.parse(reportJsonText);
-
-    const netAnnualIncome = grossAnnualIncome - totalAnnualExpenses;
-    const netMonthlyIncome = netAnnualIncome / 12;
-    const monthlySurplus = disposableIncomeMonthly;
-    const monthlyDeficit = monthlySurplus < 0 ? Math.abs(monthlySurplus) : 0;
-    const debtToIncomeRatio = grossAnnualIncome > 0 ? totalLiabilities / grossAnnualIncome : null;
-    const retirementShortfallAnnual = Math.max(0, totalAnnualExpenses - sustainableAnnualDrawdown);
-    const retirementShortfallMonthly = retirementShortfallAnnual / 12;
-
-    const quantitativeAnalysis = {
-      income: {
-        grossAnnual: roundToTwo(grossAnnualIncome),
-        grossMonthly: roundToTwo(grossMonthlyIncome),
-        netAnnual: roundToTwo(netAnnualIncome),
-        netMonthly: roundToTwo(netMonthlyIncome),
-      },
-      cashflow: {
-        monthlySurplus: roundToTwo(monthlySurplus),
-        monthlyDeficit: roundToTwo(monthlyDeficit),
-        annualExpenses: roundToTwo(totalAnnualExpenses),
-        monthlyExpenses: roundToTwo(totalMonthlyExpenses),
-        savingsRate: roundToTwo(savingsRate),
-        emergencyFundCoverageMonths: roundToTwo(emergencyFundCoverageMonths),
-      },
-      debt: {
-        totalLiabilities: roundToTwo(totalLiabilities),
-        debtToIncomeRatio: debtToIncomeRatio !== null ? roundToTwo(debtToIncomeRatio) : null,
-      },
-      taxes: {
-        region: calculatedMetrics.tax.region,
-        incomeTaxBand: calculatedMetrics.tax.incomeTaxBand,
-        nationalInsuranceBand: calculatedMetrics.tax.nationalInsuranceBand,
-        personalAllowance: calculatedMetrics.tax.personalAllowance,
-        taxableIncomeAfterAllowance: calculatedMetrics.tax.taxableIncomeAfterAllowance,
-      },
-      retirement: {
-        projectedPensionPot: roundToTwo(projectedPensionPot),
-        sustainableAnnualDrawdown: roundToTwo(sustainableAnnualDrawdown),
-        retirementShortfallAnnual: roundToTwo(retirementShortfallAnnual),
-        retirementShortfallMonthly: roundToTwo(retirementShortfallMonthly),
-      },
-    };
 
     return res.status(200).json({
       ...reportObject,
@@ -456,3 +464,13 @@ function buildProductionPrompt(userData, calculatedMetrics) {
     ${JSON.stringify(calculatedMetrics, null, 2)}
   `;
 }
+
+export {
+  parseMoney,
+  parseNumber,
+  normaliseNumericFields,
+  roundToTwo,
+  determineTaxBand,
+  determineNIBand,
+  computeQuantitativeMetrics,
+};
