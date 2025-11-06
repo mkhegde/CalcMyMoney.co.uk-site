@@ -99,9 +99,8 @@ const SurveyPage = () => {
       isaInvestmentsValue: '0',
       otherInvestments: '0',
       otherAssets: '0',
-      monthlyRent: '0',
       mortgageBalance: '0',
-      mortgageMonthlyPayment: '0',
+      mortgageInterestRatePercent: '0',
       mortgageRemainingTermYears: '0',
       creditCardDebt: '0',
       otherLoans: '0',
@@ -196,12 +195,13 @@ const SurveyPage = () => {
     const payloadSource = { ...latestValues, ...finalData };
     setIsLoading(true);
     setSubmissionError(null);
-    try {
-      const payload = {
-        ...payloadSource,
-        otherIncome: payloadSource.otherIncomeMonthly ?? payloadSource.otherIncome ?? '0',
-        benefitsIncome: payloadSource.benefitsIncomeMonthly ?? payloadSource.benefitsIncome ?? '0',
-      };
+      try {
+        const payload = {
+          ...payloadSource,
+          otherIncome: payloadSource.otherIncomeMonthly ?? payloadSource.otherIncome ?? '0',
+          benefitsIncome: payloadSource.benefitsIncomeMonthly ?? payloadSource.benefitsIncome ?? '0',
+          housingPaymentMonthly: payloadSource.expensesHousing ?? '0',
+        };
       const response = await fetch('/api/generate-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -24,11 +24,8 @@ const Step5_Liabilities = ({
     const resetOptions = { shouldValidate: false, shouldDirty: false };
     if (housingStatus !== 'mortgaged') {
       setValue('mortgageBalance', '0', resetOptions);
-      setValue('mortgageMonthlyPayment', '0', resetOptions);
+      setValue('mortgageInterestRatePercent', '0', resetOptions);
       setValue('mortgageRemainingTermYears', '0', resetOptions);
-    }
-    if (housingStatus !== 'renting') {
-      setValue('monthlyRent', '0', resetOptions);
     }
   }, [housingStatus, setValue]);
 
@@ -44,18 +41,6 @@ const Step5_Liabilities = ({
       </div>
 
       <div className="space-y-6 rounded-lg bg-gray-50 p-6 border border-gray-200">
-        {housingStatus === 'renting' ? (
-          <CurrencyInput
-            name="monthlyRent"
-            control={control}
-            label="Monthly rent"
-            placeholder="1,200"
-            error={errors.monthlyRent}
-            minimumFractionDigits={0}
-            maximumFractionDigits={0}
-          />
-        ) : null}
-
         {housingStatus === 'mortgaged' ? (
           <div className="space-y-6">
             <CurrencyInput
@@ -67,15 +52,23 @@ const Step5_Liabilities = ({
               minimumFractionDigits={0}
               maximumFractionDigits={0}
             />
-            <CurrencyInput
-              name="mortgageMonthlyPayment"
-              control={control}
-              label="Monthly mortgage payment"
-              placeholder="1,100"
-              error={errors.mortgageMonthlyPayment}
-              minimumFractionDigits={0}
-              maximumFractionDigits={0}
-            />
+            <div>
+              <label htmlFor="mortgageInterestRatePercent" className="block text-sm font-medium text-gray-700">
+                Mortgage interest rate (annual %)
+              </label>
+              <input
+                id="mortgageInterestRatePercent"
+                type="number"
+                min={0}
+                step="0.01"
+                {...register('mortgageInterestRatePercent')}
+                className="mt-1 block w-full rounded-md border-gray-400 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
+              />
+              {errors.mortgageInterestRatePercent ? (
+                <p className="mt-1 text-sm text-red-600">{errors.mortgageInterestRatePercent.message}</p>
+              ) : null}
+              <p className="mt-1 text-xs text-gray-500">Enter the headline rate on your current mortgage deal.</p>
+            </div>
             <div>
               <label htmlFor="mortgageRemainingTermYears" className="block text-sm font-medium text-gray-700">
                 Years remaining on mortgage

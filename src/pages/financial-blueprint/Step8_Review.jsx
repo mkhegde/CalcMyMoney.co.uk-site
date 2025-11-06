@@ -15,7 +15,16 @@ const LineItem = ({ label, value }) => (
   </div>
 );
 
-const formatGBP = (value, opts = {}) => `£${safeGBP(parseMoney(value), { minimumFractionDigits: 0, maximumFractionDigits: 0, ...opts })}`;
+const formatGBP = (value, opts = {}) =>
+  `£${safeGBP(parseMoney(value), { minimumFractionDigits: 0, maximumFractionDigits: 0, ...opts })}`;
+
+const formatPercent = (value) => {
+  const numeric = Number.parseFloat(value);
+  if (!Number.isFinite(numeric)) {
+    return '—';
+  }
+  return `${numeric.toFixed(2)}%`;
+};
 
 const friendlyText = {
   blueprintFor: { individual: 'Individual', family: 'Family / Joint' },
@@ -47,9 +56,22 @@ const friendlyText = {
 };
 
 const Step8_Review = ({ onBack, onConfirm, values, isLoading }) => {
-  const summary = useMemo(() => ({
-    profile: [
-      ['Blueprint for', friendlyText.blueprintFor[values.blueprintFor] || values.blueprintFor || '—'],
+  const summary = useMemo(() => {
+    const mortgageBalance = parseMoney(values.mortgageBalance);
+    const mortgageRatePercent = Number.parseFloat(values.mortgageInterestRatePercent ?? 0);
+    const mortgageTermYears = Number.parseFloat(values.mortgageRemainingTermYears ?? 0);
+    const mortgageTermMonths = Math.max(0, Math.round(mortgageTermYears * 12));
+    const mortgageMonthlyRate = mortgageRatePercent > 0 ? mortgageRatePercent / 100 / 12 : 0;
+    const estimatedMortgagePayment =
+      values.housingStatus === 'mortgaged' && mortgageBalance > 0 && mortgageTermMonths > 0
+        ? mortgageMonthlyRate > 0
+          ? mortgageBalance * (mortgageMonthlyRate / (1 - Math.pow(1 + mortgageMonthlyRate, -mortgageTermMonths)))
+          : mortgageBalance / mortgageTermMonths
+        : 0;
+
+    return {
+      profile: [
+        ['Blueprint for', friendlyText.blueprintFor[values.blueprintFor] || values.blueprintFor || '—'],
       ['Location', values.location || '—'],
       ['Housing', friendlyText.housingStatus[values.housingStatus] || values.housingStatus || '—'],
       ['Marital status', friendlyText.maritalStatus[values.maritalStatus] || values.maritalStatus || '—'],
@@ -107,16 +129,27 @@ const Step8_Review = ({ onBack, onConfirm, values, isLoading }) => {
       ['Other investments', formatGBP(values.otherInvestments)],
       ['Other assets', formatGBP(values.otherAssets)],
     ],
-    liabilities: [
-      ['Monthly rent', formatGBP(values.monthlyRent)],
-      ['Mortgage balance', formatGBP(values.mortgageBalance)],
-      ['Mortgage payment (monthly)', formatGBP(values.mortgageMonthlyPayment)],
-      ['Mortgage term remaining (years)', values.mortgageRemainingTermYears || '0'],
-      ['Credit card debt', formatGBP(values.creditCardDebt)],
-      ['Other loans', formatGBP(values.otherLoans)],
-      ['Student loan balance', formatGBP(values.studentLoanBalance)],
-      ['Insurance premiums (monthly total)', formatGBP(values.insurancePremiumsTotalMonthly)],
-    ],
+      liabilities: [
+        values.housingStatus === 'mortgaged'
+          ? ['Mortgage balance', formatGBP(values.mortgageBalance)]
+          : null,
+        values.housingStatus === 'mortgaged'
+          ? ['Mortgage interest rate', formatPercent(values.mortgageInterestRatePercent)]
+          : null,
+        values.housingStatus === 'mortgaged'
+          ? ['Mortgage term remaining (years)', values.mortgageRemainingTermYears || '0']
+          : null,
+        values.housingStatus === 'mortgaged'
+          ? [
+              'Estimated mortgage payment',
+              formatGBP(estimatedMortgagePayment, { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+            ]
+          : null,
+        ['Credit card debt', formatGBP(values.creditCardDebt)],
+        ['Other loans', formatGBP(values.otherLoans)],
+        ['Student loan balance', formatGBP(values.studentLoanBalance)],
+        ['Insurance premiums (monthly total)', formatGBP(values.insurancePremiumsTotalMonthly)],
+      ].filter(Boolean),
     mindset: [
       ['Earning habit', friendlyText.earningHabit[values.earningHabit] || values.earningHabit || '—'],
       ['Saving habit', friendlyText.savingHabit[values.savingHabit] || values.savingHabit || '—'],
@@ -291,7 +324,8 @@ const Step8_Review = ({ onBack, onConfirm, values, isLoading }) => {
           ]
         : null,
     ].filter(Boolean),
-  }), [values]);
+    };
+  }, [values]);
 
   return (
     <div className="space-y-8">
