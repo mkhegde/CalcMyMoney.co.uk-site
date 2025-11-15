@@ -13,6 +13,29 @@ export default defineConfig({
   base: '/',
   logLevel: 'warn', // quieter Vite logs
 
+  // This is for the dev server (which is failing, but we keep it for completeness)
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
+
+  // This tells the 'vite preview' command to also use the proxy.
+  preview: {
+    port: 5173,
+    host: '127.0.0.1',
+    open: true, // This will automatically open the browser for you
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
+
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
     extensions: ['.mjs', '.js', '.jsx', '.ts', '.tsx', '.json'],
@@ -20,6 +43,7 @@ export default defineConfig({
 
   optimizeDeps: { esbuildOptions: { loader: { '.js': 'jsx' } } },
 
+  // --- THIS 'build' SECTION WAS MISSING AND IS NOW RESTORED ---
   build: {
     cssCodeSplit: true,
     chunkSizeWarningLimit: 1200,
@@ -61,5 +85,10 @@ export default defineConfig({
           : []),
       ],
     },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './vitest.setup.js',
   },
 });

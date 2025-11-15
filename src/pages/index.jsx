@@ -34,6 +34,7 @@ const SelfAssessmentGuide = lazy(() => import('./SelfAssessmentGuide.jsx'));
 const LinkToUs = lazy(() => import('./LinkToUs.jsx'));
 // Correctly import your new component
 const MyMoneyBlueprint = lazy(() => import('./financial-blueprint/MyMoneyBlueprint.jsx'));
+const SurveyPage = lazy(() => import('./financial-blueprint/SurveyPage.jsx'));
 
 // Legacy redirects (old path -> new path)
 const LEGACY_REDIRECTS = {
@@ -376,7 +377,7 @@ function PagesContent() {
           <Route path="/present-value-calculator" element={<LazyPresentValueCalculator />} />
           <Route path="/price-per-unit-calculator" element={<LazyPricePerUnitCalculator />} />
           <Route path="/pro-rata-salary-calculator" element={<LazyProRataSalaryCalculator />} />
-          <Route path="/property-flipping-calculator" element={<LazyPropertyFppingCalculator />} />
+          <Route path="/property-flipping-calculator" element={<LazyPropertyFlippingCalculator />} />
           <Route path="/property-tax-calculator" element={<LazyPropertyTaxCalculator />} />
           <Route path="/rent-to-buy-calculator" element={<LazyRentToBuyCalculator />} />
           <Route path="/rent-vs-buy-calculator" element={<LazyRentVsBuyCalculator />} />
@@ -445,7 +446,7 @@ function PagesContent() {
           
           {/* CORRECTLY ADDED ROUTE FOR YOUR NEW PAGE */}
           <Route path={paths.myMoneyBlueprint} element={<MyMoneyBlueprint />} />
-
+          <Route path={paths.financialBlueprintSurvey} element={<SurveyPage />} />
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
