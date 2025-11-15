@@ -390,8 +390,8 @@ export const step8Schema = z
       .max(80, { message: 'Please provide a realistic retirement age.' }),
     partnerRetirementTargetAge: z.coerce
       .number({ required_error: "Partner's target retirement age is required." })
-      .min(50, { message: "Partner's retirement age should be at least 50." })
-      .max(80, { message: 'Please provide a realistic retirement age for your partner.' })
+      .min(0, { message: "Partner's retirement age cannot be negative." })
+      .max(120, { message: 'Please provide a realistic retirement age for your partner.' })
       .optional(),
     retirementIncomeTargetMonthly: moneyField('Desired monthly retirement income'),
     partnerRetirementIncomeTargetMonthly: moneyField(
@@ -426,11 +426,17 @@ export const step8Schema = z
         });
       }
     } else {
-      if (!data.partnerRetirementTargetAge) {
+      if (!data.partnerRetirementTargetAge || data.partnerRetirementTargetAge < 50) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['partnerRetirementTargetAge'],
-          message: 'Please provide your partner’s target retirement age.',
+          message: 'Please provide your partner’s target retirement age (between 50 and 80).',
+        });
+      } else if (data.partnerRetirementTargetAge > 80) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['partnerRetirementTargetAge'],
+          message: 'Please provide a realistic retirement age for your partner.',
         });
       }
       if (data.partnerRetirementIncomeTargetMonthly <= 0) {
