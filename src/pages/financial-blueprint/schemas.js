@@ -11,6 +11,14 @@ const integerField = (label) =>
     .int({ message: `${label} must be a whole number.` })
     .min(0, { message: `${label} cannot be negative.` });
 
+const optionalize = (schema) =>
+  z
+    .preprocess(
+      (val) => (val === '' || val === null || val === undefined ? null : val),
+      schema.nullable()
+    )
+    .transform((val) => (val === null ? undefined : val));
+
 export const step1Schema = z
   .object({
     blueprintFor: z.enum(['individual', 'family'], {
@@ -29,34 +37,27 @@ export const step1Schema = z
       .number({ required_error: 'Your age is required.' })
       .min(18, { message: 'You must be at least 18 years old to continue.' })
       .max(110, { message: 'Please provide a realistic age.' }),
-    partnerAge: z
-      .preprocess(
-        (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
-        z
-          .number({ required_error: "Partner's age must be at least 18." })
-          .min(18, { message: "Partner's age must be at least 18." })
-          .max(110, { message: 'Please provide a realistic partner age.' })
-      )
-      .optional(),
+    partnerAge: optionalize(
+      z
+        .coerce.number({ invalid_type_error: "Partner's age must be at least 18." })
+        .min(18, { message: "Partner's age must be at least 18." })
+        .max(110, { message: 'Please provide a realistic partner age.' })
+    ),
     profession: z
       .string({ required_error: 'Profession is required.' })
       .min(2, { message: 'Please provide a valid profession.' }),
-    partnerProfession: z
-      .preprocess(
-        (val) => (val === '' || val === null || val === undefined ? undefined : val),
-        z.string().min(2, { message: "Partner's profession is required." })
-      )
-      .optional(),
+    partnerProfession: optionalize(
+      z
+        .string({ required_error: "Partner's profession is required." })
+        .min(2, { message: "Partner's profession is required." })
+    ),
     numberOfChildren: integerField('Number of children'),
     specialNeedsChildren: integerField('Number of children with special needs'),
-    specialNeedsSupport: z
-      .preprocess(
-        (val) => (val === '' || val === null || val === undefined ? undefined : val),
-        z
-          .string({ required_error: 'Please describe the support requirements.' })
-          .min(3, { message: 'Please add a short description of support needs.' })
-      )
-      .optional(),
+    specialNeedsSupport: optionalize(
+      z
+        .string({ required_error: 'Please describe the support requirements.' })
+        .min(3, { message: 'Please add a short description of support needs.' })
+    ),
     healthStatus: z.enum(['good', 'fair', 'poor'], {
       required_error: 'Health status is required.',
     }),
